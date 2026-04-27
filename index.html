@@ -2193,17 +2193,12 @@ window.addEventListener('load', displayAppVersion);
 // === PWA LOGIC: SERVICE WORKER И ОБНОВЛЕНИЕ (ABSOLUTE STEALTH) ===
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        // 1. Регистрацию выполняем всегда (в том числе оффлайн), иначе на Android
-        // после «долгого сна» приложение может не восстановить контроль SW.
-        // updateViaCache:'none' сохраняем, чтобы онлайн-обновления были консистентны.
+        
+        // 1. АБСОЛЮТНАЯ ТИШИНА: Если планшет в Авиарежиме (без Wi-Fi),
+        // мы вообще не трогаем регистрацию! 
+        // PWA всё равно откроется, так как SW уже живёт в памяти iOS.
         navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
             .then(registration => {
-                if (!navigator.onLine) {
-                    console.log('Оффлайн-старт: SW зарегистрирован/активен, проверка обновлений пропущена.');
-                    return;
-                }
-
-                // 2. Если сеть ЕСТЬ, тихо проверяем обновления в фоне.
                 registration.addEventListener('updatefound', () => {
                     const installingWorker = registration.installing;
                     if (installingWorker == null || !navigator.serviceWorker.controller) return;
