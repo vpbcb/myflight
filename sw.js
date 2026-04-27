@@ -1,5 +1,5 @@
 // Меняй версию здесь при любом обновлении кода (например, v1.1, v1.2)
-const CACHE_NAME = 'mywind-260417-1';
+const CACHE_NAME = 'mywind-260427-1';
 const SCOPE = self.registration.scope;
 
 // Динамическое формирование путей от корня регистрации Service Worker'а
