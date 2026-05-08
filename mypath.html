@@ -1,0 +1,1751 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>APRROACH PATH CALC</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="appicon.png">
+    <link rel="apple-touch-icon" href="appicon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0f19">
+
+    <style>
+        :root {
+            /* Ночная тема (твоя оригинальная) */
+            --fdp-color: rgba(56, 189, 248, 0.2); /* Светло-синий */
+            --fap-color: rgba(251, 146, 60, 0.15); /* Оранжевый */
+            --bg: #0b0f19;
+            --card: rgba(22, 30, 46, 0.98);
+            --accent: #38bdf8;
+            --text: #cbd5e1;
+            --dim: #64748b;
+            --border: rgba(255, 255, 255, 0.1);
+            --highlight: rgba(56, 189, 248, 0.15);
+            --orange: #fb923c;
+            --input-bg: rgba(0, 0, 0, 0.09);
+            --zebra: rgba(255, 255, 255, 0.07);
+            --shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.04);
+        }
+        * {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+        /* Переносим переменные на уровень HTML для моментальной отрисовки */
+        html.light-theme {
+            /* Светлая тема */
+            --fdp-color: #e0f2fe;
+            --fap-color: #ffedd5;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --accent: #0ea5e9;
+            --text: #1e293b;
+            --dim: #64748b;
+            --border: rgba(0, 0, 0, 0.1);
+            --highlight: rgba(14, 165, 233, 0.12);
+            --input-bg: #f7f9fa;
+            --zebra: #f0f5fa;
+            --row-bg: #ffffff;
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        html {
+            background-color: var(--bg);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: transparent; /* Наследует фон мгновенно от html */
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            height: 100dvh; 
+            overflow: hidden;
+            /* ВЫРЕЗАНО: transition: background 0.3s ease; (чтобы не было вспышки) */
+            overscroll-behavior-y: none;
+        }
+
+/* Обновленный стиль для единиц измерения */
+        .unit-label {
+            position: absolute;
+            right: 12px;
+            top: 50%;                     /* НОВОЕ: сдвиг вниз на 50% */
+            transform: translateY(-50%);  /* НОВОЕ: точное центрирование */
+            font-size: 0.8rem;            /* Делаем шрифт меньше */
+            font-weight: 600;
+            color: var(--dim);            /* Тот самый серый цвет */
+            pointer-events: none;
+            z-index: 5;
+        }
+
+/* Стили для всех заголовков в нашей новой сетке 4х3 */
+        .grid-label {
+            display: flex;
+            align-items: center;      /* Выравнивает иконку и текст по вертикали */
+            justify-content: center;  /* Выравнивает всё строго по центру столбца */
+            gap: 0px;                 /* Расстояние между иконкой и текстом */
+            font-size: 0.70rem;       /* ТУТ МЕНЯЕМ ШРИФТ: размер */
+            font-weight: 800;         /* ТУТ МЕНЯЕМ ШРИФТ: максимальная жирность */
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: -2px;       /* Небольшой отступ вниз к полю ввода */
+            margin-top: 5px;          /* Отступ сверху (особенно нужен для FDP/FAP/OAT) */
+        }
+
+        /* Увеличенный шрифт специально для FDP и FAP */
+        .grid-label.large-text {
+            font-size: 1.0rem;       /* Заметно крупнее остальных (было 0.95rem) */
+            letter-spacing: 1px;     /* Чуть больше разрядка */
+            color: var(--text);      /* Можно сделать их ярче (белыми в темной теме), а не тусклыми (--dim) */
+        }
+
+        #fdp { background-color: var(--fdp-color) !important; }
+        #fap { background-color: var(--fap-color) !important; }
+
+        /* Автоматически увеличиваем иконки рядом с крупным текстом */
+        .grid-label.large-text .icon-img {
+            height: 18px !important; 
+        }
+/* Отступ справа для всех полей с единицами */
+/* Отступ с обеих сторон для идеального центрирования текста */
+        .unit-input {
+            padding-left: 15px !important;  /* Компенсируем левую сторону */
+            padding-right: 15px !important; /* Место под ярлычок ft/°C справа */
+        }
+
+#limitModal {
+    z-index: 2000 !important; /* В два раза выше, чем клавиатура */
+}
+
+#kpDisplay.faded {
+    opacity: 0.3;
+    font-weight: normal;
+}
+
+.calculator {
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    padding: 2px 20px 40px 20px;
+    border-radius: 0; 
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow);
+    
+    /* Делаем калькулятор гибким по вертикали */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+.theme-toggle {
+    position: absolute;
+    bottom: 20px;  
+    
+    right: 20px; 
+    left: auto;
+    margin: 0;
+    
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--text); 
+    opacity: 1;         
+    z-index: 100;
+    transition: transform 0.2s ease, color 0.3s ease;
+}
+
+/* Сенсорная область (Метод 2) */
+.theme-toggle::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    bottom: -15px;
+    left: -15px;
+    right: -15px;
+    pointer-events: auto;
+}
+
+/* --- ЦЕНТРАЛЬНАЯ КНОПКА МЕНЮ --- */
+.menu-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 5px;
+    cursor: pointer;
+    display: flex; /* Критично: размещает иконку и текст в ряд */
+    align-items: center; /* Центрируем иконку и текст по вертикали */
+    justify-content: center; /* Центрируем контент внутри кнопки */
+    color: var(--text);
+    z-index: 100;
+    transition: transform 0.2s ease, color 0.3s ease;
+}
+.menu-btn::after {
+    content: '';
+    position: absolute;
+    top: -15px; bottom: -15px; left: -25px; right: -25px;
+}
+.menu-btn:active { transform: translateX(-50%) scale(0.9); }
+
+/* ИЗМЕНЕНИЕ: Текст меню справа от иконки */
+.menu-text {
+    font-size: 0.6rem; /* Маленький, matching wind-calc */
+    font-weight: 800; /* Стерильный, matching other buttons */
+    letter-spacing: 1px; /* Aero-aesthetic */
+    text-transform: uppercase; /* Sterile cockpit */
+    margin-left: 6px; /* Жесткий отступ от иконки */
+    font-family: inherit; /* Используем основной шрифт */
+    display: inline-block; /* Гарантирует отступ */
+    opacity: 0.9; /* Чуть бледнее, чтобы не отвлекал */
+}
+
+/* --- НАДПИСЬ С ИМЕНЕМ КЭША (ПОД МЕНЮ) --- */
+.cache-label {
+    position: absolute;
+    bottom: 15px; /* Опускаем в самый низ экрана */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.45rem;
+    color: var(--dim);
+    opacity: 0.4;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+    pointer-events: none; /* Жестко отключаем любые нажатия */
+    z-index: 50;
+    white-space: nowrap; /* Запрет на перенос строк */
+}
+
+/* Эффект при нажатии для мобильных устройств */
+.theme-toggle:active {
+    transform: scale(0.9);
+}
+        .theme-toggle:hover { opacity: 1; }
+
+        h2 { font-size: 0.6rem; text-align: center; letter-spacing: 5px; color: var(--dim); text-transform: uppercase; margin: 5 0 5px 0; font-weight: 800; opacity: 0.6; }
+
+        /* Выравниваем ширину колонок (Elev / OAT / Angle) */
+        .main-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px 5px;
+            margin-bottom: 20px;
+            flex-shrink: 0; 
+        }
+        .main-layout > .grid-label:nth-of-type(n+4) {
+    margin-bottom: -7px; /* Настрой это значение под себя */
+        }
+
+        /* Убедись, что перед этим классом нет ошибок в коде выше */
+        .sign-btn-outer {
+            width: 65px !important; 
+            height: 40px !important; 
+            border-radius: 12px !important; 
+            border: 1px solid var(--border); 
+            background: var(--input-bg); 
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.8rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sign-btn-outer.neg { 
+            color: var(--accent); 
+            background: rgba(56, 189, 248, 0.1); 
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .sign-btn-outer.pos { 
+            color: #ef4444; 
+            background: rgba(239, 68, 68, 0.1); 
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { display: block; font-size: 0.55rem; text-transform: uppercase; color: var(--dim); font-weight: 800; text-align: center; }
+
+        .input-wrapper { position: relative; display: flex; align-items: center; width: 100%; height: 100%; }
+
+        .field-label {
+    position: absolute;
+    left: 12px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    pointer-events: none;
+    
+    /* НОВОЕ: Выравнивание иконки и текста */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 5;
+}
+
+      input { 
+            width: 100%; height: 40px; padding: 0 10px; background: var(--input-bg); border: 1px solid var(--border); 
+            border-radius: 12px; color: var(--text); font-size: 1.3rem; outline: none; box-sizing: border-box; 
+            text-align: center; font-weight: 600;
+        }
+        input:focus { border-color: var(--accent); }
+
+        .labeled-input { padding-left: 95px; text-align: center; }
+
+        ./* Новая кнопка, стоящая рядом с полем */
+       .sign-btn-outer {
+            width: 65px !important; 
+            height: 40px !important; 
+            border-radius: 12px !important; 
+            border: 1px solid var(--border); 
+            background: var(--input-bg); 
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.8rem !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+        /* Аккуратные оттенки для плюса и минуса, не ломающие дизайн инпутов */
+       .sign-btn-outer.neg { 
+            color: var(--accent); 
+            background: rgba(56, 189, 248, 0.1); 
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .sign-btn-outer.pos { 
+            color: #ef4444; 
+            background: rgba(239, 68, 68, 0.1); 
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .angle-container { position: relative; width: 100%; height: 100%; }
+        .arrow-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--accent); font-size: 0.6rem; z-index: 10; }
+        
+        .dropdown-menu { 
+    position: absolute; 
+    /* МЕНЯЕМ top: 100% НА bottom: 100% */
+    bottom: 100%; 
+    left: 0; 
+    width: 100%; 
+    box-sizing: border-box;
+    background: var(--card); 
+    border: 1px solid var(--accent); 
+    border-radius: 10px; 
+    /* МЕНЯЕМ margin-top НА margin-bottom */
+    margin-bottom: 5px; 
+    display: none; 
+    z-index: 100; 
+}
+        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 0.9rem; text-align: center; color: var(--text); }
+        .dropdown-item:last-child { border-bottom: none; color: var(--orange); font-weight: bold; }
+
+        .fpa-box { 
+            background: var(--highlight); 
+            border: 1px dashed var(--accent); 
+            border-radius: 12px;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            height: 100%; /* Изменили 50px на 100% */
+            box-sizing: border-box;
+            min-height: 68px; /* Гарантирует, что блок не сплющится */
+        }
+        .fpa-box label { margin-bottom: 2px; font-size: 0.5rem; }
+        .fpa-val { font-size: 1.4rem; font-weight: 900; color: var(--accent); line-height: 1; }
+
+        .table { 
+    width: 100%; 
+    background: var(--input-bg); 
+    border-radius: 20px; 
+    overflow: hidden; 
+    border: 1px solid var(--border); 
+    margin-top: 5px;
+    margin-bottom: 5px;
+    /* Таблица забирает всё свободное место */
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+    
+
+        .t-head { 
+    display: flex; 
+    /* Изменил 15px на 18px, чтобы совпадало со строками ниже */
+    padding: 10px 18px; 
+    font-size: 0.55rem; 
+    color: var(--accent); 
+    font-weight: 900; 
+    text-transform: uppercase; 
+    border-bottom: 1px solid var(--border); 
+    background: rgba(40, 69, 110, 0.6);
+}
+
+.t-row { 
+    display: flex; 
+    height: 45px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--border); 
+    font-variant-numeric: tabular-nums; 
+    align-items: center; 
+    font-size: 1.2rem;
+    font-weight: 500;
+    box-sizing: border-box;
+    /* Ускоряем анимацию, чтобы не было ощущения "желе" */
+    
+}
+
+@keyframes rowAppear {
+    from {
+        opacity: 0.8; /* Не делаем полную прозрачность, чтобы не мигало */
+        transform: translateY(2px); /* Уменьшаем прыжок с 5px до 2px */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    @keyframes spin { 
+    100% { transform: rotate(360deg); } 
+}
+
+/*настрока увето строк таблицы*/
+/* 1. Красим ВСЕ строки в базовый цвет (нечетные) */
+#tableBody .t-row:not(.highlight) { 
+    background: var(--row-bg); 
+}
+
+/* 2. Четные строки перекрашиваем в цвет зебры */
+#tableBody .t-row:nth-child(even):not(.highlight) { 
+    background: var(--zebra); 
+}
+
+/* 3. Оставляем твою задержку анимации для четных строк */
+#tableBody .t-row:nth-child(even) {
+    animation-delay: 0.05s;
+}
+
+/* 4. Стиль для выделенных строк (FDP/FAP) остается главным */
+    .t-row.highlight-fdp, 
+.t-row.highlight-fap { 
+    color: var(--text); 
+    font-weight: 800;
+}
+
+/* Специфический фон для FDP в таблице */
+.t-row.highlight-fdp { 
+    background-color: rgba(56, 189, 248, 0.25) !important; 
+}
+
+/* Специфический фон для FAP в таблице */
+.t-row.highlight-fap { 
+    background-color: rgba(251, 146, 60, 0.25) !important;
+}
+
+       .col-nm { width: 90px; flex-shrink: 0; text-align: right; }
+       .col-ft { width: 90px; flex-shrink: 0; text-align: left; }
+       .col-mid {flex: 1; text-align: center; 
+    
+    /* НОВЫЕ ПРАВИЛА: Гарантируют центрирование иконки+текста внутри фиксированной строки 45px */
+    display: flex;
+    justify-content: center; /* По горизонтали */
+    align-items: center;     /* По вертикали */
+    
+    font-size: 1.1rem; 
+    font-weight: 900; 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    color: inherit;
+}
+#temp {
+    padding-left: 0px !important;  /* 34px под кнопку + 6px зазор */
+    padding-right: 18px !important; /* стандартный отступ справа */
+    text-align: center;  /* центрирование в оставшейся свободной зоне */
+}
+/* Единый стиль для всех иконок (FDP и FAP) */
+.icon-img {
+    height: 1.1em;
+    width: auto;
+    margin-right: 8px;
+    object-fit: contain;
+    vertical-align: middle;
+    /* Инверсия для темной темы (черный крест станет белым) */
+    filter: invert(1);
+}
+
+/* Правило для светлой темы: возвращаем оригинальный черный цвет */
+html.light-theme .icon-img {
+    filter: invert(0) !important;
+
+}
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+       #tableBody { 
+        position: relative;
+    flex: 1; 
+    overflow-y: auto; 
+    display: block;
+    -webkit-overflow-scrolling: touch; 
+}
+
+/* Делаем скроллбар тонким и аккуратным */
+#tableBody::-webkit-scrollbar {
+    width: 4px;
+}
+#tableBody::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 10px;
+
+}
+/* Кнопка "!" */
+        /* Базовая кнопка (БЕЗ анимации) */
+.info-btn {
+    background: var(--highlight);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.85rem;
+    font-weight: 900;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 2px;
+    padding: 0;
+    line-height: 1;
+    margin-top: -4px;
+    
+    opacity: 0; 
+    visibility: hidden;
+    pointer-events: none; 
+    display: none;
+    transition: opacity 0.3s ease; 
+}
+
+/* Состояние, когда кнопка ПОЯВЛЯЕТСЯ */
+.info-btn.show {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    display: flex;
+    
+    /* АНИМАЦИЮ СТАВИМ ИМЕННО СЮДА: */
+    animation: beacon-pulse 0.3s ease-in-out 8 forwards;
+}
+@keyframes beacon-pulse {
+    0% {
+        opacity: 0.8;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+    50% {
+        /* Пик вспышки: красный цвет #ef4444 с прозрачностью 0.6 */
+        opacity: 1;
+        box-shadow: 0 0 10px 1px rgba(239, 68, 68, 0.99);
+    }
+    100% {
+        opacity: 0.8;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+        /* Оверлей (затемнение фона) */
+        /* Оверлей (только затемнение фона, без blur) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* Дисплей внутри клавиатуры (сверху) */
+        #kpValue {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 15px;
+            
+            /* ВОТ ЭТО ИСПРАВИТ ВЫСОТУ: */
+            min-height: 2.4rem; /* Высота не даст полю "схлопнуться" */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Возвращаем твой стандартный синий цвет по умолчанию */
+            color: var(--accent); 
+            transition: color 0.2s;
+        }
+
+        /* Компактное модальное окно */
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 15px 25px; /* Уменьшили внутренние отступы */
+            text-align: center;
+            box-shadow: var(--shadow);
+            animation: modalPop 0.15s ease-out; /* Слегка ускорили анимацию */
+            min-width: 140px; /* Уменьшили ширину */
+        }
+
+        /* Стили цифровой клавиатуры */
+        .keypad-content {
+            padding: 20px 10px;
+            width: 80%;
+            max-width: 280px;
+            margin-bottom: -15vh;
+            margin-left: 30px;
+        }
+        .keypad-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid var(--border);
+        }
+        #kpTitle { font-size: 0.75rem; color: #38bdf8; font-weight: 800; letter-spacing: 1px; }
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+       .kp-btn {
+    --btn-height: 60px; /* Твоя базовая высота */
+    height: var(--btn-height);
+    font-weight: 700;
+    /* Пропорциональный размер шрифта */
+    font-size: calc(var(--btn-height) * 0.55); 
+    color: var(--text); /* 1. Жестко задаем цвет (белый в темной, темный в светлой) */
+    -webkit-appearance: none; /* 2. Отключаем встроенные выпуклости и цвета iOS */
+    /* Идеальное центрирование */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Убираем лишние отступы, которые могут давать браузеры по умолчанию */
+    padding: 0;
+    line-height: 1;
+    
+    /* Твои остальные стили */
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+}
+        .kp-btn:active { background: var(--highlight); transform: scale(0.95); }
+        .kp-del { color: #ef4444; font-size: calc(var(--btn-height) * 0.5);padding-right: 2px; }
+
+        /* Кнопка очистки */
+    /* Кнопка очистки — занимает 1 ячейку (1/3) */
+    .kp-clr {
+        flex: 1;
+        font-size: calc(var(--btn-height) * 0.35) !important;
+        color: #ef4444;
+        font-weight: 700;
+        
+        /* ДОБАВИТЬ ЭТО: */
+        width: 100% !important; /* Растягиваем на всю ширину колонки */
+    }
+
+    /* Кнопка подтверждения — занимает 2 ячейки (2/3) */
+    .kp-done {
+        flex: 2;
+        font-size: calc(var(--btn-height) * 0.38) !important;
+        color: var(--accent);
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        background: rgba(56, 189, 248, 0.1) !important;
+        border-color: var(--accent) !important;
+
+        /* ДОБАВИТЬ ЭТО: */
+        width: 100% !important;   /* Растягиваем на всю ширину */
+        grid-column: span 2;      /* КЛЮЧЕВОЙ МОМЕНТ: заставляет кнопку занять 2 колонки из 3 */
+    }
+
+        
+        .modal-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.75rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-val {
+            font-size: 2.2rem; /* Уменьшили размер главных цифр */
+            margin-bottom: 15px;
+            color: var(--accent);
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .modal-close {
+            background: var(--highlight);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 8px 24px; /* Сделали кнопку меньше */
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .modal-close:active { transform: scale(0.95); }
+/* Цвет для поля FDP */
+#fdp {
+
+    background: rgba(56, 189, 248, 0.15) !important; /* Светло-синий оттенок */
+    border-color: var(--accent); /* Выделяем рамку */
+}
+
+/* Цвет для поля FAP */
+#fap {
+    background: rgba(251, 146, 60, 0.2) !important; /* Оранжевый оттенок */
+    border-color: var(--orange); /* Выделяем рамку оранжевым */
+}
+
+/* --- КНОПКИ УПРАВЛЕНИЯ ВНИЗУ (ОБНОВЛЕНО) --- */
+.refresh-btn, .wind-btn {
+    position: absolute;
+    bottom: 20px; 
+    margin: 0;
+    background: transparent !important; 
+    border: none !important;            
+    box-shadow: none !important;        
+    padding: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text); 
+    z-index: 100;
+    transition: transform 0.2s ease, color 0.3s ease;
+    user-select: none;
+}
+.refresh-btn { 
+    left: 20px; 
+    justify-content: flex-start; 
+}
+.wind-btn { 
+    left: 50%; 
+    transform: translateX(-50%); 
+    justify-content: center; 
+}
+
+/* Сенсорная область для удобного тапа */
+.refresh-btn::after, .wind-btn::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    bottom: -15px;
+    left: -15px;
+    right: -15px;
+}
+
+.refresh-btn:active {
+    transform: scale(0.9);
+}
+.wind-btn:active {
+    transform: translateX(-50%) scale(0.9);
+}
+
+
+
+
+/* --- АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ (IPAD И ДР.) --- */
+/* --- 1. АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ: ЦЕНТРИРОВАНИЕ В ЛЮБОМ РЕЖИМЕ --- */
+/* min-device-width смотрит на железо (экран), а не на размер окна. 
+   Поэтому даже в узком Slide Over сдвиги отменятся, и окно встанет по центру */
+@media (min-device-width: 768px) {
+    .keypad-content {
+        margin-bottom: 0 !important; 
+        margin-left: 0 !important;
+    }
+}
+
+/* --- 2. УВЕЛИЧЕНИЕ КЛАВИАТУРЫ ТОЛЬКО ДЛЯ ШИРОКОГО ОКНА --- */
+/* min-width смотрит на окно. Клавиатура станет большой, только если есть место */
+@media (min-width: 768px) {
+    .keypad-content {
+        max-width: 360px !important; 
+        padding: 30px 20px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .keypad-grid {
+        gap: 6px !important; 
+    }
+    
+    .kp-btn {
+        --btn-height: 55px; 
+    }
+}
+
+/* --- ЯРКОСТЬ ОБВОДКИ ДЛЯ ELEV, ANGLE, DA/MDA (ТЕМНАЯ ТЕМА) --- */
+#elev, #angleInput, #minInput {
+    /* 0.4 — это уровень яркости. Попробуй 0.6 или 0.8, если нужно еще ярче */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; 
+}
+
+/* --- ЯРКОСТЬ ОБВОДКИ ДЛЯ ТЕХ ЖЕ ПОЛЕЙ (СВЕТЛАЯ ТЕМА) --- */
+html.light-theme #elev, 
+html.light-theme #angleInput, 
+html.light-theme #minInput {
+    /* На светлом фоне используем черный цвет с прозрачностью */
+    border: 1px solid rgba(0, 0, 0, 0.4) !important; 
+}
+
+/* --- ВНЕШНЯЯ РАМКА ТАБЛИЦЫ (ТЕМНАЯ ТЕМА) --- */
+.table {
+    /* Настраиваем саму рамку: толщина 2px, цвет белый, прозрачность 0.4 */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; 
+    
+    /* Делаем аккуратные закругленные углы. Если 8px мало, верни 20px, как было у тебя раньше! */
+    border-radius: 8px !important; 
+    
+    /* Обрезаем всё, что вылезает за закругленные края */
+    overflow: hidden !important; 
+
+}
+
+/* --- ВНЕШНЯЯ РАМКА ТАБЛИЦЫ (СВЕТЛАЯ ТЕМА) --- */
+html.light-theme .table {
+    /* Темная рамка для светлой темы */
+    border: 1px solid rgba(0, 0, 0, 0.3) !important; 
+}
+    /* Свой цвет шапки для СВЕТЛОЙ темы */
+html.light-theme .t-head {
+    /* Например, светло-серый с легким голубым оттенком */
+    background: rgba(135, 166, 207, 0.3); 
+}
+    </style>
+    
+    <!-- Микро-скрипт синхронизации темы с Хабом -->
+    <!-- Микро-скрипт синхронизации темы с Хабом (Без вспышек) -->
+    <script>
+        (function() {
+            // Мгновенно применяем тему ТОЛЬКО к html до рендера экрана
+            const savedTheme = localStorage.getItem('hub_theme');
+            const isDark = savedTheme === 'dark';
+            
+            document.documentElement.classList.toggle('dark-theme', isDark);
+            document.documentElement.classList.toggle('light-theme', !isDark);
+
+            // Слушаем переключения из других вкладок
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'hub_theme') {
+                    const dark = event.newValue === 'dark';
+                    document.documentElement.classList.toggle('dark-theme', dark);
+                    document.documentElement.classList.toggle('light-theme', !dark);
+                }
+            });
+        })();
+    </script>
+</head>
+
+<body>
+
+<div class="calculator">
+
+    <!-- Кнопка сброса (Слева) -->
+    <button class="refresh-btn" id="startApprBtn" title="Обновить поля">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
+        </svg>
+        <span id="startBtnText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 2px; text-transform: uppercase; white-space: nowrap;">Start here</span>
+    </button>
+
+    <!-- Кнопка перехода в MyWind (По центру) -->
+    <a href="./mywind.html" class="wind-btn" title="RWY Wind Limits" style="text-decoration: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+        </svg>
+        <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">MyWind</span>
+    </a>
+
+    <!-- Кнопка GO HOME (Справа) -->
+    <a href="./index.html" class="theme-toggle" title="В главное меню" style="text-decoration: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span class="menu-text" style="margin-left: 4px;">GO HOME</span>
+    </a>
+
+    <h2>Approach path calc</h2>
+
+<div class="table">
+        <div class="t-head">
+            <div style="width: 90px;text-align: right;">Dist (NM)</div>
+            <div style="flex: 1;"></div>
+            <div style="width: 90px; text-align: left;">Alt (FT)</div>
+        </div>
+        <div id="tableBody"></div>
+    </div>
+
+
+    <div class="main-layout">
+        <div class="grid-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+            Elevation
+        </div>
+        <div class="grid-label">
+            <span style="position: relative; display: flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 22-5-5"/><path d="M9 22H2V2l20 20H9Z"/></svg>
+                Angle
+                <button class="info-btn" id="angleInfoBtn" onclick="openModal('fpaModal')" style="position: absolute; left: 100%; margin-left: 6px;">!</button>
+            </span>
+        </div>
+        <div class="grid-label">
+            <span style="position: relative; display: flex; align-items: center;">
+                 DA/MDA
+                <button class="info-btn" id="minInfoBtn" onclick="openModal('minModal')" style="position: absolute; left: 100%; margin-left: 6px;">!</button>
+            </span>
+        </div>
+
+        <div class="input-wrapper">
+            <input type="text" id="elev" class="unit-input" value="" readonly onclick="openKeypad('elev', 'ELEVATION')">
+            <span class="unit-label">ft</span>
+        </div>
+               
+        <div class="angle-container" onclick="toggleMenu(event)" style="cursor: pointer;"> 
+            <input type="text" id="angleInput" value="3.0°" readonly 
+            onkeydown="handleEnter(event)">
+            <div class="arrow-btn">▼</div>
+            <div id="angleMenu" class="dropdown-menu">
+                <div class="dropdown-item" onclick="setAngle(2.7, event)">2.7°</div>
+                <div class="dropdown-item" onclick="setAngle(3.0, event)">3.0°</div>
+                <div class="dropdown-item" onclick="setAngle(3.5, event)">3.5°</div>
+                <div class="dropdown-item" onclick="setAngle('another', event)">Another...</div>
+            </div>
+        </div>
+
+        <div class="input-wrapper">
+            <input type="text" id="minInput" class="unit-input" value="" readonly onclick="openKeypad('minInput', 'DA/MDA')">
+            <span class="unit-label">ft</span>
+        </div>
+
+        <div class="grid-label large-text">
+            <img src="fdp.png" alt="" class="icon-img" style="margin-right: 2px;"> FDP
+        </div>
+        <div class="grid-label large-text" id="fapLabelBtn" style="cursor: pointer; user-select: none; -webkit-user-select: none;">
+         <img src="fap.png" alt="" class="icon-img" style="margin-right: 2px;"> FAP
+        </div>
+        <div class="grid-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            OAT
+        </div>
+
+        <div class="input-wrapper">
+            <input type="text" id="fdp" class="unit-input" value="" readonly onclick="openKeypad('fdp', 'FDP')">
+            <span class="unit-label">ft</span>
+        </div>
+               
+        <div class="input-wrapper">
+            <input type="text" id="fap" class="unit-input" value="" readonly onclick="openKeypad('fap', 'FAP')">
+            <span class="unit-label">ft</span>
+        </div>
+               
+        <div style="display: flex; gap: 4px; width: 100%; height: 50px; align-items: center;">
+            <div style="position: relative; display: flex; gap: 2px; width: 100%; height: 40px; align-items: center;">
+            <button class="sign-btn-outer" id="signBtn" onclick="toggleSign()" style="width: 40px !important; font-size: 1.4rem !important; flex-shrink: 0;">+</button>
+            <input type="text" id="temp" class="unit-input" value="15" readonly 
+       style="flex-grow: 1; text-align: center; height: 100%; margin: 0;"
+       onclick="openKeypad('temp', 'TEMPERATURE')">
+            <span class="unit-label">°C</span>
+        </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div id="fpaModal" class="modal-overlay" onclick="closeModal('fpaModal')">
+        <div class="modal-content">
+        <h3>📐 FPA corrected</h3>
+        <div class="modal-val" id="fpaCorrValue" style="margin-bottom: 0;">2.9°</div>
+        </div>
+</div>
+
+
+<div id="minModal" class="modal-overlay" onclick="closeModal('minModal')">
+    <div class="modal-content">
+        <h3> MIN corrected</h3>
+        <div class="modal-val" id="minCorrValue" style="margin-bottom: 0;">---</div>
+        </div>
+</div>
+
+<div id="limitModal" class="modal-overlay" onclick="closeLimitModal()">
+    <div class="modal-content" style="border-color: #ef4444; min-width: 200px;" onclick="event.stopPropagation()">
+        <h3 style="color: #ef4444; margin-bottom: 15px;">⚠️ OUT OF LIMITS</h3>
+        <div id="limitMessage" style="font-size: 0.9rem; color: var(--text); margin-bottom: 20px; font-weight: 600;">
+            Temperature range: -54°C ... +55°C
+        </div>
+        <button class="modal-close" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; width: 100%;" onclick="closeLimitModal()">CHECKED</button>
+    </div>
+</div>
+
+
+<div id="keypadModal" class="modal-overlay" onclick="closeKeypad(event)">
+    <div class="modal-content keypad-content" onclick="event.stopPropagation()">
+        <div class="keypad-header">
+            <span id="kpTitle">ENTER VALUE</span>
+            <span id="kpValue" class="modal-val" style="margin: 0; font-size: 1.8rem;">0</span>
+        </div>
+        <div class="keypad-grid">
+            <button class="kp-btn" onclick="kpPress('1')">1</button>
+            <button class="kp-btn" onclick="kpPress('2')">2</button>
+            <button class="kp-btn" onclick="kpPress('3')">3</button>
+            <button class="kp-btn" onclick="kpPress('4')">4</button>
+            <button class="kp-btn" onclick="kpPress('5')">5</button>
+            <button class="kp-btn" onclick="kpPress('6')">6</button>
+            <button class="kp-btn" onclick="kpPress('7')">7</button>
+            <button class="kp-btn" onclick="kpPress('8')">8</button>
+            <button class="kp-btn" onclick="kpPress('9')">9</button>
+            <button class="kp-btn" id="dotBtn" onclick="kpPress('.')">.</button>
+            <button class="kp-btn" onclick="kpPress('0')">0</button>
+            <button class="kp-btn kp-del" onclick="kpPress('del')">⌫</button>
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
+            <button id="doneBtn" class="kp-btn kp-done" onclick="closeKeypad('done')">DONE</button>
+        </div>
+        
+    </div>
+</div>
+</div>
+
+
+
+
+ <script>
+    let isNeg = false; 
+
+// --- ПЕРЕМЕННЫЕ КЛАВИАТУРЫ ---
+    let activeKp = null;
+    let currentKpVal = "";
+    let placeholderVal = "";
+    let isSequentialFlow = false;
+
+    function openKeypad(id, title) {
+    activeKp = document.getElementById(id);
+    
+    // --- ДОБАВЛЯЕМ ИКОНКИ В ЗАГОЛОВОК ---
+    let iconHTML = "";
+    if (id === 'elev') {
+        iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>';
+    } else if (id === 'fdp') {
+        iconHTML = '<img src="fdp.png" class="icon-img" style="height: 12px; width: auto; margin-right: 4px; margin-bottom: 2px;">';
+    } else if (id === 'fap') {
+        iconHTML = '<img src="fap.png" class="icon-img" style="height: 12px; width: auto; margin-right: 4px; margin-bottom: 2px;">';
+    } else if (id === 'temp') {
+        // НОВОЕ: Добавляем иконку термометра для OAT
+        iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"      stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>';
+    }
+    
+    // Вставляем иконку и текст с выравниванием по центру
+    document.getElementById('kpTitle').innerHTML = '<span style="display: flex; align-items: center; justify-content: center;">' + iconHTML + title + '</span>';
+    // ------------------------------------
+
+    // Сохраняем то, что уже было в поле, как подсказку
+    placeholderVal = activeKp.value || ""; 
+    currentKpVal = ""; // Набор начинаем с чистого листа
+    
+    // Логика кастомизации кнопки (точка / плюс-минус / 00)
+    const dotBtn = document.getElementById('dotBtn');
+    dotBtn.style.visibility = 'visible'; // Сбрасываем невидимость на всякий случай
+
+    if (id === 'temp') {
+        // Для температуры — смена знака
+        dotBtn.innerText = "+/−";
+        dotBtn.onclick = function() { kpPress('+/-'); };
+        
+    } else if (id === 'fdp' || id === 'fap') {
+        // Для FDP и FAP — кнопка двойного нуля
+        dotBtn.innerText = "00";
+        dotBtn.onclick = function() { kpPress('00'); };
+        
+    } else if (id === 'elev') {
+        // НОВОЕ УСЛОВИЕ ДЛЯ ELEV: кнопка минуса
+        dotBtn.innerText = "−"; 
+        dotBtn.onclick = function() { kpPress('minus_toggle'); };
+
+    } else if (id === 'minInput') {
+        // Для DA/MDA дробные и минусы не нужны, прячем кнопку
+        dotBtn.style.visibility = 'hidden'; 
+        
+    } else {
+        // Для всех остальных (Angle) — обычная точка
+        dotBtn.innerText = ".";
+        dotBtn.onclick = function() { kpPress('.'); };
+    }
+
+    // --- НОВАЯ ЛОГИКА: МЕНЯЕМ DONE НА NEXT ДЛЯ ЦЕПОЧКИ ---
+    const doneBtn = document.getElementById('doneBtn');
+    if (doneBtn) {
+        // В режиме цепочки кнопка показывает NEXT для всех этапов ввода
+        if (isSequentialFlow && (id === 'elev' || id === 'fdp' || id === 'fap' || id === 'temp')) {
+            doneBtn.innerText = "NEXT";
+        } else {
+            doneBtn.innerText = "DONE";
+        }
+    }
+
+    updateKpDisplay();
+    document.getElementById('keypadModal').classList.add('active');
+}
+
+    
+    function closeKeypad(e) {
+    // Закрываем, если нажали DONE или мимо окна (по темному фону)
+    if (e && e !== 'done' && e.target !== e.currentTarget) return;
+
+    // --- ЛОГИКА ЦЕПОЧКИ ВВОДА ---
+    if (e === 'done' && isSequentialFlow) {
+        let currentId = activeKp ? activeKp.id : null;
+        calculate(currentId);
+        if (activeKp && activeKp.id === 'elev') {
+            openKeypad('fdp', 'FDP');
+            return; 
+        } else if (activeKp && activeKp.id === 'fdp') {
+            openKeypad('fap', 'FAP');
+            return; 
+        } else if (activeKp && activeKp.id === 'fap') {
+            openKeypad('temp', 'TEMPERATURE');
+            return; 
+        } else if (activeKp && activeKp.id === 'temp') {
+            // Завершаем цепочку клавиатуры и открываем список углов
+            document.getElementById('keypadModal').classList.remove('active');
+            activeKp = null;
+            isSequentialFlow = false;
+            
+            // Имитируем открытие меню Angle
+            const angleMenu = document.getElementById('angleMenu');
+            if (angleMenu) angleMenu.style.display = 'block';
+            return;
+        }
+    }
+
+    // --- СТАНДАРТНОЕ ЗАКРЫТИЕ (или конец цепочки) ---
+    let closedId = activeKp ? activeKp.id : null;
+    document.getElementById('keypadModal').classList.remove('active');
+    isSequentialFlow = false; // Обязательно сбрасываем флаг
+    activeKp = null;
+    calculate(closedId);
+}
+
+    function kpPress(key) {
+    if (key === '+/-') {
+        toggleSign();
+        return;
+    }
+
+    // --- НОВАЯ ЛОГИКА ДЛЯ МИНУСА В ELEVATION ---
+    if (key === 'minus_toggle') {
+        
+        // Если ввод только начался (горит бледная подсказка), 
+        // нажатие минуса жестко сбрасывает старое значение и начинает новый ввод!
+        if (currentKpVal === "") {
+            currentKpVal = "- "; 
+        } else {
+            // Если пользователь уже ввел какие-то новые цифры, 
+            // кнопка работает просто как переключатель знака
+            let cleanVal = currentKpVal.replace(/^-\s*/, '');
+            if (currentKpVal.startsWith('-')) {
+                currentKpVal = cleanVal;
+            } else {
+                currentKpVal = '- ' + cleanVal;
+            }
+        }
+        
+        updateKpDisplay();
+        
+        if (activeKp) {
+            activeKp.value = currentKpVal;
+            calculate();
+        }
+        return; 
+    }
+    // ---------------------------------------------
+
+    if (key === 'clear') {
+        currentKpVal = "";
+        if (activeKp) activeKp.value = ""; // ДОБАВЛЕНО: жестко очищаем базовое поле, чтобы не было фантомной подсказки
+    } else if (key === 'del') {
+        currentKpVal = currentKpVal.slice(0, -1);
+    } else {
+        if (key === '.' && currentKpVal.includes('.')) return;
+
+        if (activeKp && activeKp.id !== 'temp') {
+            if ((key === '0' || key === '00') && currentKpVal === "") return;
+        }
+
+        // Формируем новое значение
+        let newVal = (currentKpVal === "0" && key !== '.') ? key : currentKpVal + key;
+
+        // ПРОВЕРКА ЛИМИТОВ ТЕМПЕРАТУРЫ
+        if (activeKp && activeKp.id === 'temp') {
+            let num = parseFloat(newVal);
+            if (!isNeg && num > 55) { showLimitWarning(); return; }
+            if (isNeg && num > 54) { showLimitWarning(); return; }
+        }
+
+        currentKpVal = newVal;
+    }
+    
+    updateKpDisplay();
+
+    if (activeKp) {
+        // --- ВОТ ЗДЕСЬ МАГИЯ СИМВОЛОВ ---
+        if (activeKp.id === 'angleInput' && currentKpVal !== "") {
+            activeKp.value = currentKpVal + "°";
+        } else {
+            activeKp.value = currentKpVal;
+        }
+
+        updateTempColors(); 
+    }
+}
+
+    function updateKpDisplay() {
+    let val = currentKpVal;
+    const displayEl = document.getElementById('kpValue');
+
+    // --- 1. УНИКАЛЬНАЯ ЛОГИКА ДЛЯ ТЕМПЕРАТУРЫ ---
+    if (activeKp && activeKp.id === 'temp') {
+        const sign = isNeg ? "−" : "+";
+        const color = isNeg ? '#38bdf8' : '#ef4444'; // Синий для минуса, красный для плюса
+
+        if (val === "") {
+            if (activeKp.value !== "") {
+                // Режим бледной подсказки (если есть старое значение)
+                let cleanVal = activeKp.value.replace(/[+−-]/g, ''); 
+                displayEl.textContent = sign + cleanVal;
+                // Делаем цвет бледно-серым, точно как у остальных полей!
+                displayEl.style.color = 'var(--text)'; 
+                displayEl.style.opacity = '0.15';      
+            } else {
+                // Поле пустое: показываем только знак
+                displayEl.textContent = sign;
+                displayEl.style.color = color;
+                displayEl.style.opacity = '1';
+            }
+        } else {
+            // Режим активного ввода
+            displayEl.textContent = sign + val;
+            displayEl.style.color = color;
+            displayEl.style.opacity = '1';
+        }
+        return; // Обязательно выходим, чтобы код не пошел дальше
+    }
+
+    // --- 2. СТАНДАРТНАЯ ЛОГИКА ДЛЯ ОСТАЛЬНЫХ ПОЛЕЙ (Elev, FDP, FAP) ---
+    if (val === "" && activeKp && activeKp.value !== "") {
+        displayEl.textContent = activeKp.value; // Берем старое значение
+        displayEl.style.color = 'var(--text)';  // Используем стандартный цвет текста
+        displayEl.style.opacity = '0.15';       // Делаем его бледным
+        return; 
+    }
+    
+    // Если начали вводить (val не пустой)
+    displayEl.style.opacity = '1';
+    displayEl.style.color = 'var(--accent)';
+    
+    if (val === "") {
+        // Держим высоту блока невидимым пробелом, если текста нет совсем
+        displayEl.innerHTML = "&nbsp;"; 
+    } else {
+        displayEl.textContent = val;
+    }
+}
+
+
+function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+
+    // --- ФУНКЦИИ ФОРМАТИРОВАНИЯ ЕДИНИЦ ИЗМЕРЕНИЯ ---
+    function formatUnit(input, unit) {
+        let val = input.value.replace(',', '.').replace(/[^\d.-]/g, ''); 
+        if (val !== '') {
+            input.value = val + (unit === '°' ? '' : ' ') + unit; 
+        }
+    }
+
+    function unformatUnit(input) {
+        input.value = input.value.replace(',', '.').replace(/[^\d.-]/g, '');
+    }
+
+    function getNumVal(id) {
+        let raw = document.getElementById(id).value.replace(',', '.').replace(/[^\d.-]/g, '');
+        return raw === "" ? NaN : parseFloat(raw);
+    }
+
+    // --- ОСНОВНЫЕ ФУНКЦИИ ---
+    function restartPulseAnimation(element) {
+        element.classList.remove('show');
+        void element.offsetWidth;
+        element.classList.add('show');
+    }
+
+    function scrollToActivePoint(isInstant = false) {
+    const container = document.getElementById('tableBody');
+    if (!container) return;
+
+    const highlights = container.querySelectorAll('.highlight-fdp,.highlight-fap');
+    if (highlights.length === 0) return;
+
+    const targetRow = highlights[highlights.length - 1]; 
+    const rowHeight = targetRow.offsetHeight || 45; 
+    const containerHeight = container.clientHeight;
+    const targetScroll = targetRow.offsetTop - (containerHeight - (4 * rowHeight));
+
+    container.scrollTo({
+        top: Math.round(targetScroll),
+        // Если передан флаг isInstant, скроллим жестко и моментально
+        behavior: isInstant === true ? 'auto' : 'smooth'
+    });
+}
+
+    function showLimitWarning() {
+        document.getElementById('limitModal').classList.add('active');
+    }
+
+    function closeLimitModal() {
+        document.getElementById('limitModal').classList.remove('active');
+        
+        if (activeKp && activeKp.id === 'temp') {
+            currentKpVal = "";   // Внутренняя переменная пуста
+            activeKp.value = ""; // Поле ввода в таблице пусто
+            isNeg = false;       // Сброс на плюс по умолчанию
+            
+            document.getElementById('signBtn').innerText = "+";
+            
+            updateKpDisplay();   // Теперь покажет пустоту, а не "0"
+            updateTempColors();  // Сбросит фон поля в нейтральный
+            calculate();         // Пересчитает (OAT будет считаться как 0 или пропуск)
+        }
+    }
+
+    function calculate(sourceId = null, isInitLoad = false) {
+    // 1. Обновляем цвета (плюс/минус) для поля температуры
+    updateTempColors();
+    
+    // 2. Получаем значения из полей ввода
+    const h_elev = getNumVal('elev');
+    const h_fdp  = getNumVal('fdp');
+    const h_fap  = getNumVal('fap');
+    const angle  = getNumVal('angleInput');
+    const h_min  = getNumVal('minInput'); 
+    
+    const tempRaw = document.getElementById('temp').value.replace(',', '.').replace(/[^\d.-]/g, '');
+    let t_val = (tempRaw === "") ? NaN : parseFloat(tempRaw);
+    
+    // Элементы интерфейса
+    const tableBody = document.getElementById('tableBody');
+    const fpaDisp = document.getElementById('fpaCorrValue');
+    const minCorrDisp = document.getElementById('minCorrValue'); 
+    const minInfoBtn = document.getElementById('minInfoBtn');
+    const angleInfoBtn = document.getElementById('angleInfoBtn');
+
+    const fdpValid = !isNaN(h_fdp);
+    const fapValid = !isNaN(h_fap);
+    const minValid = !isNaN(h_min);
+
+    // --- БЛОК 1: РАСЧЕТ ПОПРАВОК (FPA и MIN CORR) ---
+    if (!isNaN(h_elev) && !isNaN(angle) && !isNaN(t_val)) {
+        const t_gr = isNeg ? -t_val : t_val;
+        const K = (288.15 - (0.00198 * h_elev)) / (t_gr + 273.15);
+        
+        // 1. Расчет угла (FPA)
+        const calculatedFPA = (angle * K).toFixed(1);
+        const oldFPA = fpaDisp.innerText; // Читаем то, что было на экране ДО обновления
+        fpaDisp.innerText = calculatedFPA + "°";
+
+        // Маяк Angle: если расчетный отличается от заданного
+        if (parseFloat(calculatedFPA) !== parseFloat(angle)) {
+             // Мерцаем ТОЛЬКО если расчетный угол изменился ИЛИ мы вручную правили само поле Angle
+            if (oldFPA !== calculatedFPA + "°" || sourceId === 'angleInput') {
+                restartPulseAnimation(angleInfoBtn);
+            } else {
+                angleInfoBtn.classList.add('show'); // Оставляем гореть без мерцания
+            }
+        } else {
+            angleInfoBtn.classList.remove('show');
+        }
+
+        // 2. Расчет Minimum Corrected
+        if (minValid && h_min >= h_elev) {
+            const height = h_min - h_elev; 
+            const corrHeight = height * K; 
+            const minCorr = Math.round(h_elev + corrHeight); // Округляем до целого фута
+            
+            // Запоминаем прошлое вычисленное значение через data-атрибут
+            const oldMinCorr = minCorrDisp.getAttribute('data-val'); 
+            minCorrDisp.setAttribute('data-val', minCorr); 
+
+            minCorrDisp.innerHTML = minCorr + '<span style="font-size: 0.6em; margin-left: 2px; color: var(--dim);">ft</span>';
+
+            // ЛОГИКА МАЯКА MINIMUM (2 условия):
+            // Условие 1: Холодно (t_gr < 15)
+            // Условие 2: Есть разница (minCorr не равен введенному h_min)
+            if (t_gr < 15 && minCorr !== Math.round(h_min)) {
+                // Мерцаем ТОЛЬКО если расчетный минимум реально поменялся ИЛИ мы вручную вводили DA/MDA
+                if (oldMinCorr != minCorr || sourceId === 'minInput') {
+                    restartPulseAnimation(minInfoBtn);
+                } else {
+                    minInfoBtn.classList.add('show'); // Оставляем гореть без мерцания
+                }
+            } else {
+                minInfoBtn.classList.remove('show');
+            }
+        } else {
+            // Если данные минимума не валидны
+            minCorrDisp.innerText = "---";
+            minInfoBtn.classList.remove('show');
+        }
+        
+    } else {
+        // Если базовые данные не введены
+        fpaDisp.innerText = "---"; 
+        minCorrDisp.innerText = "---";
+        if (minInfoBtn) minInfoBtn.classList.remove('show');
+        if (angleInfoBtn) angleInfoBtn.classList.remove('show');
+    }
+
+    // --- БЛОК 2: РАСЧЕТ И ОТРИСОВКА ТАБЛИЦЫ ---
+    if (isInitLoad) return; // СЛЕПОК: Если мы загрузили готовую таблицу из кэша, прерываем функцию и не перерисовываем её
+
+    // Если базовых данных нет — выводим заглушку
+    if (isNaN(h_elev) || isNaN(angle) || isNaN(t_val) || (!fdpValid && !fapValid)) {
+        tableBody.innerHTML = '<div class="t-row" style="justify-content:center; color:var(--dim); font-size:0.75rem">Check Inputs (Elevation,FDP or FAP)...</div>';
+        return;
+    }
+
+    const t_gr_table = isNeg ? -t_val : t_val;
+    const K_table = (288.15 - (0.00198 * h_elev)) / (t_gr_table + 273.15);
+    const FT_NM = 6076.1155;
+    const angRad = angle * (Math.PI / 180);
+
+    // Функции пересчета
+    const getDistFromInd = (h) => Math.max(0, Math.ceil(((h - h_elev) / K_table - 50) / (Math.tan(angRad) * FT_NM) * 10) / 10);
+    const getIndFromDist = (d) => Math.round(((d * Math.tan(angRad) * FT_NM + 50) * K_table + h_elev) / 10) * 10;
+
+    const d_fdp = fdpValid ? getDistFromInd(h_fdp) : null;
+    const d_fap = fapValid ? getDistFromInd(h_fap) : null;
+
+    let tableHTML = ''; 
+    let fdpIns = false, fapIns = false;
+    
+    // Определяем верхнюю точку таблицы
+    let startDist = fdpValid ? d_fdp : d_fap;
+    let topMile = Math.floor(startDist + 20);
+
+    // Цикл генерации строк (от дальней мили до 2 NM)
+    // Цикл генерации строк (от дальней мили до 2 NM)
+for (let d = topMile; d >= 2; d--) {
+    // Вставляем строку FDP в нужную позицию
+    if (fdpValid && !fdpIns && d <= d_fdp) {
+        tableHTML += `
+            <div class="t-row highlight-fdp"> <div class="col-nm">${d_fdp.toFixed(1)} nm</div>
+                <div class="col-mid"><img src="fdp.png" alt="" class="icon-img">FDP</div>
+                <div class="col-ft">${Math.round(h_fdp)} ft</div>
+            </div>`;
+        fdpIns = true;
+    }
+    // Вставляем строку FAP в нужную позицию
+    if (fapValid && !fapIns && d <= d_fap) {
+        tableHTML += `
+            <div class="t-row highlight-fap"> <div class="col-nm">${d_fap.toFixed(1)} nm</div>
+                <div class="col-mid"><img src="fap.png" alt="" class="icon-img">FAP</div>
+                <div class="col-ft">${Math.round(h_fap)} ft</div>
+            </div>`;
+        fapIns = true;
+    }
+
+    // ... остальной код (пропуски миль и обычные мили) без изменений ...
+    if ((fdpValid && d === d_fdp) || (fapValid && d === d_fap)) continue;
+    if (fdpValid && fapValid && d < d_fdp && d > d_fap) continue;
+
+    tableHTML += `
+        <div class="t-row">
+            <div class="col-nm">${d} nm</div>
+            <div class="col-mid"></div>
+            <div class="col-ft">${getIndFromDist(d)} ft</div>
+        </div>`;
+}
+    
+    // Рендерим таблицу и скроллим
+    tableBody.innerHTML = tableHTML;
+    setTimeout(scrollToActivePoint, 50);
+
+    // СОХРАНЯЕМ СТЕЙТ ПРИ ЛЮБОМ ПЕРЕСЧЕТЕ (EFB State Persistence)
+    if (typeof saveAppState === 'function') saveAppState();
+}
+
+    
+
+    function handleEnter(e) { if (e.key === 'Enter') { e.target.blur(); calculate(); } }
+    
+    function toggleMenu(e) { 
+        if (e) e.stopPropagation(); 
+        const m = document.getElementById('angleMenu'); 
+        m.style.display = m.style.display === 'block' ? 'none' : 'block'; 
+    }
+    
+    function setAngle(val, e) {
+    if (e) e.stopPropagation();
+    const inp = document.getElementById('angleInput');
+    document.getElementById('angleMenu').style.display = 'none';
+
+    if (val === 'another') { 
+        openKeypad('angleInput', 'ANGLE'); 
+    } else { 
+        // ДОБАВЛЯЕМ ЗНАЧОК ГРАДУСА ТУТ:
+        inp.value = val.toFixed(1) + "°"; 
+        calculate('angleInput'); 
+    }
+}
+
+    function updateTempColors() {
+        const tempInput = document.getElementById('temp');
+        const tempRaw = tempInput.value.replace(',', '.').replace(/[^\d.-]/g, '');
+        const t_val = tempRaw === "" ? NaN : parseFloat(tempRaw);
+        
+        const signBtn = document.getElementById('signBtn');
+
+        // Базовые классы для цвета текста и рамки (+ красный, - синий)
+        signBtn.className = (!isNeg) ? 'sign-btn-outer pos' : 'sign-btn-outer neg';
+
+        // Задаем наши цвета в переменные для удобства (насыщенность 0.35)
+        const blue = 'rgba(56, 189, 248, 0.35)';
+        const red = 'rgba(239, 68, 68, 0.35)';
+
+        if (isNaN(t_val)) {
+            // Если пусто
+            tempInput.style.background = 'var(--input-bg)';
+            signBtn.style.background = ''; 
+            signBtn.style.color = ''; 
+        } else if (t_val === 0) {
+            // МАГИЯ ЕДИНОГО ГРАДИЕНТА
+            // Кнопка переливается от синего в начале до красного где-то далеко вправо
+            signBtn.style.background = `linear-gradient(90deg, ${blue} 0%, ${red} 400%)`;
+            // Поле ввода тянет синий цвет откуда-то слева и переходит в красный в конце
+            tempInput.style.background = `linear-gradient(90deg, ${blue} -30%, ${red} 100%)`;
+            
+            signBtn.style.color = 'var(--dim)'; // Серый плюс/минус
+        } else if (!isNeg) {
+            // Плюс
+            tempInput.style.background = red;
+            signBtn.style.background = ''; 
+            signBtn.style.color = ''; 
+        } else {
+            // Минус
+            tempInput.style.background = blue;
+            signBtn.style.background = ''; 
+            signBtn.style.color = ''; 
+        }
+    }
+
+    function toggleSign() {
+        // Проверка: если у нас введено 55 и мы жмем "минус", это будет -55, что вне лимита
+        if (!isNeg && currentKpVal === "55") {
+            showLimitWarning();
+            return;
+        }
+
+        isNeg = !isNeg;
+        document.getElementById('signBtn').innerText = isNeg ? '−' : '+';
+        
+        if (activeKp && activeKp.id === 'temp') {
+            updateKpDisplay();
+        }
+        calculate();
+    }
+
+    // --- ФУНКЦИЯ СБРОСА ПОЛЕЙ (Кнопка NEW APPR) ---
+    function resetFields() {
+        // 1. Устанавливаем данные по умолчанию
+        document.getElementById('elev').value = "620";
+        document.getElementById('minInput').value = "";
+        document.getElementById('fdp').value = "2500";
+        document.getElementById('fap').value = "2000";
+        document.getElementById('angleInput').value = "3.0°"; 
+        
+        // Температуру НЕ сбрасываем, оставляем прошлое значение как подсказку
+        
+        // 2. Вызываем пересчет (это также сохранит стейт)
+        calculate();
+
+        // 3. Меняем текст на кнопке
+        const startText = document.getElementById('startBtnText');
+        if (startText) {
+            startText.innerText = 'NEW APPR';
+            sessionStorage.setItem('apprStarted', 'true');
+        }
+
+        // 4. Включаем режим цепочки и открываем первое поле
+        isSequentialFlow = true; 
+        openKeypad('elev', 'ELEVATION');
+    }
+
+    // --- STATE PERSISTENCE LOGIC (ВОССТАНОВЛЕНИЕ СЕССИИ) ---
+    function saveAppState() {
+        const state = {
+            elev: document.getElementById('elev').value,
+            angle: document.getElementById('angleInput').value,
+            min: document.getElementById('minInput').value,
+            fdp: document.getElementById('fdp').value,
+            fap: document.getElementById('fap').value,
+            temp: document.getElementById('temp').value,
+            isNeg: isNeg,
+            // СЛЕПОК: Сохраняем всю сгенерированную таблицу
+            tableHTML: document.getElementById('tableBody') ? document.getElementById('tableBody').innerHTML : ''
+        };
+        localStorage.setItem('myPath_state', JSON.stringify(state));
+    }
+
+    function loadAppState() {
+        const saved = localStorage.getItem('myPath_state');
+        if (!saved) return false;
+        try {
+            const state = JSON.parse(saved);
+            if (state.elev) document.getElementById('elev').value = state.elev;
+            if (state.angle) document.getElementById('angleInput').value = state.angle;
+            if (state.min) document.getElementById('minInput').value = state.min;
+            if (state.fdp) document.getElementById('fdp').value = state.fdp;
+            if (state.fap) document.getElementById('fap').value = state.fap;
+            if (state.temp) document.getElementById('temp').value = state.temp;
+            if (state.isNeg !== undefined) {
+                isNeg = state.isNeg;
+                const signBtn = document.getElementById('signBtn');
+                if(signBtn) signBtn.innerText = isNeg ? '−' : '+';
+            }
+            
+            // СЛЕПОК: Восстанавливаем таблицу визуально
+            let hasSnapshot = false;
+            if (state.tableHTML) {
+                document.getElementById('tableBody').innerHTML = state.tableHTML;
+                // Принудительно гасим стартовую анимацию строк для слепка
+                const rows = document.getElementById('tableBody').querySelectorAll('.t-row');
+                rows.forEach(r => r.style.animation = 'none');
+                // Вызываем мгновенный скролл без задержек
+                setTimeout(() => scrollToActivePoint(true), 0);
+                hasSnapshot = true;
+            }
+            
+            return hasSnapshot; // Возвращаем true, только если слепок реально загрузился
+        } catch (e) {
+            console.error('Ошибка чтения сессии:', e);
+            return false;
+        }
+    }
+
+    
+    // --- СТАРТ ПРИ ЗАГРУЗКЕ ---
+    window.onload = () => {
+        // Читаем, удалось ли загрузить слепок
+        const hasSavedState = loadAppState(); 
+        
+        if (!document.getElementById('elev').value) {
+            document.getElementById('elev').value = "620";
+            document.getElementById('minInput').value = "821";
+            document.getElementById('fdp').value = "2500";
+            document.getElementById('fap').value = "2000";
+            saveAppState();
+        }
+
+        // Передаем статус слепка в расчет, чтобы не сломать мгновенную отрисовку
+        calculate(null, hasSavedState);
+       
+        
+        if (sessionStorage.getItem('apprStarted') === 'true') {
+            document.getElementById('startBtnText').innerText = 'NEW APPR';
+        }
+
+        const startBtn = document.getElementById('startApprBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetFields();
+                if (navigator.vibrate) navigator.vibrate(30);
+            });
+        }
+
+        const fapLabel = document.getElementById('fapLabelBtn');
+        let lastTapTime = 0;
+        if (fapLabel) {
+            fapLabel.addEventListener('click', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTapTime;
+                if (tapLength < 400 && tapLength > 0) {
+                    e.preventDefault();
+                    fillDefaultApproach();
+                }
+                lastTapTime = currentTime;
+            });
+        }
+    };
+
+    window.onclick = (e) => { 
+        if (!e.target.matches('.arrow-btn') && !e.target.matches('#angleInput')) {
+            document.getElementById('angleMenu').style.display = 'none'; 
+        }
+    }
+
+    function fillDefaultApproach() {
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+        document.getElementById('elev').value = "620";
+        document.getElementById('minInput').value = "821";
+        document.getElementById('fdp').value = "2500";
+        document.getElementById('fap').value = "2000";
+        calculate();
+    }
+</script>
+</body>
+</html>

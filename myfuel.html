@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content">
+<meta name="color-scheme" content="light dark">
+
+<!-- Раздельный theme-color для светлой и тёмной темы -->
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+    <title>Расчет топлива</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="FuelIcon.png">
+
+    <style>
+        :root {
+            --primary-blue: #2196F3;
+            --dark-blue-text: #ffffff; /* Белый текст как на плашке TAKEOFF */
+            --light-blue-bg: #0ea5e9;  /* Голубой фон плашки TAKEOFF из RWY */
+            --bg-body: #ffffff;
+            --gray-pill-bg: #E7EDF0; /* Стерильный светлый фон как у кнопок (PF) в RWY */
+            --orange-pill-bg: #FF9800;
+            --text-main: #000;
+            
+            /* ЦВЕТА ИНПУТОВ И ЦИФР */
+            --digits-color: #333333;       /* Цвет вводимых цифр */
+            --input-bg: #ffffff;           /* Белый фон самих полей ввода */
+            --input-readonly-bg: #d3dee4;  /* Слегка серый фон для полей вывода (DOW, ZFW) */
+            
+            --status-green: #C8E6C9;
+            --status-red: #dd0016;
+        }
+
+        html.dark-theme {
+            --bg-body: rgba(22, 30, 46, 0.98); /* Серо-голубой цвет карточек из RWY */
+            --light-blue-bg: #016091; /* Темно-синий как плашка TAKEOFF из RWY */
+            --gray-pill-bg: rgba(0, 0, 0, 0.2); /* Фон кнопок a/c type из RWY */
+            --orange-pill-bg: #e0580f;
+            --text-main: #e0e0e0;
+            
+            /* ЦВЕТА ИНПУТОВ И ЦИФР В ТЕМНОЙ ТЕМЕ */
+            --digits-color: #ffffff;       /* Белые цифры */
+            --input-bg: #262e3d;           /* Цвет неактивных верхних вкладок из RWY */
+            --input-readonly-bg: #1B1E29;  /* Более темный сине-серый фон для вывода данных */
+            
+            --status-green: #3de048;
+            --status-red: #B71C1C;
+        }
+
+        * { box-sizing: border-box; }
+
+      html, body {
+    overflow-x: hidden;
+    overscroll-behavior-y: none; /* Блокирует системное обновление страницы (тянуть вниз) */
+    touch-action: manipulation; /* Блокирует зум по двойному тапу */
+    -webkit-user-select: none; /* Блокирует выделение текста в Safari/Chrome */
+    user-select: none; /* Блокирует выделение текста везде */
+    -webkit-tap-highlight-color: transparent; /* Убирает системную серую/синюю подсветку при тапе */
+    -webkit-text-size-adjust: 100%; /* Запрещает браузеру самовольно менять размер шрифта */
+}
+
+/* Корневой слой */
+html {
+    height: 100%; /* Жестко фиксируем высоту */
+    background-color: #f1f5f9 !important; /* Серо-голубой светлый фон из RWY */
+    transition: none !important;
+}
+
+html.dark-theme {
+    background-color: #0b0f19 !important; /* Темно-синий фон из RWY */
+}
+
+/* Основной слой страницы */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: transparent !important; /* Делаем слой прозрачным, чтобы проявился цвет из html */
+    margin: 0;
+    padding: 0px;
+    height: 100%; /* Привязываем к html */
+    color: var(--text-main);
+    transition: color 0.3s ease; 
+    position: fixed; /* Блокируем любые отскоки страницы целиком */
+    width: 100%;
+}
+
+        /* --- ГЛАВНЫЙ КОНТЕЙНЕР (БЕЗ ОТСТУПОВ СВЕРХУ И СНИЗУ) --- */
+        .app-wrapper {
+            background: var(--bg-body);
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 0; 
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Убиваем 100dvh, который сжимался от клавиатуры */
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        /* --- ЗОНА СКРОЛЛА В ВИДЕ ОТДЕЛЬНОГО КОНТЕЙНЕРА С ОБВОДКОЙ --- */
+        .precision-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            /* Убрано -webkit-overflow-scrolling: touch; как в RWY Wind Limits */
+            z-index: 10;
+            margin: 5px 0px 65px 0px; 
+            padding: 10px 8px;
+            background: rgba(0, 0, 0, 0.07); 
+            border: 1px solid rgba(0, 0, 0, 0.1); 
+            border-radius: 16px;
+        }
+
+        /* --- КАСТОМНАЯ ПОЛОСА ПРОКРУТКИ (Адаптировано из RWY) --- */
+        .precision-scroll-container::-webkit-scrollbar { 
+            width: 4px; 
+        }
+        
+        .precision-scroll-container::-webkit-scrollbar-thumb { 
+            /* Используем плотный синий цвет без прозрачности (rgba) */
+            background: var(--primary-blue); 
+            border-radius: 10px; 
+        }
+        
+        .precision-scroll-container::-webkit-scrollbar-button { 
+            /* Жесткая блокировка системных кнопок iOS/Android */
+            display: none; 
+            width: 0; 
+            height: 0; 
+        }
+
+        .precision-scroll-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Настройка для темной темы */
+        html.dark-theme .precision-scroll-container {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        html.dark-theme .precision-scroll-container::-webkit-scrollbar-thumb {
+            /* Тот самый глубокий синий (#016091) из ваших плашек TAKEOFF, 100% плотный */
+            background: var(--light-blue-bg); 
+        }
+
+        html.dark-theme .app-wrapper {
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.04);
+        }
+
+        /* --- ЗАГОЛОВОК В СТИЛЕ RWY --- */
+        .app-title { 
+            font-size: 0.6rem; 
+            text-align: center; 
+            letter-spacing: 5px; 
+            color: var(--text-main); 
+            text-transform: uppercase; 
+            margin: 0;
+            padding: 5px 0 5px 0; /* Отступ сверху внутри контейнера */
+            font-weight: 800; 
+            opacity: 0.3; 
+        }
+
+        /* --- КНОПКИ УПРАВЛЕНИЯ ВНУТРИ КОНТЕЙНЕРА --- */
+        .refresh-btn, .theme-toggle, .menu-btn {
+            position: absolute;
+            bottom: 25px;
+            background: transparent !important;
+            border: none !important;
+            padding: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-main);
+            z-index: 100;
+            transition: transform 0.2s ease;
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .refresh-btn { left: 15px; }
+        .theme-toggle { right: 15px; justify-content: flex-end; }
+        .menu-btn { left: 50%; transform: translateX(-50%); justify-content: center; }
+
+        .refresh-btn:active, .theme-toggle:active { transform: scale(0.9); }
+        .menu-btn:active { transform: scale(0.9) translateX(-50%); }
+
+        .btn-label-style {
+            font-size: 0.65rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* --- НАДПИСЬ КЭША В СТИЛЕ RWY --- */
+        .cache-label {
+            position: absolute;
+            bottom: 15px; /* Ровно под кнопкой MENU */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            color: var(--text-main);
+            opacity: 0.4; /* Стерильный, не отвлекающий вид */
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+            white-space: nowrap;
+            z-index: 50;
+            pointer-events: none;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        
+
+        /* CARDS */
+        .section-card { 
+            background-color: var(--bg-body); 
+            border: 1px solid rgba(0, 0, 0, 0.18); 
+            border-radius: 12px; 
+            padding: 5px; 
+            margin-bottom: 10px; 
+            box-shadow: none; 
+        }
+        html.dark-theme .section-card { border-color: rgba(255, 255, 255, 0.1); }
+
+        .section-header-bar { background-color: var(--light-blue-bg); width: 100%; border-radius: 15px; padding: 6px 0; margin-bottom: 5px; text-align: center; border: 1px solid #BBDEFB; }
+        html.dark-theme .section-header-bar { border-color: #2c3e50; }
+        html.dark-theme .section-title { color: #ffffff; } /* Белый текст как на плашке TAKEOFF */
+
+        /* Обводка для серых и оранжевых полей в темной теме (согласно стилю RWY) */
+        html.dark-theme .input-row-gray,
+        html.dark-theme .input-row-orange,
+        html.dark-theme .tile-gray,
+        html.dark-theme .footer-gray-bar {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .section-title { font-size: 16px; font-weight: 800; margin: 0; color: var(--dark-blue-text); text-transform: uppercase; letter-spacing: 1.5px; }
+
+        /* Специальный стиль для заголовка самолета (разрешает перенос на 2 строки) */
+        #acSectionTitle {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            column-gap: 8px;
+            line-height: 1.2;
+            padding-left: 35px; /* Для визуальной симметрии */
+            padding-right: 35px; /* Жестко резервируем место справа, чтобы текст не наезжал на кнопку (i) */
+            min-height: 24px;
+        }
+        #acSectionTitle span {
+            display: inline-block;
+        }
+
+        
+
+        /* ИНПУТЫ И ИХ ЦВЕТА (ИСПРАВЛЕНО) */
+        input, select { 
+            -webkit-user-select: auto; /* Разрешаем взаимодействие тексту внутри инпутов */
+            user-select: auto;
+            border: 1px solid transparent; 
+            outline: none; 
+            font-size: 16px; 
+            background-color: var(--input-bg) !important; 
+            color: var(--digits-color) !important; 
+            border-radius: 10px; 
+            padding: 0 5px; 
+            height: 30px; 
+            width: 100%; 
+            text-align: center; 
+            font-weight: 600; 
+        }
+        /* ФИКС ДЛЯ ЦЕНТРОВКИ ВЫПАДАЮЩИХ СПИСКОВ НА iOS */
+        select {
+            text-align-last: center;
+        }
+        
+        input::placeholder { color: #ccc; font-style: normal; font-weight: normal; opacity: 1; }
+        html.dark-theme input::placeholder { color: #888; } /*12500*/
+        
+        /* СТИЛЬ ДЛЯ ВЫВОДА ДАННЫХ (READONLY) */
+        input:read-only { 
+            background-color: var(--input-readonly-bg) !important; 
+            border: 1px solid transparent; 
+            font-weight: 600; 
+            color: #888 !important; /* Цвет текста в неактивных полях */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); 
+            cursor: default; 
+        }
+        html.dark-theme input:read-only { border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .input-bordered { border: 1px solid #ddd; }
+        /* --- СТАТУСНЫЕ ЦВЕТА (МЕНЯЕТСЯ ТОЛЬКО ФОН) --- */
+        
+        /* Светлая тема */
+        input.bg-green, input:read-only.bg-green,
+        #totalFuel.bg-green, #tow.bg-green, #lw.bg-green { 
+            background-color: var(--status-green) !important; 
+        }
+        input.bg-red, input:read-only.bg-red,
+        #totalFuel.bg-red, #tow.bg-red, #lw.bg-red { 
+            background-color: var(--status-red) !important; 
+        }
+
+        /* Темная тема */
+        html.dark-theme input.bg-green, html.dark-theme input:read-only.bg-green,
+        html.dark-theme #totalFuel.bg-green, html.dark-theme #tow.bg-green, html.dark-theme #lw.bg-green { 
+            /* Меняем #1B5E20 на светло-зеленый (например, #A5D6A7 или var(--status-green)) */
+            background-color: #479B4A !important;
+        }
+        html.dark-theme input.bg-red, html.dark-theme input:read-only.bg-red,
+        html.dark-theme #totalFuel.bg-red, html.dark-theme #tow.bg-red, html.dark-theme #lw.bg-red { 
+            background-color: #A92626 !important; /* Стерильный бордовый для защиты ночного зрения */
+        }
+        /* LAYOUT */
+        .top-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        .input-row-gray { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; margin-top: 0 !important; border: 1px solid rgba(0, 0, 0, 0.15); }
+        .tile-gray { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; height: 100%; border: 1px solid rgba(0, 0, 0, 0.15); }
+        
+        .input-row-orange { background-color: var(--orange-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.15); }
+        #totalFuel { background-color: var(--input-readonly-bg) !important; }
+
+        .label-left { font-size: 15px; font-weight: bold; color: var(--text-main); margin-right: 10px; white-space: nowrap; width: 110px; flex-shrink: 0; }
+        .label-tile { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        .cont-inputs { display: flex; gap: 5px; width: 100%; }
+
+        /* FOOTER & WEIGHTS */
+        .footer-gray-bar { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 8px 10px; display: flex; gap: 10px; margin-top: 10px; border: 1px solid rgba(0, 0, 0, 0.15); }
+        .footer-item { flex: 1; display: flex; align-items: center; gap: 5px; }
+        .label-footer { font-size: 12px; font-weight: bold; color: var(--text-main); line-height: 1.1; white-space: normal; text-align: center; margin-right: 2px; min-width: 65px; }
+        
+        .weights-grid { display: flex; gap: 5px; margin-bottom: 5px; }
+        .weights-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .weights-col .input-row-gray { margin-bottom: 0; }
+        .label-weight { width: 50px; font-size: 14px; font-weight: bold; }
+
+        .alert-text { color: red !important; font-weight: 900 !important; }
+        .help-icon { display: inline-flex; justify-content: center; align-items: center; width: 18px; height: 18px; border-radius: 50%; background-color: var(--primary-blue); color: white; font-size: 12px; font-weight: bold; cursor: pointer; user-select: none; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background-color: var(--bg-body); padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; position: relative; font-size: 14px; line-height: 1.5; color: var(--text-main); }
+        .modal-close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; color: #aaa; cursor: pointer; border: none; background: none; }
+        .modal-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; display: block; color: var(--primary-blue); }
+        .ambiguity-list { text-align: left; margin-top: 10px; }
+        .ambiguity-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; color: var(--primary-blue); font-weight: bold; font-size: 15px; }
+        .ambiguity-item:last-child { border-bottom: none; }
+        html.dark-theme .ambiguity-item { border-bottom-color: #333; }
+        html.dark-theme .ambiguity-item:hover { background-color: #333; }
+        
+        .update-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
+        .update-box { background: var(--bg-body); padding: 30px; border-radius: 15px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-blue); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+        .version-text { text-align: center; font-size: 10px; color: #999; margin-top: 20px; margin-bottom: 10px; font-family: monospace; }
+
+        /* ИКОНКА РУКИ */
+        #extra, #maxFuel {
+            padding-right: 40px !important;
+            padding-left: 40px !important;
+            background-image: url('handicon.png');
+            background-repeat: no-repeat;
+            background-blend-mode: multiply; 
+            background-position: calc(100% - 8px) calc(50% + 1px);
+            background-size: 24px; 
+            cursor: pointer;
+           -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+        }
+
+        #extra:focus, #maxFuel:focus { outline: none; }
+
+        /* =========================================
+           ТЕМНАЯ ТЕМА (БЕЗ ПЕРЕКРАСКИ ИКОНКИ)
+        ========================================= */
+        html.dark-theme #extra, 
+        html.dark-theme #maxFuel {
+            /* Меняем только цвет самого поля ввода на темный */
+            background-color: var(--input-bg) !important; 
+            
+            /* Жестко запрещаем браузеру применять любые фильтры к картинке */
+            filter: none !important; 
+            background-blend-mode: normal !important; 
+        }
+
+/* =========================================================
+   ЕДИНЫЙ ЦВЕТ ЦИФР ДЛЯ ВСЕХ ПОЛЕЙ ВЫВОДА (READ-ONLY)
+========================================================= */
+
+/* 1. Цвет цифр для СВЕТЛОЙ темы (например, строго черный) */
+input[readonly] {
+    color: #000000 !important; 
+    -webkit-text-fill-color: #000000 !important; /* Убивает серый цвет на iPhone */
+    opacity: 1 !important;
+}
+
+/* 2. Цвет цифр для ТЕМНОЙ темы (например, строго белый) */
+html.dark-theme input[readonly] {
+    color: #ffffff !important; 
+    -webkit-text-fill-color: #ffffff !important; /* Убивает серый цвет на iPhone */
+    opacity: 1 !important;
+}
+
+        /* =========================================================
+           ТЕМНАЯ ТЕМА: ТЕКСТ В МОДАЛЬНОМ ОКНЕ AIRCRAFT INFO
+        ========================================================= */
+        
+        /* 1. Делаем левые подписи (Former reg:, Seat conf: и т.д.) светло-серыми вместо темно-серых */
+        html.dark-theme #infoModalContent div > span:first-child {
+            color: #aaaaaa !important;
+        }
+
+        /* 2. Делаем сами значения справа белыми вместо черных */
+        html.dark-theme #infoFormerReg,
+        html.dark-theme #infoSeatConf,
+        html.dark-theme #infoMinOAT {
+            color: #cccccc !important;
+        }
+        
+        /* Примечание: поле infoKzApproval мы здесь не трогаем, 
+           чтобы скрипт мог спокойно красить его в зеленый ("Yes") 
+           или красный ("No") цвет. */
+
+/* --- Увеличиваем размер Yes/No в окне Aircraft Info --- */
+        #infoKzApproval {
+            font-size: 18px !important; /* Базовый размер там 15px, 18px будет заметно крупнее */
+            text-transform: uppercase;  /* По желанию: сделает буквы заглавными (YES / NO) */
+        }
+/* =========================================================
+           ОБВОДКА МОДАЛЬНЫХ ОКОН В ТЕМНОЙ ТЕМЕ
+        ========================================================= */
+        html.dark-theme .modal-content,
+        html.dark-theme .update-box {
+            border: 3px solid #333333 !important; /* Тонкая серая линия по контуру */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 1) !important; /* Усиливаем тень для отрыва от фона */
+        }
+
+        
+    </style>
+    <!-- Микро-скрипт синхронизации темы с Хабом -->
+    <script>
+        (function() {
+            const applyTheme = (theme) => {
+                const isDark = theme === 'dark';
+                document.documentElement.classList.toggle('dark-theme', isDark);
+                // Проверяем, существует ли уже body (для обработки событий storage)
+                if (document.body) {
+                    document.body.classList.toggle('dark-theme', isDark);
+                }
+            };
+
+            // 1. Мгновенно применяем к HTML при чтении <head> (защита от вспышки)
+            const savedTheme = localStorage.getItem('hub_theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            }
+
+            // 2. Как только загрузится <body>, применяем класс к нему (для работы CSS)
+            document.addEventListener('DOMContentLoaded', () => {
+                const currentTheme = localStorage.getItem('hub_theme');
+                if (currentTheme) applyTheme(currentTheme);
+            });
+
+            // 3. Слушаем изменения из Главного меню без перезагрузки страницы
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'hub_theme') applyTheme(event.newValue);
+            });
+        })();
+    </script>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <h2 class="app-title">=Aircraft Fuel=</h2>
+
+    <div class="precision-scroll-container" id="mainScroll">
+        
+
+    <div class="section-card">
+        <div class="section-header-bar" style="position: relative;">
+            <h2 id="acSectionTitle" class="section-title">Aircraft</h2>
+            
+            <div id="infoBtnContainer" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                <div style="width: 24px; height: 24px; background-color: var(--primary-blue); color: white; border: 1px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: serif; font-size: 14px; pointer-events: none;">
+                    i
+                </div>
+                <div onclick="openInfoModal()" style="position: absolute; right: -10px; top: -10px; width: 44px; height: 44px; cursor: pointer; z-index: 10;"></div>
+            </div>
+        </div>
+
+        <div class="top-row">
+            <div class="col">
+                <div class="tile-gray">
+                    <div class="label-tile">
+                        <span>Поиск ВС</span>
+                        <span class="help-icon" onclick="toggleHelp()">?</span>
+                    </div>
+                  <input type="text" id="acSearch" placeholder="Номер/Имя" class="nav-input"
+       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+       onblur="this.placeholder=this.dataset.ph"
+       oninput="searchAircraft()"
+       autocomplete="off" autocorrect="off" spellcheck="false" inputmode="search">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Числ. экипажа</span>
+                    <select id="crew" class="nav-input" onchange="calculateAll()">
+                        </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="top-row">
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">DOW</span>
+                    <input type="number" id="dow" readonly>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">DOI</span>
+                    <input type="number" id="doi" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">Payload</span>
+            <input type="number" id="payload" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+       <div class="input-row-gray" style="margin-bottom: 0;">
+            <span class="label-left">ZFW</span>
+            <input type="number" id="zfw" readonly>
+        </div>
+    </div>
+
+
+    <div class="section-card" style="margin-bottom: 5px !important; padding-bottom: 5px !important;">
+        <div class="section-header-bar">
+            <h2 class="section-title">Fuel (kg)</h2>
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">Trip Fuel</span>
+            <input type="number" id="trip" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">Cont.fuel</span>
+            <div class="cont-inputs">
+                <select id="contPerc" class="nav-input" style="width: 70px;" onchange="calcContFromPerc()">
+                    <option value="3" selected>3%</option>
+                    <option value="5">5%</option>
+                    <option value="10">10%</option>
+                </select>
+                <input type="number" id="contVal" readonly>
+            </div>
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">Alternate</span>
+            <input type="number" id="alt" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">Final reserve</span>
+            <input type="number" id="final" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+        <div class="input-row-gray" style="position: relative;">
+            <span class="label-left">Extra</span>
+            <input type="number" id="extra" class="nav-input" onfocus="..." onblur="...">
+            
+            <div onclick="openExtraModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
+        </div>
+
+        <div class="input-row-gray">
+            <span class="label-left">APU/Taxi</span>
+            <input type="text" inputmode="decimal" enterkeyhint="done" id="taxi" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()"
+                   onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
+        </div>
+
+        <div class="input-row-orange" style="margin-bottom: 5px;">
+            <span class="label-left">Total Fuel</span>
+            <input type="number" id="totalFuel" readonly style="font-weight: bold;">
+        </div>
+
+        <div class="input-row-gray" style="position: relative; margin-bottom: 5px;">
+            <span class="label-left">Max.Fuel</span>
+            <input type="number" id="maxFuel" class="nav-input" onfocus="..." onblur="...">
+            
+            <div onclick="openMaxFuelModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
+        </div>
+
+        <div class="footer-gray-bar" style="margin-top: 2px !important;">
+            <div class="footer-item">
+                <span class="label-footer">Remain.<br>fuel</span>
+                <input type="number" id="remFuel" readonly>
+            </div>
+            <div class="footer-item">
+                <span class="label-footer">Minimum<br>deviation</span>
+                <input type="number" id="minDev" readonly>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section-card">
+        <div class="section-header-bar">
+            <h2 class="section-title">Weights (kg)</h2>
+        </div>
+
+        <div class="weights-grid">
+            <div class="weights-col">
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">TOW</span>
+                    <input type="number" id="tow" readonly>
+                </div>
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">MTOW</span>
+                    <input type="number" id="mtow" readonly>
+                </div>
+            </div>
+            <div class="weights-col">
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">LW</span>
+                    <input type="number" id="lw" readonly>
+                </div>
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">MLW</span>
+                    <input type="number" id="mlw" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-row-gray" style="margin-bottom: 1px;">
+            <span class="label-left">RTOW</span>
+            <input type="number" id="rtow" class="nav-input" readonly>
+        </div>
+    </div> <!-- Конец карточки Weights -->
+</div> <!-- Конец precision-scroll-container (Окно с обводкой) -->
+
+<!-- КНОПКИ УПРАВЛЕНИЯ (ЗАФИКСИРОВАНЫ ВНИЗУ) -->
+
+    <!-- Кнопка Refresh (Слева) -->
+    <button class="refresh-btn" id="refreshBtn" title="Сбросить поля">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
+        </svg>
+        <span class="btn-label-style" style="margin-left: 2px;">Refresh</span>
+    </button>
+
+    <!-- Кнопка MENU (Справа) -->
+    <a href="./index.html" class="theme-toggle" title="В главное меню" style="text-decoration: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span class="btn-label-style" style="margin-left: 4px;">GO HOME</span>
+    </a>
+
+  
+</div> <!-- Конец app-wrapper -->
+
+<div id="helpModal" class="modal-overlay" onclick="toggleHelp()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close-btn" onclick="toggleHelp()">&times;</span>
+        <span class="modal-title">Как искать ВС</span>
+        <p>
+            Поиск ВС происходит по цифрам бортового номера (например <b>73724</b> или просто <b>724</b>) без RA или  по фамилии человека, в честь которого назван самолет (например <b>Гагарин</b>).
+        </p>
+    </div>
+</div>
+
+<div id="ambiguityModal" class="modal-overlay">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close-btn" onclick="closeAmbiguity()">&times;</span>
+        <span class="modal-title">Требуется уточнение</span>
+        <div id="ambiguityList" class="ambiguity-list"></div>
+    </div>
+</div>
+
+<div id="extraModal" class="modal-overlay" onclick="closeExtraModal()" style="align-items: flex-start; padding-top: 120px;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 350px;">
+        <span class="modal-close-btn" onclick="closeExtraModal()">&times;</span>
+        
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+            
+            <div style="font-weight: bold; font-size: 14px; white-space: nowrap; margin-bottom: 5px;">
+                Total Extra:
+            </div>
+            
+            <div style="display: flex; flex-direction: column; flex: 1;">
+                <label style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; text-align: center;">Extra</label>
+                <input type="number" id="modalBaseExtra" readonly style="background-color: #e0e0e0; color: #333; font-weight: bold; border: 1px solid transparent; margin: 0;">
+            </div>
+
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">+</div>
+
+            <div style="display: flex; flex-direction: column; flex: 1;">
+                <label style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 5px; text-align: center; white-space: nowrap; letter-spacing: -0.3px;">Disp.extra</label>
+                <input type="number" inputmode="decimal" id="modalDispExtra" style="background-color: #fff; border: 1px solid #ccc; font-weight: bold; margin: 0;">
+            </div>
+
+        </div>
+
+        <button onclick="confirmExtra()" style="background-color: var(--primary-blue); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer;">Подтвердить</button>
+    </div>
+</div>
+
+<div id="maxFuelModal" class="modal-overlay" onclick="closeMaxFuelModal()" style="align-items: flex-start; padding-top: 120px;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 350px;">
+        <span class="modal-close-btn" onclick="closeMaxFuelModal()">&times;</span>
+        
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+            
+            <div style="font-weight: bold; font-size: 14px; white-space: nowrap; margin-bottom: 5px;">
+                Max.Fuel:
+            </div>
+            
+            <div style="display: flex; flex-direction: column; flex: 1;">
+                <label style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 5px; text-align: center; white-space: nowrap;">Max liters</label>
+                <input type="number" id="modalMaxLiters" readonly style="background-color: #e0e0e0; color: #333; font-weight: bold; border: 1px solid transparent; margin: 0;">
+            </div>
+
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 3px;">×</div>
+
+            <div style="display: flex; flex-direction: column; flex: 1.2;">
+                <label style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 5px; text-align: center; white-space: nowrap; letter-spacing: -0.3px;">fuel density</label>
+                <input type="text" inputmode="decimal" id="modalFuelDensity" step="0.001" value="0.785" style="background-color: #fff; border: 1px solid #ccc; font-weight: bold; margin: 0; width: 100%;">
+            </div>
+
+        </div>
+
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <button onclick="confirmMaxFuel()" style="flex: 1; background-color: var(--primary-blue); color: white; border: none; border-radius: 10px; padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer;">Подтвердить</button>
+            
+            <button onclick="resetDensity()" title="Сбросить на 0.785" style="background-color: var(--primary-blue); border: none; border-radius: 10px; width: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; fill: white;">
+                    <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+                </svg>
+            </button>
+        </div>
+        
+    </div>
+</div>
+
+<div id="infoModal" class="modal-overlay" onclick="closeInfoModal()" style="align-items: flex-start; padding-top: 120px;">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        
+        <button class="modal-close-btn" onclick="closeInfoModal()">×</button>
+        <span class="modal-title">Aircraft Info</span>
+        
+        <div id="infoModalContent" style="margin-top: 20px; font-size: 15px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
+                <span style="color: #666;">Former reg:</span>
+                <span id="infoFormerReg" style="font-weight: bold; color: #111;">—</span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
+                <span style="color: #666;">Seat conf:</span>
+                <span id="infoSeatConf" style="font-weight: bold; color: #111;">—</span>
+            </div>
+            
+            <div style="padding: 10px 0; border-bottom: 1px solid #eee;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #666;">Kazakhstan approval:</span>
+                    <span id="infoKzApproval" style="font-weight: bold; color: #111;">—</span>
+                </div>
+                <div id="infoOpsLimit" style="color: #d32f2f; font-weight: 600; text-align: center; margin-top: 5px; display: none; font-size: 12px;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                <span style="color: #666;">Min OAT:</span>
+                <span id="infoMinOAT" style="font-weight: bold; color: #111;">—</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<script src="./dbaircraft.js"></script>
+
+<script>
+    let currentAircraft = null;
+
+    const val = (id) => parseFloat(document.getElementById(id).value) || 0;
+    const setVal = (id, v) => document.getElementById(id).value = (v === "" || isNaN(v)) ? "" : v;
+    
+    // --- NAVIGATION & SCROLL LOGIC ---
+    const navOrder = [
+        'acSearch', 
+        'payload', 
+        'trip', 
+        'alt', 
+        'final', 
+        'extra', 
+        'taxi'
+    ];
+
+    // Отключаем фокус на полях, которые "ломают" нативный перескок Android-клавиатуры
+    const skipIds = ['crew', 'contPerc', 'dow', 'doi', 'zfw', 'contVal', 'totalFuel', 'maxFuel', 'remFuel', 'minDev', 'tow', 'mtow', 'lw', 'mlw', 'rtow'];
+    skipIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('tabindex', '-1');
+    });
+
+    // Навешиваем логику на каждое поле ввода
+    navOrder.forEach((id, index) => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Подсказка для телефона: показывать кнопку "Далее" (или "Готово" на последнем)
+            el.setAttribute('enterkeyhint', index === navOrder.length - 1 ? 'done' : 'next');
+            
+            // Обработка нажатия Enter
+            el.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    if (index < navOrder.length - 1) {
+                        const nextEl = document.getElementById(navOrder[index + 1]);
+                        if (nextEl) {
+                            nextEl.focus({ preventScroll: true });
+                            if (nextEl.tagName === 'INPUT') nextEl.select();
+                        }
+                    } else {
+                        el.blur(); // Прячем клавиатуру после последнего поля
+                    }
+                }
+            });
+
+            // Плавный скролл и логика очистки/восстановления значения (с плейсхолдером)
+            el.addEventListener('focus', () => {
+                // 1. Запоминаем текущее значение и очищаем поле
+                el.dataset.prevVal = el.value;
+                el.value = ''; 
+                
+                // 2. Пересчитываем итоги с нулем на время ввода (кроме поиска)
+                if (el.id !== 'acSearch') calculateAll();
+
+                // 3. Микро-задержка, чтобы перебить встроенный в HTML onfocus
+                setTimeout(() => {
+                    if (el.dataset.prevVal) {
+                        el.placeholder = el.dataset.prevVal; // Старое значение становится бледным
+                    }
+                }, 10);
+            });
+
+            el.addEventListener('blur', () => {
+                // 4. Если пользователь ничего не ввел — возвращаем старое значение
+                if (el.value.trim() === '' && el.dataset.prevVal !== undefined) {
+                    el.value = el.dataset.prevVal;
+                }
+                
+                // Встроенный в HTML onblur сам вернет базовый плейсхолдер "12500"
+                
+                // 5. Пересчитываем итоги с возвращенным (или новым) значением
+                if (el.id !== 'acSearch') calculateAll();
+                
+                // 6. Очищаем память
+                delete el.dataset.prevVal;
+            });
+        }
+    });
+
+
+
+    // --- LOCAL STORAGE LOGIC ---
+    function saveFormData() {
+        const data = {
+            aircraft: currentAircraft,
+            inputs: {}
+        };
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(el => {
+            if (el.id) {
+                if (el.type === 'checkbox') {
+                    data.inputs[el.id] = el.checked;
+                } else {
+                    data.inputs[el.id] = el.value;
+                }
+            }
+        });
+        localStorage.setItem('fuelApp_data', JSON.stringify(data));
+    }
+
+    function loadFormData() {
+        const saved = localStorage.getItem('fuelApp_data');
+        if (!saved) return;
+
+        try {
+            const data = JSON.parse(saved);
+
+            // 1. Восстанавливаем самолет
+            if (data.aircraft) {
+                currentAircraft = data.aircraft;
+                
+                // ВОТ ЭТОТ БЛОК ВОЗВРАЩАЕТ ФАМИЛИЮ И ТИП В СИНИЙ ЗАГОЛОВОК
+                const titleEl = document.getElementById('acSectionTitle');
+                if (titleEl) {
+                    // Используем идеальный nameDisplay из базы как есть, без искажений
+                    const prettyName = currentAircraft.nameDisplay || capitalize(currentAircraft.name);
+                    titleEl.innerHTML = `<span>${currentAircraft.type} ${currentAircraft.regFull}</span> <span>${prettyName}</span>`;
+                    titleEl.style.textTransform = 'none';
+                }
+                
+                updateCrewOptions(currentAircraft.type);
+
+                // ЗАПОЛНЯЕМ ОКНО И ПОКАЗЫВАЕМ КНОПКУ ПОСЛЕ F5
+                fillInfoModal(currentAircraft);
+                
+                const infoBtn = document.getElementById('infoBtnContainer');
+                if (infoBtn) infoBtn.style.display = 'block';
+            }
+
+            // 2. Восстанавливаем поля
+            if (data.inputs) {
+                Object.keys(data.inputs).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.type === 'checkbox') {
+                            el.checked = data.inputs[id];
+                        } else {
+                            el.value = data.inputs[id];
+                        }
+                    }
+                });
+            }
+            // 3. Считаем
+            calculateAll();
+        } catch (e) {
+            console.error("Ошибка восстановления данных", e);
+        }
+    }
+
+
+
+    function toggleScroll() {
+        if (scrollIndicator.classList.contains('up')) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+        }
+    }
+
+    // --- ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ ---
+   document.addEventListener('DOMContentLoaded', () => {
+        // 1. ЖЕЛЕЗОБЕТОННАЯ ФИКСАЦИЯ ВЫСОТЫ (чтобы нижние кнопки не прыгали от клавиатуры)
+        const lockAppHeight = () => {
+            const staticHeight = window.innerHeight + 'px';
+            document.documentElement.style.height = staticHeight;
+            document.body.style.height = staticHeight;
+            const wrapper = document.querySelector('.app-wrapper');
+            if (wrapper) wrapper.style.height = staticHeight;
+        };
+        lockAppHeight(); // Фиксируем высоту в пикселях при старте
+
+        // Запрос постоянного хранилища для защиты от агрессивной очистки кэша iOS/Android
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().then(granted => {
+                if (granted) {
+                    console.log("Storage will not be cleared except by explicit user action.");
+                } else {
+                    console.log("Storage may be cleared by the UA under storage pressure.");
+                }
+            });
+        }
+
+        // Пересчитываем высоту только если пилот физически перевернул телефон (смена ориентации)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(lockAppHeight, 150);
+        });
+
+        // 2. Жестко указываем браузеру (Android Chrome), что клавиатура ложится поверх
+        if ('virtualKeyboard' in navigator) {
+            navigator.virtualKeyboard.overlaysContent = true;
+        }
+
+        // 3. Отключаем системные подсказки клавиатуры для всех полей
+        document.querySelectorAll('input').forEach(el => el.setAttribute('autocomplete', 'off'));
+        
+        initRefreshButton(); 
+        loadFormData();
+        calculateAll();
+       
+    });
+
+    document.addEventListener('input', (e) => {
+        if (e.target.id !== 'acSearch') {
+            calculateAll();
+            saveFormData();
+        }
+    });
+
+    document.addEventListener('change', () => {
+        calculateAll();
+        saveFormData();
+    });
+
+    
+
+    
+
+    // --- ЛОГИКА КНОПКИ REFRESH (Клик и Долгое удержание) ---
+    // --- ЛОГИКА КНОПКИ REFRESH (Только одиночный клик) ---
+    function clearFields() {
+        // 1. Очищаем поле поиска
+        const searchInput = document.getElementById('acSearch');
+        if (searchInput) searchInput.value = '';
+
+        // 2. Сбрасываем самолет
+        clearAircraftSelection(); 
+        
+        // 3. Жестко очищаем ВСЕ оставшиеся поля
+        const idsToClear = [
+            'payload', 'zfw', 
+            'trip', 'contVal', 'alt', 'final', 'extra', 'taxi', 'totalFuel',
+            'remFuel', 'minDev', 
+            'tow', 'lw', 'rtow'
+        ];
+        
+        idsToClear.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = '';
+                el.classList.remove('bg-green', 'bg-red');
+            }
+        });
+        
+        // 4. Возвращаем дефолтные 3%
+        const contPerc = document.getElementById('contPerc');
+        if (contPerc) contPerc.value = '3'; 
+        
+        saveFormData(); // Сохраняем пустой стейт
+    }
+
+    function initRefreshButton() {
+        const btn = document.getElementById('refreshBtn');
+        if (!btn) return;
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearFields();
+            if (navigator.vibrate) navigator.vibrate(30); // Легкая тактильная отдача
+        });
+    }
+
+        const endHold = () => {
+            clearTimeout(refreshHoldTimer);
+        };
+
+        // Подключаем события мыши
+        btn.addEventListener('mousedown', startHold);
+        btn.addEventListener('mouseup', endHold);
+        btn.addEventListener('mouseleave', endHold);
+        
+        // Подключаем тач-события
+        btn.addEventListener('touchstart', startHold, { passive: true });
+        btn.addEventListener('touchend', endHold);
+        btn.addEventListener('touchcancel', endHold);
+        
+        // Обычный клик
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearFields();
+        });
+    
+
+    function toggleHelp() {
+        const modal = document.getElementById('helpModal');
+        if (modal.classList.contains('show')) {
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300); 
+        } else {
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('show'); }, 10);
+        }
+    }
+    let ambiguityTimeout; // Обязательно добавляем эту переменную-таймер
+
+    function closeAmbiguity() {
+        const modal = document.getElementById('ambiguityModal');
+        modal.classList.remove('show');
+        clearTimeout(ambiguityTimeout); // Убиваем старый таймер
+        ambiguityTimeout = setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+
+    function showAmbiguity(matches) {
+        const modal = document.getElementById('ambiguityModal');
+        const list = document.getElementById('ambiguityList');
+        list.innerHTML = '';
+
+        matches.forEach(ac => {
+            const div = document.createElement('div');
+            div.className = 'ambiguity-item';
+            div.textContent = `${ac.nameDisplay} (${ac.type} ${ac.regFull})`;
+            div.onclick = () => {
+                selectAircraft(ac);
+                closeAmbiguity();
+            };
+            list.appendChild(div);
+        });
+
+        clearTimeout(ambiguityTimeout); // Блокируем скрытие, если оно уже началось
+        modal.style.display = 'flex';
+        setTimeout(() => { modal.classList.add('show'); }, 10);
+    }
+    
+    function capitalize(str) {
+        if (!str) return '';
+        return str.toLowerCase().split(' ').map(word => {
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        }).join(' ');
+    }
+
+    function searchAircraft() {
+        let query = document.getElementById('acSearch').value.toLowerCase().trim();
+        const modal = document.getElementById('ambiguityModal');
+
+        // Если введено меньше 2 символов — очищаем данные самолета и прячем модалку
+        if (query.length < 2) {
+            clearAircraftSelection();
+            if (modal && modal.classList.contains('show')) closeAmbiguity();
+            return;
+        }
+
+        let searchTerms = [query];
+        if ('retro'.startsWith(query)) searchTerms.push('ретро');
+        if ('скайтим'.startsWith(query)) searchTerms.push('skyteam');
+
+        const matches = aircraftDB.filter(ac => {
+            return searchTerms.some(term => {
+                if (ac.reg.includes(term)) return true;
+                if (ac.regFull.toLowerCase().includes(term)) return true;
+                if (ac.name.toLowerCase().startsWith(term)) return true;
+                if (ac.nameDisplay.toLowerCase().startsWith(term)) return true;
+                return false;
+            });
+        });
+
+        // 1. Если найдено СТРОГО ОДНО совпадение — выбираем самолет и заполняем данные
+        if (matches.length === 1) {
+            selectAircraft(matches[0]);
+            if (modal && modal.classList.contains('show')) closeAmbiguity();
+            return;
+        }
+
+        // 2. ВО ВСЕХ ОСТАЛЬНЫХ СЛУЧАЯХ (нет совпадений или их больше одного)
+        // Однозначность пропала -> моментально сбрасываем данные ВС
+        clearAircraftSelection();
+
+        // 3. Логика появления окна уточнения (только для "однофамильцев")
+        if (matches.length > 1) {
+            // Собираем все базовые имена найденных бортов (отсекая скобки, если это skyteam)
+            const uniqueBaseNames = new Set(matches.map(ac => {
+                return ac.name.split('(')[0].trim().toLowerCase();
+            }));
+
+            // Если уникальное имя всего ОДНО (например, в списке остались ТОЛЬКО Вавиловы) — показываем выбор
+            if (uniqueBaseNames.size === 1) {
+                showAmbiguity(matches);
+            } else {
+                // Если уникальных имен больше одного (Вавилов и Вахтангов) — продолжаем тихо фильтровать
+                if (modal && modal.classList.contains('show')) closeAmbiguity();
+            }
+        } else {
+            if (modal && modal.classList.contains('show')) closeAmbiguity();
+        }
+    }
+
+    function clearAircraftSelection() {
+        currentAircraft = null;
+        
+        const titleEl = document.getElementById('acSectionTitle');
+        if (titleEl) {
+            titleEl.textContent = "Aircraft";
+            titleEl.style.textTransform = ''; 
+        }
+
+        // Прячем кнопку "i"
+        const infoBtn = document.getElementById('infoBtnContainer');
+        if (infoBtn) infoBtn.style.display = 'none';
+
+        // --- НОВОЕ: ОЧИЩАЕМ ДАННЫЕ В МОДАЛЬНОМ ОКНЕ ---
+        fillInfoModal({ formerReg: "—", config: "—", minOAT: "—", kazakhstanApproval: "—" });
+        const kzEl = document.getElementById('infoKzApproval');
+        if (kzEl) kzEl.style.color = "#111"; // Возвращаем тексту черный цвет
+        // ----------------------------------------------
+
+        const acFields = ['dow', 'doi', 'maxFuel', 'mtow', 'mlw'];
+        acFields.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.value = '';
+                el.classList.remove('bg-green', 'bg-red');
+            }
+        });
+        
+        updateCrewOptions("A320"); 
+        calculateAll();
+        saveFormData(); 
+    }
+
+   
+
+    
+    function selectAircraft(ac) {
+        currentAircraft = ac;
+        
+        const titleEl = document.getElementById('acSectionTitle');
+        if (titleEl) {
+            // Берем готовый nameDisplay, не пропуская его через функцию capitalize
+            const prettyName = ac.nameDisplay || capitalize(ac.name);
+            titleEl.innerHTML = `<span>${ac.type} ${ac.regFull}</span> <span>${prettyName}</span>`;
+            titleEl.style.textTransform = 'none'; 
+        }
+
+        updateCrewOptions(ac.type);
+
+        setVal('mtow', ac.mtow);
+        setVal('mlw', ac.mlw);
+        
+        // --- НОВЫЙ РАСЧЕТ MAX FUEL С УЧЕТОМ ПЛОТНОСТИ ---
+        let density = 0.785;
+        const densityInput = document.getElementById('modalFuelDensity');
+        if (densityInput && !isNaN(parseFloat(densityInput.value))) {
+            density = parseFloat(densityInput.value);
+        }
+        setVal('maxFuel', Math.round(ac.maxFuel * density));
+
+        calculateAll();
+        saveFormData();
+
+        // --- ЗАПОЛНЯЕМ МОДАЛЬНОЕ ОКНО НОВЫМИ ДАННЫМИ ---
+        fillInfoModal(ac);
+
+        // --- ПОКАЗЫВАЕМ КНОПКУ "i" ---
+        const infoBtn = document.getElementById('infoBtnContainer');
+        if (infoBtn) infoBtn.style.display = 'block';
+    }
+
+    function updateCrewOptions(acType) {
+        const crewSelect = document.getElementById('crew');
+        crewSelect.innerHTML = ''; 
+
+        if (!acType) return; 
+
+        let options = [];
+        let defaultVal = "";
+
+        // Если тип включает A321 (в т.ч. A321neo)
+        if (acType.includes("A321")) {
+            options = ["2/5", "2/6", "3/5", "3/6"];
+            defaultVal = "2/5";
+        } else {
+            // Для всех остальных (A320, A320neo, Unknown)
+            options = ["2/4", "2/5", "3/4", "3/5"];
+            defaultVal = "2/4";
+        }
+
+        options.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.textContent = opt;
+            crewSelect.appendChild(el);
+        });
+
+        // Жестко применяем значение по умолчанию без сохранения предыдущего выбора
+        crewSelect.value = defaultVal;
+
+       
+    }
+
+    function calcContFromPerc() {
+        calculateAll();
+    }
+
+    function setStatusColor(elementId, value, limit) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        
+        el.classList.remove('bg-green', 'bg-red');
+        
+        if (value > 0 && limit > 0) {
+            if (value <= limit) {
+                el.classList.add('bg-green');
+            } else {
+                el.classList.add('bg-red');
+            }
+        }
+    }
+
+    function calculateAll() {
+        const trip = val('trip');
+        const perc = val('contPerc');
+        let contVal = 0;
+        
+        if (trip > 0) {
+            contVal = Math.round(trip * (perc / 100));
+            setVal('contVal', contVal);
+        } else {
+            setVal('contVal', '');
+        }
+
+        if (!currentAircraft) return;
+
+        const crewVal = document.getElementById('crew').value;
+        let dow = 0;
+        let doi = 0;
+
+        if (currentAircraft.perf && currentAircraft.perf[crewVal]) {
+            dow = currentAircraft.perf[crewVal].dow;
+            doi = currentAircraft.perf[crewVal].doi;
+        } else {
+             dow = currentAircraft.dow || 0; 
+             doi = 50.0;
+        }
+        
+        setVal('dow', dow);
+        setVal('doi', doi);
+
+        const payload = val('payload');
+        const zfw = dow + payload;
+        setVal('zfw', zfw);
+
+        const alt = val('alt');
+        const final = val('final');
+        const extra = val('extra');
+        const taxi = val('taxi');
+        
+        const totalFuel = trip + contVal + alt + final + extra + taxi;
+        setVal('totalFuel', totalFuel);
+
+        const takeoffFuel = Math.max(0, totalFuel - taxi);
+        const tow = zfw + takeoffFuel;
+        setVal('tow', tow);
+
+        const lw = tow - trip;
+        setVal('lw', lw);
+
+        const mlw = val('mlw');
+        const mtow = val('mtow');
+        let rtow = 0;
+        
+        if (totalFuel > 0) {
+            if ((trip + mlw) > mtow) {
+                rtow = mtow;
+            } else {
+                rtow = trip + mlw;
+            }
+            setVal('rtow', rtow);
+        } else {
+            setVal('rtow', '');
+        }
+
+        const remFuel = Math.max(0, totalFuel - taxi - trip);
+        setVal('remFuel', remFuel);
+
+        const minDev = final + alt;
+        setVal('minDev', minDev);
+
+        setStatusColor('totalFuel', totalFuel, val('maxFuel'));
+        setStatusColor('tow', tow, mtow);
+        setStatusColor('lw', lw, mlw);
+        
+        saveFormData();
+    }
+    
+    
+    function openExtraModal() {
+        const baseExtra = val('extra');
+        document.getElementById('modalBaseExtra').value = baseExtra > 0 ? baseExtra : '';
+        document.getElementById('modalDispExtra').value = '';
+        
+        const modal = document.getElementById('extraModal');
+        modal.style.display = 'flex';
+        
+        // МГНОВЕННЫЙ фокус без setTimeout для вызова клавиатуры
+        const dispInput = document.getElementById('modalDispExtra');
+        dispInput.focus();
+        
+        setTimeout(() => { modal.classList.add('show'); }, 10);
+    }
+
+    function closeExtraModal() {
+        const modal = document.getElementById('extraModal');
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+
+    function confirmExtra() {
+        // Считываем значения из модального окна
+        const base = parseFloat(document.getElementById('modalBaseExtra').value) || 0;
+        const disp = parseFloat(document.getElementById('modalDispExtra').value) || 0;
+        const total = base + disp;
+        
+        // Записываем сумму обратно в главное поле Extra
+        if (total > 0) {
+            setVal('extra', total);
+        } else {
+            setVal('extra', '');
+        }
+        
+        calculateAll(); // Запускаем перерасчет всего калькулятора
+        saveFormData(); // Сохраняем в кэш
+        closeExtraModal(); // Прячем окно
+    }
+
+
+    function openMaxFuelModal() {
+        if (!currentAircraft) return;
+        
+        document.getElementById('modalMaxLiters').value = currentAircraft.maxFuel;
+        
+        const modal = document.getElementById('maxFuelModal');
+        modal.style.display = 'flex';
+        
+        const densityInput = document.getElementById('modalFuelDensity');
+        densityInput.focus();
+        
+        // Находим, где стоит точка (или запятая)
+        let dotPos = densityInput.value.indexOf('.');
+        if (dotPos === -1) dotPos = densityInput.value.indexOf(',');
+        
+        // Выделяем всё, что после точки
+        if (dotPos !== -1) {
+            densityInput.setSelectionRange(dotPos + 1, densityInput.value.length);
+        } else {
+            densityInput.select(); // Если точки нет, выделяем всё
+        }
+        
+        setTimeout(() => { modal.classList.add('show'); }, 10);
+    }
+
+    function closeMaxFuelModal() {
+        const modal = document.getElementById('maxFuelModal');
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
+
+    function confirmMaxFuel() {
+        if (!currentAircraft) return;
+        
+        const liters = parseFloat(document.getElementById('modalMaxLiters').value) || 0;
+        
+        // Страховка: меняем возможную запятую на точку для правильного расчета
+        let rawVal = document.getElementById('modalFuelDensity').value.replace(',', '.');
+        let density = parseFloat(rawVal);
+        
+        if (isNaN(density) || density <= 0) density = 0.785; 
+        document.getElementById('modalFuelDensity').value = density;
+        
+        const total = Math.round(liters * density);
+        
+        if (total > 0) {
+            setVal('maxFuel', total);
+        } else {
+            setVal('maxFuel', '');
+        }
+        
+        calculateAll(); 
+        saveFormData(); 
+        closeMaxFuelModal(); 
+    }
+
+   function resetDensity() {
+        const densityInput = document.getElementById('modalFuelDensity');
+        if (densityInput) {
+            densityInput.value = '0.785';
+            densityInput.focus();
+            // Выделяем символы с 2 по 5 (то есть ровно "785")
+            densityInput.setSelectionRange(2, 5); 
+        }
+    }
+
+
+
+function fillInfoModal(ac) {
+    const formerRegEl = document.getElementById('infoFormerReg');
+    const seatConfEl = document.getElementById('infoSeatConf');
+    const kzEl = document.getElementById('infoKzApproval');
+    const limitEl = document.getElementById('infoOpsLimit');
+    const minOatEl = document.getElementById('infoMinOAT');
+
+    // Заполнение стандартных данных
+    if (formerRegEl) formerRegEl.innerText = ac.formerReg || "—";
+    if (seatConfEl) seatConfEl.innerText = ac.config || "—";
+    if (minOatEl) minOatEl.innerText = ac.minOAT || "—";
+
+    // Управление строкой ограничений (Uzbekistan, Azerbaijan, Egypt...)
+    if (limitEl) {
+        if (ac.opsLimit) {
+            limitEl.innerText = ac.opsLimit;
+            limitEl.style.display = 'block';
+        } else {
+            limitEl.style.display = 'none';
+        }
+    }
+
+    // Управление статусом Казахстана и его цветом
+    if (kzEl) {
+        const kzVal = ac.kazakhstanApproval || "No";
+        kzEl.innerText = kzVal;
+        
+        if (kzVal.toLowerCase() === "yes") {
+            kzEl.style.color = "#2e7d32"; // Зеленый
+        } else {
+            kzEl.style.color = "#d32f2f"; // Красный (совпадает с доп. строкой)
+        }
+    }
+}
+
+// --- ЛОГИКА ОКНА ИНФОРМАЦИИ (AIRCRAFT) ---
+function openInfoModal() {
+    // На всякий случай сбрасываем фокус, чтобы клавиатура точно спряталась
+    const acInput = document.getElementById('acSearch');
+    if (acInput) acInput.blur();
+    
+    const modal = document.getElementById('infoModal');
+    modal.style.display = 'flex';
+    setTimeout(() => { modal.classList.add('show'); }, 10);
+}
+
+function closeInfoModal() {
+    const modal = document.getElementById('infoModal');
+    modal.classList.remove('show');
+    setTimeout(() => { modal.style.display = 'none'; }, 300); // 300мс на красивое затухание
+}
+
+
+</script>
+</body>
+</html>

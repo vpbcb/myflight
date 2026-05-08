@@ -1,20 +1,23 @@
 {
-  "name": "MyWindLimits",
-  "short_name": "MyWind",
-  "scope": "./",
+  "name": "My Flight",
+  "short_name": "MyFlight",
+  "description": "all in one app",
+  "id": "./",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f1f5f9",
-  "theme_color": "#0ea5e9",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "windappicon.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "windappicon.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
