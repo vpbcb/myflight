@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260510-1';
+const CACHE_NAME = 'myflight_v.260510-2';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
@@ -55,10 +55,15 @@ const get = async (request, options) => {
 
 // HTML shell must survive launches with query strings, for example ?reset=...
 const getAppShell = async (request) => {
-    return await get(request)
-        || await get(request, { ignoreSearch: true })
-        || await get('./')
-        || await get('./index.html');
+    const cachedResponse = await get(request) || await get(request, { ignoreSearch: true });
+    if (cachedResponse) return cachedResponse;
+
+    const url = new URL(request.url);
+    if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
+        return await get('./') || await get('./index.html');
+    }
+
+    return null;
 };
 
 // Запись в кэш с решением "Проблемы слэша"
@@ -141,6 +146,7 @@ self.addEventListener('install', event => {
             console.error('[SW] Ошибка скачивания кэша, прерываем обновление:', err);
             // Если EDGE оборвал скачивание, мы не активируем новый SW, 
             // и старый рабочий кэш остается нетронутым.
+            throw err;
         })
     );
 });
