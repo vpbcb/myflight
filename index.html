@@ -63,7 +63,8 @@
         .theme-toggle {
             position: absolute;
             bottom: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             background: transparent;
             border: none;
             padding: 5px;
@@ -75,6 +76,52 @@
             transition: opacity 0.2s;
         }
         .theme-toggle:active { opacity: 0.5; }
+
+        /* === СТИЛИ MAIL TO ME === */
+        .mail-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-main);
+            z-index: 100;
+            transition: opacity 0.2s, transform 0.2s;
+            user-select: none;
+        }
+        .mail-btn::after {
+            content: ''; position: absolute; top: -15px; bottom: -15px; left: -15px; right: -15px;
+        }
+        .mail-btn:active { transform: scale(0.9); opacity: 0.5; }
+        .mail-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        /* Модальное окно обратной связи */
+        .mail-modal-content {
+            background-color: var(--card-bg); padding: 20px; border-radius: 16px; width: 85%; max-width: 300px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--accent-color);
+            display: flex; flex-direction: column; text-align: left;
+        }
+        #mailText {
+            width: 100%; height: 110px; border-radius: 10px; border: 1px solid var(--border-color);
+            background: var(--bg-color); color: var(--text-main); padding: 12px; font-size: 15px;
+            font-family: inherit; resize: none; margin: 15px 0; outline: none;
+            -webkit-user-select: text; user-select: text; box-sizing: border-box;
+        }
+        #mailText:focus { border-color: var(--accent-color); }
+        .mail-footer { display: flex; gap: 10px; }
+        .mail-btn-cancel {
+            flex: 1; height: 45px; border-radius: 10px; border: 1px solid var(--border-color);
+            background: var(--input-bg); color: var(--text-main); font-weight: 600; cursor: pointer;
+        }
+        .mail-btn-send {
+            flex: 2; height: 45px; border-radius: 10px; border: none;
+            background: var(--accent-color); color: #fff; font-weight: 700; cursor: pointer;
+        }
+        .mail-btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* === СТИЛИ REFRESH === */
         .refresh-btn {
@@ -438,6 +485,11 @@
             <span id="themeText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Light mode</span>
         </button>
 
+        <button class="mail-btn" id="btnMail" onclick="openMailModal()" title="Mail to me">
+            <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-right: 4px; text-transform: uppercase; white-space: nowrap;">Mail</span>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.39-2.77 7.64-3.3 3.64-1.51 4.4-1.77 4.9-.18.1.33.01 1.15-.04 1.9z"/></svg>
+        </button>
+
         <!-- Модальное окно уточнения борта -->
         <div id="ambiguityModal" class="modal-overlay" onclick="closeAmbiguity()">
             <div class="modal-content" onclick="event.stopPropagation()">
@@ -448,6 +500,17 @@
         </div>
 
         <!-- Модальное окно информации о самолете -->
+        <div id="mailModal" class="modal-overlay" onclick="closeMailModal(event)">
+            <div class="mail-modal-content" onclick="event.stopPropagation()">
+                <span class="modal-title" style="margin-bottom: 0; text-align: left;">Message to Developer</span>
+                <textarea id="mailText" placeholder="Введите ваше сообщение..."></textarea>
+                <div class="mail-footer">
+                    <button class="mail-btn-cancel" onclick="closeMailModal()">Cancel</button>
+                    <button id="btnSendMail" class="mail-btn-send" onclick="sendMail()">Send</button>
+                </div>
+            </div>
+        </div>
+
         <div id="infoModal" class="modal-overlay" onclick="closeInfoModal()" style="align-items: flex-start; padding-top: 240px;">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <button class="modal-close-btn" style="top: 5px;" onclick="closeInfoModal()">×</button>
@@ -572,6 +635,61 @@
 
             // Жесткая перезагрузка с параметром-антикэшем
             window.location.href = window.location.pathname + '?reset=' + new Date().getTime();
+        }
+
+// Логика Telegram Feedback
+        function openMailModal() {
+            const modal = document.getElementById('mailModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { 
+                modal.classList.add('show'); 
+                document.getElementById('mailText').focus(); 
+            }, 10);
+        }
+        
+        function closeMailModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            const modal = document.getElementById('mailModal');
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+        
+        async function sendMail() {
+            const txtInput = document.getElementById('mailText');
+            const msg = txtInput.value.trim();
+            const btn = document.getElementById('btnSendMail');
+            if (!msg) return;
+            
+            btn.disabled = true; 
+            btn.textContent = 'Sending...';
+            
+            try {
+                const r = await fetch('https://myflight.vpbcb1.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: msg })
+                });
+                
+                if (r.ok) {
+                    btn.textContent = 'Done!'; 
+                    txtInput.value = '';
+                    setTimeout(() => { 
+                        closeMailModal(); 
+                        btn.disabled = false; 
+                        btn.textContent = 'Send'; 
+                    }, 1000);
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                btn.textContent = 'Error!'; 
+                btn.style.background = '#ef4444';
+                setTimeout(() => { 
+                    btn.disabled = false; 
+                    btn.textContent = 'Send'; 
+                    btn.style.background = 'var(--accent-color)'; 
+                }, 2000);
+            }
         }
 
         // Слушатель загрузки страницы
