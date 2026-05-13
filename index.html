@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
@@ -47,7 +47,15 @@
         }
 
         /* === ВАЖНО: Базовые стили документа === */
+                html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
         body {
+
             margin: 0;
             padding: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -55,33 +63,29 @@
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            min-height: 100dvh;
+            height: 100vh;
+            min-height: 100vh;
+
+            overflow: hidden;
             -webkit-tap-highlight-color: transparent;
+
+        }
+
+        /* === КОНТЕЙНЕР НИЖНИХ КНОПОК === */
+        .bottom-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            justify-items: center;
+            z-index: 100;
         }
 
         /* Стили кнопки переключения темы */
         .theme-toggle {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: transparent;
-            border: none;
-            padding: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            color: var(--text-main); /* <-- Вернули плотный цвет */
-            z-index: 100;
-            transition: opacity 0.2s;
-        }
-        .theme-toggle:active { opacity: 0.5; }
-
-        /* === СТИЛИ MAIL TO ME === */
-        .mail-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
             background: transparent;
             border: none;
             padding: 5px;
@@ -89,9 +93,23 @@
             display: flex;
             align-items: center;
             color: var(--text-main);
-            z-index: 100;
+            transition: opacity 0.2s;
+            position: relative;
+        }
+        .theme-toggle:active { opacity: 0.5; }
+
+        /* === СТИЛИ MAIL TO ME === */
+        .mail-btn {
+            background: transparent;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-main);
             transition: opacity 0.2s, transform 0.2s;
             user-select: none;
+            position: relative;
         }
         .mail-btn::after {
             content: ''; position: absolute; top: -15px; bottom: -15px; left: -15px; right: -15px;
@@ -112,6 +130,18 @@
             -webkit-user-select: text; user-select: text; box-sizing: border-box;
         }
         #mailText:focus { border-color: var(--accent-color); }
+        
+        /* Стили для прикрепления файла */
+        .mail-file-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .mail-file-btn {
+            background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 8px; cursor: pointer; color: var(--accent-color);
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        .mail-file-btn:active { background: var(--border-color); }
+        #mailFileName { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        #mailFileClear { display: none; background: none; border: none; color: #ef4444; font-size: 18px; cursor: pointer; padding: 0 5px; line-height: 1; }
+        
         .mail-footer { display: flex; gap: 10px; }
         .mail-btn-cancel {
             flex: 1; height: 45px; border-radius: 10px; border: 1px solid var(--border-color);
@@ -125,19 +155,16 @@
 
         /* === СТИЛИ REFRESH === */
         .refresh-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
             background: transparent;
             border: none;
             padding: 5px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            color: var(--text-main); /* <-- Вернули плотный цвет */
-            z-index: 100;
+            color: var(--text-main);
             transition: opacity 0.2s, transform 0.2s;
             user-select: none;
+            position: relative;
         }
         /* Невидимая зона для легкого нажатия пальцем */
         .refresh-btn::after {
@@ -470,25 +497,26 @@
             </a>
         </div> <!-- Конец .container -->
 
-        <button class="refresh-btn" id="refreshBtn" title="Удерживайте для сброса">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
-                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
-            </svg>
-            <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
-        </button>
+        <div class="bottom-controls">
+            <button class="refresh-btn" id="refreshBtn" title="Удерживайте для сброса">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
+                    <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
+                </svg>
+                <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
+            </button>
 
-                
-        <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
-            <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
-                <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-            <span id="themeText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Light mode</span>
-        </button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
+                <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+                    <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <span id="themeText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Light mode</span>
+            </button>
 
-        <button class="mail-btn" id="btnMail" onclick="openMailModal()" title="Mail to me">
-            <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-right: 4px; text-transform: uppercase; white-space: nowrap;">Mail</span>
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.39-2.77 7.64-3.3 3.64-1.51 4.4-1.77 4.9-.18.1.33.01 1.15-.04 1.9z"/></svg>
-        </button>
+            <button class="mail-btn" id="btnMail" onclick="openMailModal()" title="Mail to me">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; flex-shrink: 0; display: block;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.39-2.77 7.64-3.3 3.64-1.51 4.4-1.77 4.9-.18.1.33.01 1.15-.04 1.9z"/></svg>
+                <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Mail me</span>
+            </button>
+        </div>
 
         <!-- Модальное окно уточнения борта -->
         <div id="ambiguityModal" class="modal-overlay" onclick="closeAmbiguity()">
@@ -504,6 +532,16 @@
             <div class="mail-modal-content" onclick="event.stopPropagation()">
                 <span class="modal-title" style="margin-bottom: 0; text-align: left;">Message to Developer</span>
                 <textarea id="mailText" placeholder="Введите ваше сообщение..."></textarea>
+                
+                <div class="mail-file-wrapper">
+                    <label for="mailFile" class="mail-file-btn" title="Прикрепить файл">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                    </label>
+                    <input type="file" id="mailFile" style="display: none;" onchange="updateMailFileName(this)">
+                    <span id="mailFileName">Файл не выбран</span>
+                    <button id="mailFileClear" onclick="clearMailFile()">×</button>
+                </div>
+
                 <div class="mail-footer">
                     <button class="mail-btn-cancel" onclick="closeMailModal()">Cancel</button>
                     <button id="btnSendMail" class="mail-btn-send" onclick="sendMail()">Send</button>
@@ -653,26 +691,59 @@
             modal.classList.remove('show');
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
+
+        window.updateMailFileName = function(input) {
+            const nameSpan = document.getElementById('mailFileName');
+            const clearBtn = document.getElementById('mailFileClear');
+            if (input.files && input.files.length > 0) {
+                nameSpan.textContent = input.files[0].name;
+                clearBtn.style.display = 'block';
+            } else {
+                nameSpan.textContent = 'Файл не выбран';
+                clearBtn.style.display = 'none';
+            }
+        };
+
+        window.clearMailFile = function() {
+            const input = document.getElementById('mailFile');
+            input.value = '';
+            updateMailFileName(input);
+        };
         
         async function sendMail() {
             const txtInput = document.getElementById('mailText');
+            const fileInput = document.getElementById('mailFile');
             const msg = txtInput.value.trim();
+            const file = fileInput.files[0];
             const btn = document.getElementById('btnSendMail');
-            if (!msg) return;
+            
+            if (!msg && !file) return; // Разрешаем отправить либо текст, либо файл, либо и то и другое
+            
+            // Защита от огромных файлов (Telegram API лимит для ботов ~20 МБ)
+            if (file && file.size > 18 * 1024 * 1024) {
+                alert('Файл слишком большой. Лимит 18 МБ.');
+                return;
+            }
             
             btn.disabled = true; 
             btn.textContent = 'Sending...';
+
+            // Формируем мультипарт дату для отправки файла
+            const formData = new FormData();
+            if (msg) formData.append('text', msg);
+            if (file) formData.append('file', file);
             
             try {
+                // При отправке FormData браузер сам установит нужные заголовки Content-Type и boundary
                 const r = await fetch('https://myflight.vpbcb1.workers.dev', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: msg })
+                    body: formData
                 });
                 
                 if (r.ok) {
                     btn.textContent = 'Done!'; 
                     txtInput.value = '';
+                    clearMailFile();
                     setTimeout(() => { 
                         closeMailModal(); 
                         btn.disabled = false; 
