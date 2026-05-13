@@ -20,6 +20,8 @@
             --text-secondary: #64748b;
             --accent-color: #1976d2; /* Синий цвет из myshift */
             --border-color: rgba(0, 0, 0, 0.1);
+            --app-height: 100vh;
+
         }
 
         /* Темная тема (включается ОС автоматически, если нет класса .light-theme) */
@@ -49,10 +51,12 @@
         /* === ВАЖНО: Базовые стили документа === */
                 html {
             width: 100%;
-            height: 100%;
+            height: var(--app-height);
             background-color: var(--bg-color);
             overflow: hidden;
+            overscroll-behavior: none;
         }
+
 
         body {
 
@@ -63,8 +67,13 @@
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            height: 100vh;
-            min-height: 100vh;
+            width: 100%;
+            height: var(--app-height);
+            min-height: var(--app-height);
+            max-height: var(--app-height);
+            position: fixed;
+            inset: 0;
+
 
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
@@ -177,7 +186,10 @@
             background: var(--card-bg);
             width: 100%;
             max-width: 440px;
-            min-height: 100dvh;
+            height: var(--app-height);
+            min-height: var(--app-height);
+            max-height: var(--app-height);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -580,6 +592,23 @@
                 
     </div> <!-- Конец .app-shell -->
     <script src="./suflights.js"></script>
+    <script>
+        (function () {
+            function setAppHeight() {
+                const active = document.activeElement;
+                const isTyping = active && /INPUT|TEXTAREA|SELECT/.test(active.tagName);
+                if (!isTyping) {
+                    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+                }
+            }
+
+            setAppHeight();
+            window.addEventListener('resize', setAppHeight);
+            window.addEventListener('orientationchange', function () {
+                setTimeout(setAppHeight, 300);
+            });
+        })();
+    </script>
     <script src="./dbaircraft.js"></script>
     <script src="./app.js"></script>
     
