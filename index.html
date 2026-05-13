@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0b0f19">
+    <meta name="theme-color" content="#f1f5f9">
     <title>MyFlight:All in one</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -183,7 +183,7 @@
 
         /* Главный контейнер */
         .app-shell {
-            background: var(--card-bg);
+            background: var(--bg-color);
             width: 100%;
             max-width: 440px;
             height: var(--app-height);
@@ -416,14 +416,14 @@
     <script>
         (function() {
             const savedTheme = localStorage.getItem('hub_theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark-theme');
-            } else if (savedTheme === 'light') {
-                document.documentElement.classList.add('light-theme');
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark-theme');
-            }
+            const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && sysDark);
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+            document.documentElement.classList.add(isDark ? 'dark-theme' : 'light-theme');
+            if (metaTheme) metaTheme.setAttribute('content', isDark ? '#0b0f19' : '#f1f5f9');
         })();
+
     </script>
 </head>
 <body>
@@ -651,6 +651,7 @@
             }
 
             localStorage.setItem('hub_theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
             document.querySelector('meta[name="theme-color"]').setAttribute('content', isDark ? '#0b0f19' : '#f1f5f9');
         }
 
