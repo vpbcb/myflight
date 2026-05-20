@@ -20,6 +20,7 @@
             --accent-color: #1976d2; /* Синий цвет из myshift */
             --border-color: rgba(0, 0, 0, 0.1);
             --app-height: 100vh;
+            --app-width: 100vw;
 
         }
 
@@ -86,8 +87,11 @@
             bottom: 20px;
             left: 0;
             width: 100%;
+            padding: 0 16px;
+            box-sizing: border-box;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
             align-items: center;
             justify-items: center;
             z-index: 100;
@@ -104,6 +108,7 @@
             color: var(--text-main);
             transition: opacity 0.2s;
             position: relative;
+            min-width: 0;
         }
         .theme-toggle:active { opacity: 0.5; }
 
@@ -119,6 +124,7 @@
             transition: opacity 0.2s, transform 0.2s;
             user-select: none;
             position: relative;
+            min-width: 0;
         }
         .mail-btn::after {
             content: ''; position: absolute; top: -15px; bottom: -15px; left: -15px; right: -15px;
@@ -174,6 +180,7 @@
             transition: opacity 0.2s, transform 0.2s;
             user-select: none;
             position: relative;
+            min-width: 0;
         }
         /* Невидимая зона для легкого нажатия пальцем */
         .refresh-btn::after {
@@ -184,8 +191,10 @@
         /* Главный контейнер */
         .app-shell {
             background: var(--bg-color);
-            width: 100%;
-            max-width: 440px;
+            width: min(100vw, 440px);
+            width: min(var(--app-width), 440px);
+            max-width: 100%;
+            min-width: 0;
             height: var(--app-height);
             min-height: var(--app-height);
             max-height: var(--app-height);
@@ -411,6 +420,29 @@
         .ambiguity-item:last-child { border-bottom: none; }
         html.dark-theme .ambiguity-item:hover { background-color: rgba(255, 255, 255, 0.05); }
 
+        /* Safari orientation fix: do not let stale viewport width stretch the app. */
+        .container {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            min-width: 0;
+        }
+        .project-card {
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        .title {
+            letter-spacing: 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .flight-search-card,
+        .search-wrapper,
+        .search-row {
+            min-width: 0;
+            max-width: 100%;
+        }
+
     </style>
     <!-- Микро-скрипт защиты от белой вспышки (как на подстраницах) -->
     <script>
@@ -594,21 +626,52 @@
     <script src="./suflights.js"></script>
     <script>
         (function () {
-            function lockAppHeight() {
+            function lockAppViewport() {
+                const visualViewport = window.visualViewport;
+                const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
+                const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
+                const appWidth = Math.min(viewportWidth, 440) + 'px';
                 const staticHeight = window.innerHeight + 'px';
-                document.documentElement.style.setProperty('--app-height', staticHeight);
-                document.documentElement.style.height = staticHeight;
-                document.body.style.height = staticHeight;
+                const root = document.documentElement;
+                const body = document.body;
+
+                root.style.setProperty('--app-height', staticHeight);
+                root.style.setProperty('--app-width', appWidth);
+                root.style.height = staticHeight;
+                body.style.height = staticHeight;
+
+                if (viewportWidth && viewportWidth < 440) {
+                    root.style.width = viewportWidth + 'px';
+                    body.style.width = viewportWidth + 'px';
+                } else {
+                    root.style.width = '100%';
+                    body.style.width = '100%';
+                }
 
                 const shell = document.querySelector('.app-shell');
-                if (shell) shell.style.height = staticHeight;
+                if (shell) {
+                    shell.style.height = staticHeight;
+                    shell.style.width = appWidth;
+                }
             }
 
-            lockAppHeight();
+            function relockAfterOrientation() {
+                lockAppViewport();
+                setTimeout(lockAppViewport, 150);
+                setTimeout(lockAppViewport, 350);
+                setTimeout(lockAppViewport, 700);
+            }
+
+            lockAppViewport();
 
             window.addEventListener('orientationchange', function () {
-                setTimeout(lockAppHeight, 150);
+                relockAfterOrientation();
             });
+            window.addEventListener('resize', lockAppViewport);
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', lockAppViewport);
+            }
 
             if ('virtualKeyboard' in navigator) {
                 navigator.virtualKeyboard.overlaysContent = true;
