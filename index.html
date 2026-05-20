@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
     <title>MyFlight:All in one</title>
     <link rel="manifest" href="./manifest.json">
@@ -21,6 +21,8 @@
             --border-color: rgba(0, 0, 0, 0.1);
             --app-height: 100vh;
             --app-width: 100vw;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
 
         }
 
@@ -84,7 +86,7 @@
         /* === КОНТЕЙНЕР НИЖНИХ КНОПОК === */
         .bottom-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: max(20px, calc(var(--safe-bottom) + 12px));
             left: 0;
             width: 100%;
             padding: 0 16px;
@@ -212,6 +214,7 @@
         .header {
             width: 100%;
             padding: 20px 20px 20px;
+            padding-top: max(20px, calc(var(--safe-top) + 6px));
             display: flex;
             justify-content: center; /* Строго по центру */
             box-sizing: border-box;
@@ -476,7 +479,7 @@
                 <div class="search-row">
                     <div class="input-group">
                         <div class="prefix su-color">SU</div>
-                        <input type="tel" id="flightNumInput" class="short-input" placeholder="" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="tel" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
                     <!-- Результат будет показан справа от поля ввода -->
@@ -490,7 +493,7 @@
                     <div class="input-group">
                         <div class="prefix ac-color">A/C</div>
                         <!-- Разрешаем буквы и цифры (type="text"). Ограничение длины снято. -->
-                        <input type="text" id="acNumInput" class="short-input" placeholder="" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="text" id="acNumInput" class="short-input" placeholder="73821" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
 <!-- Место под вывод информации о самолете -->
