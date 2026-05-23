@@ -1,0 +1,1138 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0b0f19" media="(prefers-color-scheme: dark)">
+    
+    <title>MyNPA</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+    <style>
+        :root {
+            --bg-main: #f1f5f9;          
+            --card-bg: #ffffff;          
+            --text-main: #0f172a;        
+            --accent-blue: #0ea5e9;
+            --border-color: rgba(15, 23, 42, 0.08);
+        }
+
+        html.dark-theme {
+            --bg-main: #0b0f19;          
+            --card-bg: #151f32;          
+            --text-main: #f8fafc;        
+            --accent-blue: #38bdf8;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        html {
+            height: 100%;
+            background-color: var(--bg-main) !important;
+            transition: background-color 0.2s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent !important;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            color: var(--text-main);
+            position: fixed;
+            width: 100%;
+        }
+
+        .app-wrapper {
+            background: var(--bg-main);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            padding: 0; 
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        .precision-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            z-index: 10;
+            margin: 5px 0px 65px 0px; 
+            padding: 8px 10px;
+            background: transparent; 
+            border: none;
+        }
+
+        .precision-scroll-container::-webkit-scrollbar { width: 4px; }
+        .precision-scroll-container::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 10px; }
+
+        .app-title { 
+            font-size: 0.65rem; 
+            text-align: center; 
+            letter-spacing: 5px; 
+            color: var(--text-main); 
+            text-transform: uppercase; 
+            margin: 0;
+            padding: 6px 0;
+            font-weight: 800; 
+            opacity: 0.4; 
+        }
+
+        /* БЕЛЫЕ ФОНОВЫЕ БЛОКИ (КОНТЕЙНЕРЫ) */
+        .section-card { 
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 16px; 
+            margin-bottom: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            overflow: hidden; /* Чтобы контент не вылезал за скругления при анимации */
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* ЗАГОЛОВОК ПРЯМО НА БЕЛОМ ФОНЕ КОНТЕЙНЕРА */
+        .card-title {
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        /* АНИМАЦИЯ СВОРАЧИВАНИЯ КОНТЕНТА */
+        .foldBlock {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-6px);
+            /* Используем ease-in-out для идеальной синхронизации старта */
+            transition: max-height 250ms ease-in-out, opacity 250ms ease-in-out, transform 250ms ease-in-out;
+        }
+        
+        .foldBlock.open { 
+            /* Значение 220px убирает "задержку пустоты", но оставляет запас для ваших полей */
+            max-height: 220px; 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+
+        .card-content {
+            padding: 0 16px 16px 16px;
+            color: var(--text-main);
+        }
+
+        /* КНОПКИ ВНИЗУ */
+        .refresh-btn, .menu-btn {
+            position: absolute;
+            bottom: 25px;
+            background: transparent !important;
+            border: none !important;
+            padding: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-main);
+            z-index: 100;
+            transition: transform 0.2s ease;
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            opacity: 0.8;
+        }
+
+        .refresh-btn { left: 15px; }
+        .menu-btn { right: 15px; justify-content: flex-end; }
+        .refresh-btn:active, .menu-btn:active { transform: scale(0.95); }
+
+        .btn-label-style {
+            font-size: 0.65rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* Стили новой сетки для Контейнера 1 */
+        .c1-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .c1-left-container {
+            flex: 1.2;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        html.dark-theme .c1-left-container {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        .c1-right {
+            flex: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .c1-airport-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            width: 100%;
+        }
+        .c1-label-mini {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+        html.dark-theme .c1-label-mini {
+            color: #94a3b8;
+        }
+        .c1-input-field {
+            width: 100% !important;
+            height: 36px !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            outline: none !important;
+            -webkit-user-select: auto;
+            user-select: auto;
+            padding: 0 4px !important;
+        }
+        html.dark-theme .c1-input-field {
+            background-color: #262e3d !important;
+            color: #f8fafc !important;
+        }
+        .c1-btn-field {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            padding: 2px 6px;
+            height: 36px;
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+        .c1-btn-field:active {
+            background: rgba(0, 0, 0, 0.08);
+        }
+        html.dark-theme .c1-btn-field {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        html.dark-theme .c1-btn-field:active {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .cell-wrapper {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px 4px 2px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        html.dark-theme .cell-wrapper {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        .cell-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1px;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
+        }
+        html.dark-theme .cell-label {
+            color: #94a3b8;
+        }
+        .cell-input {
+            width: 100% !important;
+            height: 22px !important;
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            color: var(--text-main) !important;
+            outline: none !important;
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        
+        /* Убираем системные стрелочки, которые сдвигают текст влево */
+        .cell-input::-webkit-outer-spin-button,
+        .cell-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number].cell-input {
+            -moz-appearance: textfield;
+        }
+
+        /* Стили для Контейнера 2 */
+        .c2-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .c2-row:last-child {
+            margin-bottom: 0;
+        }
+        .flex-1 {
+            flex: 1;
+        }
+        .tall-wrapper {
+            height: 76px; /* В два раза больше базовой высоты ячейки (38px) */
+        }
+        .btn-val {
+            font-size: 15px; 
+            font-weight: 700; 
+            text-align: center; 
+            color: var(--text-main); 
+            height: 22px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* Класс для иконок FDP / FAP */
+        .npa-icon {
+            height: 12px;
+            width: auto;
+            object-fit: contain;
+            filter: invert(0);
+        }
+        html.dark-theme .npa-icon {
+            filter: invert(1);
+        }
+
+        /* Классы для иконок FDP / FAP */
+        .npa-icon {
+            height: 11px;
+            width: auto;
+            object-fit: contain;
+            filter: invert(0);
+        }
+        html.dark-theme .npa-icon {
+            filter: invert(1);
+        }
+
+        /* Модальное окно по типу mypath.html */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 85%;
+            max-width: 320px;
+            padding: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            color: var(--text-main);
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+        .modal-header {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modal-opt-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+        }
+        html.dark-theme .modal-opt-btn {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .modal-opt-btn:active {
+            background: var(--accent-blue);
+            color: #ffffff;
+        }
+
+        /* Стили таблицы для Контейнера 4 */
+        .npa-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2px;
+        }
+        .npa-table th {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 2px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        html.dark-theme .npa-table th {
+            color: #94a3b8;
+        }
+        .npa-table td {
+            padding: 2px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+        }
+        html.dark-theme .npa-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .table-input {
+            width: 100% !important;
+            height: 28px !important;
+            border: 1px solid transparent !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            color: var(--text-main) !important;
+            outline: none !important;
+            padding: 0 !important;
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        .table-input:focus {
+            border-color: var(--accent-blue) !important;
+            background-color: #f8fafc !important;
+        }
+        html.dark-theme .table-input:focus {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+        .table-input::-webkit-outer-spin-button,
+        .table-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number].table-input {
+            -moz-appearance: textfield;
+        }
+
+        /* --- КЛАВИАТУРА ИЗ MYPATH --- */
+        .keypad-content {
+            padding: 20px 10px;
+            width: 85%;
+            max-width: 320px;
+        }
+        .keypad-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+        html.dark-theme .keypad-header {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        #kpTitle { font-size: 0.75rem; color: var(--accent-blue); font-weight: 800; letter-spacing: 1px; }
+        .modal-val { font-size: 2.2rem; color: var(--accent-blue); font-weight: 900; line-height: 1; margin: 0; }
+        
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+        .kp-btn {
+            --btn-height: 60px;
+            height: var(--btn-height);
+            font-weight: 700;
+            font-size: calc(var(--btn-height) * 0.55);
+            color: var(--text-main);
+            -webkit-appearance: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            touch-action: manipulation;
+            -webkit-font-smoothing: antialiased;
+        }
+        html.dark-theme .kp-btn {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .kp-btn:active { background: var(--accent-blue); color: #ffffff; transform: scale(0.95); }
+        .kp-del { color: #ef4444; font-size: calc(var(--btn-height) * 0.5); padding-right: 2px; }
+        .kp-clr {
+            flex: 1;
+            font-size: calc(var(--btn-height) * 0.35) !important;
+            color: #ef4444;
+            font-weight: 700;
+            width: 100% !important;
+        }
+        .kp-done {
+            flex: 2;
+            font-size: calc(var(--btn-height) * 0.38) !important;
+            color: var(--accent-blue);
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: rgba(14, 165, 233, 0.1) !important; 
+            border-color: var(--accent-blue) !important;
+            width: 100% !important;
+            grid-column: span 2;
+        }
+
+        /* Стили для Контейнера 2 */
+    </style>
+
+    <script>
+        (function() {
+            const applyTheme = (theme) => {
+                const isDark = theme === 'dark';
+                document.documentElement.classList.toggle('dark-theme', isDark);
+                if (document.body) document.body.classList.toggle('dark-theme', isDark);
+            };
+            const savedTheme = localStorage.getItem('hub_theme');
+            if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme');
+            document.addEventListener('DOMContentLoaded', () => {
+                const currentTheme = localStorage.getItem('hub_theme');
+                if (currentTheme) applyTheme(currentTheme);
+            });
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'hub_theme') applyTheme(event.newValue);
+            });
+        })();
+    </script>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <h2 class="app-title" ondblclick="adminLogin()" title="Double tap for admin login">=NPA CALC=</h2>
+
+    <div class="precision-scroll-container" id="mainScroll">
+        
+        <div class="section-card">
+            <div class="card-content" style="padding: 8px;">
+                <div class="c2-row" style="margin-bottom: 0;">
+                    <div class="cell-wrapper flex-1">
+                        <span class="cell-label">Airport</span>
+                        <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" style="text-transform: uppercase;" oninput="handleAirportInput()">
+                    </div>
+                    <div class="cell-wrapper flex-1" onclick="openNpaModal()" style="cursor: pointer;">
+                        <span class="cell-label">APPROACH TYPE</span>
+                        <div class="btn-val" id="selectedTypeLabel" style="color: var(--accent-blue); font-size: 16px;">—</div>
+                    </div>
+                    <div class="cell-wrapper flex-1">
+                        <span class="cell-label">OAT °C</span>
+                        <input type="number" class="cell-input" id="tempC">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="card-title" onclick="toggleNpaBlock('npaBlock5')">
+                Airport and approach info
+            </div>
+            <div id="npaBlock5" class="foldBlock open">
+                <div class="card-content">
+                    
+                    <div class="c2-row">
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">RW length</span>
+                            <input type="number" class="cell-input" id="rwLength">
+                        </div>
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">Land THR elev</span>
+                            <input type="number" class="cell-input" id="elevation">
+                        </div>
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">GPA</span>
+                            <input type="number" class="cell-input" id="gpa" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="c2-row">
+                        <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.2);">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <img src="FDP.png" alt="" class="npa-icon">
+                                <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FDP</span>
+                            </div>
+                            <input type="number" class="cell-input" id="fdp" style="width: 50px !important;">
+                        </div>
+                        <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.2);">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <img src="FAP.png" alt="" class="npa-icon">
+                                <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FAP</span>
+                            </div>
+                            <input type="number" class="cell-input" id="fap" style="width: 50px !important;">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="saveToFirebase()" style="width: 100%; margin-top: 10px; height: 38px; background: var(--accent-blue); color: #ffffff; border: none; border-radius: 12px; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity 0.1s ease; outline: none; -webkit-tap-highlight-color: transparent;">
+                        Save to Database
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="card-title" onclick="toggleNpaBlock('npaBlock2')">
+                Racetrack entry
+            </div>
+            <div id="npaBlock2" class="foldBlock">
+                <div class="card-content">
+                    
+                    <div class="c2-row">
+                        <div class="cell-wrapper flex-1" style="cursor: pointer;" onclick="toggleRacetrack()">
+                            <span class="cell-label">Racetrack conf</span>
+                            <div class="btn-val" id="racetrackVal">Right</div>
+                        </div>
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">Inbound Course</span>
+                            <input type="number" class="cell-input" id="inboundCrs">
+                        </div>
+                    </div>
+
+                    <div class="c2-row">
+                        <div class="cell-wrapper flex-1 tall-wrapper">
+                            <span class="cell-label">Direct</span>
+                            <input type="text" class="cell-input" id="sectDirect">
+                        </div>
+                        <div class="cell-wrapper flex-1 tall-wrapper">
+                            <span class="cell-label">Parallel</span>
+                            <input type="text" class="cell-input" id="sectParallel">
+                        </div>
+                        <div class="cell-wrapper flex-1 tall-wrapper">
+                            <span class="cell-label">Offset</span>
+                            <input type="text" class="cell-input" id="sectOffset">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="card-title" onclick="toggleNpaBlock('npaBlock3')">
+                Downwind flight
+            </div>
+            <div id="npaBlock3" class="foldBlock">
+                <div class="card-content">
+                    
+                    <div class="c2-row">
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">S downwind</span>
+                            <input type="number" class="cell-input" id="sDownwind">
+                        </div>
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">Downwind time</span>
+                            <input type="text" class="cell-input" id="downwindTime">
+                        </div>
+                        <div class="cell-wrapper flex-1">
+                            <span class="cell-label">Ground Speed</span>
+                            <input type="number" class="cell-input" id="gsAppr">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="card-title" onclick="toggleNpaBlock('npaBlock4')">
+                Profile (Alt Vs Dist)
+            </div>
+            <div id="npaBlock4" class="foldBlock">
+                <div class="card-content" style="padding: 0 8px 8px 8px;">
+                    <table class="npa-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">H feet</th>
+                                <th style="width: 25%;">THR dist</th>
+                                <th style="width: 25%; cursor: pointer;" onclick="openNpaKeypad('radio')">
+                                    Radio dist
+                                    <div style="font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 2px; opacity: 0.8; line-height: 1.1; pointer-events: none;">
+                                        <span id="radioDistValDisplay" style="font-size: 11px; color: var(--accent-blue);">0.0</span><span style="font-size: 11px; color: var(--accent-blue);">nm</span><br>
+                                        <span style="font-size: 8px;">shift from land THR</span>
+                                    </div>
+                                </th>
+                                <th style="width: 25%; cursor: pointer;" onclick="openNpaKeypad('tar')">
+                                    TAR dist
+                                    <div style="font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 2px; opacity: 0.8; line-height: 1.1; pointer-events: none;">
+                                        <span id="tarDistValDisplay" style="font-size: 11px; color: var(--accent-blue);">0.0</span><span style="font-size: 11px; color: var(--accent-blue);">nm</span><br>
+                                        <span style="font-size: 8px;">shift from land THR</span>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" class="table-input" id="hFeet1"></td>
+                                <td><input type="number" class="table-input" id="thrDist1" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="radioDist1" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="tarDist1" step="0.1"></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" class="table-input" id="hFeet2"></td>
+                                <td><input type="number" class="table-input" id="thrDist2" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="radioDist2" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="tarDist2" step="0.1"></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" class="table-input" id="hFeet3"></td>
+                                <td><input type="number" class="table-input" id="thrDist3" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="radioDist3" step="0.1"></td>
+                                <td><input type="number" class="table-input" id="tarDist3" step="0.1"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        
+        </div>
+
+    </div>
+
+    <button class="refresh-btn" id="refreshBtn" title="Сбросить">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
+        </svg>
+        <span class="btn-label-style" style="margin-left: 4px;">Refresh</span>
+    </button>
+
+    <a href="./index.html" class="menu-btn" title="В главное меню" style="text-decoration: none;">
+        <span class="btn-label-style" style="margin-right: 5px;">GO HOME</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+    </a>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const lockAppHeight = () => {
+            const staticHeight = window.innerHeight + 'px';
+            document.documentElement.style.height = staticHeight;
+            document.body.style.height = staticHeight;
+            const wrapper = document.querySelector('.app-wrapper');
+            if (wrapper) wrapper.style.height = staticHeight;
+        };
+        lockAppHeight();
+        window.addEventListener('orientationchange', () => setTimeout(lockAppHeight, 150));
+        
+        if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
+    });
+
+    function toggleNpaBlock(id) {
+        const block = document.getElementById(id);
+        if (block) {
+            const isOpen = block.classList.contains('open');
+            
+            // Закрываем все блоки перед открытием выбранного
+            document.querySelectorAll('.foldBlock').forEach(b => {
+                b.classList.remove('open');
+            });
+            
+            // Если выбранный блок был закрыт — разворачиваем его
+            if (!isOpen) {
+                block.classList.add('open');
+            }
+            
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+    }
+
+    let airportInputTimeout; // Переменная для хранения таймера
+
+    function handleAirportInput() {
+        clearTimeout(airportInputTimeout); // Сбрасываем таймер при каждом новом вводе
+
+        const inputEl = document.getElementById('apprName');
+        const airportCode = inputEl.value.trim().toUpperCase();
+        const typeLabel = document.getElementById('selectedTypeLabel');
+
+        window.airportsNpa = window.airportsNpa || {};
+
+        if (!airportCode || !window.airportsNpa[airportCode]) {
+            typeLabel.innerText = "—";
+            clearNpaFields();
+            return;
+        }
+
+        const availableApproaches = Object.keys(window.airportsNpa[airportCode]);
+
+        // Если вариантов несколько, визуально очищаем интерфейс сразу
+        if (availableApproaches.length > 1) {
+            typeLabel.innerText = "—";
+            clearNpaFields();
+        }
+
+        // Запускаем задержку в 500 мс
+        airportInputTimeout = setTimeout(() => {
+            // Двойная проверка, что пользователь не стер текст за эти полсекунды
+            if (inputEl.value.trim().toUpperCase() === airportCode) {
+                if (availableApproaches.length === 1) {
+                    selectNpaType(availableApproaches[0]);
+                    inputEl.blur();
+                } else {
+                    openNpaModal();
+                    inputEl.blur();
+                }
+            }
+        }, 500);
+    }
+
+    function openNpaModal() {
+        if (navigator.vibrate) navigator.vibrate(25);
+        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
+        const optionsContainer = document.getElementById('npaModalOptions');
+        
+        window.airportsNpa = window.airportsNpa || {};
+        optionsContainer.innerHTML = ''; // Очищаем старые кнопки
+
+        if (airportCode && window.airportsNpa[airportCode]) {
+            const approaches = Object.keys(window.airportsNpa[airportCode]);
+            approaches.forEach(type => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-opt-btn';
+                btn.onclick = () => selectNpaType(type);
+                btn.innerText = type;
+                optionsContainer.appendChild(btn);
+            });
+        } else {
+            optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">ICAO NOT IN DATABASE</div>';
+        }
+
+        document.getElementById('npaModal').style.display = 'flex';
+    }
+
+    function closeNpaModal(e) {
+        if (!e || e.target.classList.contains('modal-overlay')) {
+            document.getElementById('npaModal').style.display = 'none';
+        }
+    }
+
+    function selectNpaType(type) {
+        if (navigator.vibrate) navigator.vibrate(30);
+        document.getElementById('selectedTypeLabel').innerText = type;
+        document.getElementById('npaModal').style.display = 'none';
+        
+        checkAndFillFromDB();
+    }
+
+    function checkAndFillFromDB() {
+        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
+        const type = document.getElementById('selectedTypeLabel').innerText;
+        window.airportsNpa = window.airportsNpa || {};
+
+        if (airportCode && type && type !== "—" && window.airportsNpa[airportCode] && window.airportsNpa[airportCode][type]) {
+            const data = window.airportsNpa[airportCode][type];
+
+            document.getElementById('rwLength').value = data.rwLength !== undefined ? data.rwLength : "";
+            document.getElementById('elevation').value = data.elevation !== undefined ? data.elevation : "";
+            document.getElementById('gpa').value = data.gpa !== undefined ? data.gpa : "";
+            
+            const fdpEl = document.getElementById('fdp');
+            const fapEl = document.getElementById('fap');
+            if (fdpEl) fdpEl.value = data.fdp !== undefined ? data.fdp : "";
+            if (fapEl) fapEl.value = data.fap !== undefined ? data.fap : "";
+
+            document.getElementById('racetrackVal').innerText = data.racetrack || "Right";
+            document.getElementById('inboundCrs').value = data.inbound !== undefined ? data.inbound : "";
+            document.getElementById('downwindTime').value = data.downwindTime !== undefined ? data.downwindTime : "";
+
+            document.getElementById('radioDistValDisplay').innerText = data.radioShift !== undefined ? data.radioShift : "0.0";
+            document.getElementById('tarDistValDisplay').innerText = data.tarShift !== undefined ? data.tarShift : "0.0";
+        }
+    }
+
+    function clearNpaFields() {
+        const fields = ['rwLength', 'elevation', 'gpa', 'fdp', 'fap', 'inboundCrs', 'downwindTime'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+        document.getElementById('racetrackVal').innerText = "Right";
+        document.getElementById('radioDistValDisplay').innerText = "0.0";
+        document.getElementById('tarDistValDisplay').innerText = "0.0";
+    }
+
+    // --- ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ---
+    async function saveToFirebase() {
+        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
+        let type = document.getElementById('selectedTypeLabel').innerText;
+
+        if (!airportCode || airportCode.length < 4) {
+            alert("Please enter a valid 4-letter ICAO code.");
+            return;
+        }
+
+        if (type === "—") {
+            const newType = prompt("Enter Approach Type (e.g. ILS, RNAV, VOR):");
+            if (!newType) return;
+            type = newType.trim().toUpperCase();
+            document.getElementById('selectedTypeLabel').innerText = type;
+        }
+
+        if (navigator.vibrate) navigator.vibrate(25);
+
+        const approachData = {
+            rwLength: document.getElementById('rwLength').value ? Number(document.getElementById('rwLength').value) : "",
+            elevation: document.getElementById('elevation').value ? Number(document.getElementById('elevation').value) : "",
+            gpa: document.getElementById('gpa').value ? Number(document.getElementById('gpa').value) : "",
+            fdp: document.getElementById('fdp').value ? Number(document.getElementById('fdp').value) : "",
+            fap: document.getElementById('fap').value ? Number(document.getElementById('fap').value) : "",
+            racetrack: document.getElementById('racetrackVal').innerText,
+            inbound: document.getElementById('inboundCrs').value ? Number(document.getElementById('inboundCrs').value) : "",
+            downwindTime: document.getElementById('downwindTime').value || "",
+            radioShift: document.getElementById('radioDistValDisplay').innerText,
+            tarShift: document.getElementById('tarDistValDisplay').innerText
+        };
+
+        try {
+            // Отправляем в облако
+            await firebase.firestore().collection("airportsnpa").doc(airportCode).set({
+                [type]: approachData
+            }, { merge: true });
+
+            // Обновляем локальный кэш
+            if (!window.airportsNpa[airportCode]) window.airportsNpa[airportCode] = {};
+            window.airportsNpa[airportCode][type] = approachData;
+
+            alert(`Saved successfully: ${airportCode} ${type}`);
+        } catch (error) {
+            console.error("Save error:", error);
+            alert("Failed to save. Are you logged in as Admin? Check network or Firebase Rules.");
+        }
+    }
+
+    function toggleRacetrack() {
+        if (navigator.vibrate) navigator.vibrate(15);
+        const el = document.getElementById('racetrackVal');
+        if (el.innerText === 'Right') {
+            el.innerText = 'Left';
+        } else {
+            el.innerText = 'Right';
+        }
+    }
+
+    // --- ЛОГИКА ЦИФРОВОЙ КЛАВИАТУРЫ ---
+    let currentKpVal = "";
+    let activeNpaField = ""; // Хранит 'radio' или 'tar'
+
+    function openNpaKeypad(type) {
+        if (navigator.vibrate) navigator.vibrate(15);
+        activeNpaField = type;
+        
+        // Динамически меняем заголовок в шапке клавиатуры под выбранный режим
+        document.getElementById('kpTitle').innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
+        
+        const displayId = type === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
+        const displayVal = document.getElementById(displayId).innerText;
+        currentKpVal = displayVal === "0.0" ? "" : displayVal;
+        updateKpDisplay();
+        document.getElementById('keypadModal').style.display = 'flex';
+    }
+
+    function closeNpaKeypad(e) {
+        if (e && e !== 'done' && e.target !== e.currentTarget) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        
+        document.getElementById('keypadModal').style.display = 'none';
+        
+        let finalVal = currentKpVal === "" ? "0.0" : currentKpVal;
+        if (finalVal.endsWith('.')) finalVal = finalVal.slice(0, -1);
+        if (finalVal === "." || finalVal === "-." || finalVal === "-") finalVal = "0.0";
+
+        const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
+        document.getElementById(displayId).innerText = finalVal;
+    }
+
+    function kpPress(key) {
+        if (navigator.vibrate) navigator.vibrate(10);
+        if (key === 'clear') {
+            currentKpVal = "";
+        } else if (key === '+/-') {
+            // Обработка смены знака
+            if (currentKpVal.startsWith('-')) {
+                currentKpVal = currentKpVal.substring(1);
+            } else {
+                currentKpVal = '-' + currentKpVal;
+            }
+        } else if (key === 'del') {
+            // Оставили на случай, если вернете кнопку
+            currentKpVal = currentKpVal.slice(0, -1);
+        } else {
+            if (key === '.' && currentKpVal.includes('.')) return;
+            if (key === '0' && (currentKpVal === "0" || currentKpVal === "-0")) return;
+            
+            if (currentKpVal === "0" && key !== '.') {
+                currentKpVal = key;
+            } else if (currentKpVal === "-0" && key !== '.') {
+                currentKpVal = "-" + key;
+            } else {
+                currentKpVal += key;
+            }
+        }
+        updateKpDisplay();
+    }
+
+    function updateKpDisplay() {
+        const displayEl = document.getElementById('kpValue');
+        displayEl.innerHTML = currentKpVal === "" ? "&nbsp;" : currentKpVal;
+    }
+</script>
+<div class="modal-overlay" id="npaModal" onclick="closeNpaModal(event)">
+    <div class="modal-content">
+        <div class="modal-header">Select Approach Type</div>
+        <div class="modal-options" id="npaModalOptions">
+            </div>
+    </div>
+</div>
+
+<div id="keypadModal" class="modal-overlay" onclick="closeNpaKeypad(event)">
+    <div class="modal-content keypad-content" onclick="event.stopPropagation()">
+        <div class="keypad-header">
+            <span id="kpTitle">SHIFT FROM THR</span>
+            <span style="font-size: 9px; font-weight: 700; color: var(--text-main); opacity: 0.6; letter-spacing: 0.5px; margin-top: 4px; margin-bottom: 8px; text-transform: none; text-align: center;">+: за торцом / -: перед торцом</span>
+            <span id="kpValue" class="modal-val">0.0</span>
+        </div>
+        <div class="keypad-grid">
+            <button class="kp-btn" onclick="kpPress('1')">1</button>
+            <button class="kp-btn" onclick="kpPress('2')">2</button>
+            <button class="kp-btn" onclick="kpPress('3')">3</button>
+            <button class="kp-btn" onclick="kpPress('4')">4</button>
+            <button class="kp-btn" onclick="kpPress('5')">5</button>
+            <button class="kp-btn" onclick="kpPress('6')">6</button>
+            <button class="kp-btn" onclick="kpPress('7')">7</button>
+            <button class="kp-btn" onclick="kpPress('8')">8</button>
+            <button class="kp-btn" onclick="kpPress('9')">9</button>
+            <button class="kp-btn" id="dotBtn" onclick="kpPress('.')">.</button>
+            <button class="kp-btn" onclick="kpPress('0')">0</button>
+            <button class="kp-btn" style="font-size: 1.4rem; color: var(--text-main);" onclick="kpPress('+/-')">+/-</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
+            <button id="doneBtn" class="kp-btn kp-done" onclick="closeNpaKeypad('done')">DONE</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<script>
+    // ВСТАВЬТЕ СВОИ ДАННЫЕ ИЗ FIREBASE CONSOLE СЮДА:
+    const firebaseConfig = {
+  apiKey: "AIzaSyBrx_6HkG7-zOEZMKzLB2NpMqpae_qKlGo",
+  authDomain: "mynpa-db.firebaseapp.com",
+  projectId: "mynpa-db",
+  storageBucket: "mynpa-db.firebasestorage.app",
+  messagingSenderId: "556017315454",
+  appId: "1:556017315454:web:6ec41a310c54315d4ab22f"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    window.airportsNpa = {};
+
+    // 1. Включаем Оффлайн-хранилище (кэш в памяти телефона)
+    db.enablePersistence()
+      .catch(err => console.error("Offline init error:", err));
+
+    // 2. Сразу скачиваем ВСЮ базу при загрузке приложения для работы в авиарежиме
+    db.collection("airportsnpa").get().then((snapshot) => {
+        snapshot.forEach(doc => { 
+            window.airportsNpa[doc.id] = doc.data(); 
+        });
+        console.log("Database synced for offline use.");
+    }).catch(err => console.error("Database sync error:", err));
+
+    // 3. Скрытая функция входа Владельца
+    function adminLogin() {
+        const email = prompt("Admin Email:");
+        if (!email) return;
+        const pass = prompt("Password:");
+        if (!pass) return;
+        
+        auth.signInWithEmailAndPassword(email, pass)
+            .then(u => alert("Admin mode ON: " + u.user.email))
+            .catch(e => alert("Login Error: " + e.message));
+    }
+</script>
+
+<script src="./app.js"></script>
+</body>
+</html>
