@@ -629,12 +629,31 @@
     <script src="./suflights.js"></script>
     <script>
         (function () {
-            function lockAppViewport() {
+            let lockedAppHeight = 0;
+
+            function isEditableFocused() {
+                const active = document.activeElement;
+                return !!active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
+            }
+
+            function lockAppViewport(options) {
+                const forceHeight = options && options.forceHeight;
                 const visualViewport = window.visualViewport;
                 const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
                 const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
                 const appWidth = Math.min(viewportWidth, 440) + 'px';
-                const staticHeight = window.innerHeight + 'px';
+                const nextHeight = Math.floor(window.innerHeight || 0);
+                const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : nextHeight;
+                const keyboardLikelyOpen = isEditableFocused() && lockedAppHeight && (
+                    (visualHeight && visualHeight < lockedAppHeight - 80) ||
+                    (nextHeight && nextHeight < lockedAppHeight - 80)
+                );
+                if (!lockedAppHeight || forceHeight) {
+                    lockedAppHeight = nextHeight || lockedAppHeight;
+                } else if (!keyboardLikelyOpen && !isEditableFocused() && nextHeight > lockedAppHeight) {
+                    lockedAppHeight = nextHeight;
+                }
+                const staticHeight = (lockedAppHeight || nextHeight) + 'px';
                 const root = document.documentElement;
                 const body = document.body;
 
@@ -659,13 +678,14 @@
             }
 
             function relockAfterOrientation() {
-                lockAppViewport();
-                setTimeout(lockAppViewport, 150);
-                setTimeout(lockAppViewport, 350);
-                setTimeout(lockAppViewport, 700);
+                lockedAppHeight = 0;
+                lockAppViewport({ forceHeight: true });
+                setTimeout(function () { lockAppViewport({ forceHeight: true }); }, 150);
+                setTimeout(function () { lockAppViewport({ forceHeight: true }); }, 350);
+                setTimeout(function () { lockAppViewport({ forceHeight: true }); }, 700);
             }
 
-            lockAppViewport();
+            lockAppViewport({ forceHeight: true });
 
             window.addEventListener('orientationchange', function () {
                 relockAfterOrientation();
@@ -675,6 +695,15 @@
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', lockAppViewport);
             }
+
+            document.addEventListener('focusin', function (event) {
+                if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) {
+                    lockAppViewport();
+                }
+            });
+            document.addEventListener('focusout', function () {
+                setTimeout(lockAppViewport, 250);
+            });
 
             if ('virtualKeyboard' in navigator) {
                 navigator.virtualKeyboard.overlaysContent = true;
