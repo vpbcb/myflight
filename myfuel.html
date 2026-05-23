@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="color-scheme" content="light dark">
 
 <!-- Раздельный theme-color для светлой и тёмной темы -->
@@ -30,6 +32,10 @@
             
             --status-green: #C8E6C9;
             --status-red: #dd0016;
+            --app-height: 100vh;
+            --app-width: 100vw;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         html.dark-theme {
@@ -62,7 +68,9 @@
 
 /* Корневой слой */
 html {
-    height: 100%; /* Жестко фиксируем высоту */
+    height: var(--app-height); /* Жестко фиксируем высоту */
+    min-height: var(--app-height);
+    max-height: var(--app-height);
     background-color: #f1f5f9 !important; /* Серо-голубой светлый фон из RWY */
     transition: none !important;
 }
@@ -77,7 +85,9 @@ body {
     background-color: transparent !important; /* Делаем слой прозрачным, чтобы проявился цвет из html */
     margin: 0;
     padding: 0px;
-    height: 100%; /* Привязываем к html */
+    height: var(--app-height); /* Привязываем к html */
+    min-height: var(--app-height);
+    max-height: var(--app-height);
     color: var(--text-main);
     transition: color 0.3s ease; 
     position: fixed; /* Блокируем любые отскоки страницы целиком */
@@ -90,24 +100,32 @@ body {
             border-left: 1px solid rgba(0, 0, 0, 0.1);
             border-right: 1px solid rgba(0, 0, 0, 0.1);
             padding: 0; 
-            width: 100%;
-            max-width: 440px;
+            width: min(100vw, 440px);
+            width: min(var(--app-width), 440px);
+            max-width: 100%;
+            min-width: 0;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Убиваем 100dvh, который сжимался от клавиатуры */
+            height: var(--app-height); /* Убиваем 100dvh, который сжимался от клавиатуры */
+            min-height: var(--app-height);
+            max-height: var(--app-height);
             position: relative;
             box-sizing: border-box;
             overflow: hidden; 
+            padding-top: var(--safe-top);
         }
 
         /* --- ЗОНА СКРОЛЛА В ВИДЕ ОТДЕЛЬНОГО КОНТЕЙНЕРА С ОБВОДКОЙ --- */
         .precision-scroll-container {
             flex: 1;
+            min-height: 0;
+            min-width: 0;
+            max-width: 100%;
             overflow-y: auto;
             /* Убрано -webkit-overflow-scrolling: touch; как в RWY Wind Limits */
             z-index: 10;
-            margin: 5px 0px 65px 0px; 
+            margin: 5px 0px max(65px, calc(var(--safe-bottom) + 60px)) 0px; 
             padding: 10px 8px;
             background: rgba(0, 0, 0, 0.07); 
             border: 1px solid rgba(0, 0, 0, 0.1); 
@@ -168,7 +186,7 @@ body {
         /* --- КНОПКИ УПРАВЛЕНИЯ ВНУТРИ КОНТЕЙНЕРА --- */
         .refresh-btn, .theme-toggle, .menu-btn {
             position: absolute;
-            bottom: 25px;
+            bottom: max(25px, calc(var(--safe-bottom) + 20px));
             background: transparent !important;
             border: none !important;
             padding: 5px;
@@ -201,7 +219,7 @@ body {
         /* --- НАДПИСЬ КЭША В СТИЛЕ RWY --- */
         .cache-label {
             position: absolute;
-            bottom: 15px; /* Ровно под кнопкой MENU */
+            bottom: max(15px, calc(var(--safe-bottom) + 10px)); /* Ровно под кнопкой MENU */
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.5rem;
@@ -322,6 +340,19 @@ body {
             background-color: #A92626 !important; /* Стерильный бордовый для защиты ночного зрения */
         }
         /* LAYOUT */
+        .section-card,
+        .top-row,
+        .col,
+        .input-row-gray,
+        .input-row-orange,
+        .footer-gray-bar,
+        .weights-grid,
+        .weights-col,
+        .cont-inputs {
+            min-width: 0;
+            max-width: 100%;
+        }
+
         .top-row { display: flex; gap: 5px; margin-bottom: 5px; }
         .col { flex: 1; display: flex; flex-direction: column; }
         .input-row-gray { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; margin-top: 0 !important; border: 1px solid rgba(0, 0, 0, 0.15); }
@@ -975,14 +1006,42 @@ html.dark-theme input[readonly] {
     // --- ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ ---
    document.addEventListener('DOMContentLoaded', () => {
         // 1. ЖЕЛЕЗОБЕТОННАЯ ФИКСАЦИЯ ВЫСОТЫ (чтобы нижние кнопки не прыгали от клавиатуры)
-        const lockAppHeight = () => {
+        const lockAppViewport = () => {
+            const visualViewport = window.visualViewport;
+            const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
+            const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
+            const appWidth = Math.min(viewportWidth, 440) + 'px';
             const staticHeight = window.innerHeight + 'px';
-            document.documentElement.style.height = staticHeight;
-            document.body.style.height = staticHeight;
+            const root = document.documentElement;
+            const body = document.body;
+
+            root.style.setProperty('--app-height', staticHeight);
+            root.style.setProperty('--app-width', appWidth);
+            root.style.height = staticHeight;
+            body.style.height = staticHeight;
+
+            if (viewportWidth && viewportWidth < 440) {
+                root.style.width = viewportWidth + 'px';
+                body.style.width = viewportWidth + 'px';
+            } else {
+                root.style.width = '100%';
+                body.style.width = '100%';
+            }
+
             const wrapper = document.querySelector('.app-wrapper');
-            if (wrapper) wrapper.style.height = staticHeight;
+            if (wrapper) {
+                wrapper.style.height = staticHeight;
+                wrapper.style.width = appWidth;
+            }
         };
-        lockAppHeight(); // Фиксируем высоту в пикселях при старте
+
+        const relockAfterOrientation = () => {
+            lockAppViewport();
+            setTimeout(lockAppViewport, 150);
+            setTimeout(lockAppViewport, 350);
+            setTimeout(lockAppViewport, 700);
+        };
+        lockAppViewport(); // Фиксируем viewport в пикселях при старте
 
         // Запрос постоянного хранилища для защиты от агрессивной очистки кэша iOS/Android
         if (navigator.storage && navigator.storage.persist) {
@@ -996,9 +1055,12 @@ html.dark-theme input[readonly] {
         }
 
         // Пересчитываем высоту только если пилот физически перевернул телефон (смена ориентации)
-        window.addEventListener('orientationchange', () => {
-            setTimeout(lockAppHeight, 150);
-        });
+        window.addEventListener('orientationchange', relockAfterOrientation);
+        window.addEventListener('resize', lockAppViewport);
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', lockAppViewport);
+        }
 
         // 2. Жестко указываем браузеру (Android Chrome), что клавиатура ложится поверх
         if ('virtualKeyboard' in navigator) {

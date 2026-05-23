@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <title>Расчет смены</title>
 
 <link rel="manifest" href="manifest.json">
@@ -32,6 +34,10 @@
 
   /* фиксированные зоны */
   --fixedHeaderH: 100px;
+  --app-height: 100vh;
+  --app-width: 100vw;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ЖЕЛЕЗНАЯ ФИКСАЦИЯ ЦИФР (Arial Tabular Numbers) */
@@ -106,7 +112,9 @@ html {
 html, body {
     /* Блокировка pull-to-refresh на уровне браузера */
     overscroll-behavior-y: none;
-    height: 100%;
+    height: var(--app-height);
+    min-height: var(--app-height);
+    max-height: var(--app-height);
     width: 100%;
     overflow: hidden;
 }
@@ -117,30 +125,35 @@ body {
     color: var(--ink); 
     display: flex; 
     justify-content: center;
-    height: 100dvh; 
+    height: var(--app-height); 
     /* manipulation отключает зум по двойному тапу, сохраняя скролл */
     touch-action: manipulation; 
 }
 
 /* Главный контейнер-приложение (строго 440px по центру) */
 .app-container {
-  width: 100%;
-  max-width: 440px;
-  height: 100%;
+  width: min(100vw, 440px);
+  width: min(var(--app-width), 440px);
+  max-width: 100%;
+  min-width: 0;
+  height: var(--app-height);
+  min-height: var(--app-height);
+  max-height: var(--app-height);
   display: flex;
   flex-direction: column;
   position: relative;
   background: var(--card); /* Белый фон всего сайта по аналогии с образцом */
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
+  padding-top: var(--safe-top);
   /* Отступ снизу для кнопок управления */
-  padding-bottom: 60px;
+  padding-bottom: max(60px, calc(var(--safe-bottom) + 52px));
 }
 
 /* Кнопки управления внизу (аналогия с образцом) */
 .bottom-btn {
   position: absolute;
-  bottom: 15px;
+  bottom: max(15px, calc(var(--safe-bottom) + 10px));
   background: transparent !important;
   border: none !important;
   padding: 5px;
@@ -166,7 +179,7 @@ body {
 /* --- СТИЛЬ НАДПИСИ КЭША ИЗ ОБРАЗЦА --- */
 .cache-label {
   position: absolute;
-  bottom: 10px; /* Чуть ниже текста MENU */
+  bottom: max(10px, calc(var(--safe-bottom) + 5px)); /* Чуть ниже текста MENU */
   left: 50%;
   transform: translateX(-50%);
   font-size: 7px;
@@ -210,6 +223,9 @@ html.dark-theme {
 /* Зона скролла занимает всё оставшееся место */
 .scrollArea {
   flex: 1; 
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
@@ -239,7 +255,22 @@ html.dark-theme {
 /* Внутренние отступы контента */
 .wrap { 
   width: 100%; 
+  min-width: 0;
+  max-width: 100%;
   padding: 10px; 
+}
+
+.headerFixed,
+.headerWrap,
+.pairRow,
+.multiTimes,
+.sixRow,
+.results3,
+.paxButtons,
+.modeButtons,
+.tzGroup {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .card{
@@ -968,6 +999,59 @@ button:focus {
 
 </div>
 <script>
+
+  (function () {
+    function lockAppViewport() {
+      const visualViewport = window.visualViewport;
+      const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
+      const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
+      const appWidth = Math.min(viewportWidth, 440) + 'px';
+      const staticHeight = window.innerHeight + 'px';
+      const root = document.documentElement;
+      const body = document.body;
+
+      root.style.setProperty('--app-height', staticHeight);
+      root.style.setProperty('--app-width', appWidth);
+      root.style.height = staticHeight;
+      body.style.height = staticHeight;
+
+      if (viewportWidth && viewportWidth < 440) {
+        root.style.width = viewportWidth + 'px';
+        body.style.width = viewportWidth + 'px';
+      } else {
+        root.style.width = '100%';
+        body.style.width = '100%';
+      }
+
+      const shell = document.querySelector('.app-container');
+      if (shell) {
+        shell.style.height = staticHeight;
+        shell.style.width = appWidth;
+      }
+    }
+
+    function relockAfterOrientation() {
+      lockAppViewport();
+      setTimeout(lockAppViewport, 150);
+      setTimeout(lockAppViewport, 350);
+      setTimeout(lockAppViewport, 700);
+    }
+
+    lockAppViewport();
+
+    window.addEventListener('orientationchange', function () {
+      relockAfterOrientation();
+    });
+    window.addEventListener('resize', lockAppViewport);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', lockAppViewport);
+    }
+
+    if ('virtualKeyboard' in navigator) {
+      navigator.virtualKeyboard.overlaysContent = true;
+    }
+  })();
 
   // Блокировка контекстного меню (правой кнопки мыши / долгого тапа)
 document.addEventListener('contextmenu', event => event.preventDefault());
