@@ -1108,17 +1108,20 @@
 
     window.airportsNpa = {};
 
-    // 1. Включаем Оффлайн-хранилище (кэш в памяти телефона)
-    db.enablePersistence()
+    // Включаем мульти-вкладочное оффлайн-хранилище
+    db.enableMultiTabPersistence()
       .catch(err => console.error("Offline init error:", err));
 
-    // 2. Сразу скачиваем ВСЮ базу при загрузке приложения для работы в авиарежиме
-    db.collection("airportsnpa").get().then((snapshot) => {
+    // 2. Живой слушатель базы. В оффлайне мгновенно отдает кэш, в онлайне обновляется сам.
+    db.collection("airportsnpa").onSnapshot((snapshot) => {
+        window.airportsNpa = {}; // Очищаем перед заливкой
         snapshot.forEach(doc => { 
             window.airportsNpa[doc.id] = doc.data(); 
         });
-        console.log("Database synced for offline use.");
-    }).catch(err => console.error("Database sync error:", err));
+        console.log("База синхронизирована и готова к оффлайну");
+    }, (error) => {
+        console.error("Ошибка загрузки базы:", error);
+    });
 
     // 3. Скрытая функция входа Владельца
     function adminLogin() {
