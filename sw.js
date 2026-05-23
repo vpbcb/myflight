@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260523-8';
+const CACHE_NAME = 'myflight_v.260523-7';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
     './myfuel.html',
     './mywind.html',
     './mypath.html',
+    './mynpa.html',
     './myshift.html',
     // --- ДОБАВИТЬ ЭТИ СТРОКИ: ---
     './suflights.js',    // БД рейсов (из index.html)

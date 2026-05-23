@@ -803,7 +803,7 @@
                 <div class="info"><span class="title">MyWeather</span></div>
             </a>
 
-            <a href="#" class="project-card" style="opacity: 0.5;">
+            <a href="#" class="project-card" id="mynpaCard" style="opacity: 0.5;">
                 <div class="icon-box">🗺️</div>
                 <div class="info"><span class="title">MyNPA</span></div>
             </a>
@@ -1788,6 +1788,35 @@ window.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.quick-note-card[data-note-key]').forEach(card => {
                 card.addEventListener('click', () => openNotesKeypad(card.dataset.noteKey));
             });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mynpaCard = document.getElementById('mynpaCard');
+            if (!mynpaCard) return;
+
+            let mynpaTimer = null;
+
+            const cancelMynpaTimer = () => {
+                clearTimeout(mynpaTimer);
+                mynpaTimer = null;
+            };
+
+            const startMynpaTimer = (event) => {
+                if (event.pointerType === 'mouse' && event.button !== 0) return;
+                cancelMynpaTimer();
+                mynpaTimer = setTimeout(() => {
+                    window.location.href = './mynpa.html';
+                }, 3000);
+            };
+
+            mynpaCard.addEventListener('click', event => event.preventDefault());
+            mynpaCard.addEventListener('contextmenu', event => event.preventDefault());
+            mynpaCard.addEventListener('pointerdown', startMynpaTimer);
+            mynpaCard.addEventListener('pointerup', cancelMynpaTimer);
+            mynpaCard.addEventListener('pointerleave', cancelMynpaTimer);
+            mynpaCard.addEventListener('pointercancel', cancelMynpaTimer);
         });
     </script>
 </body>
