@@ -590,6 +590,32 @@
         .quick-note-card.note-crew,
         .note-chip.note-crew { background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 52%, #0ea5e9 100%); color: #082f49; }
 
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-theme) .quick-note-card,
+            :root:not(.light-theme) .note-chip {
+                border-color: rgba(255, 255, 255, 0.16);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            }
+            :root:not(.light-theme) .quick-note-card.note-fob,
+            :root:not(.light-theme) .note-chip.note-fob { background: linear-gradient(135deg, #c7834f 0%, #b7642c 52%, #9f4c16 100%); color: #2f1205; }
+            :root:not(.light-theme) .quick-note-card.note-stand,
+            :root:not(.light-theme) .note-chip.note-stand { background: linear-gradient(135deg, #c9af52 0%, #b39214 58%, #95750b 100%); color: #2d2103; }
+            :root:not(.light-theme) .quick-note-card.note-crew,
+            :root:not(.light-theme) .note-chip.note-crew { background: linear-gradient(135deg, #519eba 0%, #277fa3 52%, #0b668f 100%); color: #031e2f; }
+        }
+
+        html.dark-theme .quick-note-card,
+        html.dark-theme .note-chip {
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        html.dark-theme .quick-note-card.note-fob,
+        html.dark-theme .note-chip.note-fob { background: linear-gradient(135deg, #c7834f 0%, #b7642c 52%, #9f4c16 100%); color: #2f1205; }
+        html.dark-theme .quick-note-card.note-stand,
+        html.dark-theme .note-chip.note-stand { background: linear-gradient(135deg, #c9af52 0%, #b39214 58%, #95750b 100%); color: #2d2103; }
+        html.dark-theme .quick-note-card.note-crew,
+        html.dark-theme .note-chip.note-crew { background: linear-gradient(135deg, #519eba 0%, #277fa3 52%, #0b668f 100%); color: #031e2f; }
+
         .notes-keypad-content {
             width: 80%;
             max-width: 280px;
@@ -706,6 +732,45 @@
         .search-row {
             min-width: 0;
             max-width: 100%;
+        }
+
+        @media (hover: hover) and (pointer: fine) and (max-height: 900px) {
+            .header {
+                padding-bottom: 10px;
+            }
+            .header .main-logo {
+                height: 54px;
+            }
+            .flight-search-card {
+                margin-bottom: 12px;
+            }
+            .search-wrapper {
+                padding: 12px;
+                gap: 10px;
+            }
+            .notes-field {
+                min-height: 86px;
+            }
+            .notes-free-text {
+                min-height: 38px;
+                font-size: 0.9rem;
+            }
+            .quick-note-card {
+                min-height: 38px;
+            }
+            .container {
+                gap: 10px;
+                margin-bottom: 82px;
+            }
+            .project-card {
+                aspect-ratio: 1.18 / 1;
+                padding: 10px 6px;
+            }
+            .icon-box {
+                width: 36px;
+                height: 36px;
+                margin-bottom: 6px;
+            }
         }
 
     </style>
