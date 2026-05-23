@@ -170,6 +170,43 @@
         }
         .mail-btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .clear-data-modal {
+            text-align: center;
+            max-width: 300px;
+        }
+        .clear-data-text {
+            margin: 8px 0 18px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.35;
+        }
+        .clear-data-actions {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 10px;
+        }
+        .clear-data-cancel,
+        .clear-data-confirm {
+            height: 44px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+        .clear-data-cancel {
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+        .clear-data-confirm {
+            border: none;
+            background: #ef4444;
+            color: #fff;
+        }
+        .clear-data-cancel:active,
+        .clear-data-confirm:active { transform: scale(0.97); }
+
         /* === СТИЛИ REFRESH === */
         .refresh-btn {
             background: transparent;
@@ -438,8 +475,11 @@
 
         .notes-chip-row {
             display: none;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 6px;
+            width: 100%;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .notes-placeholder {
@@ -532,9 +572,15 @@
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25);
         }
         .note-chip {
-            flex: 0 0 auto;
+            flex: var(--note-chip-flex, 1 1 0);
+            min-width: 0;
             max-width: 100%;
             min-height: 32px;
+            padding-left: 7px;
+            padding-right: 7px;
+            font-size: 0.76rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .quick-note-card.note-fob,
@@ -821,6 +867,17 @@
             </div>
         </div>
 
+        <div id="clearDataModal" class="modal-overlay" onclick="closeClearDataModal(event)">
+            <div class="modal-content clear-data-modal" onclick="event.stopPropagation()">
+                <span class="modal-title">Очистить данные?</span>
+                <div class="clear-data-text">Будут очищены номер рейса, номер самолета и заметки.</div>
+                <div class="clear-data-actions">
+                    <button type="button" class="clear-data-cancel" onclick="closeClearDataModal()">Отмена</button>
+                    <button type="button" class="clear-data-confirm" onclick="confirmClearData()">Очистить</button>
+                </div>
+            </div>
+        </div>
+
         <div id="ambiguityModal" class="modal-overlay" onclick="closeAmbiguity()">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <span class="modal-close-btn" onclick="closeAmbiguity()">&times;</span>
@@ -1076,6 +1133,46 @@
             window.location.href = window.location.pathname + '?reset=' + new Date().getTime();
         }
 
+        function openClearDataModal() {
+            const modal = document.getElementById('clearDataModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeClearDataModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('clearDataModal');
+            if (!modal) return;
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
+        }
+
+        function confirmClearData() {
+            const flightInput = document.getElementById('flightNumInput');
+            const acInput = document.getElementById('acNumInput');
+
+            if (flightInput) {
+                flightInput.value = '';
+                flightInput.dataset.prevVal = '';
+                searchLocalRoute(flightInput);
+                localStorage.removeItem('last_flight_num');
+            }
+
+            if (acInput) {
+                acInput.value = '';
+                acInput.dataset.prevVal = '';
+                searchLocalAc(acInput);
+                localStorage.removeItem('last_ac_query');
+            }
+
+            if (typeof window.clearQuickNotesData === 'function') {
+                window.clearQuickNotesData();
+            }
+
+            closeClearDataModal();
+        }
+
 // Логика Telegram Feedback
         function openMailModal() {
             const modal = document.getElementById('mailModal');
@@ -1207,20 +1304,33 @@
             // 3. ЛОГИКА ДОЛГОГО ТАПА НА REFRESH
             const refBtn = document.getElementById('refreshBtn');
             let refPressTimer;
+            let refLongPressTriggered = false;
             
             if (refBtn) {
                 refBtn.addEventListener('contextmenu', e => e.preventDefault());
-                refBtn.addEventListener('click', e => e.preventDefault()); 
+                refBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    if (refLongPressTriggered) {
+                        refLongPressTriggered = false;
+                        return;
+                    }
+                    openClearDataModal();
+                });
 
                 const startRefPress = (e) => {
                     if (e.type === 'touchstart') e.preventDefault();
+                    refLongPressTriggered = false;
                     refPressTimer = setTimeout(() => {
+                        refLongPressTriggered = true;
                         hardResetApp(); 
                     }, 1000); 
                 };
 
-                const cancelRefPress = () => {
-                    clearTimeout(refPressTimer); 
+                const cancelRefPress = (e) => {
+                    clearTimeout(refPressTimer);
+                    if (e && e.type === 'touchend' && !refLongPressTriggered) {
+                        openClearDataModal();
+                    }
                 };
 
                 refBtn.addEventListener('mousedown', startRefPress);
@@ -1309,12 +1419,14 @@ function searchLocalRoute(inputElem) {
 
 // Умный фокус: запоминаем значение и очищаем поле
 function handleFocus(el) {
+    if (el.id === 'quickNotesText') return;
     el.dataset.prevVal = el.value;
     el.value = '';
     el.dispatchEvent(new Event('input'));
 }
 
 function handleBlur(el) {
+    if (el.id === 'quickNotesText') return;
     if (el.value.trim() === '') {
         el.value = el.dataset.prevVal || '';
         el.dispatchEvent(new Event('input'));
@@ -1536,6 +1648,19 @@ window.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem(QUICK_NOTES_STORAGE_KEY, JSON.stringify(quickNoteValues));
         }
 
+        window.clearQuickNotesData = function() {
+            quickNoteValues = {};
+            notesKeypadValue = '';
+            activeQuickNoteKey = null;
+            localStorage.removeItem(QUICK_NOTES_STORAGE_KEY);
+            localStorage.removeItem(QUICK_NOTES_TEXT_STORAGE_KEY);
+
+            const notesText = document.getElementById('quickNotesText');
+            if (notesText) notesText.value = '';
+
+            renderQuickNotes();
+        };
+
         function getQuickNoteConfig(key) {
             return QUICK_NOTES.find(item => item.key === key);
         }
@@ -1564,6 +1689,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     chip.type = 'button';
                     chip.className = 'note-chip ' + item.className;
                     chip.textContent = item.label + ': ' + value;
+                    chip.title = chip.textContent;
+                    chip.style.setProperty('--note-chip-flex', Math.max(8, chip.textContent.length) + ' 1 0');
                     chip.addEventListener('click', () => openNotesKeypad(item.key));
                     chipRow.appendChild(chip);
                 }
@@ -1643,6 +1770,9 @@ window.addEventListener('DOMContentLoaded', () => {
             if (notesText) {
                 notesText.value = localStorage.getItem(QUICK_NOTES_TEXT_STORAGE_KEY) || '';
                 notesText.addEventListener('input', () => {
+                    localStorage.setItem(QUICK_NOTES_TEXT_STORAGE_KEY, notesText.value);
+                });
+                notesText.addEventListener('blur', () => {
                     localStorage.setItem(QUICK_NOTES_TEXT_STORAGE_KEY, notesText.value);
                 });
             }
