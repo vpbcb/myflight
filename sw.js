@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260523-4';
+const CACHE_NAME = 'myflight_v.260523-1';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
@@ -161,6 +161,12 @@ self.addEventListener('activate', (event) => {
             })
         )).then(() => self.clients.claim())
     );
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 // Перехват запросов (Ядро маршрутизации)
