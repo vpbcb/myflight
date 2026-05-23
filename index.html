@@ -636,6 +636,12 @@
                 return !!active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
             }
 
+            function keepViewportPinned() {
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                window.scrollTo(0, 0);
+            }
+
             function lockAppViewport(options) {
                 const forceHeight = options && options.forceHeight;
                 const visualViewport = window.visualViewport;
@@ -675,6 +681,11 @@
                     shell.style.height = staticHeight;
                     shell.style.width = appWidth;
                 }
+
+                if (keyboardLikelyOpen || isEditableFocused()) {
+                    keepViewportPinned();
+                    setTimeout(keepViewportPinned, 50);
+                }
             }
 
             function relockAfterOrientation() {
@@ -699,6 +710,8 @@
             document.addEventListener('focusin', function (event) {
                 if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) {
                     lockAppViewport();
+                    keepViewportPinned();
+                    setTimeout(keepViewportPinned, 100);
                 }
             });
             document.addEventListener('focusout', function () {
@@ -707,6 +720,7 @@
 
             if ('virtualKeyboard' in navigator) {
                 navigator.virtualKeyboard.overlaysContent = true;
+                navigator.virtualKeyboard.addEventListener('geometrychange', lockAppViewport);
             }
         })();
     </script>
