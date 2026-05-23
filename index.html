@@ -407,6 +407,222 @@
             font-weight: 700;
         }
 
+
+        .quick-notes-block {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notes-field {
+            min-height: 104px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            padding: 8px;
+            overflow: hidden;
+            scrollbar-width: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .notes-field::-webkit-scrollbar { display: none; }
+        .notes-field:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+        }
+
+        .notes-chip-row {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .notes-placeholder {
+            color: var(--text-secondary);
+            opacity: 0.65;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            padding-left: 6px;
+            white-space: nowrap;
+        }
+
+        .quick-notes-picker {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .notes-free-text {
+            width: 100%;
+            min-height: 56px;
+            border: none;
+            outline: none;
+            resize: none;
+            background: transparent;
+            color: var(--text-main);
+            font: inherit;
+            font-size: 0.95rem;
+            line-height: 1.35;
+            font-weight: 600;
+            padding: 2px 4px;
+            box-sizing: border-box;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        .notes-free-text::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.65;
+            font-weight: 700;
+        }
+
+        .quick-note-card,
+        .note-chip {
+            min-height: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 8px;
+            padding: 0 10px;
+            font-family: inherit;
+            font-weight: 900;
+            font-size: 0.8rem;
+            line-height: 1.1;
+            letter-spacing: 0;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+        }
+        .quick-note-card {
+            position: relative;
+            min-height: 42px;
+            overflow: hidden;
+        }
+        .quick-note-card::after {
+            content: '+';
+            position: absolute;
+            top: 5px;
+            right: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.42);
+            color: currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            line-height: 1;
+            font-weight: 900;
+        }
+        .quick-note-card:active,
+        .note-chip:active {
+            transform: scale(0.97);
+            filter: brightness(0.96);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+        .note-chip {
+            flex: 0 0 auto;
+            max-width: 100%;
+            min-height: 32px;
+        }
+
+        .quick-note-card.note-fob,
+        .note-chip.note-fob { background: linear-gradient(135deg, #fdba74 0%, #fb923c 52%, #f97316 100%); color: #431407; }
+        .quick-note-card.note-stand,
+        .note-chip.note-stand { background: linear-gradient(135deg, #fde68a 0%, #facc15 58%, #eab308 100%); color: #422006; }
+        .quick-note-card.note-crew,
+        .note-chip.note-crew { background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 52%, #0ea5e9 100%); color: #082f49; }
+
+        .notes-keypad-content {
+            width: 80%;
+            max-width: 280px;
+            padding: 20px 10px;
+            border-radius: 16px;
+        }
+
+        .notes-keypad-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 15px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        #notesKpTitle {
+            color: var(--accent-color);
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #notesKpValue {
+            min-height: 34px;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .notes-keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            margin-bottom: 10px;
+        }
+
+        .notes-kp-btn {
+            height: 58px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1.85rem;
+            font-weight: 800;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+        }
+        .notes-kp-btn:active {
+            background: rgba(25, 118, 210, 0.14);
+            transform: scale(0.95);
+        }
+        .notes-kp-del { color: #ef4444; }
+        .notes-kp-clr {
+            color: #ef4444;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+        .notes-kp-done {
+            grid-column: span 2;
+            color: var(--accent-color);
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            background: rgba(25, 118, 210, 0.1);
+            border-color: var(--accent-color);
+        }
+
         /* --- Стили содержимого окна Aircraft Info --- */
         #infoModalContent div > span:first-child { color: var(--text-secondary); }
         #infoFormerReg, #infoSeatConf, #infoMinOAT { color: var(--text-main); }
@@ -508,6 +724,19 @@
                     </div>
                 </div>
 
+
+                <div class="quick-notes-block">
+                    <div id="quickNotesField" class="notes-field" aria-label="Notes">
+                        <div id="quickNotesChipRow" class="notes-chip-row"></div>
+                        <textarea id="quickNotesText" class="notes-free-text" placeholder="Notes" rows="2" onfocus="handleFocus(this)" onblur="handleBlur(this)"></textarea>
+                    </div>
+                    <div id="quickNotesPicker" class="quick-notes-picker">
+                        <button type="button" class="quick-note-card note-fob" data-note-key="fob">FOB</button>
+                        <button type="button" class="quick-note-card note-stand" data-note-key="stand">Stand</button>
+                        <button type="button" class="quick-note-card note-crew" data-note-key="crew">Crew ID</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -566,6 +795,32 @@
         </div>
 
         <!-- Модальное окно уточнения борта -->
+
+        <div id="notesKeypadModal" class="modal-overlay" onclick="closeNotesKeypad(event)">
+            <div class="modal-content notes-keypad-content" onclick="event.stopPropagation()">
+                <div class="notes-keypad-header">
+                    <span id="notesKpTitle">ENTER VALUE</span>
+                    <span id="notesKpValue">&nbsp;</span>
+                </div>
+                <div class="notes-keypad-grid">
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('1')">1</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('2')">2</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('3')">3</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('4')">4</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('5')">5</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('6')">6</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('7')">7</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('8')">8</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('9')">9</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('00')">00</button>
+                    <button type="button" class="notes-kp-btn" onclick="notesKpPress('0')">0</button>
+                    <button type="button" class="notes-kp-btn notes-kp-del" onclick="notesKpPress('del')">&#9003;</button>
+                    <button type="button" class="notes-kp-btn notes-kp-clr" onclick="notesKpPress('clear')">CLR</button>
+                    <button type="button" class="notes-kp-btn notes-kp-done" onclick="confirmNotesKeypad()">DONE</button>
+                </div>
+            </div>
+        </div>
+
         <div id="ambiguityModal" class="modal-overlay" onclick="closeAmbiguity()">
             <div class="modal-content" onclick="event.stopPropagation()">
                 <span class="modal-close-btn" onclick="closeAmbiguity()">&times;</span>
@@ -1254,5 +1509,156 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+
+    <!-- Quick notes logic -->
+    <script>
+        const QUICK_NOTES_STORAGE_KEY = 'hub_quick_notes';
+        const QUICK_NOTES_TEXT_STORAGE_KEY = 'hub_quick_notes_text';
+        const QUICK_NOTES = [
+            { key: 'fob', label: 'FOB', className: 'note-fob' },
+            { key: 'stand', label: 'Stand', className: 'note-stand' },
+            { key: 'crew', label: 'Crew ID', className: 'note-crew' }
+        ];
+
+        let quickNoteValues = {};
+        let activeQuickNoteKey = null;
+        let notesKeypadValue = '';
+
+        function loadQuickNotes() {
+            try {
+                quickNoteValues = JSON.parse(localStorage.getItem(QUICK_NOTES_STORAGE_KEY) || '{}') || {};
+            } catch (e) {
+                quickNoteValues = {};
+            }
+        }
+
+        function saveQuickNotes() {
+            localStorage.setItem(QUICK_NOTES_STORAGE_KEY, JSON.stringify(quickNoteValues));
+        }
+
+        function getQuickNoteConfig(key) {
+            return QUICK_NOTES.find(item => item.key === key);
+        }
+
+        function renderQuickNotes() {
+            const field = document.getElementById('quickNotesField');
+            const picker = document.getElementById('quickNotesPicker');
+            const chipRow = document.getElementById('quickNotesChipRow');
+            if (!field || !picker || !chipRow) return;
+
+            chipRow.querySelectorAll('.note-chip').forEach(chip => chip.remove());
+
+            let hasSelected = false;
+            let hasAvailable = false;
+
+            QUICK_NOTES.forEach(item => {
+                const value = (quickNoteValues[item.key] || '').trim();
+                const sourceCard = picker.querySelector('[data-note-key="' + item.key + '"]');
+
+                if (sourceCard) sourceCard.style.display = value ? 'none' : 'flex';
+                if (!value) hasAvailable = true;
+
+                if (value) {
+                    hasSelected = true;
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'note-chip ' + item.className;
+                    chip.textContent = item.label + ': ' + value;
+                    chip.addEventListener('click', () => openNotesKeypad(item.key));
+                    chipRow.appendChild(chip);
+                }
+            });
+
+            chipRow.style.display = hasSelected ? 'flex' : 'none';
+            picker.style.display = hasAvailable ? 'grid' : 'none';
+        }
+
+        function openNotesKeypad(key) {
+            const item = getQuickNoteConfig(key);
+            const modal = document.getElementById('notesKeypadModal');
+            const title = document.getElementById('notesKpTitle');
+            const textInput = document.getElementById('quickNotesText');
+            if (!item || !modal || !title) return;
+
+            if (textInput) textInput.blur();
+            activeQuickNoteKey = key;
+            notesKeypadValue = (quickNoteValues[key] || '').trim();
+            title.textContent = item.label;
+            updateNotesKpDisplay();
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeNotesKeypad(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('notesKeypadModal');
+            if (!modal) return;
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
+            activeQuickNoteKey = null;
+            notesKeypadValue = '';
+        }
+
+        function confirmNotesKeypad() {
+            if (!activeQuickNoteKey) return;
+            const value = notesKeypadValue.trim();
+            if (value) {
+                quickNoteValues[activeQuickNoteKey] = value;
+            } else {
+                delete quickNoteValues[activeQuickNoteKey];
+            }
+            saveQuickNotes();
+            renderQuickNotes();
+            closeNotesKeypad();
+        }
+
+        function notesKpPress(key) {
+            if (!activeQuickNoteKey) return;
+
+            if (key === 'clear') {
+                notesKeypadValue = '';
+            } else if (key === 'del') {
+                notesKeypadValue = notesKeypadValue.slice(0, -1);
+            } else {
+                notesKeypadValue += key;
+            }
+
+            updateNotesKpDisplay();
+        }
+
+        function updateNotesKpDisplay() {
+            const valueEl = document.getElementById('notesKpValue');
+            if (!valueEl) return;
+            valueEl.textContent = notesKeypadValue || '\u00a0';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuickNotes();
+            renderQuickNotes();
+
+            const notesText = document.getElementById('quickNotesText');
+            const notesField = document.getElementById('quickNotesField');
+            const chipRow = document.getElementById('quickNotesChipRow');
+
+            if (notesText) {
+                notesText.value = localStorage.getItem(QUICK_NOTES_TEXT_STORAGE_KEY) || '';
+                notesText.addEventListener('input', () => {
+                    localStorage.setItem(QUICK_NOTES_TEXT_STORAGE_KEY, notesText.value);
+                });
+            }
+
+            if (notesField && notesText) {
+                notesField.addEventListener('click', (event) => {
+                    if (event.target === notesField || event.target === chipRow) {
+                        notesText.focus();
+                    }
+                });
+            }
+
+            document.querySelectorAll('.quick-note-card[data-note-key]').forEach(card => {
+                card.addEventListener('click', () => openNotesKeypad(card.dataset.noteKey));
+            });
+        });
+    </script>
 </body>
 </html>
