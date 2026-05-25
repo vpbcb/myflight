@@ -19,6 +19,8 @@
             --text-main: #0f172a;        
             --accent-blue: #0ea5e9;
             --border-color: rgba(15, 23, 42, 0.08);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         html.dark-theme {
@@ -78,7 +80,7 @@
             flex: 1;
             overflow-y: auto;
             z-index: 10;
-            margin: 5px 0px 65px 0px; 
+            margin: 5px 0 max(60px, calc(var(--safe-bottom) + 55px)) 0; 
             padding: 8px 10px;
             background: transparent; 
             border: none;
@@ -87,6 +89,16 @@
         .precision-scroll-container::-webkit-scrollbar { width: 4px; }
         .precision-scroll-container::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 10px; }
 
+        .app-header {
+            position: relative;
+            flex-shrink: 0;
+            min-height: max(36px, calc(var(--safe-top) + 32px));
+            padding: max(6px, calc(var(--safe-top) + 4px)) 8px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .app-title { 
             font-size: 0.65rem; 
             text-align: center; 
@@ -94,9 +106,55 @@
             color: var(--text-main); 
             text-transform: uppercase; 
             margin: 0;
-            padding: 6px 0;
+            padding: 0;
             font-weight: 800; 
             opacity: 0.4; 
+        }
+
+        .header-actions {
+            position: absolute;
+            right: 8px;
+            top: max(5px, calc(var(--safe-top) + 4px));
+            display: flex;
+            gap: 6px;
+            z-index: 20;
+        }
+
+        .header-action-btn {
+            height: 28px;
+            padding: 0 8px;
+            border-radius: 9px;
+            border: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.04);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            cursor: pointer;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header-action-btn.save {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: #ffffff;
+        }
+
+        html.dark-theme .header-action-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        html.dark-theme .header-action-btn.save {
+            background: #0273ad;
+            border-color: #0273ad;
+        }
+
+        .header-action-btn:active {
+            transform: scale(0.95);
         }
 
         /* БЕЛЫЕ ФОНОВЫЕ БЛОКИ (КОНТЕЙНЕРЫ) */
@@ -108,6 +166,10 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
             overflow: hidden; /* Чтобы контент не вылезал за скругления при анимации */
             transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .npa-info-card {
+            overflow: visible;
         }
 
         /* ЗАГОЛОВОК ПРЯМО НА БЕЛОМ ФОНЕ КОНТЕЙНЕРА */
@@ -138,6 +200,11 @@
             transform: translateY(0); 
         }
 
+        .npa-info-card .foldBlock.open {
+            max-height: 330px;
+            overflow: visible;
+        }
+
         .card-content {
             padding: 0 16px 16px 16px;
             color: var(--text-main);
@@ -146,9 +213,11 @@
         /* КНОПКИ ВНИЗУ */
         .refresh-btn, .menu-btn {
             position: absolute;
-            bottom: 25px;
+            bottom: max(20px, calc(var(--safe-bottom) + 15px));
+            margin: 0;
             background: transparent !important;
             border: none !important;
+            box-shadow: none !important;
             padding: 5px;
             cursor: pointer;
             display: flex;
@@ -160,11 +229,20 @@
             outline: none;
             -webkit-tap-highlight-color: transparent;
             opacity: 0.8;
+            font-family: inherit;
         }
 
-        .refresh-btn { left: 15px; }
-        .menu-btn { right: 15px; justify-content: flex-end; }
-        .refresh-btn:active, .menu-btn:active { transform: scale(0.95); }
+        .refresh-btn { left: 20px; justify-content: flex-start; }
+        .menu-btn { right: 20px; justify-content: flex-end; }
+        .refresh-btn::after, .menu-btn::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            bottom: -15px;
+            left: -15px;
+            right: -15px;
+        }
+        .refresh-btn:active, .menu-btn:active { transform: scale(0.9); }
 
         .btn-label-style {
             font-size: 0.65rem; 
@@ -310,6 +388,100 @@
             -moz-appearance: textfield;
         }
 
+        .split-display-field {
+            width: 100%;
+            height: 22px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: var(--text-main);
+            font-family: inherit;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 3px;
+            cursor: pointer;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .split-primary {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .split-secondary {
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+            color: #64748b;
+            opacity: 0.72;
+            white-space: nowrap;
+        }
+
+        html.dark-theme .split-secondary {
+            color: #94a3b8;
+            opacity: 0.65;
+        }
+
+        .gpa-container {
+            position: relative;
+            width: 100%;
+            height: 22px;
+            cursor: pointer;
+        }
+
+        .gpa-input {
+            cursor: pointer;
+            padding-right: 15px !important;
+        }
+
+        .gpa-arrow {
+            position: absolute;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 9px;
+            line-height: 1;
+            color: var(--accent-blue);
+            pointer-events: none;
+        }
+
+        .gpa-menu {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            z-index: 300;
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--accent-blue);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+        }
+
+        .gpa-menu-item {
+            padding: 9px 6px;
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            background: transparent;
+        }
+
+        .gpa-menu-item:last-child {
+            border-bottom: none;
+            color: var(--accent-blue);
+        }
+
+        .gpa-menu-item:active {
+            background: rgba(14, 165, 233, 0.1);
+        }
+
         /* Стили для Контейнера 2 */
         .c2-row {
             display: flex;
@@ -417,6 +589,17 @@
             color: #ffffff;
         }
 
+        .modal-opt-btn.add-new-appr {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.35);
+            color: var(--accent-blue);
+        }
+
+        html.dark-theme .modal-opt-btn.add-new-appr {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.35);
+        }
+
         /* Стили таблицы для Контейнера 4 */
         .npa-table {
             width: 100%;
@@ -495,6 +678,18 @@
         }
         #kpTitle { font-size: 0.75rem; color: var(--accent-blue); font-weight: 800; letter-spacing: 1px; }
         .modal-val { font-size: 2.2rem; color: var(--accent-blue); font-weight: 900; line-height: 1; margin: 0; }
+
+        .keypad-subtitle {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-main);
+            opacity: 0.6;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            text-transform: none;
+            text-align: center;
+        }
         
         .keypad-grid {
             display: grid;
@@ -569,11 +764,17 @@
 <body>
 
 <div class="app-wrapper">
-    <h2 class="app-title" ondblclick="adminLogin()" title="Double tap for admin login">=NPA CALC=</h2>
+    <div class="app-header">
+        <h2 class="app-title" ondblclick="adminLogin()" title="Double tap for admin login">=NPA CALC=</h2>
+        <div class="header-actions">
+            <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
+            <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
+        </div>
+    </div>
 
     <div class="precision-scroll-container" id="mainScroll">
         
-        <div class="section-card">
+        <div class="section-card npa-info-card">
             <div class="card-content" style="padding: 8px;">
                 <div class="c2-row" style="margin-bottom: 0;">
                     <div class="cell-wrapper flex-1">
@@ -586,7 +787,7 @@
                     </div>
                     <div class="cell-wrapper flex-1">
                         <span class="cell-label">OAT °C</span>
-                        <input type="number" class="cell-input" id="tempC">
+                        <input type="number" class="cell-input" id="tempC" value="15">
                     </div>
                 </div>
             </div>
@@ -602,7 +803,11 @@
                     <div class="c2-row">
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">RW length</span>
-                            <input type="number" class="cell-input" id="rwLength">
+                            <input type="hidden" id="rwLength">
+                            <button type="button" class="split-display-field" id="rwLengthDisplay" onclick="openNpaKeypad('rwLength')">
+                                <span class="split-primary" id="rwLengthMain"></span>
+                                <span class="split-secondary" id="rwLengthSub"></span>
+                            </button>
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">Land THR elev</span>
@@ -610,7 +815,16 @@
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">GPA</span>
-                            <input type="number" class="cell-input" id="gpa" step="0.1">
+                            <div class="gpa-container" onclick="toggleGpaMenu(event)">
+                                <input type="text" class="cell-input gpa-input" id="gpa" readonly>
+                                <span class="gpa-arrow">▼</span>
+                                <div class="gpa-menu" id="gpaMenu">
+                                    <div class="gpa-menu-item" onclick="setGpa(2.7, event)">2.7</div>
+                                    <div class="gpa-menu-item" onclick="setGpa(3.0, event)">3.0</div>
+                                    <div class="gpa-menu-item" onclick="setGpa(3.5, event)">3.5</div>
+                                    <div class="gpa-menu-item" onclick="setGpa('another', event)">Another...</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -631,10 +845,6 @@
                         </div>
                     </div>
 
-                    <button type="button" onclick="saveToFirebase()" style="width: 100%; margin-top: 10px; height: 38px; background: var(--accent-blue); color: #ffffff; border: none; border-radius: 12px; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity 0.1s ease; outline: none; -webkit-tap-highlight-color: transparent;">
-                        Save to Database
-                    </button>
-
                 </div>
             </div>
         </div>
@@ -653,7 +863,11 @@
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">Inbound Course</span>
-                            <input type="number" class="cell-input" id="inboundCrs">
+                            <input type="hidden" id="inboundCrs">
+                            <button type="button" class="split-display-field" id="inboundCrsDisplay" onclick="openNpaKeypad('inboundCrs')">
+                                <span class="split-primary" id="inboundCrsMain"></span>
+                                <span class="split-secondary" id="inboundCrsSub"></span>
+                            </button>
                         </div>
                     </div>
 
@@ -757,21 +971,19 @@
         
         </div>
 
-    </div>
-
     <button class="refresh-btn" id="refreshBtn" title="Сбросить">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
         </svg>
-        <span class="btn-label-style" style="margin-left: 4px;">Refresh</span>
+        <span class="btn-label-style" style="margin-left: 2px;">Refresh</span>
     </button>
 
     <a href="./index.html" class="menu-btn" title="В главное меню" style="text-decoration: none;">
-        <span class="btn-label-style" style="margin-right: 5px;">GO HOME</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
+        <span class="btn-label-style" style="margin-left: 4px;">GO HOME</span>
     </a>
 
 </div>
@@ -789,28 +1001,168 @@
         window.addEventListener('orientationchange', () => setTimeout(lockAppHeight, 150));
         
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
+        setDefaultTemperature();
     });
 
     function toggleNpaBlock(id) {
         const block = document.getElementById(id);
         if (block) {
             const isOpen = block.classList.contains('open');
+            const exclusiveBlocks = ['npaBlock2', 'npaBlock3', 'npaBlock4'];
             
-            // Закрываем все блоки перед открытием выбранного
-            document.querySelectorAll('.foldBlock').forEach(b => {
-                b.classList.remove('open');
-            });
+            if (exclusiveBlocks.includes(id)) {
+                exclusiveBlocks.forEach(blockId => {
+                    const relatedBlock = document.getElementById(blockId);
+                    if (relatedBlock) relatedBlock.classList.remove('open');
+                });
+            }
             
             // Если выбранный блок был закрыт — разворачиваем его
             if (!isOpen) {
                 block.classList.add('open');
+            } else if (!exclusiveBlocks.includes(id)) {
+                block.classList.remove('open');
             }
             
             if (navigator.vibrate) navigator.vibrate(15);
         }
     }
 
+    const NPA_LOCAL_DB_KEY = 'mynpa_airports_cache_v1';
+    const NPA_PENDING_QUEUE_KEY = 'mynpa_pending_saves_v1';
+    let npaSyncInProgress = false;
+
+    function readJsonStorage(key, fallbackValue) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : fallbackValue;
+        } catch (error) {
+            console.error('Local storage read error:', error);
+            return fallbackValue;
+        }
+    }
+
+    function writeJsonStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (error) {
+            console.error('Local storage write error:', error);
+            return false;
+        }
+    }
+
+    function persistNpaCache() {
+        writeJsonStorage(NPA_LOCAL_DB_KEY, window.airportsNpa || {});
+    }
+
+    function loadNpaCache() {
+        return readJsonStorage(NPA_LOCAL_DB_KEY, {});
+    }
+
+    function mergeNpaDatabase(source) {
+        if (!source || typeof source !== 'object') return;
+        const merged = window.airportsNpa && typeof window.airportsNpa === 'object'
+            ? window.airportsNpa
+            : {};
+        const pendingKeys = new Set(
+            getPendingNpaSaves()
+                .filter(item => item && item.recordKey)
+                .map(item => item.recordKey)
+        );
+
+        Object.keys(source).forEach(airportCode => {
+            const airportData = source[airportCode];
+            if (!airportData || typeof airportData !== 'object') return;
+            if (!merged[airportCode]) merged[airportCode] = {};
+
+            Object.keys(airportData).forEach(type => {
+                if (pendingKeys.has(`${airportCode}::${type}`)) return;
+                merged[airportCode][type] = airportData[type];
+            });
+        });
+
+        window.airportsNpa = merged;
+        persistNpaCache();
+    }
+
+    function upsertLocalNpaRecord(airportCode, type, approachData) {
+        window.airportsNpa = window.airportsNpa || {};
+        if (!window.airportsNpa[airportCode]) window.airportsNpa[airportCode] = {};
+        window.airportsNpa[airportCode][type] = approachData;
+        persistNpaCache();
+    }
+
+    function getPendingNpaSaves() {
+        return readJsonStorage(NPA_PENDING_QUEUE_KEY, []);
+    }
+
+    function setPendingNpaSaves(queue) {
+        writeJsonStorage(NPA_PENDING_QUEUE_KEY, queue);
+    }
+
+    function queueNpaSave(airportCode, type, approachData) {
+        const recordKey = `${airportCode}::${type}`;
+        const nextQueue = getPendingNpaSaves()
+            .filter(item => item && item.recordKey !== recordKey);
+
+        nextQueue.push({
+            recordKey,
+            airportCode,
+            type,
+            approachData,
+            updatedAt: Date.now()
+        });
+        setPendingNpaSaves(nextQueue);
+    }
+
+    function isFirebaseReady() {
+        return window.npaDb && typeof window.npaDb.collection === 'function';
+    }
+
+    async function writeNpaRecordToCloud(airportCode, type, approachData) {
+        if (!isFirebaseReady()) throw new Error('Firebase is not ready');
+        await window.npaDb.collection('airportsnpa').doc(airportCode).set({
+            [type]: approachData
+        }, { merge: true });
+    }
+
+    async function syncPendingNpaSaves() {
+        if (npaSyncInProgress || !navigator.onLine || !isFirebaseReady()) return;
+
+        const queue = getPendingNpaSaves();
+        if (!queue.length) return;
+
+        npaSyncInProgress = true;
+        const remaining = [];
+
+        try {
+            for (let i = 0; i < queue.length; i += 1) {
+                const item = queue[i];
+                if (!item || !item.airportCode || !item.type || !item.approachData) continue;
+
+                try {
+                    await writeNpaRecordToCloud(item.airportCode, item.type, item.approachData);
+                } catch (error) {
+                    console.error('Pending sync error:', error);
+                    remaining.push(item, ...queue.slice(i + 1));
+                    break;
+                }
+            }
+        } finally {
+            setPendingNpaSaves(remaining);
+            npaSyncInProgress = false;
+        }
+    }
+
+    window.airportsNpa = loadNpaCache();
+
     let airportInputTimeout; // Переменная для хранения таймера
+
+    function setDefaultTemperature() {
+        const tempEl = document.getElementById('tempC');
+        if (tempEl && tempEl.value === "") tempEl.value = "15";
+    }
 
     function handleAirportInput() {
         clearTimeout(airportInputTimeout); // Сбрасываем таймер при каждом новом вводе
@@ -820,34 +1172,31 @@
         const typeLabel = document.getElementById('selectedTypeLabel');
 
         window.airportsNpa = window.airportsNpa || {};
+        inputEl.value = airportCode;
+        typeLabel.innerText = "—";
+        clearNpaFields();
 
-        if (!airportCode || !window.airportsNpa[airportCode]) {
-            typeLabel.innerText = "—";
-            clearNpaFields();
+        if (!airportCode || airportCode.length < 4) {
             return;
-        }
-
-        const availableApproaches = Object.keys(window.airportsNpa[airportCode]);
-
-        // Если вариантов несколько, визуально очищаем интерфейс сразу
-        if (availableApproaches.length > 1) {
-            typeLabel.innerText = "—";
-            clearNpaFields();
         }
 
         // Запускаем задержку в 500 мс
         airportInputTimeout = setTimeout(() => {
             // Двойная проверка, что пользователь не стер текст за эти полсекунды
             if (inputEl.value.trim().toUpperCase() === airportCode) {
-                if (availableApproaches.length === 1) {
-                    selectNpaType(availableApproaches[0]);
-                    inputEl.blur();
-                } else {
-                    openNpaModal();
-                    inputEl.blur();
-                }
+                openNpaModal();
+                inputEl.blur();
             }
         }, 500);
+    }
+
+    function createApproachModalButton(label, onClick, extraClass) {
+        const btn = document.createElement('button');
+        btn.className = `modal-opt-btn${extraClass ? ` ${extraClass}` : ''}`;
+        btn.type = 'button';
+        btn.onclick = onClick;
+        btn.innerText = label;
+        return btn;
     }
 
     function openNpaModal() {
@@ -858,17 +1207,26 @@
         window.airportsNpa = window.airportsNpa || {};
         optionsContainer.innerHTML = ''; // Очищаем старые кнопки
 
-        if (airportCode && window.airportsNpa[airportCode]) {
-            const approaches = Object.keys(window.airportsNpa[airportCode]);
-            approaches.forEach(type => {
-                const btn = document.createElement('button');
-                btn.className = 'modal-opt-btn';
-                btn.onclick = () => selectNpaType(type);
-                btn.innerText = type;
-                optionsContainer.appendChild(btn);
-            });
+        if (airportCode && airportCode.length >= 4) {
+            const approaches = window.airportsNpa[airportCode]
+                ? Object.keys(window.airportsNpa[airportCode]).sort()
+                : [];
+
+            if (approaches.length) {
+                approaches.forEach(type => {
+                    optionsContainer.appendChild(
+                        createApproachModalButton(type, () => selectNpaType(type))
+                    );
+                });
+            } else {
+                optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">NO APPROACHES SAVED</div>';
+            }
+
+            optionsContainer.appendChild(
+                createApproachModalButton('Add New Appr', startNewApproachEntry, 'add-new-appr')
+            );
         } else {
-            optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">ICAO NOT IN DATABASE</div>';
+            optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">ENTER AIRPORT FIRST</div>';
         }
 
         document.getElementById('npaModal').style.display = 'flex';
@@ -888,6 +1246,160 @@
         checkAndFillFromDB();
     }
 
+    function setFieldValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const nextValue = value !== undefined && value !== null ? value : "";
+        el.value = nextValue;
+
+        if (id === 'rwLength') {
+            el.dataset.displayUnit = 'm';
+            renderRwLengthDisplay();
+        } else if (id === 'inboundCrs') {
+            renderInboundCourseDisplay();
+        } else if (id === 'gpa') {
+            el.value = nextValue === "" ? "" : formatDecimal(nextValue, 1);
+        }
+    }
+
+    function getNumberOrBlank(id) {
+        const el = document.getElementById(id);
+        if (!el || el.value === "") return "";
+        const normalized = String(el.value).replace(',', '.').replace(/[^\d.-]/g, '');
+        if (normalized === "" || normalized === "-" || normalized === ".") return "";
+        const value = Number(normalized);
+        return Number.isFinite(value) ? value : "";
+    }
+
+    function getTextOrBlank(id) {
+        const el = document.getElementById(id);
+        return el ? el.value || "" : "";
+    }
+
+    function formatDecimal(value, digits) {
+        const num = Number(String(value).replace(',', '.').replace(/[^\d.-]/g, ''));
+        if (!Number.isFinite(num)) return "";
+        return num.toFixed(digits);
+    }
+
+    function setSplitDisplay(mainId, subId, primary, secondary) {
+        const mainEl = document.getElementById(mainId);
+        const subEl = document.getElementById(subId);
+        if (mainEl) mainEl.innerText = primary || "";
+        if (subEl) subEl.innerText = secondary || "";
+    }
+
+    function renderRwLengthDisplay() {
+        const el = document.getElementById('rwLength');
+        if (!el) return;
+
+        const meters = getNumberOrBlank('rwLength');
+        if (meters === "") {
+            setSplitDisplay('rwLengthMain', 'rwLengthSub', '', '');
+            return;
+        }
+
+        const displayUnit = el.dataset.displayUnit === 'ft' ? 'ft' : 'm';
+        const primaryValue = displayUnit === 'ft'
+            ? Math.round(meters / 0.3048)
+            : Math.round(meters);
+        const nauticalMiles = meters / 1852;
+
+        setSplitDisplay(
+            'rwLengthMain',
+            'rwLengthSub',
+            `${primaryValue} ${displayUnit}`,
+            `/ ${nauticalMiles.toFixed(2)} nm`
+        );
+    }
+
+    function normalizeCourse(value) {
+        const num = Number(String(value).replace(',', '.').replace(/[^\d.-]/g, ''));
+        if (!Number.isFinite(num)) return "";
+        let course = Math.round(num) % 360;
+        if (course < 0) course += 360;
+        return course === 0 ? 360 : course;
+    }
+
+    function formatCourse(value) {
+        const course = normalizeCourse(value);
+        return course === "" ? "" : String(course).padStart(3, '0');
+    }
+
+    function getReciprocalCourse(value) {
+        const course = normalizeCourse(value);
+        if (course === "") return "";
+        const reciprocal = ((course + 180 - 1) % 360) + 1;
+        return String(reciprocal).padStart(3, '0');
+    }
+
+    function renderInboundCourseDisplay() {
+        const course = formatCourse(getNumberOrBlank('inboundCrs'));
+        if (!course) {
+            setSplitDisplay('inboundCrsMain', 'inboundCrsSub', '', '');
+            return;
+        }
+
+        setSplitDisplay(
+            'inboundCrsMain',
+            'inboundCrsSub',
+            course,
+            `/ ${getReciprocalCourse(course)}`
+        );
+    }
+
+    function startNewApproachEntry() {
+        if (navigator.vibrate) navigator.vibrate(20);
+        document.getElementById('npaModal').style.display = 'none';
+        document.getElementById('selectedTypeLabel').innerText = "—";
+        clearNpaFields();
+        const infoBlock = document.getElementById('npaBlock5');
+        if (infoBlock) infoBlock.classList.add('open');
+    }
+
+    function startNewAirportEntry() {
+        if (navigator.vibrate) navigator.vibrate(20);
+        clearTimeout(airportInputTimeout);
+        const airportEl = document.getElementById('apprName');
+        if (airportEl) {
+            airportEl.value = "";
+            airportEl.focus();
+        }
+        document.getElementById('selectedTypeLabel').innerText = "—";
+        clearNpaFields();
+        const infoBlock = document.getElementById('npaBlock5');
+        if (infoBlock) infoBlock.classList.add('open');
+    }
+
+    function toggleGpaMenu(e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('gpaMenu');
+        if (!menu) return;
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function setGpa(value, e) {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById('gpaMenu');
+        if (menu) menu.style.display = 'none';
+
+        if (value === 'another') {
+            openNpaKeypad('gpa');
+            return;
+        }
+
+        setFieldValue('gpa', value);
+    }
+
+    document.addEventListener('click', (event) => {
+        const menu = document.getElementById('gpaMenu');
+        if (!menu) return;
+        if (!event.target.closest('.gpa-container')) {
+            menu.style.display = 'none';
+        }
+    });
+
     function checkAndFillFromDB() {
         const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
         const type = document.getElementById('selectedTypeLabel').innerText;
@@ -896,33 +1408,52 @@
         if (airportCode && type && type !== "—" && window.airportsNpa[airportCode] && window.airportsNpa[airportCode][type]) {
             const data = window.airportsNpa[airportCode][type];
 
-            document.getElementById('rwLength').value = data.rwLength !== undefined ? data.rwLength : "";
-            document.getElementById('elevation').value = data.elevation !== undefined ? data.elevation : "";
-            document.getElementById('gpa').value = data.gpa !== undefined ? data.gpa : "";
-            
-            const fdpEl = document.getElementById('fdp');
-            const fapEl = document.getElementById('fap');
-            if (fdpEl) fdpEl.value = data.fdp !== undefined ? data.fdp : "";
-            if (fapEl) fapEl.value = data.fap !== undefined ? data.fap : "";
-
+            setFieldValue('rwLength', data.rwLength);
+            setFieldValue('elevation', data.elevation);
+            setFieldValue('gpa', data.gpa);
+            setFieldValue('fdp', data.fdp);
+            setFieldValue('fap', data.fap);
             document.getElementById('racetrackVal').innerText = data.racetrack || "Right";
-            document.getElementById('inboundCrs').value = data.inbound !== undefined ? data.inbound : "";
-            document.getElementById('downwindTime').value = data.downwindTime !== undefined ? data.downwindTime : "";
+            setFieldValue('inboundCrs', data.inbound);
+            setFieldValue('sectDirect', data.sectDirect);
+            setFieldValue('sectParallel', data.sectParallel);
+            setFieldValue('sectOffset', data.sectOffset);
+            setFieldValue('sDownwind', data.sDownwind);
+            setFieldValue('downwindTime', data.downwindTime);
+            setFieldValue('gsAppr', data.gsAppr);
+
+            const profileRows = Array.isArray(data.profileRows) ? data.profileRows : [];
+            for (let i = 1; i <= 3; i += 1) {
+                const row = profileRows[i - 1] || {};
+                setFieldValue(`hFeet${i}`, row.hFeet);
+                setFieldValue(`thrDist${i}`, row.thrDist);
+                setFieldValue(`radioDist${i}`, row.radioDist);
+                setFieldValue(`tarDist${i}`, row.tarDist);
+            }
 
             document.getElementById('radioDistValDisplay').innerText = data.radioShift !== undefined ? data.radioShift : "0.0";
             document.getElementById('tarDistValDisplay').innerText = data.tarShift !== undefined ? data.tarShift : "0.0";
+            setDefaultTemperature();
         }
     }
 
     function clearNpaFields() {
-        const fields = ['rwLength', 'elevation', 'gpa', 'fdp', 'fap', 'inboundCrs', 'downwindTime'];
+        const fields = [
+            'rwLength', 'elevation', 'gpa', 'fdp', 'fap',
+            'inboundCrs', 'sectDirect', 'sectParallel', 'sectOffset',
+            'sDownwind', 'downwindTime', 'gsAppr',
+            'hFeet1', 'thrDist1', 'radioDist1', 'tarDist1',
+            'hFeet2', 'thrDist2', 'radioDist2', 'tarDist2',
+            'hFeet3', 'thrDist3', 'radioDist3', 'tarDist3'
+        ];
         fields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = "";
+            setFieldValue(id, "");
         });
         document.getElementById('racetrackVal').innerText = "Right";
         document.getElementById('radioDistValDisplay').innerText = "0.0";
         document.getElementById('tarDistValDisplay').innerText = "0.0";
+        const tempEl = document.getElementById('tempC');
+        if (tempEl) tempEl.value = "15";
     }
 
     // --- ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ---
@@ -945,32 +1476,45 @@
         if (navigator.vibrate) navigator.vibrate(25);
 
         const approachData = {
-            rwLength: document.getElementById('rwLength').value ? Number(document.getElementById('rwLength').value) : "",
-            elevation: document.getElementById('elevation').value ? Number(document.getElementById('elevation').value) : "",
-            gpa: document.getElementById('gpa').value ? Number(document.getElementById('gpa').value) : "",
-            fdp: document.getElementById('fdp').value ? Number(document.getElementById('fdp').value) : "",
-            fap: document.getElementById('fap').value ? Number(document.getElementById('fap').value) : "",
+            rwLength: getNumberOrBlank('rwLength'),
+            elevation: getNumberOrBlank('elevation'),
+            gpa: getNumberOrBlank('gpa'),
+            fdp: getNumberOrBlank('fdp'),
+            fap: getNumberOrBlank('fap'),
             racetrack: document.getElementById('racetrackVal').innerText,
-            inbound: document.getElementById('inboundCrs').value ? Number(document.getElementById('inboundCrs').value) : "",
-            downwindTime: document.getElementById('downwindTime').value || "",
+            inbound: getNumberOrBlank('inboundCrs'),
+            sectDirect: getTextOrBlank('sectDirect'),
+            sectParallel: getTextOrBlank('sectParallel'),
+            sectOffset: getTextOrBlank('sectOffset'),
+            sDownwind: getNumberOrBlank('sDownwind'),
+            downwindTime: getTextOrBlank('downwindTime'),
+            gsAppr: getNumberOrBlank('gsAppr'),
             radioShift: document.getElementById('radioDistValDisplay').innerText,
-            tarShift: document.getElementById('tarDistValDisplay').innerText
+            tarShift: document.getElementById('tarDistValDisplay').innerText,
+            profileRows: [1, 2, 3].map(index => ({
+                hFeet: getNumberOrBlank(`hFeet${index}`),
+                thrDist: getNumberOrBlank(`thrDist${index}`),
+                radioDist: getNumberOrBlank(`radioDist${index}`),
+                tarDist: getNumberOrBlank(`tarDist${index}`)
+            }))
         };
 
+        upsertLocalNpaRecord(airportCode, type, approachData);
+        queueNpaSave(airportCode, type, approachData);
+
         try {
-            // Отправляем в облако
-            await firebase.firestore().collection("airportsnpa").doc(airportCode).set({
-                [type]: approachData
-            }, { merge: true });
-
-            // Обновляем локальный кэш
-            if (!window.airportsNpa[airportCode]) window.airportsNpa[airportCode] = {};
-            window.airportsNpa[airportCode][type] = approachData;
-
-            alert(`Saved successfully: ${airportCode} ${type}`);
+            await syncPendingNpaSaves();
         } catch (error) {
-            console.error("Save error:", error);
-            alert("Failed to save. Are you logged in as Admin? Check network or Firebase Rules.");
+            console.error("Save sync error:", error);
+        }
+
+        const isStillPending = getPendingNpaSaves()
+            .some(item => item && item.recordKey === `${airportCode}::${type}`);
+
+        if (isStillPending) {
+            alert(`Saved locally: ${airportCode} ${type}. Sync will run automatically when Firebase is available.`);
+        } else {
+            alert(`Saved successfully: ${airportCode} ${type}`);
         }
     }
 
@@ -987,19 +1531,96 @@
     // --- ЛОГИКА ЦИФРОВОЙ КЛАВИАТУРЫ ---
     let currentKpVal = "";
     let activeNpaField = ""; // Хранит 'radio' или 'tar'
+    let rwLengthInputUnit = "m";
 
     function openNpaKeypad(type) {
         if (navigator.vibrate) navigator.vibrate(15);
         activeNpaField = type;
-        
-        // Динамически меняем заголовок в шапке клавиатуры под выбранный режим
-        document.getElementById('kpTitle').innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
-        
-        const displayId = type === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
-        const displayVal = document.getElementById(displayId).innerText;
-        currentKpVal = displayVal === "0.0" ? "" : displayVal;
+        configureNpaKeypad(type);
         updateKpDisplay();
         document.getElementById('keypadModal').style.display = 'flex';
+    }
+
+    function configureNpaKeypad(type) {
+        const titleEl = document.getElementById('kpTitle');
+        const subtitleEl = document.getElementById('kpSubtitle');
+        const dotBtn = document.getElementById('dotBtn');
+        const signBtn = document.getElementById('signToggleBtn');
+
+        if (dotBtn) {
+            dotBtn.style.visibility = 'visible';
+            dotBtn.innerText = ".";
+            dotBtn.onclick = function() { kpPress('.'); };
+        }
+        if (signBtn) signBtn.style.visibility = 'visible';
+        if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
+
+        if (type === 'radio' || type === 'tar') {
+            titleEl.innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
+            const displayId = type === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
+            const displayVal = document.getElementById(displayId).innerText;
+            currentKpVal = displayVal === "0.0" ? "" : displayVal;
+            return;
+        }
+
+        if (signBtn) signBtn.style.visibility = 'hidden';
+        if (subtitleEl) subtitleEl.innerText = '';
+
+        if (type === 'rwLength') {
+            const el = document.getElementById('rwLength');
+            const meters = getNumberOrBlank('rwLength');
+            rwLengthInputUnit = el && el.dataset.displayUnit === 'ft' ? 'ft' : 'm';
+            currentKpVal = meters === ""
+                ? ""
+                : String(rwLengthInputUnit === 'ft' ? Math.round(meters / 0.3048) : Math.round(meters));
+            updateRwLengthKeypadUnit();
+            return;
+        }
+
+        if (type === 'inboundCrs') {
+            titleEl.innerText = 'INBOUND COURSE';
+            currentKpVal = formatCourse(getNumberOrBlank('inboundCrs'));
+            if (dotBtn) dotBtn.style.visibility = 'hidden';
+            return;
+        }
+
+        if (type === 'gpa') {
+            titleEl.innerText = 'GPA';
+            currentKpVal = document.getElementById('gpa').value || "";
+            return;
+        }
+    }
+
+    function updateRwLengthKeypadUnit() {
+        const titleEl = document.getElementById('kpTitle');
+        const dotBtn = document.getElementById('dotBtn');
+        if (titleEl) titleEl.innerText = `RW LENGTH (${rwLengthInputUnit.toUpperCase()})`;
+        if (dotBtn) {
+            dotBtn.innerText = rwLengthInputUnit.toUpperCase();
+            dotBtn.onclick = toggleRwLengthUnit;
+        }
+    }
+
+    function toggleRwLengthUnit() {
+        if (navigator.vibrate) navigator.vibrate(10);
+        const value = getKeypadNumericValue();
+
+        if (rwLengthInputUnit === 'm') {
+            rwLengthInputUnit = 'ft';
+            currentKpVal = value === "" ? "" : String(Math.round(value / 0.3048));
+        } else {
+            rwLengthInputUnit = 'm';
+            currentKpVal = value === "" ? "" : String(Math.round(value * 0.3048));
+        }
+
+        updateRwLengthKeypadUnit();
+        updateKpDisplay();
+    }
+
+    function getKeypadNumericValue() {
+        if (currentKpVal === "" || currentKpVal === "." || currentKpVal === "-" || currentKpVal === "-.") return "";
+        const value = Number(currentKpVal);
+        return Number.isFinite(value) ? value : "";
     }
 
     function closeNpaKeypad(e) {
@@ -1007,13 +1628,29 @@
         if (navigator.vibrate) navigator.vibrate(15);
         
         document.getElementById('keypadModal').style.display = 'none';
-        
+        const rawVal = currentKpVal;
         let finalVal = currentKpVal === "" ? "0.0" : currentKpVal;
         if (finalVal.endsWith('.')) finalVal = finalVal.slice(0, -1);
         if (finalVal === "." || finalVal === "-." || finalVal === "-") finalVal = "0.0";
 
-        const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
-        document.getElementById(displayId).innerText = finalVal;
+        if (activeNpaField === 'rwLength') {
+            const value = getKeypadNumericValue();
+            const el = document.getElementById('rwLength');
+            if (el) {
+                el.value = value === "" ? "" : Math.round(rwLengthInputUnit === 'ft' ? value * 0.3048 : value);
+                el.dataset.displayUnit = rwLengthInputUnit;
+            }
+            renderRwLengthDisplay();
+        } else if (activeNpaField === 'inboundCrs') {
+            const course = rawVal === "" ? "" : normalizeCourse(finalVal);
+            setFieldValue('inboundCrs', course === "" ? "" : course);
+        } else if (activeNpaField === 'gpa') {
+            const gpaValue = rawVal === "" ? "" : formatDecimal(finalVal, 1);
+            setFieldValue('gpa', gpaValue);
+        } else {
+            const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
+            document.getElementById(displayId).innerText = finalVal;
+        }
     }
 
     function kpPress(key) {
@@ -1021,6 +1658,7 @@
         if (key === 'clear') {
             currentKpVal = "";
         } else if (key === '+/-') {
+            if (!['radio', 'tar'].includes(activeNpaField)) return;
             // Обработка смены знака
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = currentKpVal.substring(1);
@@ -1031,6 +1669,11 @@
             // Оставили на случай, если вернете кнопку
             currentKpVal = currentKpVal.slice(0, -1);
         } else {
+            if (activeNpaField === 'inboundCrs') {
+                if (key === '.') return;
+                if (currentKpVal.length >= 3) return;
+            }
+            if (activeNpaField === 'rwLength' && key === '.') return;
             if (key === '.' && currentKpVal.includes('.')) return;
             if (key === '0' && (currentKpVal === "0" || currentKpVal === "-0")) return;
             
@@ -1062,7 +1705,7 @@
     <div class="modal-content keypad-content" onclick="event.stopPropagation()">
         <div class="keypad-header">
             <span id="kpTitle">SHIFT FROM THR</span>
-            <span style="font-size: 9px; font-weight: 700; color: var(--text-main); opacity: 0.6; letter-spacing: 0.5px; margin-top: 4px; margin-bottom: 8px; text-transform: none; text-align: center;">+: за торцом / -: перед торцом</span>
+            <span id="kpSubtitle" class="keypad-subtitle">+: за торцом / -: перед торцом</span>
             <span id="kpValue" class="modal-val">0.0</span>
         </div>
         <div class="keypad-grid">
@@ -1077,7 +1720,7 @@
             <button class="kp-btn" onclick="kpPress('9')">9</button>
             <button class="kp-btn" id="dotBtn" onclick="kpPress('.')">.</button>
             <button class="kp-btn" onclick="kpPress('0')">0</button>
-            <button class="kp-btn" style="font-size: 1.4rem; color: var(--text-main);" onclick="kpPress('+/-')">+/-</button>
+            <button class="kp-btn" id="signToggleBtn" style="font-size: 1.4rem; color: var(--text-main);" onclick="kpPress('+/-')">+/-</button>
         </div>
         <div style="display: flex; gap: 8px;">
             <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
@@ -1102,36 +1745,111 @@
   appId: "1:556017315454:web:6ec41a310c54315d4ab22f"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+    const FIREBASE_APP_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
+    const FIREBASE_FIRESTORE_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
+    const FIREBASE_AUTH_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js";
+    let npaFirebaseInitPromise = null;
 
-    window.airportsNpa = {};
-
-    // Включаем мульти-вкладочное оффлайн-хранилище
-    db.enableMultiTabPersistence()
-      .catch(err => console.error("Offline init error:", err));
-
-    // 2. Живой слушатель базы. В оффлайне мгновенно отдает кэш, в онлайне обновляется сам.
-    db.collection("airportsnpa").onSnapshot((snapshot) => {
-        window.airportsNpa = {}; // Очищаем перед заливкой
-        snapshot.forEach(doc => { 
-            window.airportsNpa[doc.id] = doc.data(); 
+    function loadScriptOnce(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = false;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load ${src}`));
+            document.head.appendChild(script);
         });
-        console.log("База синхронизирована и готова к оффлайну");
-    }, (error) => {
-        console.error("Ошибка загрузки базы:", error);
+    }
+
+    async function ensureFirebaseSdk() {
+        if (!window.firebase) await loadScriptOnce(FIREBASE_APP_SDK);
+        if (!window.firebase || !firebase.firestore) await loadScriptOnce(FIREBASE_FIRESTORE_SDK);
+        if (!window.firebase || !firebase.auth) await loadScriptOnce(FIREBASE_AUTH_SDK);
+        return Boolean(window.firebase && firebase.firestore && firebase.auth);
+    }
+
+    async function initNpaFirebase() {
+        if (window.npaFirebaseInitialized) return true;
+        if (npaFirebaseInitPromise) return npaFirebaseInitPromise;
+
+        npaFirebaseInitPromise = (async () => {
+            try {
+                const sdkReady = await ensureFirebaseSdk();
+                if (!sdkReady) {
+                    npaFirebaseInitPromise = null;
+                    return false;
+                }
+
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+                window.npaDb = firebase.firestore();
+                window.npaAuth = firebase.auth();
+
+                // Firestore keeps its own offline cache; localStorage is an extra fallback for the airport DB.
+                window.npaDb.enablePersistence({ synchronizeTabs: true })
+                    .catch(error => console.error("Offline init error:", error));
+
+                window.npaDb.collection("airportsnpa").onSnapshot({
+                    includeMetadataChanges: true
+                }, (snapshot) => {
+                    const cloudData = {};
+                    snapshot.forEach(doc => {
+                        cloudData[doc.id] = doc.data();
+                    });
+
+                    if (Object.keys(cloudData).length > 0) {
+                        mergeNpaDatabase(cloudData);
+                    }
+
+                    console.log("NPA database ready:", snapshot.metadata.fromCache ? "cache" : "server");
+                    syncPendingNpaSaves();
+                }, (error) => {
+                    console.error("Ошибка загрузки базы:", error);
+                });
+
+                window.npaAuth.onAuthStateChanged(() => {
+                    syncPendingNpaSaves();
+                });
+
+                window.npaFirebaseInitialized = true;
+                syncPendingNpaSaves();
+                return true;
+            } catch (error) {
+                console.warn("Firebase SDK is not available. MyNPA will use local offline storage only.", error);
+                npaFirebaseInitPromise = null;
+                return false;
+            }
+        })();
+
+        return npaFirebaseInitPromise;
+    }
+
+    initNpaFirebase();
+
+    window.addEventListener('online', () => {
+        setTimeout(() => {
+            initNpaFirebase().then(() => syncPendingNpaSaves());
+        }, 1000);
     });
 
     // 3. Скрытая функция входа Владельца
-    function adminLogin() {
+    async function adminLogin() {
+        const firebaseReady = await initNpaFirebase();
+        if (!firebaseReady || !window.npaAuth) {
+            alert("Firebase is not available yet. Check internet connection and reload once.");
+            return;
+        }
+
         const email = prompt("Admin Email:");
         if (!email) return;
         const pass = prompt("Password:");
         if (!pass) return;
         
-        auth.signInWithEmailAndPassword(email, pass)
-            .then(u => alert("Admin mode ON: " + u.user.email))
+        window.npaAuth.signInWithEmailAndPassword(email, pass)
+            .then(u => {
+                alert("Admin mode ON: " + u.user.email);
+                syncPendingNpaSaves();
+            })
             .catch(e => alert("Login Error: " + e.message));
     }
 </script>
