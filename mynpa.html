@@ -18,6 +18,7 @@
             --card-bg: #ffffff;          
             --text-main: #0f172a;        
             --accent-blue: #0ea5e9;
+            --accent-orange: #fb923c;
             --border-color: rgba(15, 23, 42, 0.08);
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -79,7 +80,7 @@
         .precision-scroll-container {
             flex: 1;
             overflow-y: auto;
-            z-index: 10;
+            z-index: 30;
             margin: 5px 0 max(60px, calc(var(--safe-bottom) + 55px)) 0; 
             padding: 8px 10px;
             background: transparent; 
@@ -112,17 +113,21 @@
         }
 
         .header-actions {
-            position: absolute;
-            right: 8px;
-            top: max(5px, calc(var(--safe-top) + 4px));
-            display: flex;
-            gap: 6px;
-            z-index: 20;
-        }
+    position: absolute;
+    left: 13px;
+    right: 13px;
+
+    top: max(10px, calc(var(--safe-top) + 4px));
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    z-index: 20;
+}
 
         .header-action-btn {
             height: 28px;
             padding: 0 8px;
+            width: 88px;
             border-radius: 9px;
             border: 1px solid var(--border-color);
             background: rgba(15, 23, 42, 0.04);
@@ -169,7 +174,9 @@
         }
 
         .npa-info-card {
+            position: relative;
             overflow: visible;
+            z-index: 40;
         }
 
         /* ЗАГОЛОВОК ПРЯМО НА БЕЛОМ ФОНЕ КОНТЕЙНЕРА */
@@ -201,8 +208,10 @@
         }
 
         .npa-info-card .foldBlock.open {
+            position: relative;
             max-height: 330px;
             overflow: visible;
+            z-index: 45;
         }
 
         .card-content {
@@ -429,8 +438,9 @@
         .gpa-container {
             position: relative;
             width: 100%;
-            height: 22px;
+            height: 100%;
             cursor: pointer;
+            z-index: 60;
         }
 
         .gpa-input {
@@ -440,42 +450,44 @@
 
         .gpa-arrow {
             position: absolute;
-            right: 2px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 9px;
+            font-size: 0.6rem;
             line-height: 1;
             color: var(--accent-blue);
             pointer-events: none;
+            z-index: 10;
         }
 
         .gpa-menu {
             position: absolute;
             top: calc(100% + 5px);
             left: 0;
-            right: 0;
-            z-index: 300;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 3000;
             display: none;
             background: var(--card-bg);
             border: 1px solid var(--accent-blue);
             border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
         }
 
         .gpa-menu-item {
-            padding: 9px 6px;
+            padding: 12px;
             color: var(--text-main);
-            font-size: 13px;
-            font-weight: 800;
+            font-size: 0.9rem;
+            font-weight: 700;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
             background: transparent;
+            cursor: pointer;
         }
 
         .gpa-menu-item:last-child {
             border-bottom: none;
-            color: var(--accent-blue);
+            color: var(--accent-orange);
+            font-weight: 800;
         }
 
         .gpa-menu-item:active {
@@ -542,6 +554,9 @@
             align-items: center;
             justify-content: center;
             z-index: 2000;
+        }
+        .modal-overlay.active {
+            display: flex;
         }
         .modal-content {
             background: var(--card-bg);
@@ -718,8 +733,22 @@
         html.dark-theme .kp-btn {
             background: rgba(255, 255, 255, 0.04);
         }
+        .kp-unit-btn {
+            font-size: 0.82rem !important;
+            letter-spacing: 0;
+            text-transform: none;
+        }
         .kp-btn:active { background: var(--accent-blue); color: #ffffff; transform: scale(0.95); }
-        .kp-del { color: #ef4444; font-size: calc(var(--btn-height) * 0.5); padding-right: 2px; }
+        .kp-del {
+            color: #ef4444 !important;
+            font-size: calc(var(--btn-height) * 0.5);
+            padding: 0 !important;
+        }
+        .kp-del svg {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
         .kp-clr {
             flex: 1;
             font-size: calc(var(--btn-height) * 0.35) !important;
@@ -774,7 +803,7 @@
 
     <div class="precision-scroll-container" id="mainScroll">
         
-        <div class="section-card npa-info-card">
+        <div class="section-card">
             <div class="card-content" style="padding: 8px;">
                 <div class="c2-row" style="margin-bottom: 0;">
                     <div class="cell-wrapper flex-1">
@@ -787,13 +816,13 @@
                     </div>
                     <div class="cell-wrapper flex-1">
                         <span class="cell-label">OAT °C</span>
-                        <input type="number" class="cell-input" id="tempC" value="15">
+                        <input type="text" class="cell-input" id="tempC" value="15" readonly onclick="openNpaKeypad('tempC')">
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="section-card">
+        <div class="section-card npa-info-card">
             <div class="card-title" onclick="toggleNpaBlock('npaBlock5')">
                 Airport and approach info
             </div>
@@ -811,7 +840,7 @@
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">Land THR elev</span>
-                            <input type="number" class="cell-input" id="elevation">
+                            <input type="text" class="cell-input" id="elevation" readonly onclick="openNpaKeypad('elevation')">
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">GPA</span>
@@ -819,9 +848,9 @@
                                 <input type="text" class="cell-input gpa-input" id="gpa" readonly>
                                 <span class="gpa-arrow">▼</span>
                                 <div class="gpa-menu" id="gpaMenu">
-                                    <div class="gpa-menu-item" onclick="setGpa(2.7, event)">2.7</div>
-                                    <div class="gpa-menu-item" onclick="setGpa(3.0, event)">3.0</div>
-                                    <div class="gpa-menu-item" onclick="setGpa(3.5, event)">3.5</div>
+                                    <div class="gpa-menu-item" onclick="setGpa(2.7, event)">2.7°</div>
+                                    <div class="gpa-menu-item" onclick="setGpa(3.0, event)">3.0°</div>
+                                    <div class="gpa-menu-item" onclick="setGpa(3.5, event)">3.5°</div>
                                     <div class="gpa-menu-item" onclick="setGpa('another', event)">Another...</div>
                                 </div>
                             </div>
@@ -834,14 +863,14 @@
                                 <img src="FDP.png" alt="" class="npa-icon">
                                 <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FDP</span>
                             </div>
-                            <input type="number" class="cell-input" id="fdp" style="width: 50px !important;">
+                            <input type="text" class="cell-input" id="fdp" readonly onclick="openNpaKeypad('fdp')" style="width: 50px !important;">
                         </div>
                         <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.2);">
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <img src="FAP.png" alt="" class="npa-icon">
                                 <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FAP</span>
                             </div>
-                            <input type="number" class="cell-input" id="fap" style="width: 50px !important;">
+                            <input type="text" class="cell-input" id="fap" readonly onclick="openNpaKeypad('fap')" style="width: 50px !important;">
                         </div>
                     </div>
 
@@ -900,15 +929,15 @@
                     <div class="c2-row">
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">S downwind</span>
-                            <input type="number" class="cell-input" id="sDownwind">
+                            <input type="text" class="cell-input" id="sDownwind" readonly onclick="openNpaKeypad('sDownwind')">
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">Downwind time</span>
-                            <input type="text" class="cell-input" id="downwindTime">
+                            <input type="text" class="cell-input" id="downwindTime" readonly onclick="openNpaKeypad('downwindTime')">
                         </div>
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">Ground Speed</span>
-                            <input type="number" class="cell-input" id="gsAppr">
+                            <input type="text" class="cell-input" id="gsAppr" readonly onclick="openNpaKeypad('gsAppr')">
                         </div>
                     </div>
 
@@ -1315,7 +1344,9 @@
     }
 
     function normalizeCourse(value) {
-        const num = Number(String(value).replace(',', '.').replace(/[^\d.-]/g, ''));
+        const normalized = String(value).replace(',', '.').replace(/[^\d.-]/g, '');
+        if (normalized === "" || normalized === "-" || normalized === ".") return "";
+        const num = Number(normalized);
         if (!Number.isFinite(num)) return "";
         let course = Math.round(num) % 360;
         if (course < 0) course += 360;
@@ -1382,7 +1413,9 @@
     function setGpa(value, e) {
         if (e) e.stopPropagation();
         const menu = document.getElementById('gpaMenu');
-        if (menu) menu.style.display = 'none';
+        if (menu) {
+            menu.style.display = 'none';
+        }
 
         if (value === 'another') {
             openNpaKeypad('gpa');
@@ -1395,7 +1428,7 @@
     document.addEventListener('click', (event) => {
         const menu = document.getElementById('gpaMenu');
         if (!menu) return;
-        if (!event.target.closest('.gpa-container')) {
+        if (!event.target.closest('.gpa-container') && !event.target.closest('#gpaMenu')) {
             menu.style.display = 'none';
         }
     });
@@ -1530,12 +1563,39 @@
 
     // --- ЛОГИКА ЦИФРОВОЙ КЛАВИАТУРЫ ---
     let currentKpVal = "";
-    let activeNpaField = ""; // Хранит 'radio' или 'tar'
+    let activeNpaField = "";
     let rwLengthInputUnit = "m";
+    let keypadWasCleared = false;
+    let npaTempIsNegative = false;
+
+    const npaKeypadFields = {
+        elevation: { title: 'LAND THR ELEV', mode: 'minus' },
+        fdp: { title: 'FDP', mode: 'double-zero' },
+        fap: { title: 'FAP', mode: 'double-zero' },
+        sDownwind: { title: 'S DOWNWIND', mode: 'decimal' },
+        gsAppr: { title: 'GROUND SPEED', mode: 'double-zero' },
+        downwindTime: { title: 'DOWNWIND TIME', mode: 'time' },
+        tempC: { title: 'OAT °C', mode: 'temperature' }
+    };
+
+    const npaBackspaceFields = [
+        'rwLength',
+        'elevation',
+        'gpa',
+        'fdp',
+        'fap',
+        'inboundCrs',
+        'sDownwind',
+        'gsAppr',
+        'downwindTime',
+        'tempC'
+    ];
 
     function openNpaKeypad(type) {
         if (navigator.vibrate) navigator.vibrate(15);
         activeNpaField = type;
+        currentKpVal = "";
+        keypadWasCleared = false;
         configureNpaKeypad(type);
         updateKpDisplay();
         document.getElementById('keypadModal').style.display = 'flex';
@@ -1548,57 +1608,107 @@
         const signBtn = document.getElementById('signToggleBtn');
 
         if (dotBtn) {
+            dotBtn.classList.remove('kp-unit-btn');
             dotBtn.style.visibility = 'visible';
             dotBtn.innerText = ".";
             dotBtn.onclick = function() { kpPress('.'); };
         }
-        if (signBtn) signBtn.style.visibility = 'visible';
-        if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
+        if (signBtn) {
+            signBtn.classList.remove('kp-del');
+            signBtn.style.visibility = 'hidden';
+            signBtn.innerText = '+/-';
+            signBtn.onclick = function() { kpPress('+/-'); };
+        }
+        if (subtitleEl) subtitleEl.innerText = '';
 
         if (type === 'radio' || type === 'tar') {
-            titleEl.innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
-            const displayId = type === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
-            const displayVal = document.getElementById(displayId).innerText;
-            currentKpVal = displayVal === "0.0" ? "" : displayVal;
+            if (titleEl) titleEl.innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
+            if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
+            if (signBtn) signBtn.style.visibility = 'visible';
             return;
         }
 
-        if (signBtn) signBtn.style.visibility = 'hidden';
-        if (subtitleEl) subtitleEl.innerText = '';
-
         if (type === 'rwLength') {
             const el = document.getElementById('rwLength');
-            const meters = getNumberOrBlank('rwLength');
             rwLengthInputUnit = el && el.dataset.displayUnit === 'ft' ? 'ft' : 'm';
-            currentKpVal = meters === ""
-                ? ""
-                : String(rwLengthInputUnit === 'ft' ? Math.round(meters / 0.3048) : Math.round(meters));
             updateRwLengthKeypadUnit();
+            configureNpaBackspaceButton();
             return;
         }
 
         if (type === 'inboundCrs') {
-            titleEl.innerText = 'INBOUND COURSE';
-            currentKpVal = formatCourse(getNumberOrBlank('inboundCrs'));
+            if (titleEl) titleEl.innerText = 'INBOUND COURSE';
             if (dotBtn) dotBtn.style.visibility = 'hidden';
+            configureNpaBackspaceButton();
             return;
         }
 
         if (type === 'gpa') {
-            titleEl.innerText = 'GPA';
-            currentKpVal = document.getElementById('gpa').value || "";
+            if (titleEl) titleEl.innerText = 'GPA';
+            configureNpaBackspaceButton();
             return;
         }
+
+        if (type === 'tempC') {
+            const tempValue = String(document.getElementById('tempC').value || '').trim();
+            npaTempIsNegative = tempValue.startsWith('-') || tempValue.startsWith('−');
+        }
+
+        const config = npaKeypadFields[type];
+        if (!config) return;
+
+        if (titleEl) titleEl.innerText = config.title;
+        if (!dotBtn) return;
+
+        if (config.mode === 'double-zero') {
+            dotBtn.innerText = "00";
+            dotBtn.onclick = function() { kpPress('00'); };
+        } else if (config.mode === 'minus') {
+            dotBtn.innerText = "−";
+            dotBtn.onclick = function() { kpPress('minus_toggle'); };
+        } else if (config.mode === 'time') {
+            dotBtn.innerText = "00";
+            dotBtn.onclick = function() { kpPress('00'); };
+        } else if (config.mode === 'temperature') {
+            dotBtn.innerText = "+/−";
+            dotBtn.onclick = function() { kpPress('temp_sign'); };
+        }
+
+        configureNpaBackspaceButton();
+    }
+
+    function configureNpaBackspaceButton() {
+        if (!npaBackspaceFields.includes(activeNpaField)) return;
+        const signBtn = document.getElementById('signToggleBtn');
+        if (!signBtn) return;
+        signBtn.classList.add('kp-del');
+        signBtn.style.visibility = 'visible';
+        signBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M22,3H7C6.31,3 5.77,3.35 5.41,3.88L0,12L5.41,20.11C5.77,20.64 6.31,21 7,21H22A2,2 0 0,0 24,19V5A2,2 0 0,0 22,3M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59Z"/>
+            </svg>`;
+        signBtn.onclick = function() { kpPress('del'); };
+    }
+
+    function getRwLengthUnitLabel() {
+        return rwLengthInputUnit === 'ft' ? 'feet' : 'Meters';
     }
 
     function updateRwLengthKeypadUnit() {
         const titleEl = document.getElementById('kpTitle');
         const dotBtn = document.getElementById('dotBtn');
-        if (titleEl) titleEl.innerText = `RW LENGTH (${rwLengthInputUnit.toUpperCase()})`;
+        if (titleEl) titleEl.innerText = `RW LENGTH (${getRwLengthUnitLabel()})`;
         if (dotBtn) {
-            dotBtn.innerText = rwLengthInputUnit.toUpperCase();
+            dotBtn.innerText = getRwLengthUnitLabel();
+            dotBtn.classList.add('kp-unit-btn');
             dotBtn.onclick = toggleRwLengthUnit;
         }
+    }
+
+    function getRwLengthKeypadValueFromStored() {
+        const meters = getNumberOrBlank('rwLength');
+        if (meters === "") return "";
+        return String(rwLengthInputUnit === 'ft' ? Math.round(meters / 0.3048) : Math.round(meters));
     }
 
     function toggleRwLengthUnit() {
@@ -1623,73 +1733,272 @@
         return Number.isFinite(value) ? value : "";
     }
 
+    function getNpaKeypadPlaceholder() {
+        if (keypadWasCleared) return "";
+
+        if (activeNpaField === 'radio' || activeNpaField === 'tar') {
+            const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
+            return document.getElementById(displayId).innerText || "";
+        }
+
+        if (activeNpaField === 'rwLength') return getRwLengthKeypadValueFromStored();
+        if (activeNpaField === 'inboundCrs') return formatCourse(getNumberOrBlank('inboundCrs'));
+
+        const el = document.getElementById(activeNpaField);
+        if (!el) return "";
+
+        if (activeNpaField === 'tempC') {
+            const value = String(el.value || '').trim();
+            if (!value) return "";
+            const clean = value.replace(/[+−-]/g, '');
+            return `${npaTempIsNegative ? '−' : '+'}${clean}`;
+        }
+
+        return el.value || "";
+    }
+
+    function cleanNpaKeypadFinalValue() {
+        let finalVal = currentKpVal;
+        if (finalVal.endsWith('.')) finalVal = finalVal.slice(0, -1);
+        if (finalVal === "." || finalVal === "-." || finalVal === "-") return "";
+        return finalVal;
+    }
+
+    function formatNpaTimeDigits(value) {
+        const digits = String(value || '').replace(/\D/g, '').slice(0, 4);
+        if (!digits) return "";
+
+        let hh = "00";
+        let mm = "00";
+        if (digits.length === 1) {
+            mm = "0" + digits;
+        } else if (digits.length === 2) {
+            mm = digits;
+        } else if (digits.length === 3) {
+            hh = "0" + digits[0];
+            mm = digits.substring(1);
+        } else {
+            hh = digits.substring(0, 2);
+            mm = digits.substring(2);
+        }
+
+        return `${hh}:${mm}`;
+    }
+
+    function isValidNpaTimeDigits(value) {
+        const formatted = formatNpaTimeDigits(value);
+        if (!formatted) return true;
+        const parts = formatted.split(':');
+        const hours = Number(parts[0]);
+        const minutes = Number(parts[1]);
+        return Number.isFinite(hours) && Number.isFinite(minutes) && hours <= 23 && minutes <= 59;
+    }
+
     function closeNpaKeypad(e) {
         if (e && e !== 'done' && e.target !== e.currentTarget) return;
         if (navigator.vibrate) navigator.vibrate(15);
-        
-        document.getElementById('keypadModal').style.display = 'none';
-        const rawVal = currentKpVal;
-        let finalVal = currentKpVal === "" ? "0.0" : currentKpVal;
-        if (finalVal.endsWith('.')) finalVal = finalVal.slice(0, -1);
-        if (finalVal === "." || finalVal === "-." || finalVal === "-") finalVal = "0.0";
+
+        const keypadModal = document.getElementById('keypadModal');
+
+        const hasNewValue = currentKpVal !== "" || keypadWasCleared;
+        if (!hasNewValue) {
+            keypadModal.style.display = 'none';
+            return;
+        }
+
+        const finalVal = cleanNpaKeypadFinalValue();
+
+        if (activeNpaField === 'downwindTime' && finalVal !== "" && !isValidNpaTimeDigits(finalVal)) {
+            const displayEl = document.getElementById('kpValue');
+            if (displayEl) {
+                displayEl.textContent = formatNpaTimeDigits(finalVal);
+                displayEl.style.color = '#ef4444';
+                displayEl.style.opacity = '1';
+            }
+            return;
+        }
+
+        keypadModal.style.display = 'none';
 
         if (activeNpaField === 'rwLength') {
             const value = getKeypadNumericValue();
             const el = document.getElementById('rwLength');
             if (el) {
-                el.value = value === "" ? "" : Math.round(rwLengthInputUnit === 'ft' ? value * 0.3048 : value);
+                el.value = finalVal === "" ? "" : Math.round(rwLengthInputUnit === 'ft' ? value * 0.3048 : value);
                 el.dataset.displayUnit = rwLengthInputUnit;
             }
             renderRwLengthDisplay();
         } else if (activeNpaField === 'inboundCrs') {
-            const course = rawVal === "" ? "" : normalizeCourse(finalVal);
+            const course = finalVal === "" ? "" : normalizeCourse(finalVal);
             setFieldValue('inboundCrs', course === "" ? "" : course);
         } else if (activeNpaField === 'gpa') {
-            const gpaValue = rawVal === "" ? "" : formatDecimal(finalVal, 1);
+            const gpaValue = finalVal === "" ? "" : formatDecimal(finalVal, 1);
             setFieldValue('gpa', gpaValue);
-        } else {
+        } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
-            document.getElementById(displayId).innerText = finalVal;
+            document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
+        } else if (activeNpaField === 'tempC') {
+            const tempEl = document.getElementById('tempC');
+            if (tempEl) tempEl.value = finalVal === "" ? "" : `${npaTempIsNegative ? '-' : ''}${finalVal}`;
+        } else if (activeNpaField === 'downwindTime') {
+            setFieldValue('downwindTime', finalVal === "" ? "" : formatNpaTimeDigits(finalVal));
+        } else if (npaKeypadFields[activeNpaField]) {
+            setFieldValue(activeNpaField, finalVal);
         }
+    }
+
+    function showNpaTempLimitWarning() {
+        const modal = document.getElementById('npaLimitModal');
+        if (modal) {
+            modal.classList.add('active');
+        } else {
+            alert('Temperature range: -54°C ... +55°C');
+        }
+    }
+
+    function closeNpaLimitModal(e) {
+        if (e && e !== 'button' && e.target && !e.target.classList.contains('modal-overlay')) return;
+
+        const modal = document.getElementById('npaLimitModal');
+        if (modal) modal.classList.remove('active');
+
+        if (activeNpaField === 'tempC') {
+            currentKpVal = "";
+            keypadWasCleared = true;
+            npaTempIsNegative = false;
+            const tempEl = document.getElementById('tempC');
+            if (tempEl) tempEl.value = "";
+            updateKpDisplay();
+        }
+    }
+
+    function isNpaTempAllowed(nextValue) {
+        if (nextValue === "") return true;
+        const value = Number(nextValue);
+        if (!Number.isFinite(value)) return false;
+        return npaTempIsNegative ? value <= 54 : value <= 55;
+    }
+
+    function toggleNpaTempSign() {
+        if (currentKpVal === "" && !keypadWasCleared) {
+            const currentTemp = String(document.getElementById('tempC').value || '').trim().replace(/[+−-]/g, '');
+            if (currentTemp !== "") currentKpVal = currentTemp;
+        }
+
+        if (!npaTempIsNegative && currentKpVal === "55") {
+            showNpaTempLimitWarning();
+            return;
+        }
+
+        npaTempIsNegative = !npaTempIsNegative;
+        updateKpDisplay();
     }
 
     function kpPress(key) {
         if (navigator.vibrate) navigator.vibrate(10);
+
         if (key === 'clear') {
             currentKpVal = "";
-        } else if (key === '+/-') {
+            keypadWasCleared = true;
+            updateKpDisplay();
+            return;
+        }
+
+        if (key === 'temp_sign') {
+            if (activeNpaField !== 'tempC') return;
+            toggleNpaTempSign();
+            return;
+        }
+
+        if (key === '+/-') {
             if (!['radio', 'tar'].includes(activeNpaField)) return;
-            // Обработка смены знака
+            keypadWasCleared = false;
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = currentKpVal.substring(1);
             } else {
                 currentKpVal = '-' + currentKpVal;
             }
-        } else if (key === 'del') {
-            // Оставили на случай, если вернете кнопку
-            currentKpVal = currentKpVal.slice(0, -1);
-        } else {
-            if (activeNpaField === 'inboundCrs') {
-                if (key === '.') return;
-                if (currentKpVal.length >= 3) return;
-            }
-            if (activeNpaField === 'rwLength' && key === '.') return;
-            if (key === '.' && currentKpVal.includes('.')) return;
-            if (key === '0' && (currentKpVal === "0" || currentKpVal === "-0")) return;
-            
-            if (currentKpVal === "0" && key !== '.') {
-                currentKpVal = key;
-            } else if (currentKpVal === "-0" && key !== '.') {
-                currentKpVal = "-" + key;
-            } else {
-                currentKpVal += key;
-            }
+            updateKpDisplay();
+            return;
         }
+
+        if (key === 'minus_toggle') {
+            if (activeNpaField !== 'elevation') return;
+            keypadWasCleared = false;
+            if (currentKpVal.startsWith('-')) {
+                currentKpVal = currentKpVal.substring(1);
+            } else {
+                currentKpVal = '-' + currentKpVal;
+            }
+            updateKpDisplay();
+            return;
+        }
+
+        if (key === 'del') {
+            currentKpVal = currentKpVal.slice(0, -1);
+            keypadWasCleared = true;
+            updateKpDisplay();
+            return;
+        }
+
+        const integerOnlyFields = ['rwLength', 'inboundCrs', 'elevation', 'fdp', 'fap', 'gsAppr', 'tempC', 'downwindTime'];
+        if (integerOnlyFields.includes(activeNpaField) && key === '.') return;
+        if (activeNpaField === 'inboundCrs' && currentKpVal.length >= 3) return;
+        if (key === '.' && currentKpVal.includes('.')) return;
+        if (key === '00' && currentKpVal === "" && activeNpaField !== 'downwindTime') return;
+        if (key === '0' && (currentKpVal === "0" || currentKpVal === "-0")) return;
+
+        let nextValue;
+        if (currentKpVal === "0" && key !== '.') {
+            nextValue = key;
+        } else if (currentKpVal === "-0" && key !== '.') {
+            nextValue = "-" + key;
+        } else {
+            nextValue = currentKpVal + key;
+        }
+
+        if (activeNpaField === 'downwindTime') {
+            nextValue = String(nextValue).replace(/\D/g, '').slice(0, 4);
+        }
+
+        if (activeNpaField === 'tempC' && !isNpaTempAllowed(nextValue)) {
+            showNpaTempLimitWarning();
+            return;
+        }
+
+        currentKpVal = nextValue;
+        keypadWasCleared = false;
         updateKpDisplay();
     }
 
     function updateKpDisplay() {
         const displayEl = document.getElementById('kpValue');
+        if (!displayEl) return;
+
+        const placeholder = getNpaKeypadPlaceholder();
+        if (currentKpVal === "" && placeholder !== "") {
+            displayEl.textContent = placeholder;
+            displayEl.style.color = 'var(--text-main)';
+            displayEl.style.opacity = '0.18';
+            return;
+        }
+
+        displayEl.style.opacity = '1';
+
+        if (activeNpaField === 'tempC') {
+            const sign = npaTempIsNegative ? '−' : '+';
+            displayEl.textContent = currentKpVal === "" ? sign : `${sign}${currentKpVal}`;
+            displayEl.style.color = npaTempIsNegative ? '#38bdf8' : '#ef4444';
+            return;
+        }
+
+        if (activeNpaField === 'downwindTime') {
+            displayEl.style.color = 'var(--accent-blue)';
+            displayEl.textContent = currentKpVal === "" ? "\u00A0" : formatNpaTimeDigits(currentKpVal);
+            return;
+        }
+
+        displayEl.style.color = 'var(--accent-blue)';
         displayEl.innerHTML = currentKpVal === "" ? "&nbsp;" : currentKpVal;
     }
 </script>
@@ -1726,6 +2035,17 @@
             <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
             <button id="doneBtn" class="kp-btn kp-done" onclick="closeNpaKeypad('done')">DONE</button>
         </div>
+    </div>
+</div>
+
+
+<div id="npaLimitModal" class="modal-overlay" onclick="closeNpaLimitModal(event)">
+    <div class="modal-content" style="border-color: #ef4444; min-width: 200px;" onclick="event.stopPropagation()">
+        <h3 style="color: #ef4444; margin-bottom: 15px;">⚠️ OUT OF LIMITS</h3>
+        <div id="npaLimitMessage" style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 20px; font-weight: 600;">
+            Temperature range: -54°C ... +55°C
+        </div>
+        <button class="modal-opt-btn" type="button" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; width: 100%;" onclick="closeNpaLimitModal('button')">CHECKED</button>
     </div>
 </div>
 
