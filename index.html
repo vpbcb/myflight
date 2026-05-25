@@ -85,11 +85,10 @@
 
         /* === КОНТЕЙНЕР НИЖНИХ КНОПОК === */
         .bottom-controls {
-            position: absolute;
-            bottom: max(20px, calc(var(--safe-bottom) + 12px));
-            left: 0;
+            position: static;
             width: 100%;
-            padding: 0 16px;
+            padding: 0 16px max(12px, calc(var(--safe-bottom) + 8px));
+            margin-top: 12px;
             box-sizing: border-box;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -97,6 +96,7 @@
             align-items: center;
             justify-items: center;
             z-index: 100;
+            flex-shrink: 0;
         }
 
         /* Стили кнопки переключения темы */
@@ -237,7 +237,10 @@
             height: var(--app-height);
             min-height: var(--app-height);
             max-height: var(--app-height);
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -285,7 +288,7 @@
             grid-template-columns: repeat(3, 1fr); /* 3 колонки */
             gap: 12px;
             margin-top: auto;
-            margin-bottom: 100px; /* Отступ снизу, чтобы сетка не наезжала на кнопки */
+            margin-bottom: 0;
         }
 
         .project-card {
@@ -702,6 +705,7 @@
 
         /* --- СТИЛИ МОДАЛЬНОГО ОКНА ДЛЯ БОРТОВ (Как в MyFuel) --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        #mailModal.modal-overlay { background-color: var(--bg-color); }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background-color: var(--card-bg); padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; position: relative; font-size: 14px; line-height: 1.5; color: var(--text-main); border: 1px solid var(--border-color); }
         .modal-close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; color: var(--text-secondary); cursor: pointer; border: none; background: none; }
@@ -760,7 +764,7 @@
             }
             .container {
                 gap: 10px;
-                margin-bottom: 82px;
+                margin-bottom: 0;
             }
             .project-card {
                 aspect-ratio: 1.18 / 1;
