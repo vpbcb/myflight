@@ -207,6 +207,11 @@
             transform: translateY(0); 
         }
 
+        #npaBlock4.open {
+            max-height: var(--npa-profile-block-height, 520px);
+            overflow: hidden;
+        }
+
         .npa-info-card .foldBlock.open {
             position: relative;
             max-height: 330px;
@@ -615,53 +620,208 @@
             border-color: rgba(56, 189, 248, 0.35);
         }
 
-        /* Стили таблицы для Контейнера 4 */
-        .npa-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 2px;
-        }
-        .npa-table th {
-            font-size: 10px;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 6px 2px;
+        .clear-data-modal {
             text-align: center;
+            max-width: 300px;
+        }
+        .clear-data-text {
+            margin: 8px 0 18px;
+            color: var(--text-main);
+            opacity: 0.72;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+        .clear-data-actions {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 10px;
+        }
+        .clear-data-cancel,
+        .clear-data-confirm {
+            height: 44px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 800;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+        .clear-data-cancel {
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.03);
+            color: var(--text-main);
+        }
+        html.dark-theme .clear-data-cancel {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .clear-data-confirm {
+            border: none;
+            background: #ef4444;
+            color: #ffffff;
+        }
+        .clear-data-cancel:active,
+        .clear-data-confirm:active {
+            transform: scale(0.97);
+        }
+
+        /* Profile table: перенесено из mypath с 4 колонками mynpa */
+        .npa-profile-table {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            background: #f8fafc;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: var(--npa-profile-table-height, 430px);
+            max-height: var(--npa-profile-table-height, 430px);
+        }
+        html.dark-theme .npa-profile-table {
+            background: rgba(15, 23, 42, 0.82);
+        }
+        .npa-profile-head {
+            display: flex;
+            padding: 10px 12px;
+            font-size: 9px;
+            color: var(--accent-blue);
+            font-weight: 900;
+            text-transform: uppercase;
             border-bottom: 1px solid var(--border-color);
+            background: rgba(14, 165, 233, 0.08);
+            box-sizing: border-box;
         }
-        html.dark-theme .npa-table th {
-            color: #94a3b8;
+        html.dark-theme .npa-profile-head {
+            background: rgba(40, 69, 110, 0.6);
         }
-        .npa-table td {
-            padding: 2px;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+        .npa-profile-body {
+            position: relative;
+            flex: 1;
+            overflow-y: auto;
+            display: block;
+            height: var(--npa-profile-body-height, 360px);
+            max-height: var(--npa-profile-body-height, 360px);
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
         }
-        html.dark-theme .npa-table td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        .npa-profile-body::-webkit-scrollbar {
+            width: 4px;
         }
-        .table-input {
-            width: 100% !important;
-            height: 28px !important;
-            border: 1px solid transparent !important;
-            border-radius: 6px !important;
-            background: transparent !important;
-            font-size: 14px !important;
-            font-weight: 700 !important;
-            text-align: center !important;
-            color: var(--text-main) !important;
-            outline: none !important;
-            padding: 0 !important;
-            -webkit-user-select: auto;
-            user-select: auto;
+        .npa-profile-body::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 10px;
         }
-        .table-input:focus {
-            border-color: var(--accent-blue) !important;
-            background-color: #f8fafc !important;
+        .npa-profile-row {
+            display: flex;
+            min-height: 45px;
+            padding: 0 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-variant-numeric: tabular-nums;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 500;
+            box-sizing: border-box;
+            color: var(--text-main);
         }
-        html.dark-theme .table-input:focus {
-            background-color: rgba(255, 255, 255, 0.03) !important;
+        .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap) {
+            background: rgba(255, 255, 255, 0.72);
+        }
+        .npa-profile-body .npa-profile-row:nth-child(even):not(.highlight-fdp):not(.highlight-fap) {
+            background: rgba(15, 23, 42, 0.035);
+        }
+        html.dark-theme .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        html.dark-theme .npa-profile-body .npa-profile-row:nth-child(even):not(.highlight-fdp):not(.highlight-fap) {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .npa-profile-row.highlight-fdp,
+        .npa-profile-row.highlight-fap {
+            color: var(--text-main);
+            font-weight: 800;
+        }
+        .npa-profile-row.highlight-fdp {
+            background-color: rgba(56, 189, 248, 0.25) !important;
+        }
+        .npa-profile-row.highlight-fap {
+            background-color: rgba(251, 146, 60, 0.25) !important;
+        }
+        .npa-profile-cell {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .npa-profile-dist {
+            flex: 0 0 22%;
+            justify-content: flex-end;
+            text-align: right;
+            padding-right: 8px;
+        }
+        .npa-profile-dist-with-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            min-width: 0;
+        }
+        .npa-profile-dist-icon {
+            height: 9px;
+            width: auto;
+            flex: 0 0 auto;
+            object-fit: contain;
+            filter: invert(0);
+        }
+        html.dark-theme .npa-profile-dist-icon {
+            filter: invert(1);
+        }
+        .npa-profile-alt {
+            flex: 0 0 30%;
+            justify-content: flex-start;
+            text-align: left;
+            padding-left: 4px;
+            gap: 5px;
+        }
+        .npa-profile-radio,
+        .npa-profile-tar {
+            flex: 1 1 24%;
+            justify-content: center;
+            text-align: center;
+        }
+        .npa-profile-head .npa-profile-cell {
+            align-items: flex-start;
+            font-size: 9px;
+            line-height: 1.15;
+        }
+        .npa-profile-shift-head {
+            cursor: pointer;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .npa-profile-shift-value {
+            font-size: 11px;
+            color: var(--accent-blue);
+            font-weight: 800;
+            text-transform: none;
+            letter-spacing: 0;
+            pointer-events: none;
+        }
+        .npa-profile-shift-label {
+            font-size: 8px;
+            opacity: 0.8;
+            text-transform: none;
+            letter-spacing: 0;
+            pointer-events: none;
+        }
+        .npa-profile-placeholder {
+            justify-content: center;
+            color: var(--text-dim);
+            font-size: 12px;
+            text-align: center;
         }
         .table-input::-webkit-outer-spin-button,
         .table-input::-webkit-inner-spin-button {
@@ -903,15 +1063,15 @@
                     <div class="c2-row">
                         <div class="cell-wrapper flex-1 tall-wrapper">
                             <span class="cell-label">Direct</span>
-                            <input type="text" class="cell-input" id="sectDirect">
+                            <input type="text" class="cell-input" id="sectDirect" readonly>
                         </div>
                         <div class="cell-wrapper flex-1 tall-wrapper">
                             <span class="cell-label">Parallel</span>
-                            <input type="text" class="cell-input" id="sectParallel">
+                            <input type="text" class="cell-input" id="sectParallel" readonly>
                         </div>
                         <div class="cell-wrapper flex-1 tall-wrapper">
                             <span class="cell-label">Offset</span>
-                            <input type="text" class="cell-input" id="sectOffset">
+                            <input type="text" class="cell-input" id="sectOffset" readonly>
                         </div>
                     </div>
 
@@ -926,6 +1086,13 @@
             <div id="npaBlock3" class="foldBlock">
                 <div class="card-content">
                     
+                    <div class="c2-row">
+                        <div class="cell-wrapper" style="width: calc(((100% - 12px) / 3) * 2 + 6px); flex-direction: row; justify-content: flex-start; padding: 4px 10px;">
+                            <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 9px; text-align: left; white-space: nowrap;">Radio fix shift from land THR:</span>
+                            <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')" style="flex: 1; min-width: 0; text-align: center !important; margin-left: 6px;">
+                        </div>
+                    </div>
+
                     <div class="c2-row">
                         <div class="cell-wrapper flex-1">
                             <span class="cell-label">S downwind</span>
@@ -945,54 +1112,29 @@
             </div>
         </div>
 
-        <div class="section-card">
+        <div class="section-card npa-profile-card" id="npaProfileCard">
             <div class="card-title" onclick="toggleNpaBlock('npaBlock4')">
                 Profile (Alt Vs Dist)
             </div>
             <div id="npaBlock4" class="foldBlock">
                 <div class="card-content" style="padding: 0 8px 8px 8px;">
-                    <table class="npa-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 25%;">H feet</th>
-                                <th style="width: 25%;">THR dist</th>
-                                <th style="width: 25%; cursor: pointer;" onclick="openNpaKeypad('radio')">
-                                    Radio dist
-                                    <div style="font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 2px; opacity: 0.8; line-height: 1.1; pointer-events: none;">
-                                        <span id="radioDistValDisplay" style="font-size: 11px; color: var(--accent-blue);">0.0</span><span style="font-size: 11px; color: var(--accent-blue);">nm</span><br>
-                                        <span style="font-size: 8px;">shift from land THR</span>
-                                    </div>
-                                </th>
-                                <th style="width: 25%; cursor: pointer;" onclick="openNpaKeypad('tar')">
-                                    TAR dist
-                                    <div style="font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 2px; opacity: 0.8; line-height: 1.1; pointer-events: none;">
-                                        <span id="tarDistValDisplay" style="font-size: 11px; color: var(--accent-blue);">0.0</span><span style="font-size: 11px; color: var(--accent-blue);">nm</span><br>
-                                        <span style="font-size: 8px;">shift from land THR</span>
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="number" class="table-input" id="hFeet1"></td>
-                                <td><input type="number" class="table-input" id="thrDist1" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="radioDist1" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="tarDist1" step="0.1"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="number" class="table-input" id="hFeet2"></td>
-                                <td><input type="number" class="table-input" id="thrDist2" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="radioDist2" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="tarDist2" step="0.1"></td>
-                            </tr>
-                            <tr>
-                                <td><input type="number" class="table-input" id="hFeet3"></td>
-                                <td><input type="number" class="table-input" id="thrDist3" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="radioDist3" step="0.1"></td>
-                                <td><input type="number" class="table-input" id="tarDist3" step="0.1"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="npa-profile-table">
+                        <div class="npa-profile-head">
+                            <div class="npa-profile-cell npa-profile-dist">Dist (NM)</div>
+                            <div class="npa-profile-cell npa-profile-alt">H feet</div>
+                            <div class="npa-profile-cell npa-profile-radio npa-profile-shift-head" onclick="openNpaKeypad('radio')">
+                                <span>Radio dist</span>
+                                <span class="npa-profile-shift-value"><span id="radioDistValDisplay">0.0</span>nm</span>
+                                <span class="npa-profile-shift-label">shift from land THR</span>
+                            </div>
+                            <div class="npa-profile-cell npa-profile-tar npa-profile-shift-head" onclick="openNpaKeypad('tar')">
+                                <span>TAR dist</span>
+                                <span class="npa-profile-shift-value"><span id="tarDistValDisplay">0.0</span>nm</span>
+                                <span class="npa-profile-shift-label">shift from land THR</span>
+                            </div>
+                        </div>
+                        <div class="npa-profile-body" id="npaProfileTableBody"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1027,10 +1169,22 @@
             if (wrapper) wrapper.style.height = staticHeight;
         };
         lockAppHeight();
-        window.addEventListener('orientationchange', () => setTimeout(lockAppHeight, 150));
+        window.addEventListener('orientationchange', () => setTimeout(() => {
+            lockAppHeight();
+            scheduleNpaProfileLayoutUpdate();
+        }, 150));
         
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
-        setDefaultTemperature();
+        initNpaRefreshButton();
+        const restoredState = restoreNpaCurrentPageState();
+        if (!restoredState) {
+            setDefaultTemperature();
+            updateRacetrackSectors();
+        }
+        scheduleNpaProfileLayoutUpdate();
+        window.addEventListener('resize', scheduleNpaProfileLayoutUpdate);
+        const mainScroll = document.getElementById('mainScroll');
+        if (mainScroll) mainScroll.addEventListener('scroll', scheduleNpaProfileLayoutUpdate, { passive: true });
     });
 
     function toggleNpaBlock(id) {
@@ -1054,12 +1208,71 @@
             }
             
             if (navigator.vibrate) navigator.vibrate(15);
+            scheduleNpaProfileLayoutUpdate();
+            scheduleNpaCurrentPageStateSave();
         }
     }
 
+    function initNpaRefreshButton() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (!refreshBtn) return;
+        refreshBtn.addEventListener('click', event => {
+            event.preventDefault();
+            openNpaClearDataModal();
+        });
+    }
+
+    function openNpaClearDataModal() {
+        const modal = document.getElementById('npaClearDataModal');
+        if (!modal) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        modal.classList.add('active');
+    }
+
+    function closeNpaClearDataModal(event) {
+        if (event && event !== 'button' && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('npaClearDataModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function confirmNpaClearData() {
+        if (navigator.vibrate) navigator.vibrate(25);
+        clearTimeout(airportInputTimeout);
+        if (npaPageStateSaveTimer) {
+            clearTimeout(npaPageStateSaveTimer);
+            npaPageStateSaveTimer = null;
+        }
+        npaPageStateSaveSuppressed = true;
+
+        const airportEl = document.getElementById('apprName');
+        if (airportEl) airportEl.value = "";
+
+        const typeEl = document.getElementById('selectedTypeLabel');
+        if (typeEl) typeEl.innerText = "—";
+
+        clearNpaFields();
+        clearNpaCurrentPageState();
+
+        const mainScroll = document.getElementById('mainScroll');
+        if (mainScroll) mainScroll.scrollTop = 0;
+        const profileBody = document.getElementById('npaProfileTableBody');
+        if (profileBody) profileBody.scrollTop = 0;
+
+        npaPageStateSaveSuppressed = false;
+        closeNpaClearDataModal('button');
+    }
+
     const NPA_LOCAL_DB_KEY = 'mynpa_airports_cache_v1';
-    const NPA_PENDING_QUEUE_KEY = 'mynpa_pending_saves_v1';
-    let npaSyncInProgress = false;
+        const NPA_PENDING_QUEUE_KEY = 'mynpa_pending_saves_v1';
+        const NPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
+        const NPA_PAGE_STATE_FIELD_IDS = [
+            'apprName',
+            'rwLength', 'elevation', 'gpa', 'fdp', 'fap',
+            'inboundCrs', 'sectDirect', 'sectParallel', 'sectOffset',
+            'downwindRadioFixShift', 'sDownwind', 'downwindTime', 'gsAppr',
+            'tempC'
+        ];
+        let npaSyncInProgress = false;
 
     function readJsonStorage(key, fallbackValue) {
         try {
@@ -1184,14 +1397,117 @@
         }
     }
 
-    window.airportsNpa = loadNpaCache();
+        window.airportsNpa = loadNpaCache();
 
-    let airportInputTimeout; // Переменная для хранения таймера
+        let airportInputTimeout; // Переменная для хранения таймера
+        let downwindCalcSource = "";
+        let npaProfileLayoutFrame = null;
+        let npaProfileLayoutTimer = null;
+        let npaPageStateSaveTimer = null;
+        let npaPageStateSaveSuppressed = false;
+        let npaPageStateRestoring = false;
 
-    function setDefaultTemperature() {
-        const tempEl = document.getElementById('tempC');
-        if (tempEl && tempEl.value === "") tempEl.value = "15";
-    }
+        function getNpaCurrentPageState() {
+            const fields = {};
+            NPA_PAGE_STATE_FIELD_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                fields[id] = el ? el.value || "" : "";
+            });
+
+            return {
+                fields,
+                selectedType: document.getElementById('selectedTypeLabel')?.innerText || "—",
+                racetrack: document.getElementById('racetrackVal')?.innerText || "Right",
+                radioShift: document.getElementById('radioDistValDisplay')?.innerText || "0.0",
+                tarShift: document.getElementById('tarDistValDisplay')?.innerText || "0.0",
+                rwLengthDisplayUnit: document.getElementById('rwLength')?.dataset.displayUnit || "m",
+                downwindCalcSource,
+                openBlocks: ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5']
+                    .filter(id => document.getElementById(id)?.classList.contains('open')),
+                savedAt: Date.now()
+            };
+        }
+
+        function saveNpaCurrentPageState() {
+            if (npaPageStateSaveSuppressed || npaPageStateRestoring) return;
+            writeJsonStorage(NPA_PAGE_STATE_KEY, getNpaCurrentPageState());
+        }
+
+        function scheduleNpaCurrentPageStateSave() {
+            if (npaPageStateSaveSuppressed || npaPageStateRestoring) return;
+            if (npaPageStateSaveTimer) clearTimeout(npaPageStateSaveTimer);
+            npaPageStateSaveTimer = setTimeout(() => {
+                npaPageStateSaveTimer = null;
+                saveNpaCurrentPageState();
+            }, 80);
+        }
+
+        function restoreNpaCurrentPageState() {
+            const state = readJsonStorage(NPA_PAGE_STATE_KEY, null);
+            if (!state || typeof state !== 'object') return false;
+
+            npaPageStateRestoring = true;
+            try {
+                const fields = state.fields && typeof state.fields === 'object' ? state.fields : {};
+
+                const typeEl = document.getElementById('selectedTypeLabel');
+                if (typeEl) typeEl.innerText = state.selectedType || "—";
+
+                const racetrackEl = document.getElementById('racetrackVal');
+                if (racetrackEl) racetrackEl.innerText = state.racetrack === 'Left' ? 'Left' : 'Right';
+
+                NPA_PAGE_STATE_FIELD_IDS.forEach(id => {
+                    if (Object.prototype.hasOwnProperty.call(fields, id)) {
+                        setFieldValue(id, fields[id]);
+                    }
+                });
+
+                const rwLengthEl = document.getElementById('rwLength');
+                if (rwLengthEl) {
+                    rwLengthEl.dataset.displayUnit = state.rwLengthDisplayUnit === 'ft' ? 'ft' : 'm';
+                    renderRwLengthDisplay();
+                }
+
+                const radioShiftEl = document.getElementById('radioDistValDisplay');
+                if (radioShiftEl) radioShiftEl.innerText = state.radioShift !== undefined ? state.radioShift : "0.0";
+                const tarShiftEl = document.getElementById('tarDistValDisplay');
+                if (tarShiftEl) tarShiftEl.innerText = state.tarShift !== undefined ? state.tarShift : "0.0";
+
+                downwindCalcSource = state.downwindCalcSource === 'time' || state.downwindCalcSource === 'speed'
+                    ? state.downwindCalcSource
+                    : "";
+
+                if (Array.isArray(state.openBlocks)) {
+                    ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5'].forEach(id => {
+                        const block = document.getElementById(id);
+                        if (block) block.classList.toggle('open', state.openBlocks.includes(id));
+                    });
+                }
+
+                updateRacetrackSectors();
+                updateDownwindCalculation('load');
+                renderNpaProfileTable();
+                scheduleNpaProfileLayoutUpdate();
+                return true;
+            } finally {
+                npaPageStateRestoring = false;
+            }
+        }
+
+        function clearNpaCurrentPageState() {
+            try {
+                localStorage.removeItem(NPA_PAGE_STATE_KEY);
+            } catch (error) {
+                console.error('Local storage remove error:', error);
+            }
+        }
+
+        function setDefaultTemperature() {
+            const tempEl = document.getElementById('tempC');
+            if (tempEl && tempEl.value === "") tempEl.value = "15";
+            renderNpaProfileTable();
+            scheduleNpaCurrentPageStateSave();
+        }
 
     function handleAirportInput() {
         clearTimeout(airportInputTimeout); // Сбрасываем таймер при каждом новом вводе
@@ -1204,6 +1520,7 @@
         inputEl.value = airportCode;
         typeLabel.innerText = "—";
         clearNpaFields();
+        scheduleNpaCurrentPageStateSave();
 
         if (!airportCode || airportCode.length < 4) {
             return;
@@ -1273,6 +1590,7 @@
         document.getElementById('npaModal').style.display = 'none';
         
         checkAndFillFromDB();
+        scheduleNpaCurrentPageStateSave();
     }
 
     function setFieldValue(id, value) {
@@ -1287,9 +1605,16 @@
             renderRwLengthDisplay();
         } else if (id === 'inboundCrs') {
             renderInboundCourseDisplay();
+            updateRacetrackSectors();
         } else if (id === 'gpa') {
             el.value = nextValue === "" ? "" : formatDecimal(nextValue, 1);
         }
+
+        if (isNpaProfileSourceField(id)) {
+            renderNpaProfileTable();
+        }
+
+        scheduleNpaCurrentPageStateSave();
     }
 
     function getNumberOrBlank(id) {
@@ -1306,10 +1631,277 @@
         return el ? el.value || "" : "";
     }
 
+    function isNpaProfileSourceField(id) {
+        return ['elevation', 'fdp', 'fap', 'gpa', 'tempC'].includes(id);
+    }
+
+    function isFilledProfileNumber(value) {
+        return value !== "" && Number.isFinite(Number(value));
+    }
+
+    function clearNpaProfileLayout() {
+        const block = document.getElementById('npaBlock4');
+        const table = document.querySelector('.npa-profile-table');
+        const body = document.getElementById('npaProfileTableBody');
+
+        if (block) {
+            block.style.removeProperty('--npa-profile-block-height');
+            block.style.removeProperty('max-height');
+        }
+        if (table) {
+            table.style.removeProperty('--npa-profile-table-height');
+            table.style.removeProperty('height');
+            table.style.removeProperty('max-height');
+        }
+        if (body) {
+            body.style.removeProperty('--npa-profile-body-height');
+            body.style.removeProperty('height');
+            body.style.removeProperty('max-height');
+        }
+    }
+
+    function scheduleNpaProfileLayoutUpdate() {
+        if (npaProfileLayoutFrame) cancelAnimationFrame(npaProfileLayoutFrame);
+        if (npaProfileLayoutTimer) clearTimeout(npaProfileLayoutTimer);
+        npaProfileLayoutFrame = requestAnimationFrame(() => {
+            npaProfileLayoutFrame = null;
+            updateNpaProfileLayout();
+        });
+        npaProfileLayoutTimer = setTimeout(() => {
+            npaProfileLayoutTimer = null;
+            updateNpaProfileLayout();
+        }, 280);
+    }
+
+    function updateNpaProfileLayout() {
+        const block = document.getElementById('npaBlock4');
+        const table = document.querySelector('.npa-profile-table');
+        const body = document.getElementById('npaProfileTableBody');
+        const head = table ? table.querySelector('.npa-profile-head') : null;
+
+        if (!block || !table || !body || !head || !block.classList.contains('open')) {
+            clearNpaProfileLayout();
+            return;
+        }
+
+        const scroll = document.getElementById('mainScroll');
+        const wrapper = document.querySelector('.app-wrapper');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const menuBtn = document.querySelector('.menu-btn');
+        const scrollRect = scroll ? scroll.getBoundingClientRect() : null;
+        const wrapperRect = wrapper ? wrapper.getBoundingClientRect() : null;
+        const buttonTops = [refreshBtn, menuBtn]
+            .filter(Boolean)
+            .map(button => button.getBoundingClientRect().top)
+            .filter(top => Number.isFinite(top));
+        const controlsTop = buttonTops.length ? Math.min(...buttonTops) : (wrapperRect ? wrapperRect.bottom - 50 : window.innerHeight - 50);
+        const visibleBottom = Math.min(
+            scrollRect ? scrollRect.bottom : window.innerHeight,
+            controlsTop - 6,
+            wrapperRect ? wrapperRect.bottom - 6 : window.innerHeight
+        );
+        const blockRect = block.getBoundingClientRect();
+        const tableRect = table.getBoundingClientRect();
+        const minTableHeight = 190;
+        const minBodyHeight = 130;
+
+        const blockHeight = Math.max(220, Math.floor(visibleBottom - blockRect.top));
+        const tableHeight = Math.max(minTableHeight, Math.floor(visibleBottom - tableRect.top - 4));
+        const bodyHeight = Math.max(minBodyHeight, tableHeight - head.offsetHeight);
+
+        block.style.setProperty('--npa-profile-block-height', `${blockHeight}px`);
+        block.style.maxHeight = `${blockHeight}px`;
+        table.style.setProperty('--npa-profile-table-height', `${tableHeight}px`);
+        table.style.height = `${tableHeight}px`;
+        table.style.maxHeight = `${tableHeight}px`;
+        body.style.setProperty('--npa-profile-body-height', `${bodyHeight}px`);
+        body.style.height = `${bodyHeight}px`;
+        body.style.maxHeight = `${bodyHeight}px`;
+    }
+
+    function scrollToNpaProfilePoint(isInstant = false) {
+        const container = document.getElementById('npaProfileTableBody');
+        if (!container) return;
+
+        const highlights = container.querySelectorAll('.highlight-fdp,.highlight-fap');
+        if (!highlights.length) return;
+
+        const targetRow = highlights[highlights.length - 1];
+        const rowHeight = targetRow.offsetHeight || 45;
+        const containerHeight = container.clientHeight;
+        const targetScroll = targetRow.offsetTop - (containerHeight - (4 * rowHeight));
+
+        container.scrollTo({
+            top: Math.round(targetScroll),
+            behavior: isInstant === true ? 'auto' : 'smooth'
+        });
+    }
+
+    function makeNpaProfileRow(distValue, altValue, className = '') {
+        return `
+            <div class="npa-profile-row${className ? ` ${className}` : ''}">
+                <div class="npa-profile-cell npa-profile-dist">${distValue}</div>
+                <div class="npa-profile-cell npa-profile-alt">${altValue}</div>
+                <div class="npa-profile-cell npa-profile-radio"></div>
+                <div class="npa-profile-cell npa-profile-tar"></div>
+            </div>`;
+    }
+
+    function makeNpaProfileDistValue(distValue, iconName = '') {
+        if (!iconName) return distValue;
+        return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span>${distValue}</span></span>`;
+    }
+
+    function isNpaProfileDistanceInRange(distance) {
+        return Number.isFinite(distance) && distance >= 2 && distance <= 10;
+    }
+
+    function renderNpaProfileTable() {
+        const tableBody = document.getElementById('npaProfileTableBody');
+        if (!tableBody) return;
+
+        const elevationValue = getNumberOrBlank('elevation');
+        const fdpValue = getNumberOrBlank('fdp');
+        const fapValue = getNumberOrBlank('fap');
+        const angleValue = getNumberOrBlank('gpa');
+        const tempValue = getNumberOrBlank('tempC');
+
+        const fdpValid = isFilledProfileNumber(fdpValue);
+        const fapValid = isFilledProfileNumber(fapValue);
+
+        if (
+            !isFilledProfileNumber(elevationValue) ||
+            !isFilledProfileNumber(angleValue) ||
+            !isFilledProfileNumber(tempValue) ||
+            (!fdpValid && !fapValid)
+        ) {
+            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
+            return;
+        }
+
+        const hElev = Number(elevationValue);
+        const hFdp = Number(fdpValue);
+        const hFap = Number(fapValue);
+        const angle = Number(angleValue);
+        const temp = Number(tempValue);
+        const denominator = temp + 273.15;
+        const angleRad = angle * (Math.PI / 180);
+        const tanAngle = Math.tan(angleRad);
+
+        if (!Number.isFinite(denominator) || denominator <= 0 || !Number.isFinite(tanAngle) || tanAngle <= 0) {
+            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs (Elevation, GPA, OAT)...</div>';
+            return;
+        }
+
+        const kTable = (288.15 - (0.00198 * hElev)) / denominator;
+        const ftPerNm = 6076.1155;
+        const getDistFromInd = (height) => Math.max(0, Math.ceil(((height - hElev) / kTable - 50) / (tanAngle * ftPerNm) * 10) / 10);
+        const getIndFromDist = (distance) => Math.round(((distance * tanAngle * ftPerNm + 50) * kTable + hElev) / 10) * 10;
+
+        const dFdp = fdpValid ? getDistFromInd(hFdp) : null;
+        const dFap = fapValid ? getDistFromInd(hFap) : null;
+        const topMile = 10;
+        const bottomMile = 2;
+
+        let tableHTML = '';
+        let fdpInserted = false;
+        let fapInserted = false;
+
+        for (let d = topMile; d >= bottomMile; d -= 1) {
+            if (fdpValid && isNpaProfileDistanceInRange(dFdp) && !fdpInserted && d <= dFdp) {
+                tableHTML += makeNpaProfileRow(makeNpaProfileDistValue(`${dFdp.toFixed(1)} nm`, 'fdp.png'), `${Math.round(hFdp)} ft`, 'highlight-fdp');
+                fdpInserted = true;
+            }
+
+            if (fapValid && isNpaProfileDistanceInRange(dFap) && !fapInserted && d <= dFap) {
+                tableHTML += makeNpaProfileRow(makeNpaProfileDistValue(`${dFap.toFixed(1)} nm`, 'fap.png'), `${Math.round(hFap)} ft`, 'highlight-fap');
+                fapInserted = true;
+            }
+
+            if ((fdpValid && d === dFdp) || (fapValid && d === dFap)) continue;
+
+            tableHTML += makeNpaProfileRow(`${d} nm`, `${getIndFromDist(d)} ft`);
+        }
+
+        tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
+        tableBody.scrollTop = 0;
+        scheduleNpaProfileLayoutUpdate();
+    }
+
     function formatDecimal(value, digits) {
         const num = Number(String(value).replace(',', '.').replace(/[^\d.-]/g, ''));
         if (!Number.isFinite(num)) return "";
         return num.toFixed(digits);
+    }
+
+    function parseDownwindTimeMinutes(value) {
+        const text = String(value || "").trim();
+        if (!text) return "";
+
+        if (text.includes(':')) {
+            const parts = text.split(':');
+            const minutes = Number(parts[0]);
+            const seconds = Number(parts[1]);
+            if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || seconds < 0 || seconds > 59) return "";
+            return minutes + (seconds / 60);
+        }
+
+        const numeric = Number(text.replace(',', '.').replace(/[^\d.-]/g, ''));
+        return Number.isFinite(numeric) ? numeric : "";
+    }
+
+    function formatDownwindMinutes(minutes) {
+        const value = Number(minutes);
+        if (!Number.isFinite(value) || value <= 0) return "";
+
+        const totalSeconds = Math.max(1, Math.round(value * 60));
+        const displayMinutes = Math.floor(totalSeconds / 60);
+        const displaySeconds = totalSeconds % 60;
+
+        return `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
+    }
+
+    function setDownwindCalcField(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = value !== undefined && value !== null ? value : "";
+        scheduleNpaCurrentPageStateSave();
+    }
+
+    function updateDownwindCalculation(source) {
+        const distance = getNumberOrBlank('sDownwind');
+        const timeMinutes = parseDownwindTimeMinutes(getTextOrBlank('downwindTime'));
+        const speed = getNumberOrBlank('gsAppr');
+
+        let calcSource = source;
+        if (source === 'distance' || source === 'load' || source === 'save') {
+            calcSource = downwindCalcSource;
+            if (!calcSource) {
+                if (timeMinutes !== "" && speed === "") calcSource = 'time';
+                else if (speed !== "" && timeMinutes === "") calcSource = 'speed';
+            }
+        }
+
+        if (calcSource === 'time') {
+            downwindCalcSource = 'time';
+            if (distance === "" || Number(distance) <= 0 || timeMinutes === "" || Number(timeMinutes) <= 0) {
+                setDownwindCalcField('gsAppr', "");
+                return;
+            }
+
+            setDownwindCalcField('gsAppr', Math.max(1, Math.round((Number(distance) / Number(timeMinutes)) * 60)));
+            return;
+        }
+
+        if (calcSource === 'speed') {
+            downwindCalcSource = 'speed';
+            if (distance === "" || Number(distance) <= 0 || speed === "" || Number(speed) <= 0) {
+                setDownwindCalcField('downwindTime', "");
+                return;
+            }
+
+            setDownwindCalcField('downwindTime', formatDownwindMinutes((Number(distance) / Number(speed)) * 60));
+        }
     }
 
     function setSplitDisplay(mainId, subId, primary, secondary) {
@@ -1380,6 +1972,44 @@
         );
     }
 
+    function formatRacetrackCourse(value) {
+        const course = normalizeCourse(value);
+        return course === "" ? "" : String(course);
+    }
+
+    function formatRacetrackSector(inbound, fromOffset, toOffset) {
+        const from = formatRacetrackCourse(Number(inbound) + fromOffset);
+        const to = formatRacetrackCourse(Number(inbound) + toOffset);
+        return from && to ? `${from}º…${to}º` : "";
+    }
+
+    function updateRacetrackSectors() {
+        const inbound = getNumberOrBlank('inboundCrs');
+        if (inbound === "") {
+            setFieldValue('sectDirect', "");
+            setFieldValue('sectParallel', "");
+            setFieldValue('sectOffset', "");
+            return;
+        }
+
+        const racetrack = document.getElementById('racetrackVal').innerText === 'Left' ? 'Left' : 'Right';
+        const offsets = racetrack === 'Left'
+            ? {
+                direct: [-110, 70],
+                parallel: [70, 180],
+                offset: [180, 250]
+            }
+            : {
+                direct: [-70, 110],
+                parallel: [-180, -70],
+                offset: [-250, -180]
+            };
+
+        setFieldValue('sectDirect', formatRacetrackSector(inbound, offsets.direct[0], offsets.direct[1]));
+        setFieldValue('sectParallel', formatRacetrackSector(inbound, offsets.parallel[0], offsets.parallel[1]));
+        setFieldValue('sectOffset', formatRacetrackSector(inbound, offsets.offset[0], offsets.offset[1]));
+    }
+
     function startNewApproachEntry() {
         if (navigator.vibrate) navigator.vibrate(20);
         document.getElementById('npaModal').style.display = 'none';
@@ -1387,6 +2017,8 @@
         clearNpaFields();
         const infoBlock = document.getElementById('npaBlock5');
         if (infoBlock) infoBlock.classList.add('open');
+        scheduleNpaProfileLayoutUpdate();
+        scheduleNpaCurrentPageStateSave();
     }
 
     function startNewAirportEntry() {
@@ -1401,6 +2033,8 @@
         clearNpaFields();
         const infoBlock = document.getElementById('npaBlock5');
         if (infoBlock) infoBlock.classList.add('open');
+        scheduleNpaProfileLayoutUpdate();
+        scheduleNpaCurrentPageStateSave();
     }
 
     function toggleGpaMenu(e) {
@@ -1440,6 +2074,7 @@
 
         if (airportCode && type && type !== "—" && window.airportsNpa[airportCode] && window.airportsNpa[airportCode][type]) {
             const data = window.airportsNpa[airportCode][type];
+            downwindCalcSource = "";
 
             setFieldValue('rwLength', data.rwLength);
             setFieldValue('elevation', data.elevation);
@@ -1451,9 +2086,12 @@
             setFieldValue('sectDirect', data.sectDirect);
             setFieldValue('sectParallel', data.sectParallel);
             setFieldValue('sectOffset', data.sectOffset);
+            updateRacetrackSectors();
+            setFieldValue('downwindRadioFixShift', data.downwindRadioFixShift);
             setFieldValue('sDownwind', data.sDownwind);
             setFieldValue('downwindTime', data.downwindTime);
             setFieldValue('gsAppr', data.gsAppr);
+            updateDownwindCalculation('load');
 
             const profileRows = Array.isArray(data.profileRows) ? data.profileRows : [];
             for (let i = 1; i <= 3; i += 1) {
@@ -1467,6 +2105,7 @@
             document.getElementById('radioDistValDisplay').innerText = data.radioShift !== undefined ? data.radioShift : "0.0";
             document.getElementById('tarDistValDisplay').innerText = data.tarShift !== undefined ? data.tarShift : "0.0";
             setDefaultTemperature();
+            scheduleNpaCurrentPageStateSave();
         }
     }
 
@@ -1474,7 +2113,7 @@
         const fields = [
             'rwLength', 'elevation', 'gpa', 'fdp', 'fap',
             'inboundCrs', 'sectDirect', 'sectParallel', 'sectOffset',
-            'sDownwind', 'downwindTime', 'gsAppr',
+            'downwindRadioFixShift', 'sDownwind', 'downwindTime', 'gsAppr',
             'hFeet1', 'thrDist1', 'radioDist1', 'tarDist1',
             'hFeet2', 'thrDist2', 'radioDist2', 'tarDist2',
             'hFeet3', 'thrDist3', 'radioDist3', 'tarDist3'
@@ -1482,11 +2121,15 @@
         fields.forEach(id => {
             setFieldValue(id, "");
         });
+        downwindCalcSource = "";
         document.getElementById('racetrackVal').innerText = "Right";
+        updateRacetrackSectors();
         document.getElementById('radioDistValDisplay').innerText = "0.0";
         document.getElementById('tarDistValDisplay').innerText = "0.0";
         const tempEl = document.getElementById('tempC');
         if (tempEl) tempEl.value = "15";
+        renderNpaProfileTable();
+        scheduleNpaCurrentPageStateSave();
     }
 
     // --- ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ---
@@ -1504,9 +2147,12 @@
             if (!newType) return;
             type = newType.trim().toUpperCase();
             document.getElementById('selectedTypeLabel').innerText = type;
+            scheduleNpaCurrentPageStateSave();
         }
 
         if (navigator.vibrate) navigator.vibrate(25);
+        updateRacetrackSectors();
+        updateDownwindCalculation('save');
 
         const approachData = {
             rwLength: getNumberOrBlank('rwLength'),
@@ -1519,6 +2165,7 @@
             sectDirect: getTextOrBlank('sectDirect'),
             sectParallel: getTextOrBlank('sectParallel'),
             sectOffset: getTextOrBlank('sectOffset'),
+            downwindRadioFixShift: getNumberOrBlank('downwindRadioFixShift'),
             sDownwind: getNumberOrBlank('sDownwind'),
             downwindTime: getTextOrBlank('downwindTime'),
             gsAppr: getNumberOrBlank('gsAppr'),
@@ -1559,6 +2206,8 @@
         } else {
             el.innerText = 'Right';
         }
+        updateRacetrackSectors();
+        scheduleNpaCurrentPageStateSave();
     }
 
     // --- ЛОГИКА ЦИФРОВОЙ КЛАВИАТУРЫ ---
@@ -1577,6 +2226,10 @@
         downwindTime: { title: 'DOWNWIND TIME', mode: 'time' },
         tempC: { title: 'OAT °C', mode: 'temperature' }
     };
+
+    function isShiftKeypadField(type) {
+        return ['radio', 'tar', 'downwindRadioFixShift'].includes(type);
+    }
 
     const npaBackspaceFields = [
         'rwLength',
@@ -1621,8 +2274,13 @@
         }
         if (subtitleEl) subtitleEl.innerText = '';
 
-        if (type === 'radio' || type === 'tar') {
-            if (titleEl) titleEl.innerText = type === 'radio' ? 'SHIFT FROM THR (RADIO)' : 'SHIFT FROM THR (TAR)';
+        if (isShiftKeypadField(type)) {
+            const titles = {
+                radio: 'SHIFT FROM THR (RADIO)',
+                tar: 'SHIFT FROM THR (TAR)',
+                downwindRadioFixShift: 'RADIO FIX SHIFT FROM LAND THR'
+            };
+            if (titleEl) titleEl.innerText = titles[type];
             if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
             if (signBtn) signBtn.style.visibility = 'visible';
             return;
@@ -1741,6 +2399,11 @@
             return document.getElementById(displayId).innerText || "";
         }
 
+        if (activeNpaField === 'downwindRadioFixShift') {
+            const el = document.getElementById('downwindRadioFixShift');
+            return el ? el.value || "" : "";
+        }
+
         if (activeNpaField === 'rwLength') return getRwLengthKeypadValueFromStored();
         if (activeNpaField === 'inboundCrs') return formatCourse(getNumberOrBlank('inboundCrs'));
 
@@ -1768,30 +2431,30 @@
         const digits = String(value || '').replace(/\D/g, '').slice(0, 4);
         if (!digits) return "";
 
-        let hh = "00";
-        let mm = "00";
+        let minutes = "00";
+        let seconds = "00";
         if (digits.length === 1) {
-            mm = "0" + digits;
+            seconds = "0" + digits;
         } else if (digits.length === 2) {
-            mm = digits;
+            seconds = digits;
         } else if (digits.length === 3) {
-            hh = "0" + digits[0];
-            mm = digits.substring(1);
+            minutes = "0" + digits[0];
+            seconds = digits.substring(1);
         } else {
-            hh = digits.substring(0, 2);
-            mm = digits.substring(2);
+            minutes = digits.substring(0, 2);
+            seconds = digits.substring(2);
         }
 
-        return `${hh}:${mm}`;
+        return `${minutes}:${seconds}`;
     }
 
     function isValidNpaTimeDigits(value) {
         const formatted = formatNpaTimeDigits(value);
         if (!formatted) return true;
         const parts = formatted.split(':');
-        const hours = Number(parts[0]);
-        const minutes = Number(parts[1]);
-        return Number.isFinite(hours) && Number.isFinite(minutes) && hours <= 23 && minutes <= 59;
+        const minutes = Number(parts[0]);
+        const seconds = Number(parts[1]);
+        return Number.isFinite(minutes) && Number.isFinite(seconds) && seconds <= 59;
     }
 
     function closeNpaKeypad(e) {
@@ -1837,14 +2500,22 @@
         } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
+        } else if (activeNpaField === 'downwindRadioFixShift') {
+            setFieldValue('downwindRadioFixShift', finalVal);
         } else if (activeNpaField === 'tempC') {
             const tempEl = document.getElementById('tempC');
             if (tempEl) tempEl.value = finalVal === "" ? "" : `${npaTempIsNegative ? '-' : ''}${finalVal}`;
+            renderNpaProfileTable();
         } else if (activeNpaField === 'downwindTime') {
             setFieldValue('downwindTime', finalVal === "" ? "" : formatNpaTimeDigits(finalVal));
+            updateDownwindCalculation('time');
         } else if (npaKeypadFields[activeNpaField]) {
             setFieldValue(activeNpaField, finalVal);
+            if (activeNpaField === 'gsAppr') updateDownwindCalculation('speed');
+            if (activeNpaField === 'sDownwind') updateDownwindCalculation('distance');
         }
+
+        scheduleNpaCurrentPageStateSave();
     }
 
     function showNpaTempLimitWarning() {
@@ -1869,6 +2540,8 @@
             const tempEl = document.getElementById('tempC');
             if (tempEl) tempEl.value = "";
             updateKpDisplay();
+            renderNpaProfileTable();
+            scheduleNpaCurrentPageStateSave();
         }
     }
 
@@ -1911,7 +2584,7 @@
         }
 
         if (key === '+/-') {
-            if (!['radio', 'tar'].includes(activeNpaField)) return;
+            if (!isShiftKeypadField(activeNpaField)) return;
             keypadWasCleared = false;
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = currentKpVal.substring(1);
@@ -2002,6 +2675,17 @@
         displayEl.innerHTML = currentKpVal === "" ? "&nbsp;" : currentKpVal;
     }
 </script>
+<div id="npaClearDataModal" class="modal-overlay" onclick="closeNpaClearDataModal(event)">
+    <div class="modal-content clear-data-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">Очистить данные?</div>
+        <div class="clear-data-text">Будут очищены все текущие поля MyNPA на этой странице.</div>
+        <div class="clear-data-actions">
+            <button type="button" class="clear-data-cancel" onclick="closeNpaClearDataModal('button')">Отмена</button>
+            <button type="button" class="clear-data-confirm" onclick="confirmNpaClearData()">Очистить</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="npaModal" onclick="closeNpaModal(event)">
     <div class="modal-content">
         <div class="modal-header">Select Approach Type</div>
