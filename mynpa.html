@@ -79,7 +79,7 @@
 
         .precision-scroll-container {
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden;
             z-index: 30;
             margin: 5px 0 max(60px, calc(var(--safe-bottom) + 55px)) 0; 
             padding: 8px 10px;
@@ -87,8 +87,7 @@
             border: none;
         }
 
-        .precision-scroll-container::-webkit-scrollbar { width: 4px; }
-        .precision-scroll-container::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 10px; }
+        .precision-scroll-container::-webkit-scrollbar { width: 0; height: 0; }
 
         .app-header {
             position: relative;
@@ -175,8 +174,12 @@
 
         .npa-info-card {
             position: relative;
-            overflow: visible;
+            overflow: hidden;
             z-index: 40;
+        }
+
+        .npa-info-card.npa-info-open {
+            overflow: visible;
         }
 
         /* ЗАГОЛОВОК ПРЯМО НА БЕЛОМ ФОНЕ КОНТЕЙНЕРА */
@@ -216,12 +219,123 @@
             position: relative;
             max-height: 330px;
             overflow: visible;
+            visibility: visible;
             z-index: 45;
+        }
+
+        .npa-info-card .foldBlock {
+            transition: none;
+            transform: none;
+        }
+
+        .npa-info-card .foldBlock:not(.open) {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .npa-info-card .foldBlock.open .card-content {
+            padding-bottom: 6px;
+        }
+
+        .npa-fdp-fap-pinned {
+            padding-top: 0;
         }
 
         .card-content {
             padding: 0 16px 16px 16px;
             color: var(--text-main);
+        }
+
+        .npa-tabs-card {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+        }
+        .npa-tabs-container {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .npa-tab-line {
+            display: flex;
+            align-items: flex-end;
+            width: 100%;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 10;
+        }
+        .npa-tab-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            width: 100%;
+        }
+        .npa-tab-btn {
+            height: 38px;
+            min-width: 0;
+            padding: 0 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px 10px 0 0;
+            background: rgba(15, 23, 42, 0.06);
+            color: var(--text-main);
+            opacity: 0.62;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html.dark-theme .npa-tab-btn {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .npa-tab-btn.active {
+            background: var(--card-bg);
+            color: var(--accent-blue);
+            opacity: 1;
+            border-bottom-color: var(--card-bg);
+            border-top: 3px solid var(--accent-blue);
+        }
+        .npa-tab-content-area {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 16px 16px;
+            padding: 8px;
+            overflow: hidden;
+            min-height: 0;
+            height: var(--npa-tab-content-height, auto);
+            max-height: var(--npa-tab-content-height, none);
+            transition: none;
+        }
+        .npa-tabs-card:not(.has-active) .npa-tab-content-area {
+            display: none;
+        }
+        .npa-tab-panel {
+            display: none;
+            height: 100%;
+            max-height: none;
+            opacity: 1;
+            transform: none;
+            overflow: hidden;
+            transition: none;
+        }
+        .npa-tab-panel.open,
+        #npaBlock4.npa-tab-panel.open {
+            display: block;
+            height: 100%;
+            max-height: none;
+            opacity: 1;
+            transform: none;
+        }
+        .npa-tab-panel .card-content {
+            padding: 0;
+            height: 100%;
+            min-height: 0;
         }
 
         /* КНОПКИ ВНИЗУ */
@@ -687,7 +801,7 @@
             display: flex;
             padding: 10px 12px;
             font-size: 9px;
-            color: var(--accent-blue);
+            color: #000000;
             font-weight: 900;
             text-transform: uppercase;
             border-bottom: 1px solid var(--border-color);
@@ -756,16 +870,27 @@
             align-items: center;
             box-sizing: border-box;
         }
+        .npa-profile-row .npa-profile-cell,
+        .npa-profile-head .npa-profile-cell {
+            align-self: stretch;
+        }
+        .npa-profile-cell + .npa-profile-cell {
+            border-left: 1px solid rgba(15, 23, 42, 0.12);
+        }
+        html.dark-theme .npa-profile-cell + .npa-profile-cell {
+            border-left-color: rgba(255, 255, 255, 0.14);
+        }
         .npa-profile-dist {
             flex: 0 0 22%;
-            justify-content: flex-end;
-            text-align: right;
-            padding-right: 8px;
+            justify-content: center;
+            text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
         }
         .npa-profile-dist-with-icon {
             display: inline-flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
             gap: 4px;
             min-width: 0;
         }
@@ -781,9 +906,10 @@
         }
         .npa-profile-alt {
             flex: 0 0 30%;
-            justify-content: flex-start;
-            text-align: left;
+            justify-content: center;
+            text-align: center;
             padding-left: 4px;
+            padding-right: 4px;
             gap: 5px;
         }
         .npa-profile-radio,
@@ -791,16 +917,37 @@
             flex: 1 1 24%;
             justify-content: center;
             text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
         }
         .npa-profile-head .npa-profile-cell {
-            align-items: flex-start;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
             font-size: 9px;
             line-height: 1.15;
         }
         .npa-profile-shift-head {
             cursor: pointer;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
             gap: 2px;
+        }
+        .npa-profile-unit-toggle {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .npa-profile-table.profile-dim-dist .npa-profile-dist,
+        .npa-profile-table.profile-dim-radio .npa-profile-radio,
+        .npa-profile-table.profile-dim-tar .npa-profile-tar {
+            opacity: 0.12;
+        }
+        .npa-profile-table .npa-profile-dist,
+        .npa-profile-table .npa-profile-radio,
+        .npa-profile-table .npa-profile-tar {
+            transition: opacity 140ms ease;
         }
         .npa-profile-shift-value {
             font-size: 11px;
@@ -982,7 +1129,7 @@
             </div>
         </div>
 
-        <div class="section-card npa-info-card">
+        <div class="section-card npa-info-card npa-info-open">
             <div class="card-title" onclick="toggleNpaBlock('npaBlock5')">
                 Airport and approach info
             </div>
@@ -1017,123 +1164,125 @@
                         </div>
                     </div>
 
-                    <div class="c2-row">
-                        <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.2);">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <img src="FDP.png" alt="" class="npa-icon">
-                                <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FDP</span>
-                            </div>
-                            <input type="text" class="cell-input" id="fdp" readonly onclick="openNpaKeypad('fdp')" style="width: 50px !important;">
+                </div>
+            </div>
+            <div class="card-content npa-fdp-fap-pinned">
+                <div class="c2-row">
+                    <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <img src="FDP.png" alt="" class="npa-icon">
+                            <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FDP</span>
                         </div>
-                        <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.2);">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <img src="FAP.png" alt="" class="npa-icon">
-                                <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FAP</span>
-                            </div>
-                            <input type="text" class="cell-input" id="fap" readonly onclick="openNpaKeypad('fap')" style="width: 50px !important;">
-                        </div>
+                        <input type="text" class="cell-input" id="fdp" readonly onclick="openNpaKeypad('fdp')" style="width: 50px !important;">
                     </div>
-
+                    <div class="cell-wrapper flex-1" style="flex-direction: row; justify-content: space-between; padding: 4px 10px; background: rgba(251, 146, 60, 0.08); border-color: rgba(251, 146, 60, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <img src="FAP.png" alt="" class="npa-icon">
+                            <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 11px;">FAP</span>
+                        </div>
+                        <input type="text" class="cell-input" id="fap" readonly onclick="openNpaKeypad('fap')" style="width: 50px !important;">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="section-card">
-            <div class="card-title" onclick="toggleNpaBlock('npaBlock2')">
-                Racetrack entry
-            </div>
-            <div id="npaBlock2" class="foldBlock">
-                <div class="card-content">
-                    
-                    <div class="c2-row">
-                        <div class="cell-wrapper flex-1" style="cursor: pointer;" onclick="toggleRacetrack()">
-                            <span class="cell-label">Racetrack conf</span>
-                            <div class="btn-val" id="racetrackVal">Right</div>
-                        </div>
-                        <div class="cell-wrapper flex-1">
-                            <span class="cell-label">Inbound Course</span>
-                            <input type="hidden" id="inboundCrs">
-                            <button type="button" class="split-display-field" id="inboundCrsDisplay" onclick="openNpaKeypad('inboundCrs')">
-                                <span class="split-primary" id="inboundCrsMain"></span>
-                                <span class="split-secondary" id="inboundCrsSub"></span>
-                            </button>
-                        </div>
+        <div class="section-card npa-tabs-card" id="npaTabsCard">
+            <div class="npa-tabs-container">
+                <div class="npa-tab-line">
+                    <div class="npa-tab-row">
+                        <button type="button" class="npa-tab-btn" data-target-block="npaBlock2" onclick="toggleNpaBlock('npaBlock2')">Racetrack entry</button>
+                        <button type="button" class="npa-tab-btn" data-target-block="npaBlock3" onclick="toggleNpaBlock('npaBlock3')">Downwind leg</button>
+                        <button type="button" class="npa-tab-btn" data-target-block="npaBlock4" onclick="toggleNpaBlock('npaBlock4')">Profile</button>
                     </div>
-
-                    <div class="c2-row">
-                        <div class="cell-wrapper flex-1 tall-wrapper">
-                            <span class="cell-label">Direct</span>
-                            <input type="text" class="cell-input" id="sectDirect" readonly>
-                        </div>
-                        <div class="cell-wrapper flex-1 tall-wrapper">
-                            <span class="cell-label">Parallel</span>
-                            <input type="text" class="cell-input" id="sectParallel" readonly>
-                        </div>
-                        <div class="cell-wrapper flex-1 tall-wrapper">
-                            <span class="cell-label">Offset</span>
-                            <input type="text" class="cell-input" id="sectOffset" readonly>
-                        </div>
-                    </div>
-
                 </div>
-            </div>
-        </div>
 
-        <div class="section-card">
-            <div class="card-title" onclick="toggleNpaBlock('npaBlock3')">
-                Downwind flight
-            </div>
-            <div id="npaBlock3" class="foldBlock">
-                <div class="card-content">
-                    
-                    <div class="c2-row">
-                        <div class="cell-wrapper" style="width: calc(((100% - 12px) / 3) * 2 + 6px); flex-direction: row; justify-content: flex-start; padding: 4px 10px;">
-                            <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 9px; text-align: left; white-space: nowrap;">Radio fix shift from land THR:</span>
-                            <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')" style="flex: 1; min-width: 0; text-align: center !important; margin-left: 6px;">
+                <div class="npa-tab-content-area">
+                    <div id="npaBlock2" class="foldBlock npa-tab-panel">
+                        <div class="card-content">
+                            
+                            <div class="c2-row">
+                                <div class="cell-wrapper flex-1" style="cursor: pointer;" onclick="toggleRacetrack()">
+                                    <span class="cell-label">Racetrack conf</span>
+                                    <div class="btn-val" id="racetrackVal">Right</div>
+                                </div>
+                                <div class="cell-wrapper flex-1">
+                                    <span class="cell-label">Inbound Course</span>
+                                    <input type="hidden" id="inboundCrs">
+                                    <button type="button" class="split-display-field" id="inboundCrsDisplay" onclick="openNpaKeypad('inboundCrs')">
+                                        <span class="split-primary" id="inboundCrsMain"></span>
+                                        <span class="split-secondary" id="inboundCrsSub"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="c2-row">
+                                <div class="cell-wrapper flex-1 tall-wrapper">
+                                    <span class="cell-label">Direct</span>
+                                    <input type="text" class="cell-input" id="sectDirect" readonly>
+                                </div>
+                                <div class="cell-wrapper flex-1 tall-wrapper">
+                                    <span class="cell-label">Parallel</span>
+                                    <input type="text" class="cell-input" id="sectParallel" readonly>
+                                </div>
+                                <div class="cell-wrapper flex-1 tall-wrapper">
+                                    <span class="cell-label">Offset</span>
+                                    <input type="text" class="cell-input" id="sectOffset" readonly>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
-                    <div class="c2-row">
-                        <div class="cell-wrapper flex-1">
-                            <span class="cell-label">S downwind</span>
-                            <input type="text" class="cell-input" id="sDownwind" readonly onclick="openNpaKeypad('sDownwind')">
-                        </div>
-                        <div class="cell-wrapper flex-1">
-                            <span class="cell-label">Downwind time</span>
-                            <input type="text" class="cell-input" id="downwindTime" readonly onclick="openNpaKeypad('downwindTime')">
-                        </div>
-                        <div class="cell-wrapper flex-1">
-                            <span class="cell-label">Ground Speed</span>
-                            <input type="text" class="cell-input" id="gsAppr" readonly onclick="openNpaKeypad('gsAppr')">
+                    <div id="npaBlock3" class="foldBlock npa-tab-panel">
+                        <div class="card-content">
+                            
+                            <div class="c2-row">
+                                <div class="cell-wrapper" style="width: calc(((100% - 12px) / 3) * 2 + 6px); flex-direction: row; justify-content: flex-start; padding: 4px 10px;">
+                                    <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 9px; text-align: left; white-space: nowrap;">Radio fix shift from land THR:</span>
+                                    <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')" style="flex: 1; min-width: 0; text-align: center !important; margin-left: 6px;">
+                                </div>
+                            </div>
+
+                            <div class="c2-row">
+                                <div class="cell-wrapper flex-1">
+                                    <span class="cell-label">S downwind</span>
+                                    <input type="text" class="cell-input" id="sDownwind" readonly onclick="openNpaKeypad('sDownwind')">
+                                </div>
+                                <div class="cell-wrapper flex-1">
+                                    <span class="cell-label">Downwind time</span>
+                                    <input type="text" class="cell-input" id="downwindTime" readonly onclick="openNpaKeypad('downwindTime')">
+                                </div>
+                                <div class="cell-wrapper flex-1">
+                                    <span class="cell-label">Ground Speed</span>
+                                    <input type="text" class="cell-input" id="gsAppr" readonly onclick="openNpaKeypad('gsAppr')">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
-                </div>
-            </div>
-        </div>
-
-        <div class="section-card npa-profile-card" id="npaProfileCard">
-            <div class="card-title" onclick="toggleNpaBlock('npaBlock4')">
-                Profile (Alt Vs Dist)
-            </div>
-            <div id="npaBlock4" class="foldBlock">
-                <div class="card-content" style="padding: 0 8px 8px 8px;">
-                    <div class="npa-profile-table">
-                        <div class="npa-profile-head">
-                            <div class="npa-profile-cell npa-profile-dist">Dist (NM)</div>
-                            <div class="npa-profile-cell npa-profile-alt">H feet</div>
-                            <div class="npa-profile-cell npa-profile-radio npa-profile-shift-head" onclick="openNpaKeypad('radio')">
-                                <span>Radio dist</span>
-                                <span class="npa-profile-shift-value"><span id="radioDistValDisplay">0.0</span>nm</span>
-                                <span class="npa-profile-shift-label">shift from land THR</span>
-                            </div>
-                            <div class="npa-profile-cell npa-profile-tar npa-profile-shift-head" onclick="openNpaKeypad('tar')">
-                                <span>TAR dist</span>
-                                <span class="npa-profile-shift-value"><span id="tarDistValDisplay">0.0</span>nm</span>
-                                <span class="npa-profile-shift-label">shift from land THR</span>
+                    <div id="npaBlock4" class="foldBlock npa-tab-panel">
+                        <div class="card-content">
+                            <div class="npa-profile-table">
+                                <div class="npa-profile-head">
+                                    <div class="npa-profile-cell npa-profile-dist npa-profile-unit-toggle" data-profile-unit-column="dist">
+                                        <span id="npaProfileDistHeader">Dist (NM)</span>
+                                    </div>
+                                    <div class="npa-profile-cell npa-profile-alt">H feet</div>
+                                    <div class="npa-profile-cell npa-profile-radio npa-profile-shift-head npa-profile-unit-toggle" data-profile-unit-column="radio" onclick="handleNpaProfileShiftHeaderClick(event, 'radio')">
+                                        <span id="npaProfileRadioHeader">Radio dist (NM)</span>
+                                        <span class="npa-profile-shift-value"><span id="radioDistValDisplay">0.0</span>nm</span>
+                                        <span class="npa-profile-shift-label">shift from land THR</span>
+                                    </div>
+                                    <div class="npa-profile-cell npa-profile-tar npa-profile-shift-head npa-profile-unit-toggle" data-profile-unit-column="tar" onclick="handleNpaProfileShiftHeaderClick(event, 'tar')">
+                                        <span id="npaProfileTarHeader">TAR dist (NM)</span>
+                                        <span class="npa-profile-shift-value"><span id="tarDistValDisplay">0.0</span>nm</span>
+                                        <span class="npa-profile-shift-label">shift from land THR</span>
+                                    </div>
+                                </div>
+                                <div class="npa-profile-body" id="npaProfileTableBody"></div>
                             </div>
                         </div>
-                        <div class="npa-profile-body" id="npaProfileTableBody"></div>
                     </div>
                 </div>
             </div>
@@ -1176,37 +1325,52 @@
         
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
         initNpaRefreshButton();
+        initNpaProfileUnitToggles();
         const restoredState = restoreNpaCurrentPageState();
         if (!restoredState) {
             setDefaultTemperature();
             updateRacetrackSectors();
         }
+        syncNpaTabState();
         scheduleNpaProfileLayoutUpdate();
         window.addEventListener('resize', scheduleNpaProfileLayoutUpdate);
-        const mainScroll = document.getElementById('mainScroll');
-        if (mainScroll) mainScroll.addEventListener('scroll', scheduleNpaProfileLayoutUpdate, { passive: true });
     });
+
+    function getNpaTabBlockIds() {
+        return ['npaBlock2', 'npaBlock3', 'npaBlock4'];
+    }
+
+    function syncNpaTabState() {
+        const tabBlockIds = getNpaTabBlockIds();
+        const activeId = tabBlockIds.find(blockId => document.getElementById(blockId)?.classList.contains('open')) || "";
+        const tabsCard = document.getElementById('npaTabsCard');
+
+        document.querySelectorAll('.npa-tab-btn').forEach(button => {
+            button.classList.toggle('active', button.dataset.targetBlock === activeId);
+        });
+
+        if (tabsCard) tabsCard.classList.toggle('has-active', activeId !== "");
+    }
 
     function toggleNpaBlock(id) {
         const block = document.getElementById(id);
         if (block) {
-            const isOpen = block.classList.contains('open');
-            const exclusiveBlocks = ['npaBlock2', 'npaBlock3', 'npaBlock4'];
+            const exclusiveBlocks = getNpaTabBlockIds();
             
             if (exclusiveBlocks.includes(id)) {
                 exclusiveBlocks.forEach(blockId => {
                     const relatedBlock = document.getElementById(blockId);
                     if (relatedBlock) relatedBlock.classList.remove('open');
                 });
-            }
-            
-            // Если выбранный блок был закрыт — разворачиваем его
-            if (!isOpen) {
                 block.classList.add('open');
-            } else if (!exclusiveBlocks.includes(id)) {
+                syncNpaTabState();
+            } else if (block.classList.contains('open')) {
                 block.classList.remove('open');
+            } else {
+                block.classList.add('open');
             }
             
+            syncNpaTabState();
             if (navigator.vibrate) navigator.vibrate(15);
             scheduleNpaProfileLayoutUpdate();
             scheduleNpaCurrentPageStateSave();
@@ -1250,6 +1414,7 @@
         const typeEl = document.getElementById('selectedTypeLabel');
         if (typeEl) typeEl.innerText = "—";
 
+        npaProfileUnits = { dist: 'nm', radio: 'nm', tar: 'nm' };
         clearNpaFields();
         clearNpaCurrentPageState();
 
@@ -1406,6 +1571,13 @@
         let npaPageStateSaveTimer = null;
         let npaPageStateSaveSuppressed = false;
         let npaPageStateRestoring = false;
+        const NPA_NM_TO_KM = 1.852;
+        const NPA_PROFILE_LONG_PRESS_MS = 550;
+        let npaProfileUnits = { dist: 'nm', radio: 'nm', tar: 'nm' };
+        let npaProfileActiveColumns = [];
+        let npaProfileLongPressTimer = null;
+        let npaProfileLongPressFired = false;
+        let npaProfileLongPressColumn = "";
 
         function getNpaCurrentPageState() {
             const fields = {};
@@ -1420,6 +1592,7 @@
                 racetrack: document.getElementById('racetrackVal')?.innerText || "Right",
                 radioShift: document.getElementById('radioDistValDisplay')?.innerText || "0.0",
                 tarShift: document.getElementById('tarDistValDisplay')?.innerText || "0.0",
+                profileUnits: { ...npaProfileUnits },
                 rwLengthDisplayUnit: document.getElementById('rwLength')?.dataset.displayUnit || "m",
                 downwindCalcSource,
                 openBlocks: ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5']
@@ -1473,17 +1646,32 @@
                 const tarShiftEl = document.getElementById('tarDistValDisplay');
                 if (tarShiftEl) tarShiftEl.innerText = state.tarShift !== undefined ? state.tarShift : "0.0";
 
+                if (state.profileUnits && typeof state.profileUnits === 'object') {
+                    npaProfileUnits = {
+                        dist: state.profileUnits.dist === 'km' ? 'km' : 'nm',
+                        radio: state.profileUnits.radio === 'km' ? 'km' : 'nm',
+                        tar: state.profileUnits.tar === 'km' ? 'km' : 'nm'
+                    };
+                }
+
                 downwindCalcSource = state.downwindCalcSource === 'time' || state.downwindCalcSource === 'speed'
                     ? state.downwindCalcSource
                     : "";
 
                 if (Array.isArray(state.openBlocks)) {
+                    const activeTabId = getNpaTabBlockIds().find(id => state.openBlocks.includes(id)) || "";
                     ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5'].forEach(id => {
                         const block = document.getElementById(id);
-                        if (block) block.classList.toggle('open', state.openBlocks.includes(id));
+                        if (block) {
+                            const shouldOpen = id === 'npaBlock5'
+                                ? state.openBlocks.includes(id)
+                                : id === activeTabId;
+                            block.classList.toggle('open', shouldOpen);
+                        }
                     });
                 }
 
+                syncNpaTabState();
                 updateRacetrackSectors();
                 updateDownwindCalculation('load');
                 renderNpaProfileTable();
@@ -1639,6 +1827,163 @@
         return value !== "" && Number.isFinite(Number(value));
     }
 
+    function isValidNpaProfileUnitColumn(column) {
+        return ['dist', 'radio', 'tar'].includes(column);
+    }
+
+    function normalizeNpaProfileUnit(unit) {
+        return unit === 'km' ? 'km' : 'nm';
+    }
+
+    function getNpaProfileUnitLabel(column) {
+        return normalizeNpaProfileUnit(npaProfileUnits[column]).toUpperCase();
+    }
+
+    function updateNpaProfileUnitHeaders() {
+        const distHeader = document.getElementById('npaProfileDistHeader');
+        const radioHeader = document.getElementById('npaProfileRadioHeader');
+        const tarHeader = document.getElementById('npaProfileTarHeader');
+
+        if (distHeader) distHeader.innerText = `Dist (${getNpaProfileUnitLabel('dist')})`;
+        if (radioHeader) radioHeader.innerText = `Radio dist (${getNpaProfileUnitLabel('radio')})`;
+        if (tarHeader) tarHeader.innerText = `TAR dist (${getNpaProfileUnitLabel('tar')})`;
+    }
+
+    function formatNpaProfileDistance(valueNm, column) {
+        const numeric = Number(valueNm);
+        if (!Number.isFinite(numeric)) return "";
+
+        const unit = normalizeNpaProfileUnit(npaProfileUnits[column]);
+        if (unit === 'km') {
+            return `${(numeric * NPA_NM_TO_KM).toFixed(1)} km`;
+        }
+
+        return `${Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1)} nm`;
+    }
+
+    function parseNpaProfileShift(displayId) {
+        const text = document.getElementById(displayId)?.innerText || "";
+        const normalized = String(text).replace(',', '.').replace(/[^\d.-]/g, '');
+        if (normalized === "" || normalized === "-" || normalized === ".") return 0;
+        const value = Number(normalized);
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function toggleNpaProfileUnit(column) {
+        if (!isValidNpaProfileUnitColumn(column)) return;
+        npaProfileUnits[column] = normalizeNpaProfileUnit(npaProfileUnits[column]) === 'nm' ? 'km' : 'nm';
+        if (navigator.vibrate) navigator.vibrate(20);
+        renderNpaProfileTable();
+        scheduleNpaCurrentPageStateSave();
+    }
+
+    function setNpaProfileFocusColumn(column) {
+        if (!isValidNpaProfileUnitColumn(column)) return;
+        const columns = ['dist', 'radio', 'tar'];
+        const isAlreadyActive = npaProfileActiveColumns.includes(column);
+
+        if (isAlreadyActive) {
+            npaProfileActiveColumns = [];
+        } else {
+            npaProfileActiveColumns = [...new Set([...npaProfileActiveColumns, column])]
+                .filter(name => columns.includes(name));
+            if (npaProfileActiveColumns.length >= columns.length) npaProfileActiveColumns = [];
+        }
+
+        const table = document.querySelector('.npa-profile-table');
+        if (!table) return;
+
+        columns.forEach(name => {
+            const shouldDim = npaProfileActiveColumns.length > 0 && !npaProfileActiveColumns.includes(name);
+            table.classList.toggle(`profile-dim-${name}`, shouldDim);
+        });
+    }
+
+    function cancelNpaProfileLongPress() {
+        if (npaProfileLongPressTimer) {
+            clearTimeout(npaProfileLongPressTimer);
+            npaProfileLongPressTimer = null;
+        }
+    }
+
+    function initNpaProfileUnitToggles() {
+        const table = document.querySelector('.npa-profile-table');
+        if (!table) return;
+
+        let startX = 0;
+        let startY = 0;
+        let pointerMoved = false;
+
+        table.addEventListener('pointerdown', event => {
+            const target = event.target.closest('[data-profile-unit-column]');
+            if (!target) return;
+
+            const column = target.dataset.profileUnitColumn;
+            if (!isValidNpaProfileUnitColumn(column)) return;
+
+            startX = event.clientX;
+            startY = event.clientY;
+            pointerMoved = false;
+            npaProfileLongPressColumn = column;
+            npaProfileLongPressFired = false;
+            cancelNpaProfileLongPress();
+
+            npaProfileLongPressTimer = setTimeout(() => {
+                npaProfileLongPressTimer = null;
+                npaProfileLongPressFired = true;
+                toggleNpaProfileUnit(column);
+            }, NPA_PROFILE_LONG_PRESS_MS);
+        });
+
+        table.addEventListener('pointermove', event => {
+            if (!npaProfileLongPressTimer) return;
+            if (Math.abs(event.clientX - startX) > 8 || Math.abs(event.clientY - startY) > 8) {
+                pointerMoved = true;
+                cancelNpaProfileLongPress();
+            }
+        });
+
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(eventName => {
+            table.addEventListener(eventName, cancelNpaProfileLongPress);
+        });
+
+        table.addEventListener('contextmenu', event => {
+            if (event.target.closest('[data-profile-unit-column]')) event.preventDefault();
+        });
+
+        table.addEventListener('click', event => {
+            if (npaProfileLongPressFired) {
+                event.preventDefault();
+                if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                event.stopPropagation();
+                npaProfileLongPressFired = false;
+                npaProfileLongPressColumn = "";
+                return;
+            }
+
+            if (pointerMoved) {
+                pointerMoved = false;
+                return;
+            }
+
+            const target = event.target.closest('[data-profile-unit-column]');
+            const column = target ? target.dataset.profileUnitColumn : "";
+            if (isValidNpaProfileUnitColumn(column)) setNpaProfileFocusColumn(column);
+        }, true);
+    }
+
+    function handleNpaProfileShiftHeaderClick(event, type) {
+        if (npaProfileLongPressFired && npaProfileLongPressColumn === type) {
+            event.preventDefault();
+            event.stopPropagation();
+            npaProfileLongPressFired = false;
+            npaProfileLongPressColumn = "";
+            return;
+        }
+
+        openNpaKeypad(type);
+    }
+
     function clearNpaProfileLayout() {
         const block = document.getElementById('npaBlock4');
         const table = document.querySelector('.npa-profile-table');
@@ -1646,6 +1991,7 @@
 
         if (block) {
             block.style.removeProperty('--npa-profile-block-height');
+            block.style.removeProperty('height');
             block.style.removeProperty('max-height');
         }
         if (table) {
@@ -1660,30 +2006,23 @@
         }
     }
 
-    function scheduleNpaProfileLayoutUpdate() {
-        if (npaProfileLayoutFrame) cancelAnimationFrame(npaProfileLayoutFrame);
-        if (npaProfileLayoutTimer) clearTimeout(npaProfileLayoutTimer);
-        npaProfileLayoutFrame = requestAnimationFrame(() => {
-            npaProfileLayoutFrame = null;
-            updateNpaProfileLayout();
-        });
-        npaProfileLayoutTimer = setTimeout(() => {
-            npaProfileLayoutTimer = null;
-            updateNpaProfileLayout();
-        }, 280);
-    }
-
-    function updateNpaProfileLayout() {
-        const block = document.getElementById('npaBlock4');
-        const table = document.querySelector('.npa-profile-table');
-        const body = document.getElementById('npaProfileTableBody');
-        const head = table ? table.querySelector('.npa-profile-head') : null;
-
-        if (!block || !table || !body || !head || !block.classList.contains('open')) {
-            clearNpaProfileLayout();
-            return;
+    function clearNpaTabLayout() {
+        const content = document.querySelector('.npa-tab-content-area');
+        if (content) {
+            content.style.removeProperty('--npa-tab-content-height');
+            content.style.removeProperty('height');
+            content.style.removeProperty('max-height');
         }
 
+        document.querySelectorAll('.npa-tab-panel').forEach(panel => {
+            panel.style.removeProperty('height');
+            panel.style.removeProperty('max-height');
+        });
+
+        clearNpaProfileLayout();
+    }
+
+    function getNpaLayoutVisibleBottom() {
         const scroll = document.getElementById('mainScroll');
         const wrapper = document.querySelector('.app-wrapper');
         const refreshBtn = document.getElementById('refreshBtn');
@@ -1695,22 +2034,76 @@
             .map(button => button.getBoundingClientRect().top)
             .filter(top => Number.isFinite(top));
         const controlsTop = buttonTops.length ? Math.min(...buttonTops) : (wrapperRect ? wrapperRect.bottom - 50 : window.innerHeight - 50);
-        const visibleBottom = Math.min(
+
+        return Math.min(
             scrollRect ? scrollRect.bottom : window.innerHeight,
             controlsTop - 6,
             wrapperRect ? wrapperRect.bottom - 6 : window.innerHeight
         );
-        const blockRect = block.getBoundingClientRect();
-        const tableRect = table.getBoundingClientRect();
-        const minTableHeight = 190;
-        const minBodyHeight = 130;
+    }
 
-        const blockHeight = Math.max(220, Math.floor(visibleBottom - blockRect.top));
-        const tableHeight = Math.max(minTableHeight, Math.floor(visibleBottom - tableRect.top - 4));
+    function scheduleNpaProfileLayoutUpdate() {
+        if (npaProfileLayoutFrame) cancelAnimationFrame(npaProfileLayoutFrame);
+        if (npaProfileLayoutTimer) clearTimeout(npaProfileLayoutTimer);
+        npaProfileLayoutTimer = null;
+        updateNpaProfileLayout();
+        npaProfileLayoutFrame = requestAnimationFrame(() => {
+            npaProfileLayoutFrame = null;
+            updateNpaProfileLayout();
+        });
+    }
+
+    function updateNpaProfileLayout() {
+        const block = document.getElementById('npaBlock4');
+        const table = document.querySelector('.npa-profile-table');
+        const body = document.getElementById('npaProfileTableBody');
+        const head = table ? table.querySelector('.npa-profile-head') : null;
+        const content = document.querySelector('.npa-tab-content-area');
+        const activePanel = document.querySelector('.npa-tab-panel.open');
+
+        if (!content || !activePanel) {
+            clearNpaTabLayout();
+            return;
+        }
+
+        const visibleBottom = getNpaLayoutVisibleBottom();
+        const contentRect = content.getBoundingClientRect();
+        const contentHeight = Math.max(80, Math.floor(visibleBottom - contentRect.top));
+
+        content.style.setProperty('--npa-tab-content-height', `${contentHeight}px`);
+        content.style.height = `${contentHeight}px`;
+        content.style.maxHeight = `${contentHeight}px`;
+
+        document.querySelectorAll('.npa-tab-panel').forEach(panel => {
+            if (panel === activePanel) {
+                panel.style.height = '100%';
+                panel.style.maxHeight = 'none';
+            } else {
+                panel.style.removeProperty('height');
+                panel.style.removeProperty('max-height');
+            }
+        });
+
+        if (!block || !table || !body || !head || !block.classList.contains('open')) {
+            clearNpaProfileLayout();
+            return;
+        }
+
+        const contentStyle = window.getComputedStyle(content);
+        const contentPaddingBottom = parseFloat(contentStyle.paddingBottom) || 0;
+        const contentBottom = content.getBoundingClientRect().bottom - contentPaddingBottom;
+        const tableRect = table.getBoundingClientRect();
+        const minTableHeight = 80;
+        const minBodyHeight = 50;
+
+        const availableTableHeight = Math.floor(contentBottom - tableRect.top);
+        const blockHeight = Math.max(0, contentHeight - 16);
+        const tableHeight = Math.max(minTableHeight, availableTableHeight);
         const bodyHeight = Math.max(minBodyHeight, tableHeight - head.offsetHeight);
 
         block.style.setProperty('--npa-profile-block-height', `${blockHeight}px`);
-        block.style.maxHeight = `${blockHeight}px`;
+        block.style.height = '100%';
+        block.style.maxHeight = 'none';
         table.style.setProperty('--npa-profile-table-height', `${tableHeight}px`);
         table.style.height = `${tableHeight}px`;
         table.style.maxHeight = `${tableHeight}px`;
@@ -1737,19 +2130,29 @@
         });
     }
 
-    function makeNpaProfileRow(distValue, altValue, className = '') {
+    function makeNpaProfileRow(distValue, altValue, radioValue = '', tarValue = '', className = '') {
         return `
             <div class="npa-profile-row${className ? ` ${className}` : ''}">
-                <div class="npa-profile-cell npa-profile-dist">${distValue}</div>
+                <div class="npa-profile-cell npa-profile-dist npa-profile-unit-toggle" data-profile-unit-column="dist">${distValue}</div>
                 <div class="npa-profile-cell npa-profile-alt">${altValue}</div>
-                <div class="npa-profile-cell npa-profile-radio"></div>
-                <div class="npa-profile-cell npa-profile-tar"></div>
+                <div class="npa-profile-cell npa-profile-radio npa-profile-unit-toggle" data-profile-unit-column="radio">${radioValue}</div>
+                <div class="npa-profile-cell npa-profile-tar npa-profile-unit-toggle" data-profile-unit-column="tar">${tarValue}</div>
             </div>`;
     }
 
     function makeNpaProfileDistValue(distValue, iconName = '') {
         if (!iconName) return distValue;
         return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span>${distValue}</span></span>`;
+    }
+
+    function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '') {
+        return makeNpaProfileRow(
+            makeNpaProfileDistValue(formatNpaProfileDistance(distanceNm, 'dist'), iconName),
+            altitudeText,
+            formatNpaProfileDistance(Number(distanceNm) + Number(radioShiftNm || 0), 'radio'),
+            formatNpaProfileDistance(Number(distanceNm) + Number(tarShiftNm || 0), 'tar'),
+            className
+        );
     }
 
     function isNpaProfileDistanceInRange(distance) {
@@ -1759,6 +2162,7 @@
     function renderNpaProfileTable() {
         const tableBody = document.getElementById('npaProfileTableBody');
         if (!tableBody) return;
+        updateNpaProfileUnitHeaders();
 
         const elevationValue = getNumberOrBlank('elevation');
         const fdpValue = getNumberOrBlank('fdp');
@@ -1802,6 +2206,8 @@
         const dFap = fapValid ? getDistFromInd(hFap) : null;
         const topMile = 10;
         const bottomMile = 2;
+        const radioShiftNm = parseNpaProfileShift('radioDistValDisplay');
+        const tarShiftNm = parseNpaProfileShift('tarDistValDisplay');
 
         let tableHTML = '';
         let fdpInserted = false;
@@ -1809,18 +2215,18 @@
 
         for (let d = topMile; d >= bottomMile; d -= 1) {
             if (fdpValid && isNpaProfileDistanceInRange(dFdp) && !fdpInserted && d <= dFdp) {
-                tableHTML += makeNpaProfileRow(makeNpaProfileDistValue(`${dFdp.toFixed(1)} nm`, 'fdp.png'), `${Math.round(hFdp)} ft`, 'highlight-fdp');
+                tableHTML += makeNpaProfileDistanceRow(dFdp, `${Math.round(hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
                 fdpInserted = true;
             }
 
             if (fapValid && isNpaProfileDistanceInRange(dFap) && !fapInserted && d <= dFap) {
-                tableHTML += makeNpaProfileRow(makeNpaProfileDistValue(`${dFap.toFixed(1)} nm`, 'fap.png'), `${Math.round(hFap)} ft`, 'highlight-fap');
+                tableHTML += makeNpaProfileDistanceRow(dFap, `${Math.round(hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
                 fapInserted = true;
             }
 
             if ((fdpValid && d === dFdp) || (fapValid && d === dFap)) continue;
 
-            tableHTML += makeNpaProfileRow(`${d} nm`, `${getIndFromDist(d)} ft`);
+            tableHTML += makeNpaProfileDistanceRow(d, `${getIndFromDist(d)} ft`, radioShiftNm, tarShiftNm);
         }
 
         tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
@@ -2500,6 +2906,7 @@
         } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
+            renderNpaProfileTable();
         } else if (activeNpaField === 'downwindRadioFixShift') {
             setFieldValue('downwindRadioFixShift', finalVal);
         } else if (activeNpaField === 'tempC') {
