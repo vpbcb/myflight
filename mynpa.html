@@ -1082,15 +1082,15 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 2px;
-            min-width: 0;
-            max-width: 100%;
-            white-space: nowrap;
+            position: relative; /* Делаем контейнер текста точкой отсчета */
         }
+        
         .npa-profile-dist-icon {
-            height: 8px;
+            position: absolute;
+            right: 100%; /* Прижимаем правый край иконки к левому краю текста */
+            margin-right: 6px; /* Задаем небольшой отступ от цифр */
+            height: 12px;
             width: auto;
-            flex: 0 0 auto;
             object-fit: contain;
             filter: invert(0);
         }
