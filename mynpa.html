@@ -241,6 +241,91 @@
             padding-top: 0;
         }
 
+        .downwind-inline-wide {
+            width: calc(((100% - 12px) / 3) * 2 + 6px);
+            flex-direction: row;
+            justify-content: flex-start;
+            padding: 4px 10px;
+        }
+
+        .downwind-inline-wide .cell-label {
+            width: auto;
+            margin-bottom: 0;
+            font-size: 9px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .downwind-inline-value {
+            flex: 1;
+            min-width: 0;
+            height: 22px;
+            margin-left: 6px;
+            border: none;
+            background: transparent;
+            color: var(--accent-blue);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .downwind-pair-row {
+            align-items: stretch;
+        }
+
+        .downwind-pair-row .cell-wrapper {
+            min-width: 0;
+        }
+
+        .downwind-mini-block {
+            min-height: 44px;
+            padding: 4px 5px 3px;
+        }
+
+        .downwind-mini-block .cell-label {
+            min-height: 18px;
+            margin-bottom: 1px;
+            font-size: 7.5px;
+            line-height: 1.05;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .downwind-mini-block .cell-input {
+            color: var(--accent-blue) !important;
+        }
+
+        .final-descent-content {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .final-descent-icon {
+            width: auto;
+            height: 9px;
+            flex: 0 0 auto;
+            object-fit: contain;
+        }
+
+        .final-descent-tag {
+            font-size: 8px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .npa-search-card {
+            position: relative;
+            overflow: visible;
+            z-index: 70;
+        }
+
         .card-content {
             padding: 0 16px 16px 16px;
             color: var(--text-main);
@@ -477,6 +562,79 @@
         html.dark-theme .cell-wrapper {
             background-color: rgba(255, 255, 255, 0.04);
         }
+        .approach-type-wrapper {
+            position: relative;
+            cursor: pointer;
+            z-index: 75;
+        }
+        .npa-approach-dropdown {
+            position: absolute;
+            top: calc(100% + 7px);
+            left: 0;
+            right: 0;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 6px;
+            border: 1px solid rgba(14, 165, 233, 0.35);
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+            z-index: 5000;
+        }
+        .npa-approach-dropdown.open {
+            display: flex;
+        }
+        .npa-approach-option {
+            width: 100%;
+            min-height: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            background: rgba(14, 165, 233, 0.08);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            text-align: center;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .npa-approach-sub {
+            display: inline-block;
+            font-size: 0.62em;
+            line-height: 0;
+            vertical-align: -0.42em;
+            text-transform: lowercase;
+        }
+        #selectedTypeLabel .npa-approach-sub {
+            font-size: 0.75em;
+            vertical-align: -0.2em;
+        }
+        .npa-approach-label-text {
+            display: inline;
+            line-height: 1;
+        }
+        .npa-approach-option.add-new-appr {
+            color: var(--accent-orange);
+            background: rgba(251, 146, 60, 0.1);
+            white-space: nowrap;
+            font-size: clamp(11px, 4.2vw, 15px);
+        }
+        .npa-approach-empty {
+            padding: 8px 4px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        html.dark-theme .npa-approach-dropdown {
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+        }
+        html.dark-theme .npa-approach-option {
+            background: rgba(14, 165, 233, 0.12);
+        }
         .cell-label {
             font-size: 9px;
             font-weight: 700;
@@ -504,6 +662,10 @@
             outline: none !important;
             -webkit-user-select: auto;
             user-select: auto;
+        }
+        .cell-input::placeholder {
+            color: rgba(100, 116, 139, 0.30);
+            opacity: 1;
         }
         
         /* Убираем системные стрелочки, которые сдвигают текст влево */
@@ -638,6 +800,35 @@
             align-items: center; 
             justify-content: center;
             width: 100%;
+        }
+
+        #elevation,
+        #gpa,
+        #fdp,
+        #fap,
+        #racetrackVal,
+        #downwindRadioFixShift,
+        #downwindTime,
+        #gsAppr,
+        #rwLengthDisplay .split-primary,
+        #rwLengthDisplay .split-secondary,
+        #inboundCrsDisplay .split-primary,
+        #inboundCrsDisplay .split-secondary {
+            color: var(--accent-blue) !important;
+        }
+        #tempC.temp-positive {
+            color: #ef4444 !important;
+        }
+        #tempC.temp-negative {
+            color: #38bdf8 !important;
+        }
+
+        #apprName.airport-ghost-value {
+            color: rgba(100, 116, 139, 0.30) !important;
+        }
+        #apprName.airport-ghost-value::placeholder {
+            color: rgba(100, 116, 139, 0.30);
+            opacity: 1;
         }
 
         /* Класс для иконок FDP / FAP */
@@ -891,15 +1082,23 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 2px;
             min-width: 0;
+            max-width: 100%;
+            white-space: nowrap;
         }
         .npa-profile-dist-icon {
-            height: 9px;
+            height: 8px;
             width: auto;
             flex: 0 0 auto;
             object-fit: contain;
             filter: invert(0);
+        }
+        .npa-profile-dist-value {
+            display: inline-block;
+            min-width: 0;
+            white-space: nowrap;
+            line-height: 1;
         }
         html.dark-theme .npa-profile-dist-icon {
             filter: invert(1);
@@ -1110,20 +1309,21 @@
 
     <div class="precision-scroll-container" id="mainScroll">
         
-        <div class="section-card">
+        <div class="section-card npa-search-card">
             <div class="card-content" style="padding: 8px;">
                 <div class="c2-row" style="margin-bottom: 0;">
                     <div class="cell-wrapper flex-1">
                         <span class="cell-label">Airport</span>
-                        <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" style="text-transform: uppercase;" oninput="handleAirportInput()">
+                        <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="4" style="text-transform: uppercase;" onfocus="handleAirportFocus()" onblur="handleAirportBlur()" oninput="handleAirportInput()">
                     </div>
-                    <div class="cell-wrapper flex-1" onclick="openNpaModal()" style="cursor: pointer;">
+                    <div class="cell-wrapper flex-1 approach-type-wrapper" id="approachTypeWrapper" onclick="toggleNpaApproachDropdown(event)">
                         <span class="cell-label">APPROACH TYPE</span>
-                        <div class="btn-val" id="selectedTypeLabel" style="color: var(--accent-blue); font-size: 16px;">—</div>
+                        <div class="btn-val" id="selectedTypeLabel" style="color: var(--accent-blue); font-size: 16px;"></div>
+                        <div class="npa-approach-dropdown" id="npaApproachDropdown"></div>
                     </div>
                     <div class="cell-wrapper flex-1">
                         <span class="cell-label">OAT °C</span>
-                        <input type="text" class="cell-input" id="tempC" value="15" readonly onclick="openNpaKeypad('tempC')">
+                        <input type="text" class="cell-input" id="tempC" value="+15 °C" readonly onclick="openNpaKeypad('tempC')">
                     </div>
                 </div>
             </div>
@@ -1237,16 +1437,9 @@
                         <div class="card-content">
                             
                             <div class="c2-row">
-                                <div class="cell-wrapper" style="width: calc(((100% - 12px) / 3) * 2 + 6px); flex-direction: row; justify-content: flex-start; padding: 4px 10px;">
-                                    <span class="cell-label" style="width: auto; margin-bottom: 0; font-size: 9px; text-align: left; white-space: nowrap;">Radio fix shift from land THR:</span>
-                                    <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')" style="flex: 1; min-width: 0; text-align: center !important; margin-left: 6px;">
-                                </div>
-                            </div>
-
-                            <div class="c2-row">
                                 <div class="cell-wrapper flex-1">
                                     <span class="cell-label">S downwind</span>
-                                    <input type="text" class="cell-input" id="sDownwind" readonly onclick="openNpaKeypad('sDownwind')">
+                                    <input type="text" class="cell-input" id="sDownwind" readonly>
                                 </div>
                                 <div class="cell-wrapper flex-1">
                                     <span class="cell-label">Downwind time</span>
@@ -1255,6 +1448,17 @@
                                 <div class="cell-wrapper flex-1">
                                     <span class="cell-label">Ground Speed</span>
                                     <input type="text" class="cell-input" id="gsAppr" readonly onclick="openNpaKeypad('gsAppr')">
+                                </div>
+                            </div>
+
+                            <div class="c2-row downwind-pair-row">
+                                <div class="cell-wrapper flex-1 downwind-mini-block">
+                                    <span class="cell-label">Racetrack radio aid shift <br> from land THR:</span>
+                                    <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')">
+                                </div>
+                                <div class="cell-wrapper flex-1 downwind-mini-block">
+                                    <span class="cell-label">final descent from</span>
+                                    <button type="button" class="downwind-inline-value" id="finalDescentFromValue" data-source="fap" onclick="toggleFinalDescentFrom()">-- ft</button>
                                 </div>
                             </div>
 
@@ -1411,8 +1615,7 @@
         const airportEl = document.getElementById('apprName');
         if (airportEl) airportEl.value = "";
 
-        const typeEl = document.getElementById('selectedTypeLabel');
-        if (typeEl) typeEl.innerText = "—";
+        setSelectedNpaType("");
 
         npaProfileUnits = { dist: 'nm', radio: 'nm', tar: 'nm' };
         clearNpaFields();
@@ -1578,6 +1781,8 @@
         let npaProfileLongPressTimer = null;
         let npaProfileLongPressFired = false;
         let npaProfileLongPressColumn = "";
+        let npaAirportGhostValue = "";
+        let finalDescentFromSource = "fap";
 
         function getNpaCurrentPageState() {
             const fields = {};
@@ -1588,13 +1793,14 @@
 
             return {
                 fields,
-                selectedType: document.getElementById('selectedTypeLabel')?.innerText || "—",
+                selectedType: getSelectedNpaType(),
                 racetrack: document.getElementById('racetrackVal')?.innerText || "Right",
                 radioShift: document.getElementById('radioDistValDisplay')?.innerText || "0.0",
                 tarShift: document.getElementById('tarDistValDisplay')?.innerText || "0.0",
                 profileUnits: { ...npaProfileUnits },
                 rwLengthDisplayUnit: document.getElementById('rwLength')?.dataset.displayUnit || "m",
                 downwindCalcSource,
+                finalDescentFromSource,
                 openBlocks: ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5']
                     .filter(id => document.getElementById(id)?.classList.contains('open')),
                 savedAt: Date.now()
@@ -1623,8 +1829,7 @@
             try {
                 const fields = state.fields && typeof state.fields === 'object' ? state.fields : {};
 
-                const typeEl = document.getElementById('selectedTypeLabel');
-                if (typeEl) typeEl.innerText = state.selectedType || "—";
+                setSelectedNpaType(state.selectedType && state.selectedType !== "—" ? state.selectedType : "");
 
                 const racetrackEl = document.getElementById('racetrackVal');
                 if (racetrackEl) racetrackEl.innerText = state.racetrack === 'Left' ? 'Left' : 'Right';
@@ -1634,6 +1839,7 @@
                         setFieldValue(id, fields[id]);
                     }
                 });
+                getNpaAirportCode();
 
                 const rwLengthEl = document.getElementById('rwLength');
                 if (rwLengthEl) {
@@ -1657,6 +1863,7 @@
                 downwindCalcSource = state.downwindCalcSource === 'time' || state.downwindCalcSource === 'speed'
                     ? state.downwindCalcSource
                     : "";
+                finalDescentFromSource = state.finalDescentFromSource === 'fdp' ? 'fdp' : 'fap';
 
                 if (Array.isArray(state.openBlocks)) {
                     const activeTabId = getNpaTabBlockIds().find(id => state.openBlocks.includes(id)) || "";
@@ -1692,36 +1899,147 @@
 
         function setDefaultTemperature() {
             const tempEl = document.getElementById('tempC');
-            if (tempEl && tempEl.value === "") tempEl.value = "15";
+            if (tempEl && getNpaTemperatureNumber() === "") setNpaTemperatureValue("15");
+            else renderNpaTemperatureDisplay();
             renderNpaProfileTable();
             scheduleNpaCurrentPageStateSave();
         }
 
-    function handleAirportInput() {
-        clearTimeout(airportInputTimeout); // Сбрасываем таймер при каждом новом вводе
+    function getNpaTemperatureNumber() {
+        const el = document.getElementById('tempC');
+        if (!el) return "";
+        const normalized = String(el.value || '').replace(',', '.').replace(/[^\d.+−-]/g, '').replace('−', '-');
+        if (normalized === "" || normalized === "+" || normalized === "-" || normalized === "." || normalized === "+." || normalized === "-.") return "";
+        const value = Number(normalized);
+        return Number.isFinite(value) ? value : "";
+    }
 
+    function formatNpaTemperatureDisplay(value) {
+        if (value === "" || value === null || value === undefined) return "";
+        const numeric = Number(String(value).replace(',', '.').replace(/[^\d.+−-]/g, '').replace('−', '-'));
+        if (!Number.isFinite(numeric)) return "";
+        const absText = Number.isInteger(Math.abs(numeric)) ? String(Math.abs(numeric)) : String(Math.abs(numeric));
+        return `${numeric < 0 ? '-' : '+'}${absText} °C`;
+    }
+
+    function setNpaTemperatureValue(value) {
+        const el = document.getElementById('tempC');
+        if (!el) return;
+        el.value = formatNpaTemperatureDisplay(value);
+        const numeric = getNpaTemperatureNumber();
+        el.classList.toggle('temp-negative', numeric !== "" && Number(numeric) < 0);
+        el.classList.toggle('temp-positive', numeric === "" || Number(numeric) >= 0);
+    }
+
+    function renderNpaTemperatureDisplay() {
+        const value = getNpaTemperatureNumber();
+        if (value === "") return;
+        setNpaTemperatureValue(value);
+    }
+
+    function sanitizeNpaAirportCode(value) {
+        return String(value || "").toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+    }
+
+    function getNpaAirportCode() {
         const inputEl = document.getElementById('apprName');
-        const airportCode = inputEl.value.trim().toUpperCase();
-        const typeLabel = document.getElementById('selectedTypeLabel');
+        const airportCode = sanitizeNpaAirportCode(inputEl ? inputEl.value : "");
+        if (inputEl && inputEl.value !== airportCode) inputEl.value = airportCode;
+        return airportCode;
+    }
 
-        window.airportsNpa = window.airportsNpa || {};
-        inputEl.value = airportCode;
-        typeLabel.innerText = "—";
-        clearNpaFields();
-        scheduleNpaCurrentPageStateSave();
+    function handleAirportFocus() {
+        const inputEl = document.getElementById('apprName');
+        if (!inputEl) return;
 
-        if (!airportCode || airportCode.length < 4) {
-            return;
+        const currentCode = sanitizeNpaAirportCode(inputEl.value);
+        npaAirportGhostValue = currentCode;
+
+        if (currentCode) {
+            inputEl.value = "";
+            inputEl.placeholder = currentCode;
+            inputEl.classList.add('airport-ghost-value');
+        }
+    }
+
+    function handleAirportBlur() {
+        const inputEl = document.getElementById('apprName');
+        if (!inputEl) return;
+
+        if (sanitizeNpaAirportCode(inputEl.value) === "" && npaAirportGhostValue) {
+            inputEl.value = npaAirportGhostValue;
         }
 
-        // Запускаем задержку в 500 мс
+        inputEl.classList.remove('airport-ghost-value');
+        inputEl.placeholder = "ICAO";
+        getNpaAirportCode();
+        npaAirportGhostValue = "";
+        scheduleNpaCurrentPageStateSave();
+    }
+
+    function getNpaApproachesForAirport(airportCode) {
+        window.airportsNpa = window.airportsNpa || {};
+        return airportCode && window.airportsNpa[airportCode]
+            ? Object.keys(window.airportsNpa[airportCode]).sort()
+            : [];
+    }
+
+    function getSelectedNpaType() {
+        const label = document.getElementById('selectedTypeLabel');
+        return label ? (label.dataset.type || label.textContent || "").trim() : "";
+    }
+
+    function formatNpaApproachTypeHtml(type) {
+        const raw = String(type || "").trim().toUpperCase().replace(/\s+/g, '');
+        if (!raw) return "";
+
+        const prefix = raw.slice(0, 3);
+        const marker = raw.length > 3 && /[A-Z]/.test(raw[3]) ? raw[3].toLowerCase() : "";
+        const restStart = marker ? 4 : 3;
+        const rest = raw.slice(restStart).replace(/^(\d{0,2})([A-Z]?)/, (match, digits, letter) => `${digits}${letter ? letter.toUpperCase() : ""}`);
+        return `${prefix}${marker ? `<span class="npa-approach-sub">${marker}</span>` : ""}${rest}`;
+    }
+
+    function setSelectedNpaType(type) {
+        const label = document.getElementById('selectedTypeLabel');
+        if (!label) return;
+
+        const raw = String(type || "").trim().toUpperCase();
+        label.dataset.type = raw;
+        label.innerHTML = raw ? `<span class="npa-approach-label-text">${formatNpaApproachTypeHtml(raw)}</span>` : "";
+    }
+
+    function closeNpaApproachDropdown() {
+        const dropdown = document.getElementById('npaApproachDropdown');
+        if (dropdown) dropdown.classList.remove('open');
+    }
+
+    function handleAirportInput() {
+        clearTimeout(airportInputTimeout);
+
+        const inputEl = document.getElementById('apprName');
+        if (inputEl) {
+            inputEl.classList.remove('airport-ghost-value');
+            inputEl.placeholder = "ICAO";
+        }
+        const airportCode = getNpaAirportCode();
+        const typeLabel = document.getElementById('selectedTypeLabel');
+
+        setSelectedNpaType("");
+        clearNpaFields();
+        closeNpaApproachDropdown();
+        scheduleNpaCurrentPageStateSave();
+
+        if (airportCode.length < 4) return;
+
         airportInputTimeout = setTimeout(() => {
-            // Двойная проверка, что пользователь не стер текст за эти полсекунды
-            if (inputEl.value.trim().toUpperCase() === airportCode) {
-                openNpaModal();
-                inputEl.blur();
+            if (getNpaAirportCode() !== airportCode) return;
+            const approaches = getNpaApproachesForAirport(airportCode);
+            if (approaches.length) {
+                renderNpaApproachDropdown(true);
+                if (inputEl) inputEl.blur();
             }
-        }, 500);
+        }, 120);
     }
 
     function createApproachModalButton(label, onClick, extraClass) {
@@ -1733,49 +2051,77 @@
         return btn;
     }
 
-    function openNpaModal() {
-        if (navigator.vibrate) navigator.vibrate(25);
-        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
-        const optionsContainer = document.getElementById('npaModalOptions');
-        
-        window.airportsNpa = window.airportsNpa || {};
-        optionsContainer.innerHTML = ''; // Очищаем старые кнопки
+    function createNpaApproachOption(label, onClick, extraClass) {
+        const btn = document.createElement('button');
+        btn.className = `npa-approach-option${extraClass ? ` ${extraClass}` : ''}`;
+        btn.type = 'button';
+        btn.dataset.type = String(label || "").trim().toUpperCase();
+        btn.innerHTML = extraClass === 'add-new-appr' ? label : formatNpaApproachTypeHtml(label);
+        btn.onclick = event => {
+            event.stopPropagation();
+            onClick();
+        };
+        return btn;
+    }
 
-        if (airportCode && airportCode.length >= 4) {
-            const approaches = window.airportsNpa[airportCode]
-                ? Object.keys(window.airportsNpa[airportCode]).sort()
-                : [];
+    function renderNpaApproachDropdown(forceOpen = false) {
+        const dropdown = document.getElementById('npaApproachDropdown');
+        if (!dropdown) return;
 
-            if (approaches.length) {
-                approaches.forEach(type => {
-                    optionsContainer.appendChild(
-                        createApproachModalButton(type, () => selectNpaType(type))
-                    );
-                });
-            } else {
-                optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">NO APPROACHES SAVED</div>';
-            }
+        const airportCode = getNpaAirportCode();
+        const approaches = getNpaApproachesForAirport(airportCode);
+        dropdown.innerHTML = "";
 
-            optionsContainer.appendChild(
-                createApproachModalButton('Add New Appr', startNewApproachEntry, 'add-new-appr')
-            );
+        if (airportCode.length < 4) {
+            dropdown.appendChild(makeNpaApproachMessage('ENTER ICAO CODE'));
+        } else if (approaches.length) {
+            approaches.forEach(type => {
+                dropdown.appendChild(createNpaApproachOption(type, () => selectNpaType(type)));
+            });
+            dropdown.appendChild(createNpaApproachOption('ADD NEW', startNewApproachEntry, 'add-new-appr'));
         } else {
-            optionsContainer.innerHTML = '<div style="text-align:center; font-size:12px; opacity:0.6; padding:10px;">ENTER AIRPORT FIRST</div>';
+            dropdown.appendChild(makeNpaApproachMessage('NO APPROACHES SAVED'));
+            dropdown.appendChild(createNpaApproachOption('ADD NEW', startNewApproachEntry, 'add-new-appr'));
         }
 
-        document.getElementById('npaModal').style.display = 'flex';
+        if (forceOpen) dropdown.classList.add('open');
+    }
+
+    function makeNpaApproachMessage(text) {
+        const message = document.createElement('div');
+        message.className = 'npa-approach-empty';
+        message.innerText = text;
+        return message;
+    }
+
+    function toggleNpaApproachDropdown(event) {
+        if (event) event.stopPropagation();
+        const dropdown = document.getElementById('npaApproachDropdown');
+        if (!dropdown) return;
+
+        const willOpen = !dropdown.classList.contains('open');
+        renderNpaApproachDropdown(willOpen);
+        if (willOpen && navigator.vibrate) navigator.vibrate(15);
+    }
+
+    function openNpaModal() {
+        renderNpaApproachDropdown(true);
     }
 
     function closeNpaModal(e) {
         if (!e || e.target.classList.contains('modal-overlay')) {
-            document.getElementById('npaModal').style.display = 'none';
+            const modal = document.getElementById('npaModal');
+            if (modal) modal.style.display = 'none';
         }
+        closeNpaApproachDropdown();
     }
 
     function selectNpaType(type) {
         if (navigator.vibrate) navigator.vibrate(30);
-        document.getElementById('selectedTypeLabel').innerText = type;
-        document.getElementById('npaModal').style.display = 'none';
+        setSelectedNpaType(type);
+        const modal = document.getElementById('npaModal');
+        if (modal) modal.style.display = 'none';
+        closeNpaApproachDropdown();
         
         checkAndFillFromDB();
         scheduleNpaCurrentPageStateSave();
@@ -1796,6 +2142,10 @@
             updateRacetrackSectors();
         } else if (id === 'gpa') {
             el.value = nextValue === "" ? "" : formatDecimal(nextValue, 1);
+        } else if (id === 'tempC') {
+            setNpaTemperatureValue(nextValue);
+        } else if (id === 'downwindRadioFixShift') {
+            updateDownwindFinalDescent();
         }
 
         if (isNpaProfileSourceField(id)) {
@@ -2142,7 +2492,7 @@
 
     function makeNpaProfileDistValue(distValue, iconName = '') {
         if (!iconName) return distValue;
-        return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span>${distValue}</span></span>`;
+        return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span class="npa-profile-dist-value">${distValue}</span></span>`;
     }
 
     function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '') {
@@ -2159,11 +2509,7 @@
         return Number.isFinite(distance) && distance >= 2 && distance <= 10;
     }
 
-    function renderNpaProfileTable() {
-        const tableBody = document.getElementById('npaProfileTableBody');
-        if (!tableBody) return;
-        updateNpaProfileUnitHeaders();
-
+    function getNpaProfileMetrics() {
         const elevationValue = getNumberOrBlank('elevation');
         const fdpValue = getNumberOrBlank('fdp');
         const fapValue = getNumberOrBlank('fap');
@@ -2179,8 +2525,7 @@
             !isFilledProfileNumber(tempValue) ||
             (!fdpValid && !fapValid)
         ) {
-            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
-            return;
+            return { valid: false, reason: 'inputs' };
         }
 
         const hElev = Number(elevationValue);
@@ -2193,8 +2538,7 @@
         const tanAngle = Math.tan(angleRad);
 
         if (!Number.isFinite(denominator) || denominator <= 0 || !Number.isFinite(tanAngle) || tanAngle <= 0) {
-            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs (Elevation, GPA, OAT)...</div>';
-            return;
+            return { valid: false, reason: 'geometry' };
         }
 
         const kTable = (288.15 - (0.00198 * hElev)) / denominator;
@@ -2202,8 +2546,36 @@
         const getDistFromInd = (height) => Math.max(0, Math.ceil(((height - hElev) / kTable - 50) / (tanAngle * ftPerNm) * 10) / 10);
         const getIndFromDist = (distance) => Math.round(((distance * tanAngle * ftPerNm + 50) * kTable + hElev) / 10) * 10;
 
-        const dFdp = fdpValid ? getDistFromInd(hFdp) : null;
-        const dFap = fapValid ? getDistFromInd(hFap) : null;
+        return {
+            valid: true,
+            fdpValid,
+            fapValid,
+            hFdp,
+            hFap,
+            dFdp: fdpValid ? getDistFromInd(hFdp) : null,
+            dFap: fapValid ? getDistFromInd(hFap) : null,
+            getIndFromDist
+        };
+    }
+
+    function renderNpaProfileTable() {
+        const tableBody = document.getElementById('npaProfileTableBody');
+        if (!tableBody) return;
+        updateNpaProfileUnitHeaders();
+
+        const metrics = getNpaProfileMetrics();
+
+        if (!metrics.valid && metrics.reason === 'geometry') {
+            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs (Elevation, GPA, OAT)...</div>';
+            updateDownwindFinalDescent();
+            return;
+        }
+
+        if (!metrics.valid) {
+            tableBody.innerHTML = '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
+            updateDownwindFinalDescent();
+            return;
+        }
         const topMile = 10;
         const bottomMile = 2;
         const radioShiftNm = parseNpaProfileShift('radioDistValDisplay');
@@ -2214,23 +2586,24 @@
         let fapInserted = false;
 
         for (let d = topMile; d >= bottomMile; d -= 1) {
-            if (fdpValid && isNpaProfileDistanceInRange(dFdp) && !fdpInserted && d <= dFdp) {
-                tableHTML += makeNpaProfileDistanceRow(dFdp, `${Math.round(hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
+            if (metrics.fdpValid && isNpaProfileDistanceInRange(metrics.dFdp) && !fdpInserted && d <= metrics.dFdp) {
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFdp, `${Math.round(metrics.hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
                 fdpInserted = true;
             }
 
-            if (fapValid && isNpaProfileDistanceInRange(dFap) && !fapInserted && d <= dFap) {
-                tableHTML += makeNpaProfileDistanceRow(dFap, `${Math.round(hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
+            if (metrics.fapValid && isNpaProfileDistanceInRange(metrics.dFap) && !fapInserted && d <= metrics.dFap) {
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFap, `${Math.round(metrics.hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
                 fapInserted = true;
             }
 
-            if ((fdpValid && d === dFdp) || (fapValid && d === dFap)) continue;
+            if ((metrics.fdpValid && d === metrics.dFdp) || (metrics.fapValid && d === metrics.dFap)) continue;
 
-            tableHTML += makeNpaProfileDistanceRow(d, `${getIndFromDist(d)} ft`, radioShiftNm, tarShiftNm);
+            tableHTML += makeNpaProfileDistanceRow(d, `${metrics.getIndFromDist(d)} ft`, radioShiftNm, tarShiftNm);
         }
 
         tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
         tableBody.scrollTop = 0;
+        updateDownwindFinalDescent();
         scheduleNpaProfileLayoutUpdate();
     }
 
@@ -2238,6 +2611,65 @@
         const num = Number(String(value).replace(',', '.').replace(/[^\d.-]/g, ''));
         if (!Number.isFinite(num)) return "";
         return num.toFixed(digits);
+    }
+
+    function formatDownwindDistance(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return "";
+        return numeric.toFixed(1);
+    }
+
+    function getFinalDescentHeightDisplay(metrics) {
+        if (!metrics || !metrics.valid) return "-- ft";
+        if (finalDescentFromSource === 'fdp') {
+            return metrics.fdpValid ? `${Math.round(metrics.hFdp)} ft` : "-- ft";
+        }
+        return metrics.fapValid ? `${Math.round(metrics.hFap)} ft` : "-- ft";
+    }
+
+    function getFinalDescentSourceLabel() {
+        return finalDescentFromSource === 'fdp' ? 'FDP' : 'FAP';
+    }
+
+    function getFinalDescentSourceIcon() {
+        return finalDescentFromSource === 'fdp' ? 'fdp.png' : 'fap.png';
+    }
+
+    function getDownwindDistanceFromFinalDescent(metrics) {
+        if (!metrics || !metrics.valid) return "";
+        if (finalDescentFromSource === 'fdp') {
+            if (!metrics.fdpValid || !Number.isFinite(metrics.dFdp)) return "";
+            const radioFixShift = getNumberOrBlank('downwindRadioFixShift');
+            return Math.max(0, Number(metrics.dFdp) - (radioFixShift === "" ? 0 : Number(radioFixShift)));
+        }
+
+        if (!metrics.fapValid || !Number.isFinite(metrics.dFap)) return "";
+        return Number(metrics.dFap);
+    }
+
+    function updateDownwindFinalDescent() {
+        const metrics = getNpaProfileMetrics();
+        const display = document.getElementById('finalDescentFromValue');
+        if (display) {
+            display.dataset.source = finalDescentFromSource;
+            display.innerHTML = `
+                <span class="final-descent-content">
+                    <img src="${getFinalDescentSourceIcon()}" alt="" class="final-descent-icon">
+                    <span class="final-descent-tag">${getFinalDescentSourceLabel()}</span>
+                    <span>${getFinalDescentHeightDisplay(metrics)}</span>
+                </span>`;
+        }
+
+        const distance = getDownwindDistanceFromFinalDescent(metrics);
+        setDownwindCalcField('sDownwind', distance === "" ? "" : formatDownwindDistance(distance));
+        updateDownwindCalculation('distance');
+    }
+
+    function toggleFinalDescentFrom() {
+        if (navigator.vibrate) navigator.vibrate(15);
+        finalDescentFromSource = finalDescentFromSource === 'fap' ? 'fdp' : 'fap';
+        updateDownwindFinalDescent();
+        scheduleNpaCurrentPageStateSave();
     }
 
     function parseDownwindTimeMinutes(value) {
@@ -2418,8 +2850,10 @@
 
     function startNewApproachEntry() {
         if (navigator.vibrate) navigator.vibrate(20);
-        document.getElementById('npaModal').style.display = 'none';
-        document.getElementById('selectedTypeLabel').innerText = "—";
+        const modal = document.getElementById('npaModal');
+        if (modal) modal.style.display = 'none';
+        closeNpaApproachDropdown();
+        setSelectedNpaType("");
         clearNpaFields();
         const infoBlock = document.getElementById('npaBlock5');
         if (infoBlock) infoBlock.classList.add('open');
@@ -2435,8 +2869,9 @@
             airportEl.value = "";
             airportEl.focus();
         }
-        document.getElementById('selectedTypeLabel').innerText = "—";
+        setSelectedNpaType("");
         clearNpaFields();
+        closeNpaApproachDropdown();
         const infoBlock = document.getElementById('npaBlock5');
         if (infoBlock) infoBlock.classList.add('open');
         scheduleNpaProfileLayoutUpdate();
@@ -2467,15 +2902,15 @@
 
     document.addEventListener('click', (event) => {
         const menu = document.getElementById('gpaMenu');
-        if (!menu) return;
-        if (!event.target.closest('.gpa-container') && !event.target.closest('#gpaMenu')) {
+        if (menu && !event.target.closest('.gpa-container') && !event.target.closest('#gpaMenu')) {
             menu.style.display = 'none';
         }
+        if (!event.target.closest('#approachTypeWrapper')) closeNpaApproachDropdown();
     });
 
     function checkAndFillFromDB() {
-        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
-        const type = document.getElementById('selectedTypeLabel').innerText;
+        const airportCode = getNpaAirportCode();
+        const type = getSelectedNpaType();
         window.airportsNpa = window.airportsNpa || {};
 
         if (airportCode && type && type !== "—" && window.airportsNpa[airportCode] && window.airportsNpa[airportCode][type]) {
@@ -2528,31 +2963,31 @@
             setFieldValue(id, "");
         });
         downwindCalcSource = "";
+        finalDescentFromSource = "fap";
         document.getElementById('racetrackVal').innerText = "Right";
         updateRacetrackSectors();
         document.getElementById('radioDistValDisplay').innerText = "0.0";
         document.getElementById('tarDistValDisplay').innerText = "0.0";
-        const tempEl = document.getElementById('tempC');
-        if (tempEl) tempEl.value = "15";
+        setNpaTemperatureValue("15");
         renderNpaProfileTable();
         scheduleNpaCurrentPageStateSave();
     }
 
     // --- ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ---
     async function saveToFirebase() {
-        const airportCode = document.getElementById('apprName').value.trim().toUpperCase();
-        let type = document.getElementById('selectedTypeLabel').innerText;
+        const airportCode = getNpaAirportCode();
+        let type = getSelectedNpaType();
 
         if (!airportCode || airportCode.length < 4) {
             alert("Please enter a valid 4-letter ICAO code.");
             return;
         }
 
-        if (type === "—") {
+        if (!type || type === "—") {
             const newType = prompt("Enter Approach Type (e.g. ILS, RNAV, VOR):");
             if (!newType) return;
             type = newType.trim().toUpperCase();
-            document.getElementById('selectedTypeLabel').innerText = type;
+            setSelectedNpaType(type);
             scheduleNpaCurrentPageStateSave();
         }
 
@@ -2714,8 +3149,8 @@
         }
 
         if (type === 'tempC') {
-            const tempValue = String(document.getElementById('tempC').value || '').trim();
-            npaTempIsNegative = tempValue.startsWith('-') || tempValue.startsWith('−');
+            const tempValue = getNpaTemperatureNumber();
+            npaTempIsNegative = Number(tempValue) < 0;
         }
 
         const config = npaKeypadFields[type];
@@ -2817,10 +3252,9 @@
         if (!el) return "";
 
         if (activeNpaField === 'tempC') {
-            const value = String(el.value || '').trim();
-            if (!value) return "";
-            const clean = value.replace(/[+−-]/g, '');
-            return `${npaTempIsNegative ? '−' : '+'}${clean}`;
+            const value = getNpaTemperatureNumber();
+            if (value === "") return "";
+            return `${npaTempIsNegative ? '−' : '+'}${Math.abs(Number(value))}`;
         }
 
         return el.value || "";
@@ -2910,8 +3344,7 @@
         } else if (activeNpaField === 'downwindRadioFixShift') {
             setFieldValue('downwindRadioFixShift', finalVal);
         } else if (activeNpaField === 'tempC') {
-            const tempEl = document.getElementById('tempC');
-            if (tempEl) tempEl.value = finalVal === "" ? "" : `${npaTempIsNegative ? '-' : ''}${finalVal}`;
+            setNpaTemperatureValue(finalVal === "" ? "" : `${npaTempIsNegative ? '-' : ''}${finalVal}`);
             renderNpaProfileTable();
         } else if (activeNpaField === 'downwindTime') {
             setFieldValue('downwindTime', finalVal === "" ? "" : formatNpaTimeDigits(finalVal));
@@ -2944,8 +3377,7 @@
             currentKpVal = "";
             keypadWasCleared = true;
             npaTempIsNegative = false;
-            const tempEl = document.getElementById('tempC');
-            if (tempEl) tempEl.value = "";
+            setNpaTemperatureValue("");
             updateKpDisplay();
             renderNpaProfileTable();
             scheduleNpaCurrentPageStateSave();
@@ -2961,8 +3393,8 @@
 
     function toggleNpaTempSign() {
         if (currentKpVal === "" && !keypadWasCleared) {
-            const currentTemp = String(document.getElementById('tempC').value || '').trim().replace(/[+−-]/g, '');
-            if (currentTemp !== "") currentKpVal = currentTemp;
+            const currentTemp = getNpaTemperatureNumber();
+            if (currentTemp !== "") currentKpVal = String(Math.abs(Number(currentTemp)));
         }
 
         if (!npaTempIsNegative && currentKpVal === "55") {
