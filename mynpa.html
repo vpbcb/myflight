@@ -123,6 +123,12 @@
     z-index: 20;
 }
 
+        .header-action-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .header-action-btn {
             height: 28px;
             padding: 0 8px;
@@ -142,6 +148,28 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        .header-action-btn.edit-lock-btn {
+            width: 34px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            touch-action: manipulation;
+        }
+
+        .header-action-btn.edit-lock-btn svg {
+            width: 15px;
+            height: 15px;
+            display: block;
+        }
+
+        .header-action-btn.edit-lock-btn.unlocked {
+            border-color: rgba(25, 118, 210, 0.45);
+            background: rgba(25, 118, 210, 0.08);
+            color: var(--accent-blue);
+        }
+
         .header-action-btn.save {
             background: var(--accent-blue);
             border-color: var(--accent-blue);
@@ -155,6 +183,16 @@
         html.dark-theme .header-action-btn.save {
             background: #0273ad;
             border-color: #0273ad;
+        }
+
+        html.dark-theme .header-action-btn.edit-lock-btn {
+            color: #94a3b8;
+        }
+
+        html.dark-theme .header-action-btn.edit-lock-btn.unlocked {
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.08);
         }
 
         .header-action-btn:active {
@@ -580,6 +618,57 @@
         html.dark-theme .cell-wrapper {
             background-color: rgba(255, 255, 255, 0.04);
         }
+
+        .npa-edit-lock-host {
+            position: relative;
+        }
+
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host .cell-input,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host .btn-val,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host .split-primary,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host .npa-profile-shift-value,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host .npa-profile-shift-value span {
+            color: var(--text-main) !important;
+        }
+
+        body.npa-edit-unlocked .npa-edit-lock-host .cell-input,
+        body.npa-edit-unlocked .npa-edit-lock-host .btn-val,
+        body.npa-edit-unlocked .npa-edit-lock-host .split-primary,
+        body.npa-edit-unlocked .npa-edit-lock-host .npa-profile-shift-value,
+        body.npa-edit-unlocked .npa-edit-lock-host .npa-profile-shift-value span {
+            color: var(--accent-blue) !important;
+        }
+
+        .npa-field-lock-icon {
+            position: absolute;
+            top: 3px;
+            right: 4px;
+            width: 10px;
+            height: 10px;
+            color: rgba(100, 116, 139, 0.72);
+            opacity: 0.85;
+            pointer-events: none;
+            z-index: 25;
+        }
+
+        .npa-field-lock-icon svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        body.npa-edit-unlocked .npa-field-lock-icon {
+            color: var(--accent-blue);
+            opacity: 0.95;
+        }
+
+        html.dark-theme .npa-field-lock-icon {
+            color: rgba(148, 163, 184, 0.78);
+        }
+
+        html.dark-theme body.npa-edit-unlocked .npa-field-lock-icon {
+            color: #38bdf8;
+        }
         .approach-type-wrapper {
             position: relative;
             cursor: pointer;
@@ -734,6 +823,11 @@
             opacity: 0.65;
         }
 
+        #rwLengthDisplay .split-primary,
+        #rwLengthDisplay .split-secondary {
+            font-weight: 500 !important;
+        }
+
         .gpa-container {
             position: relative;
             width: 100%;
@@ -835,6 +929,30 @@
         #rwLengthDisplay .split-secondary,
         #inboundCrsDisplay .split-secondary {
             color: var(--text-main) !important;
+        }
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #elevation,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #gpa,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #racetrackVal,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #sDownwind,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #downwindRadioFixShift,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #downwindTime,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #rwLengthDisplay .split-primary,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #inboundCrsDisplay .split-primary,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #radioDistValDisplay,
+        body:not(.npa-edit-unlocked) .npa-edit-lock-host #tarDistValDisplay {
+            color: var(--text-main) !important;
+        }
+        body.npa-edit-unlocked .npa-edit-lock-host #elevation,
+        body.npa-edit-unlocked .npa-edit-lock-host #gpa,
+        body.npa-edit-unlocked .npa-edit-lock-host #racetrackVal,
+        body.npa-edit-unlocked .npa-edit-lock-host #sDownwind,
+        body.npa-edit-unlocked .npa-edit-lock-host #downwindRadioFixShift,
+        body.npa-edit-unlocked .npa-edit-lock-host #downwindTime,
+        body.npa-edit-unlocked .npa-edit-lock-host #rwLengthDisplay .split-primary,
+        body.npa-edit-unlocked .npa-edit-lock-host #inboundCrsDisplay .split-primary,
+        body.npa-edit-unlocked .npa-edit-lock-host #radioDistValDisplay,
+        body.npa-edit-unlocked .npa-edit-lock-host #tarDistValDisplay {
+            color: var(--accent-blue) !important;
         }
         #tempC.temp-positive {
             color: #ef4444 !important;
@@ -949,6 +1067,40 @@
             text-align: center;
             max-width: 300px;
         }
+
+        .npa-edit-mode-toast {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 190px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(25, 118, 210, 0.28);
+            background: var(--card-bg);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.24);
+            color: var(--accent-blue);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            text-align: center;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease;
+            z-index: 2600;
+        }
+
+        .npa-edit-mode-toast.active {
+            opacity: 1;
+        }
+
+        html.dark-theme .npa-edit-mode-toast {
+            border-color: rgba(56, 189, 248, 0.28);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+            color: #38bdf8;
+        }
+
         .clear-data-text {
             margin: 8px 0 18px;
             color: var(--text-main);
@@ -1327,7 +1479,10 @@
         <h2 class="app-title" ondblclick="adminLogin()" title="Double tap for admin login">=NPA CALC=</h2>
         <div class="header-actions">
             <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
-            <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
+            <div class="header-action-group">
+                <button type="button" class="header-action-btn edit-lock-btn" id="npaEditLockBtn" aria-label="Edit locked"></button>
+                <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
+            </div>
         </div>
     </div>
 
@@ -1463,7 +1618,7 @@
                             <div class="c2-row">
                                 <div class="cell-wrapper flex-1">
                                     <span class="cell-label">S downwind</span>
-                                    <input type="text" class="cell-input" id="sDownwind" readonly>
+                                    <input type="text" class="cell-input" id="sDownwind" readonly onclick="openNpaKeypad('sDownwind')">
                                 </div>
                                 <div class="cell-wrapper flex-1">
                                     <span class="cell-label">Downwind time</span>
@@ -1553,6 +1708,7 @@
         
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
         initNpaRefreshButton();
+        initNpaEditLockMode();
         initNpaProfileUnitToggles();
         initNpaProfileScrollMemory();
         const restoredState = restoreNpaCurrentPageState();
@@ -1615,6 +1771,139 @@
         const body = document.getElementById('npaProfileTableBody');
         if (!body) return;
         body.addEventListener('scroll', saveNpaProfileScrollPosition, { passive: true });
+    }
+
+    const NPA_EDIT_UNLOCK_HOLD_MS = 1500;
+    const NPA_EDIT_LOCKED_FIELDS = [
+        'rwLength',
+        'elevation',
+        'gpa',
+        'racetrack',
+        'inboundCrs',
+        'sDownwind',
+        'downwindTime',
+        'downwindRadioFixShift',
+        'radio',
+        'tar'
+    ];
+    const NPA_EDIT_LOCK_TARGETS = [
+        { field: 'rwLength', host: () => document.getElementById('rwLengthDisplay')?.closest('.cell-wrapper') },
+        { field: 'elevation', host: () => document.getElementById('elevation')?.closest('.cell-wrapper') },
+        { field: 'gpa', host: () => document.getElementById('gpa')?.closest('.cell-wrapper') },
+        { field: 'racetrack', host: () => document.getElementById('racetrackVal')?.closest('.cell-wrapper') },
+        { field: 'inboundCrs', host: () => document.getElementById('inboundCrsDisplay')?.closest('.cell-wrapper') },
+        { field: 'sDownwind', host: () => document.getElementById('sDownwind')?.closest('.cell-wrapper') },
+        { field: 'downwindTime', host: () => document.getElementById('downwindTime')?.closest('.cell-wrapper') },
+        { field: 'downwindRadioFixShift', host: () => document.getElementById('downwindRadioFixShift')?.closest('.cell-wrapper') },
+        { field: 'radio', host: () => document.getElementById('radioDistValDisplay')?.closest('.npa-profile-shift-head') },
+        { field: 'tar', host: () => document.getElementById('tarDistValDisplay')?.closest('.npa-profile-shift-head') }
+    ];
+    let npaEditModeUnlocked = false;
+    let npaEditLockHoldTimer = null;
+    let npaEditLockHoldActivated = false;
+    let npaEditToastTimer = null;
+
+    function getNpaLockIconSvg(unlocked) {
+        const shackle = unlocked
+            ? '<path d="M7 11V8a5 5 0 0 1 9.7-1.6"></path>'
+            : '<path d="M7 11V8a5 5 0 0 1 10 0v3"></path>';
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect>${shackle}</svg>`;
+    }
+
+    function isNpaEditLockedField(type) {
+        return NPA_EDIT_LOCKED_FIELDS.includes(type);
+    }
+
+    function guardNpaEditableField(type) {
+        if (!isNpaEditLockedField(type) || npaEditModeUnlocked) return true;
+        if (navigator.vibrate) navigator.vibrate([8, 20, 8]);
+        return false;
+    }
+
+    function initNpaEditLockIcons() {
+        NPA_EDIT_LOCK_TARGETS.forEach(target => {
+            const host = target.host();
+            if (!host) return;
+            host.classList.add('npa-edit-lock-host');
+            host.querySelectorAll(`.npa-field-lock-icon[data-edit-lock-field="${target.field}"]`).forEach(icon => icon.remove());
+        });
+    }
+
+    function renderNpaEditLockState() {
+        document.body.classList.toggle('npa-edit-unlocked', npaEditModeUnlocked);
+
+        const button = document.getElementById('npaEditLockBtn');
+        if (button) {
+            button.innerHTML = getNpaLockIconSvg(npaEditModeUnlocked);
+            button.classList.toggle('unlocked', npaEditModeUnlocked);
+            button.setAttribute('aria-label', npaEditModeUnlocked ? 'Edit unlocked' : 'Edit locked');
+            button.title = npaEditModeUnlocked ? 'Edit unlocked' : 'Long tap to unlock editing';
+        }
+
+        document.querySelectorAll('.npa-field-lock-icon').forEach(icon => icon.remove());
+    }
+
+    function showNpaEditModeToast() {
+        const toast = document.getElementById('npaEditModeToast');
+        if (!toast) return;
+        clearTimeout(npaEditToastTimer);
+        toast.classList.add('active');
+        npaEditToastTimer = setTimeout(() => {
+            toast.classList.remove('active');
+        }, 2000);
+    }
+
+    function setNpaEditModeUnlocked(unlocked, showToast) {
+        npaEditModeUnlocked = Boolean(unlocked);
+        renderNpaEditLockState();
+        if (npaEditModeUnlocked && showToast) showNpaEditModeToast();
+        if (!npaEditModeUnlocked) {
+            const menu = document.getElementById('gpaMenu');
+            if (menu) menu.style.display = 'none';
+        }
+    }
+
+    function cancelNpaEditLockHold() {
+        if (!npaEditLockHoldTimer) return;
+        clearTimeout(npaEditLockHoldTimer);
+        npaEditLockHoldTimer = null;
+    }
+
+    function initNpaEditLockMode() {
+        initNpaEditLockIcons();
+        const button = document.getElementById('npaEditLockBtn');
+
+        if (button) {
+            button.addEventListener('pointerdown', event => {
+                if (npaEditModeUnlocked) return;
+                event.preventDefault();
+                npaEditLockHoldActivated = false;
+                cancelNpaEditLockHold();
+                npaEditLockHoldTimer = setTimeout(() => {
+                    npaEditLockHoldTimer = null;
+                    npaEditLockHoldActivated = true;
+                    if (navigator.vibrate) navigator.vibrate(25);
+                    setNpaEditModeUnlocked(true, true);
+                }, NPA_EDIT_UNLOCK_HOLD_MS);
+            });
+
+            ['pointerup', 'pointerleave', 'pointercancel'].forEach(eventName => {
+                button.addEventListener(eventName, cancelNpaEditLockHold);
+            });
+
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                if (npaEditLockHoldActivated) {
+                    npaEditLockHoldActivated = false;
+                    return;
+                }
+                if (npaEditModeUnlocked) setNpaEditModeUnlocked(false, false);
+            });
+
+            button.addEventListener('contextmenu', event => event.preventDefault());
+        }
+
+        setNpaEditModeUnlocked(false, false);
     }
 
     function toggleNpaBlock(id) {
@@ -2601,13 +2890,30 @@
         };
     }
 
+    function hasNpaProfileShiftValue(valueNm) {
+        const numeric = Number(valueNm);
+        return Number.isFinite(numeric) && Math.abs(numeric) > 1e-9;
+    }
+
+    function getNpaProfileShiftedColumnDisplay(distances, column, overrideValue = '') {
+        if (!distances) return "";
+        const shiftNm = column === 'radio'
+            ? distances.radioNm - distances.thrNm
+            : column === 'tar'
+                ? distances.tarNm - distances.thrNm
+                : 0;
+
+        if (!hasNpaProfileShiftValue(shiftNm)) return "";
+        return overrideValue || formatNpaProfileDistance(distances[`${column}Nm`], column);
+    }
+
     function makeNpaProfileDistanceRowFromDistances(distances, altitudeText, className = '', iconName = '', displayOverrides = {}) {
         if (!distances) return "";
         return makeNpaProfileRow(
             makeNpaProfileDistValue(displayOverrides.dist || formatNpaProfileDistance(distances.thrNm, 'dist'), iconName),
             altitudeText,
-            displayOverrides.radio || formatNpaProfileDistance(distances.radioNm, 'radio'),
-            displayOverrides.tar || formatNpaProfileDistance(distances.tarNm, 'tar'),
+            getNpaProfileShiftedColumnDisplay(distances, 'radio', displayOverrides.radio),
+            getNpaProfileShiftedColumnDisplay(distances, 'tar', displayOverrides.tar),
             className
         );
     }
@@ -3264,6 +3570,7 @@
 
     function toggleGpaMenu(e) {
         if (e) e.stopPropagation();
+        if (!guardNpaEditableField('gpa')) return;
         const menu = document.getElementById('gpaMenu');
         if (!menu) return;
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -3271,6 +3578,7 @@
 
     function setGpa(value, e) {
         if (e) e.stopPropagation();
+        if (!guardNpaEditableField('gpa')) return;
         const menu = document.getElementById('gpaMenu');
         if (menu) {
             menu.style.display = 'none';
@@ -3423,6 +3731,7 @@
     }
 
     function toggleRacetrack() {
+        if (!guardNpaEditableField('racetrack')) return;
         if (navigator.vibrate) navigator.vibrate(15);
         const el = document.getElementById('racetrackVal');
         if (el.innerText === 'Right') {
@@ -3469,6 +3778,7 @@
     ];
 
     function openNpaKeypad(type) {
+        if (!guardNpaEditableField(type)) return;
         if (navigator.vibrate) navigator.vibrate(15);
         activeNpaField = type;
         currentKpVal = "";
@@ -3897,6 +4207,8 @@
         displayEl.innerHTML = currentKpVal === "" ? "&nbsp;" : currentKpVal;
     }
 </script>
+<div id="npaEditModeToast" class="npa-edit-mode-toast">Режим редактирования</div>
+
 <div id="npaClearDataModal" class="modal-overlay" onclick="closeNpaClearDataModal(event)">
     <div class="modal-content clear-data-modal" onclick="event.stopPropagation()">
         <div class="modal-header">Очистить данные?</div>
@@ -3956,111 +4268,11 @@
 </div>
 
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
 <script>
-    // ВСТАВЬТЕ СВОИ ДАННЫЕ ИЗ FIREBASE CONSOLE СЮДА:
-    const firebaseConfig = {
-  apiKey: "AIzaSyBrx_6HkG7-zOEZMKzLB2NpMqpae_qKlGo",
-  authDomain: "mynpa-db.firebaseapp.com",
-  projectId: "mynpa-db",
-  storageBucket: "mynpa-db.firebasestorage.app",
-  messagingSenderId: "556017315454",
-  appId: "1:556017315454:web:6ec41a310c54315d4ab22f"
-    };
-
-    const FIREBASE_APP_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js";
-    const FIREBASE_FIRESTORE_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js";
-    const FIREBASE_AUTH_SDK = "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js";
-    let npaFirebaseInitPromise = null;
-
-    function loadScriptOnce(src) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = false;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load ${src}`));
-            document.head.appendChild(script);
-        });
-    }
-
-    async function ensureFirebaseSdk() {
-        if (!window.firebase) await loadScriptOnce(FIREBASE_APP_SDK);
-        if (!window.firebase || !firebase.firestore) await loadScriptOnce(FIREBASE_FIRESTORE_SDK);
-        if (!window.firebase || !firebase.auth) await loadScriptOnce(FIREBASE_AUTH_SDK);
-        return Boolean(window.firebase && firebase.firestore && firebase.auth);
-    }
-
-    async function initNpaFirebase() {
-        if (window.npaFirebaseInitialized) return true;
-        if (npaFirebaseInitPromise) return npaFirebaseInitPromise;
-
-        npaFirebaseInitPromise = (async () => {
-            try {
-                const sdkReady = await ensureFirebaseSdk();
-                if (!sdkReady) {
-                    npaFirebaseInitPromise = null;
-                    return false;
-                }
-
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
-                window.npaDb = firebase.firestore();
-                window.npaAuth = firebase.auth();
-
-                // Firestore keeps its own offline cache; localStorage is an extra fallback for the airport DB.
-                window.npaDb.enablePersistence({ synchronizeTabs: true })
-                    .catch(error => console.error("Offline init error:", error));
-
-                window.npaDb.collection("airportsnpa").onSnapshot({
-                    includeMetadataChanges: true
-                }, (snapshot) => {
-                    const cloudData = {};
-                    snapshot.forEach(doc => {
-                        cloudData[doc.id] = doc.data();
-                    });
-
-                    if (Object.keys(cloudData).length > 0) {
-                        mergeNpaDatabase(cloudData);
-                    }
-
-                    console.log("NPA database ready:", snapshot.metadata.fromCache ? "cache" : "server");
-                    syncPendingNpaSaves();
-                }, (error) => {
-                    console.error("Ошибка загрузки базы:", error);
-                });
-
-                window.npaAuth.onAuthStateChanged(() => {
-                    syncPendingNpaSaves();
-                });
-
-                window.npaFirebaseInitialized = true;
-                syncPendingNpaSaves();
-                return true;
-            } catch (error) {
-                console.warn("Firebase SDK is not available. MyNPA will use local offline storage only.", error);
-                npaFirebaseInitPromise = null;
-                return false;
-            }
-        })();
-
-        return npaFirebaseInitPromise;
-    }
-
-    initNpaFirebase();
-
-    window.addEventListener('online', () => {
-        setTimeout(() => {
-            initNpaFirebase().then(() => syncPendingNpaSaves());
-        }, 1000);
-    });
-
-    // 3. Скрытая функция входа Владельца
     async function adminLogin() {
-        const firebaseReady = await initNpaFirebase();
+        const firebaseReady = typeof window.initNpaFirebase === 'function'
+            ? await window.initNpaFirebase()
+            : false;
         if (!firebaseReady || !window.npaAuth) {
             alert("Firebase is not available yet. Check internet connection and reload once.");
             return;
@@ -4074,7 +4286,7 @@
         window.npaAuth.signInWithEmailAndPassword(email, pass)
             .then(u => {
                 alert("Admin mode ON: " + u.user.email);
-                syncPendingNpaSaves();
+                if (typeof syncPendingNpaSaves === 'function') syncPendingNpaSaves();
             })
             .catch(e => alert("Login Error: " + e.message));
     }
