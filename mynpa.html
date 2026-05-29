@@ -1099,22 +1099,24 @@
             text-align: center;
             padding-left: 4px;
             padding-right: 4px;
+            position: relative;
         }
         .npa-profile-dist-with-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            position: relative; /* Делаем контейнер текста точкой отсчета */
         }
         
         .npa-profile-dist-icon {
             position: absolute;
-            right: 100%; /* Прижимаем правый край иконки к левому краю текста */
-            margin-right: 0.05em; /* Сохраняем зазор от цифр в относительных единицах */
-            height: 0.8em;
+            left: -0.65em; /* Отступ от левой границы первого столбца */
+            top: 50%;
+            margin-right: 0;
+            height: 0.7em;
             width: auto;
             object-fit: contain;
             filter: invert(0);
+            transform: translateY(-50%);
         }
         .npa-profile-dist-value {
             display: inline-block;
