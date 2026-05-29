@@ -145,17 +145,18 @@ body {
   background: var(--card); /* Белый фон всего сайта по аналогии с образцом */
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
-  padding-top: var(--safe-top);
+  padding-top: max(2px, calc(var(--safe-top) + 2px));
   /* Отступ снизу для кнопок управления */
-  padding-bottom: max(60px, calc(var(--safe-bottom) + 52px));
+  padding-bottom: max(65px, calc(var(--safe-bottom) + 60px));
 }
 
 /* Кнопки управления внизу (аналогия с образцом) */
 .bottom-btn {
   position: absolute;
-  bottom: max(15px, calc(var(--safe-bottom) + 10px));
+  bottom: max(12px, calc(var(--safe-bottom) + 8px));
   background: transparent !important;
   border: none !important;
+  box-shadow: none !important;
   padding: 5px;
   cursor: pointer;
   display: flex;
@@ -163,23 +164,28 @@ body {
   color: var(--ink); /* Изменили с muted на ink */
   z-index: 1100;
   transition: transform 0.2s ease, color 0.3s ease;
+  user-select: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .bottom-btn:active { transform: scale(0.9); }
 .bottom-btn span {
-  font-size: 10px;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
-#btnBotRefresh { left: 15px; }
-#btnBotHome { right: 15px; }
+#btnBotRefresh { left: 16px; }
+#btnBotHome { right: 16px; }
+#btnBotRefresh span { margin-left: 2px; }
 
 /* --- СТИЛЬ НАДПИСИ КЭША ИЗ ОБРАЗЦА --- */
 .cache-label {
   position: absolute;
-  bottom: max(10px, calc(var(--safe-bottom) + 5px)); /* Чуть ниже текста MENU */
+  bottom: max(2px, calc(var(--safe-bottom) + 0px));
   left: 50%;
   transform: translateX(-50%);
   font-size: 7px;
@@ -984,7 +990,7 @@ button:focus {
 </div>
 
   <button class="bottom-btn" id="btnBotRefresh" title="Сбросить поля">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
     <span>Refresh</span>
   </button>
 

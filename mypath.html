@@ -142,7 +142,7 @@
     background: var(--card);
     backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    padding: max(2px, calc(var(--safe-top) + 2px)) 20px max(40px, calc(var(--safe-bottom) + 40px)) 20px;
+    padding: max(2px, calc(var(--safe-top) + 2px)) 20px max(65px, calc(var(--safe-bottom) + 60px)) 20px;
     border-radius: 0; 
     width: min(100vw, 440px);
     width: min(var(--app-width), 440px);
@@ -161,14 +161,15 @@
 }
 .theme-toggle {
     position: absolute;
-    bottom: max(20px, calc(var(--safe-bottom) + 15px));  
+    bottom: max(12px, calc(var(--safe-bottom) + 8px));  
     
-    right: 20px; 
+    right: 16px; 
     left: auto;
     margin: 0;
     
-    background: none;
-    border: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     padding: 5px;
     cursor: pointer;
     display: flex;
@@ -178,6 +179,9 @@
     opacity: 1;         
     z-index: 100;
     transition: transform 0.2s ease, color 0.3s ease;
+    user-select: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Сенсорная область (Метод 2) */
@@ -194,7 +198,7 @@
 /* --- ЦЕНТРАЛЬНАЯ КНОПКА МЕНЮ --- */
 .menu-btn {
     position: absolute;
-    bottom: max(20px, calc(var(--safe-bottom) + 15px));
+    bottom: max(12px, calc(var(--safe-bottom) + 8px));
     left: 50%;
     transform: translateX(-50%);
     background: transparent !important;
@@ -218,20 +222,20 @@
 
 /* ИЗМЕНЕНИЕ: Текст меню справа от иконки */
 .menu-text {
-    font-size: 0.6rem; /* Маленький, matching wind-calc */
+    font-size: 0.65rem; /* Маленький, matching wind-calc */
     font-weight: 800; /* Стерильный, matching other buttons */
     letter-spacing: 1px; /* Aero-aesthetic */
     text-transform: uppercase; /* Sterile cockpit */
-    margin-left: 6px; /* Жесткий отступ от иконки */
+    margin-left: 4px; /* Жесткий отступ от иконки */
     font-family: inherit; /* Используем основной шрифт */
     display: inline-block; /* Гарантирует отступ */
-    opacity: 0.9; /* Чуть бледнее, чтобы не отвлекал */
+    opacity: 1;
 }
 
 /* --- НАДПИСЬ С ИМЕНЕМ КЭША (ПОД МЕНЮ) --- */
 .cache-label {
     position: absolute;
-    bottom: max(15px, calc(var(--safe-bottom) + 10px)); /* Опускаем в самый низ экрана */
+    bottom: max(2px, calc(var(--safe-bottom) + 0px));
     left: 50%;
     transform: translateX(-50%);
     font-size: 0.45rem;
@@ -251,7 +255,7 @@
 }
         .theme-toggle:hover { opacity: 1; }
 
-        h2 { font-size: 0.6rem; text-align: center; letter-spacing: 5px; color: var(--dim); text-transform: uppercase; margin: 5 0 5px 0; font-weight: 800; opacity: 0.6; }
+        h2 { font-size: 0.6rem; text-align: center; letter-spacing: 5px; color: var(--dim); text-transform: uppercase; margin: 5px 0; padding: 0; font-weight: 800; opacity: 0.6; line-height: normal; }
 
         /* Выравниваем ширину колонок (Elev / OAT / Angle) */
         .main-layout {
@@ -764,7 +768,7 @@ html.light-theme .icon-img {
 /* --- КНОПКИ УПРАВЛЕНИЯ ВНИЗУ (ОБНОВЛЕНО) --- */
 .refresh-btn, .wind-btn {
     position: absolute;
-    bottom: max(20px, calc(var(--safe-bottom) + 15px)); 
+    bottom: max(12px, calc(var(--safe-bottom) + 8px)); 
     margin: 0;
     background: transparent !important; 
     border: none !important;            
@@ -777,9 +781,11 @@ html.light-theme .icon-img {
     z-index: 100;
     transition: transform 0.2s ease, color 0.3s ease;
     user-select: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 .refresh-btn { 
-    left: 20px; 
+    left: 16px; 
     justify-content: flex-start; 
 }
 .wind-btn { 

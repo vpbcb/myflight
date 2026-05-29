@@ -585,7 +585,7 @@
     /* --- КНОПКИ УПРАВЛЕНИЯ ВНИЗУ --- */
         .refresh-btn, .path-btn, .menu-btn {
             position: absolute;
-            bottom: max(20px, calc(var(--safe-bottom) + 15px));
+            bottom: max(12px, calc(var(--safe-bottom) + 8px));
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
@@ -598,9 +598,9 @@
             transition: transform 0.2s ease, color 0.3s ease;
             user-select: none;
         }
-        .refresh-btn { left: 20px; justify-content: flex-start; }
+        .refresh-btn { left: 16px; justify-content: flex-start; }
         .path-btn { left: 50%; transform: translateX(-50%); justify-content: center; }
-        .menu-btn { right: 20px; justify-content: flex-end; }
+        .menu-btn { right: 16px; justify-content: flex-end; }
         
         /* Увеличенная невидимая сенсорная область для легкого тапа пальцем */
         .refresh-btn::after, .path-btn::after, .menu-btn::after {
@@ -614,7 +614,7 @@
         /* --- НАДПИСЬ С ИМЕНЕМ КЭША (PWA) --- */
         .cache-label {
             position: absolute;
-            bottom: max(15px, calc(var(--safe-bottom) + 10px)); /* Размещаем ровно под кнопкой MENU (которая на 20px) */
+            bottom: max(2px, calc(var(--safe-bottom) + 0px));
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.5rem;
@@ -724,11 +724,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 2px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
         </button>
 
-        <a href="./mypath.html" class="path-btn" title="Калькулятор глиссады" style="text-decoration: none;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
-                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-            </svg>
-            <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">MyPath</span>
+        <a href="./mypath.html" class="path-btn" id="windPathSwitchBtn" title="Калькулятор глиссады" style="text-decoration: none; touch-action: pan-y;" onpointerdown="startPressPathSwitch(event)" onpointerup="endPressPathSwitch(event)" onpointerleave="cancelPressPathSwitch()" onpointercancel="cancelPressPathSwitch()" onclick="return clickPathSwitch(event)" oncontextmenu="event.preventDefault()">
+            <span id="pathSwitchIconHolder" style="flex-shrink: 0; display: flex; align-items: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>
+            </span>
+            <span id="pathSwitchLabel" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">MyPath</span>
         </a>
 
         <a href="./index.html" class="menu-btn" title="В главное меню" style="text-decoration: none;">
@@ -982,8 +984,28 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     let currentMappingIndex = 0, currentCategory = 'RWYCC';
     let currentRwycc5State = '5'; 
     let selectedManValue = rwyMapping[0]['MAN_DEFAULT']; // Инициализируем из базы
+    const PATH_SWITCH_STORAGE_KEY = 'rwyWind_path_target';
+    const PATH_SWITCH_HOLD_MS = 300;
+    const pathSwitchTargets = {
+        mypath: {
+            href: './mypath.html',
+            label: 'MyPath',
+            title: 'Калькулятор глиссады',
+            icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>'
+        },
+        mynpa: {
+            href: './mynpa.html',
+            label: 'MyNPA',
+            title: 'NPA calculator',
+            icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;"><path d="M3 18h18"></path><path d="M4 6h5l5 7h6"></path><path d="M14 13l-3 3"></path><path d="M18 13v4h-4"></path></svg>'
+        }
+    };
+    let currentPathSwitchTarget = localStorage.getItem(PATH_SWITCH_STORAGE_KEY) === 'mynpa' ? 'mynpa' : 'mypath';
+    let pathSwitchPressTimer;
+    let isPathSwitchLongPress = false;
 
     window.onload = () => {
+        renderPathSwitchButton();
         const isLoaded = loadAppState(); // Пытаемся загрузить сохраненную сессию
 
         if (!isLoaded) {
@@ -1003,6 +1025,61 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (typeof updateLandModalUI === 'function') updateLandModalUI(); // Применяем блокировки CAT2
         centerTable(); 
     };
+
+    function renderPathSwitchButton() {
+        const config = pathSwitchTargets[currentPathSwitchTarget] || pathSwitchTargets.mypath;
+        const button = document.getElementById('windPathSwitchBtn');
+        const iconHolder = document.getElementById('pathSwitchIconHolder');
+        const label = document.getElementById('pathSwitchLabel');
+        if (button) {
+            button.href = config.href;
+            button.title = config.title;
+            button.setAttribute('aria-label', config.label);
+        }
+        if (iconHolder) iconHolder.innerHTML = config.icon;
+        if (label) label.textContent = config.label;
+    }
+
+    function setPathSwitchTarget(target) {
+        currentPathSwitchTarget = target === 'mynpa' ? 'mynpa' : 'mypath';
+        localStorage.setItem(PATH_SWITCH_STORAGE_KEY, currentPathSwitchTarget);
+        renderPathSwitchButton();
+    }
+
+    function togglePathSwitchTarget() {
+        setPathSwitchTarget(currentPathSwitchTarget === 'mypath' ? 'mynpa' : 'mypath');
+    }
+
+    function startPressPathSwitch(e) {
+        if (e && e.button !== undefined && e.button !== 0) return;
+        isPathSwitchLongPress = false;
+        clearTimeout(pathSwitchPressTimer);
+        pathSwitchPressTimer = setTimeout(() => {
+            isPathSwitchLongPress = true;
+            togglePathSwitchTarget();
+        }, PATH_SWITCH_HOLD_MS);
+    }
+
+    function endPressPathSwitch() {
+        clearTimeout(pathSwitchPressTimer);
+    }
+
+    function cancelPressPathSwitch() {
+        clearTimeout(pathSwitchPressTimer);
+        isPathSwitchLongPress = false;
+    }
+
+    function clickPathSwitch(e) {
+        if (isPathSwitchLongPress) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            isPathSwitchLongPress = false;
+            return false;
+        }
+        return true;
+    }
 
     function selectTab(el) {
         // Используем textContent и нормализуем пробелы, чтобы внедренные <br> не ломали логику поиска
