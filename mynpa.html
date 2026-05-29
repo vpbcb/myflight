@@ -17,7 +17,7 @@
             --bg-main: #f1f5f9;          
             --card-bg: #ffffff;          
             --text-main: #0f172a;        
-            --accent-blue: #0ea5e9;
+            --accent-blue: #1976d2;
             --accent-orange: #fb923c;
             --border-color: rgba(15, 23, 42, 0.08);
             --safe-top: env(safe-area-inset-top, 0px);
@@ -296,6 +296,24 @@
 
         .downwind-mini-block .cell-input {
             color: var(--accent-blue) !important;
+        }
+        .downwind-mini-block.final-descent-fdp {
+            background: rgba(56, 189, 248, 0.18);
+            border: 1px solid rgba(56, 189, 248, 0.32);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .downwind-mini-block.final-descent-fdp .downwind-inline-value {
+            color: var(--accent-blue);
+        }
+        .downwind-mini-block.final-descent-fap {
+            background: rgba(251, 146, 60, 0.18);
+            border: 1px solid rgba(251, 146, 60, 0.34);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .downwind-mini-block.final-descent-fap .downwind-inline-value {
+            color: #fb923c;
         }
 
         .final-descent-content {
@@ -811,10 +829,12 @@
         #downwindTime,
         #gsAppr,
         #rwLengthDisplay .split-primary,
-        #rwLengthDisplay .split-secondary,
-        #inboundCrsDisplay .split-primary,
-        #inboundCrsDisplay .split-secondary {
+        #inboundCrsDisplay .split-primary {
             color: var(--accent-blue) !important;
+        }
+        #rwLengthDisplay .split-secondary,
+        #inboundCrsDisplay .split-secondary {
+            color: var(--text-main) !important;
         }
         #tempC.temp-positive {
             color: #ef4444 !important;
@@ -1032,16 +1052,18 @@
             box-sizing: border-box;
             color: var(--text-main);
         }
-        .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap) {
+        .npa-profile-body .npa-profile-row.npa-profile-zebra-base,
+        .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap):not(.npa-profile-zebra-alt) {
             background: rgba(255, 255, 255, 0.72);
         }
-        .npa-profile-body .npa-profile-row:nth-child(even):not(.highlight-fdp):not(.highlight-fap) {
+        .npa-profile-body .npa-profile-row.npa-profile-zebra-alt {
             background: rgba(15, 23, 42, 0.035);
         }
-        html.dark-theme .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap) {
+        html.dark-theme .npa-profile-body .npa-profile-row.npa-profile-zebra-base,
+        html.dark-theme .npa-profile-body .npa-profile-row:not(.highlight-fdp):not(.highlight-fap):not(.npa-profile-zebra-alt) {
             background: rgba(255, 255, 255, 0.03);
         }
-        html.dark-theme .npa-profile-body .npa-profile-row:nth-child(even):not(.highlight-fdp):not(.highlight-fap) {
+        html.dark-theme .npa-profile-body .npa-profile-row.npa-profile-zebra-alt {
             background: rgba(255, 255, 255, 0.06);
         }
         .npa-profile-row.highlight-fdp,
@@ -1088,8 +1110,8 @@
         .npa-profile-dist-icon {
             position: absolute;
             right: 100%; /* Прижимаем правый край иконки к левому краю текста */
-            margin-right: 6px; /* Задаем небольшой отступ от цифр */
-            height: 12px;
+            margin-right: 0.01em; /* Сохраняем зазор от цифр в относительных единицах */
+            height: 0.92em;
             width: auto;
             object-fit: contain;
             filter: invert(0);
@@ -1456,9 +1478,9 @@
                                     <span class="cell-label">Racetrack radio aid shift <br> from land THR:</span>
                                     <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openNpaKeypad('downwindRadioFixShift')">
                                 </div>
-                                <div class="cell-wrapper flex-1 downwind-mini-block">
+                                <div class="cell-wrapper flex-1 downwind-mini-block" id="finalDescentFromBlock" onclick="toggleFinalDescentFrom()">
                                     <span class="cell-label">final descent from</span>
-                                    <button type="button" class="downwind-inline-value" id="finalDescentFromValue" data-source="fap" onclick="toggleFinalDescentFrom()">-- ft</button>
+                                    <button type="button" class="downwind-inline-value" id="finalDescentFromValue" data-source="fap">-- ft</button>
                                 </div>
                             </div>
 
@@ -1530,6 +1552,7 @@
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
         initNpaRefreshButton();
         initNpaProfileUnitToggles();
+        initNpaProfileScrollMemory();
         const restoredState = restoreNpaCurrentPageState();
         if (!restoredState) {
             setDefaultTemperature();
@@ -1556,12 +1579,52 @@
         if (tabsCard) tabsCard.classList.toggle('has-active', activeId !== "");
     }
 
+    function saveNpaProfileScrollPosition() {
+        if (npaProfileRestoringScroll) return;
+        const profileBlock = document.getElementById('npaBlock4');
+        if (!profileBlock || !profileBlock.classList.contains('open')) return;
+        const body = document.getElementById('npaProfileTableBody');
+        if (!body) return;
+        npaProfileSavedScrollTop = body.scrollTop || 0;
+    }
+
+    function restoreNpaProfileSavedScrollPosition() {
+        const body = document.getElementById('npaProfileTableBody');
+        const profileBlock = document.getElementById('npaBlock4');
+        if (!body || !profileBlock || !profileBlock.classList.contains('open')) return;
+
+        const maxScroll = Math.max(0, body.scrollHeight - body.clientHeight);
+        npaProfileRestoringScroll = true;
+        body.scrollTop = Math.min(Math.max(0, npaProfileSavedScrollTop), maxScroll);
+        requestAnimationFrame(() => {
+            npaProfileRestoringScroll = false;
+        });
+    }
+
+    function scheduleNpaProfileScrollRestore() {
+        restoreNpaProfileSavedScrollPosition();
+        requestAnimationFrame(() => {
+            restoreNpaProfileSavedScrollPosition();
+            requestAnimationFrame(restoreNpaProfileSavedScrollPosition);
+        });
+    }
+
+    function initNpaProfileScrollMemory() {
+        const body = document.getElementById('npaProfileTableBody');
+        if (!body) return;
+        body.addEventListener('scroll', saveNpaProfileScrollPosition, { passive: true });
+    }
+
     function toggleNpaBlock(id) {
         const block = document.getElementById(id);
         if (block) {
             const exclusiveBlocks = getNpaTabBlockIds();
             
             if (exclusiveBlocks.includes(id)) {
+                if (document.getElementById('npaBlock4')?.classList.contains('open')) {
+                    saveNpaProfileScrollPosition();
+                }
+
                 exclusiveBlocks.forEach(blockId => {
                     const relatedBlock = document.getElementById(blockId);
                     if (relatedBlock) relatedBlock.classList.remove('open');
@@ -1577,6 +1640,7 @@
             syncNpaTabState();
             if (navigator.vibrate) navigator.vibrate(15);
             scheduleNpaProfileLayoutUpdate();
+            if (id === 'npaBlock4') scheduleNpaProfileScrollRestore();
             scheduleNpaCurrentPageStateSave();
         }
     }
@@ -1623,6 +1687,7 @@
 
         const mainScroll = document.getElementById('mainScroll');
         if (mainScroll) mainScroll.scrollTop = 0;
+        npaProfileSavedScrollTop = 0;
         const profileBody = document.getElementById('npaProfileTableBody');
         if (profileBody) profileBody.scrollTop = 0;
 
@@ -1778,6 +1843,8 @@
         const NPA_PROFILE_LONG_PRESS_MS = 550;
         let npaProfileUnits = { dist: 'nm', radio: 'nm', tar: 'nm' };
         let npaProfileActiveColumns = [];
+        let npaProfileSavedScrollTop = 0;
+        let npaProfileRestoringScroll = false;
         let npaProfileLongPressTimer = null;
         let npaProfileLongPressFired = false;
         let npaProfileLongPressColumn = "";
@@ -2137,14 +2204,25 @@
         if (id === 'rwLength') {
             el.dataset.displayUnit = 'm';
             renderRwLengthDisplay();
+        } else if (id === 'elevation') {
+            el.value = formatFeetDisplay(nextValue);
+        } else if (id === 'fdp' || id === 'fap') {
+            el.value = formatFeetDisplay(nextValue);
         } else if (id === 'inboundCrs') {
             renderInboundCourseDisplay();
             updateRacetrackSectors();
         } else if (id === 'gpa') {
-            el.value = nextValue === "" ? "" : formatDecimal(nextValue, 1);
+            el.value = formatDegreeDisplay(nextValue, 1);
+        } else if (id === 'sDownwind') {
+            el.value = nextValue === "" ? "" : formatNmDisplay(nextValue, 1);
+        } else if (id === 'downwindTime') {
+            el.value = nextValue === "" ? "" : formatDownwindMinutes(parseDownwindTimeMinutes(nextValue));
+        } else if (id === 'gsAppr') {
+            el.value = nextValue === "" ? "" : formatKtDisplay(nextValue);
         } else if (id === 'tempC') {
             setNpaTemperatureValue(nextValue);
         } else if (id === 'downwindRadioFixShift') {
+            el.value = formatSignedOneDecimalDisplay(nextValue);
             updateDownwindFinalDescent();
         }
 
@@ -2211,6 +2289,14 @@
         return `${Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1)} nm`;
     }
 
+    function formatNpaProfileScaleValue(value, unit) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return "";
+        const normalizedUnit = normalizeNpaProfileUnit(unit);
+        const displayValue = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(1);
+        return `${displayValue} ${normalizedUnit}`;
+    }
+
     function parseNpaProfileShift(displayId) {
         const text = document.getElementById(displayId)?.innerText || "";
         const normalized = String(text).replace(',', '.').replace(/[^\d.-]/g, '');
@@ -2227,26 +2313,33 @@
         scheduleNpaCurrentPageStateSave();
     }
 
-    function setNpaProfileFocusColumn(column) {
-        if (!isValidNpaProfileUnitColumn(column)) return;
-        const columns = ['dist', 'radio', 'tar'];
-        const isAlreadyActive = npaProfileActiveColumns.includes(column);
+    function getNpaProfileActiveColumn() {
+        const column = npaProfileActiveColumns.length === 1 ? npaProfileActiveColumns[0] : "";
+        return isValidNpaProfileUnitColumn(column) ? column : "";
+    }
 
-        if (isAlreadyActive) {
-            npaProfileActiveColumns = [];
-        } else {
-            npaProfileActiveColumns = [...new Set([...npaProfileActiveColumns, column])]
-                .filter(name => columns.includes(name));
-            if (npaProfileActiveColumns.length >= columns.length) npaProfileActiveColumns = [];
-        }
+    function getNpaProfileActiveScaleColumn() {
+        const column = getNpaProfileActiveColumn();
+        return column === 'radio' || column === 'tar' ? column : "";
+    }
 
+    function applyNpaProfileFocusClasses() {
         const table = document.querySelector('.npa-profile-table');
         if (!table) return;
 
+        const columns = ['dist', 'radio', 'tar'];
+        const activeColumn = getNpaProfileActiveColumn();
         columns.forEach(name => {
-            const shouldDim = npaProfileActiveColumns.length > 0 && !npaProfileActiveColumns.includes(name);
-            table.classList.toggle(`profile-dim-${name}`, shouldDim);
+            table.classList.toggle(`profile-dim-${name}`, activeColumn !== "" && activeColumn !== name);
         });
+    }
+
+    function setNpaProfileFocusColumn(column) {
+        if (!isValidNpaProfileUnitColumn(column)) return;
+        const activeColumn = getNpaProfileActiveColumn();
+        npaProfileActiveColumns = activeColumn === column ? [] : [column];
+        applyNpaProfileFocusClasses();
+        renderNpaProfileTable();
     }
 
     function cancelNpaProfileLongPress() {
@@ -2495,18 +2588,263 @@
         return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span class="npa-profile-dist-value">${distValue}</span></span>`;
     }
 
-    function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '') {
+    function getNpaProfileDistancesFromThr(thrDistanceNm, radioShiftNm, tarShiftNm) {
+        const thrNm = Number(thrDistanceNm);
+        if (!Number.isFinite(thrNm)) return null;
+
+        return {
+            thrNm,
+            radioNm: thrNm + Number(radioShiftNm || 0),
+            tarNm: thrNm + Number(tarShiftNm || 0)
+        };
+    }
+
+    function makeNpaProfileDistanceRowFromDistances(distances, altitudeText, className = '', iconName = '', displayOverrides = {}) {
+        if (!distances) return "";
         return makeNpaProfileRow(
-            makeNpaProfileDistValue(formatNpaProfileDistance(distanceNm, 'dist'), iconName),
+            makeNpaProfileDistValue(displayOverrides.dist || formatNpaProfileDistance(distances.thrNm, 'dist'), iconName),
             altitudeText,
-            formatNpaProfileDistance(Number(distanceNm) + Number(radioShiftNm || 0), 'radio'),
-            formatNpaProfileDistance(Number(distanceNm) + Number(tarShiftNm || 0), 'tar'),
+            displayOverrides.radio || formatNpaProfileDistance(distances.radioNm, 'radio'),
+            displayOverrides.tar || formatNpaProfileDistance(distances.tarNm, 'tar'),
             className
         );
     }
 
-    function isNpaProfileDistanceInRange(distance) {
-        return Number.isFinite(distance) && distance >= 2 && distance <= 10;
+    function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '') {
+        return makeNpaProfileDistanceRowFromDistances(
+            getNpaProfileDistancesFromThr(distanceNm, radioShiftNm, tarShiftNm),
+            altitudeText,
+            className,
+            iconName
+        );
+    }
+
+    function getNpaProfileZebraClass(index) {
+        return index % 2 === 0 ? 'npa-profile-zebra-base' : 'npa-profile-zebra-alt';
+    }
+
+    function isNpaProfileDistanceInRange(distance, topLimit = 10) {
+        return Number.isFinite(distance) && distance >= 2 && distance <= topLimit;
+    }
+
+    function getNpaProfileDefaultTopMile(metrics) {
+        const anchorDistance = metrics.fdpValid && Number.isFinite(metrics.dFdp)
+            ? metrics.dFdp
+            : metrics.fapValid && Number.isFinite(metrics.dFap)
+                ? metrics.dFap
+                : null;
+
+        if (!Number.isFinite(anchorDistance)) return 10;
+        return Math.max(10, Math.floor(anchorDistance) + 6);
+    }
+
+    function getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm) {
+        if (activeColumn === 'radio') return Number(radioShiftNm || 0);
+        if (activeColumn === 'tar') return Number(tarShiftNm || 0);
+        return 0;
+    }
+
+    function convertNpaProfileActiveUnitToNm(value, unit) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return NaN;
+        return normalizeNpaProfileUnit(unit) === 'km' ? numeric / NPA_NM_TO_KM : numeric;
+    }
+
+    function convertNpaProfileNmToActiveUnit(valueNm, unit) {
+        const numeric = Number(valueNm);
+        if (!Number.isFinite(numeric)) return NaN;
+        return normalizeNpaProfileUnit(unit) === 'km' ? numeric * NPA_NM_TO_KM : numeric;
+    }
+
+    function ceilNpaProfileStep(value, step) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return NaN;
+        return Math.ceil((numeric - 1e-9) / step) * step;
+    }
+
+    function floorNpaProfileStep(value, step) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return NaN;
+        return Math.floor((numeric + 1e-9) / step) * step;
+    }
+
+    function isSameNpaProfileScalePoint(a, b) {
+        return Math.abs(Number(a) - Number(b)) < 1e-7;
+    }
+
+    function getNpaProfileAnchorRows(metrics, radioShiftNm, tarShiftNm, activeColumn = '') {
+        const anchors = [];
+        const addAnchor = (isValid, thrNm, height, className, iconName, order) => {
+            if (!isValid || !Number.isFinite(thrNm)) return;
+            const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm);
+            if (!distances) return;
+            const activeNm = activeColumn === 'radio'
+                ? distances.radioNm
+                : activeColumn === 'tar'
+                    ? distances.tarNm
+                    : distances.thrNm;
+
+            anchors.push({
+                thrNm,
+                activeNm,
+                distances,
+                altitudeText: `${Math.round(height)} ft`,
+                className,
+                iconName,
+                order
+            });
+        };
+
+        addAnchor(metrics.fdpValid, metrics.dFdp, metrics.hFdp, 'highlight-fdp', 'fdp.png', 1);
+        addAnchor(metrics.fapValid, metrics.dFap, metrics.hFap, 'highlight-fap', 'fap.png', 2);
+        return anchors;
+    }
+
+    function getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors) {
+        const step = normalizeNpaProfileUnit(activeUnit) === 'km' ? 2 : 1;
+        const oldTopActive = convertNpaProfileNmToActiveUnit(10 + activeShiftNm, activeUnit);
+        const oldBottomActive = convertNpaProfileNmToActiveUnit(2, activeUnit);
+        const anchorValues = anchors
+            .map(anchor => convertNpaProfileNmToActiveUnit(anchor.activeNm, activeUnit))
+            .filter(Number.isFinite);
+        const anchorTop = anchorValues.length ? Math.max(...anchorValues) + (step * 4) : -Infinity;
+        const topSeed = Math.max(oldTopActive, anchorTop, oldBottomActive);
+        const top = ceilNpaProfileStep(topSeed, step);
+        const bottom = ceilNpaProfileStep(oldBottomActive, step);
+
+        return {
+            step,
+            top: Number.isFinite(top) ? top : bottom,
+            bottom: Number.isFinite(bottom) ? bottom : 2
+        };
+    }
+
+    function renderNpaProfileDefaultScaleRows(metrics, radioShiftNm, tarShiftNm) {
+        const topMile = getNpaProfileDefaultTopMile(metrics);
+        const bottomMile = 2;
+        let tableHTML = '';
+        let fdpInserted = false;
+        let fapInserted = false;
+        let regularRowIndex = 0;
+
+        for (let d = topMile; d >= bottomMile; d -= 1) {
+            if (metrics.fdpValid && isNpaProfileDistanceInRange(metrics.dFdp, topMile) && !fdpInserted && d <= metrics.dFdp) {
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFdp, `${Math.round(metrics.hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
+                fdpInserted = true;
+            }
+
+            if (metrics.fapValid && isNpaProfileDistanceInRange(metrics.dFap, topMile) && !fapInserted && d <= metrics.dFap) {
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFap, `${Math.round(metrics.hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
+                fapInserted = true;
+            }
+
+            if ((metrics.fdpValid && d === metrics.dFdp) || (metrics.fapValid && d === metrics.dFap)) continue;
+
+            tableHTML += makeNpaProfileDistanceRow(d, `${metrics.getIndFromDist(d)} ft`, radioShiftNm, tarShiftNm, getNpaProfileZebraClass(regularRowIndex));
+            regularRowIndex += 1;
+        }
+
+        return tableHTML;
+    }
+
+    function renderNpaProfileActiveScaleRows(metrics, radioShiftNm, tarShiftNm, activeColumn) {
+        const activeUnit = normalizeNpaProfileUnit(npaProfileUnits[activeColumn]);
+        const activeShiftNm = getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm);
+        const anchors = getNpaProfileAnchorRows(metrics, radioShiftNm, tarShiftNm, activeColumn);
+        const bounds = getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors);
+        const items = [];
+
+        for (let activeValue = bounds.top; activeValue >= bounds.bottom - 1e-7; activeValue -= bounds.step) {
+            const hasAnchorAtValue = anchors.some(anchor => {
+                const anchorValue = convertNpaProfileNmToActiveUnit(anchor.activeNm, activeUnit);
+                return Number.isFinite(anchorValue) && isSameNpaProfileScalePoint(anchorValue, activeValue);
+            });
+            if (hasAnchorAtValue) continue;
+
+            items.push({
+                type: 'regular',
+                sortValue: activeValue,
+                activeValue,
+                order: 10
+            });
+        }
+
+        anchors.forEach(anchor => {
+            const activeValue = convertNpaProfileNmToActiveUnit(anchor.activeNm, activeUnit);
+            if (!Number.isFinite(activeValue)) return;
+            if (activeValue < bounds.bottom - 1e-7 || activeValue > bounds.top + 1e-7) return;
+            items.push({
+                ...anchor,
+                type: 'anchor',
+                sortValue: activeValue,
+                activeValue
+            });
+        });
+
+        items.sort((a, b) => (b.sortValue - a.sortValue) || (a.order - b.order));
+
+        let regularRowIndex = 0;
+        return items.map(item => {
+            if (item.type === 'anchor') {
+                return makeNpaProfileDistanceRowFromDistances(
+                    item.distances,
+                    item.altitudeText,
+                    item.className,
+                    item.iconName
+                );
+            }
+
+            const activeNm = convertNpaProfileActiveUnitToNm(item.activeValue, activeUnit);
+            const thrNm = activeNm - activeShiftNm;
+            const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm);
+            const displayOverrides = {
+                [activeColumn]: formatNpaProfileScaleValue(item.activeValue, activeUnit)
+            };
+            const className = getNpaProfileZebraClass(regularRowIndex);
+            regularRowIndex += 1;
+
+            return makeNpaProfileDistanceRowFromDistances(
+                distances,
+                `${metrics.getIndFromDist(thrNm)} ft`,
+                className,
+                '',
+                displayOverrides
+            );
+        }).join('');
+    }
+
+    function captureNpaProfileScrollAnchor(container) {
+        if (!container) return null;
+        const anchorRow = container.querySelector('.highlight-fap') || container.querySelector('.highlight-fdp');
+        if (!anchorRow) return { type: 'scroll', scrollTop: container.scrollTop || 0 };
+
+        const containerRect = container.getBoundingClientRect();
+        const rowRect = anchorRow.getBoundingClientRect();
+        return {
+            type: 'row',
+            className: anchorRow.classList.contains('highlight-fap') ? 'highlight-fap' : 'highlight-fdp',
+            topOffset: rowRect.top - containerRect.top,
+            scrollTop: container.scrollTop || 0
+        };
+    }
+
+    function restoreNpaProfileScrollAnchor(container, anchor) {
+        if (!container || !anchor) {
+            if (container) container.scrollTop = 0;
+            return;
+        }
+
+        if (anchor.type === 'row' && anchor.className) {
+            const anchorRow = container.querySelector(`.${anchor.className}`);
+            if (anchorRow) {
+                const containerRect = container.getBoundingClientRect();
+                const rowRect = anchorRow.getBoundingClientRect();
+                container.scrollTop += (rowRect.top - containerRect.top) - anchor.topOffset;
+                return;
+            }
+        }
+
+        container.scrollTop = anchor.scrollTop || 0;
     }
 
     function getNpaProfileMetrics() {
@@ -2561,7 +2899,9 @@
     function renderNpaProfileTable() {
         const tableBody = document.getElementById('npaProfileTableBody');
         if (!tableBody) return;
+        const scrollAnchor = captureNpaProfileScrollAnchor(tableBody);
         updateNpaProfileUnitHeaders();
+        applyNpaProfileFocusClasses();
 
         const metrics = getNpaProfileMetrics();
 
@@ -2576,35 +2916,18 @@
             updateDownwindFinalDescent();
             return;
         }
-        const topMile = 10;
-        const bottomMile = 2;
         const radioShiftNm = parseNpaProfileShift('radioDistValDisplay');
         const tarShiftNm = parseNpaProfileShift('tarDistValDisplay');
-
-        let tableHTML = '';
-        let fdpInserted = false;
-        let fapInserted = false;
-
-        for (let d = topMile; d >= bottomMile; d -= 1) {
-            if (metrics.fdpValid && isNpaProfileDistanceInRange(metrics.dFdp) && !fdpInserted && d <= metrics.dFdp) {
-                tableHTML += makeNpaProfileDistanceRow(metrics.dFdp, `${Math.round(metrics.hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
-                fdpInserted = true;
-            }
-
-            if (metrics.fapValid && isNpaProfileDistanceInRange(metrics.dFap) && !fapInserted && d <= metrics.dFap) {
-                tableHTML += makeNpaProfileDistanceRow(metrics.dFap, `${Math.round(metrics.hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
-                fapInserted = true;
-            }
-
-            if ((metrics.fdpValid && d === metrics.dFdp) || (metrics.fapValid && d === metrics.dFap)) continue;
-
-            tableHTML += makeNpaProfileDistanceRow(d, `${metrics.getIndFromDist(d)} ft`, radioShiftNm, tarShiftNm);
-        }
+        const activeScaleColumn = getNpaProfileActiveScaleColumn();
+        const tableHTML = activeScaleColumn
+            ? renderNpaProfileActiveScaleRows(metrics, radioShiftNm, tarShiftNm, activeScaleColumn)
+            : renderNpaProfileDefaultScaleRows(metrics, radioShiftNm, tarShiftNm);
 
         tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
-        tableBody.scrollTop = 0;
+        restoreNpaProfileScrollAnchor(tableBody, scrollAnchor);
         updateDownwindFinalDescent();
         scheduleNpaProfileLayoutUpdate();
+        requestAnimationFrame(() => restoreNpaProfileScrollAnchor(tableBody, scrollAnchor));
     }
 
     function formatDecimal(value, digits) {
@@ -2613,10 +2936,45 @@
         return num.toFixed(digits);
     }
 
+    function getCleanDisplayNumber(value) {
+        const normalized = String(value ?? "").replace(',', '.').replace(/[^\d.-]/g, '');
+        if (normalized === "" || normalized === "-" || normalized === ".") return "";
+        const numeric = Number(normalized);
+        return Number.isFinite(numeric) ? numeric : "";
+    }
+
+    function formatFeetDisplay(value) {
+        const numeric = getCleanDisplayNumber(value);
+        return numeric === "" ? "" : `${Math.round(numeric)} ft`;
+    }
+
+    function formatDegreeDisplay(value, digits = 1) {
+        const numeric = getCleanDisplayNumber(value);
+        return numeric === "" ? "" : `${Number(numeric).toFixed(digits)}°`;
+    }
+
+    function formatNmDisplay(value, digits = 1) {
+        const numeric = getCleanDisplayNumber(value);
+        return numeric === "" ? "" : `${Number(numeric).toFixed(digits)} nm`;
+    }
+
+    function formatKtDisplay(value) {
+        const numeric = getCleanDisplayNumber(value);
+        return numeric === "" ? "" : `${Math.round(numeric)} kt`;
+    }
+
+    function formatSignedOneDecimalDisplay(value) {
+        const numeric = getCleanDisplayNumber(value);
+        if (numeric === "") return "";
+        const number = Number(numeric);
+        const sign = number < 0 ? "-" : "+";
+        return `${sign}${Math.abs(number).toFixed(1)} nm`;
+    }
+
     function formatDownwindDistance(value) {
         const numeric = Number(value);
         if (!Number.isFinite(numeric)) return "";
-        return numeric.toFixed(1);
+        return formatNmDisplay(numeric, 1);
     }
 
     function getFinalDescentHeightDisplay(metrics) {
@@ -2637,19 +2995,26 @@
 
     function getDownwindDistanceFromFinalDescent(metrics) {
         if (!metrics || !metrics.valid) return "";
+        const radioFixShift = getNumberOrBlank('downwindRadioFixShift');
+        const shiftNm = radioFixShift === "" ? 0 : Number(radioFixShift);
+
         if (finalDescentFromSource === 'fdp') {
             if (!metrics.fdpValid || !Number.isFinite(metrics.dFdp)) return "";
-            const radioFixShift = getNumberOrBlank('downwindRadioFixShift');
-            return Math.max(0, Number(metrics.dFdp) - (radioFixShift === "" ? 0 : Number(radioFixShift)));
+            return Math.max(0, Number(metrics.dFdp) - shiftNm);
         }
 
         if (!metrics.fapValid || !Number.isFinite(metrics.dFap)) return "";
-        return Number(metrics.dFap);
+        return Math.max(0, Number(metrics.dFap) - shiftNm);
     }
 
     function updateDownwindFinalDescent() {
         const metrics = getNpaProfileMetrics();
         const display = document.getElementById('finalDescentFromValue');
+        const block = document.getElementById('finalDescentFromBlock');
+        if (block) {
+            block.classList.toggle('final-descent-fdp', finalDescentFromSource === 'fdp');
+            block.classList.toggle('final-descent-fap', finalDescentFromSource !== 'fdp');
+        }
         if (display) {
             display.dataset.source = finalDescentFromSource;
             display.innerHTML = `
@@ -2676,6 +3041,14 @@
         const text = String(value || "").trim();
         if (!text) return "";
 
+        const labelMatch = text.match(/^(\d{1,2})\s*min\s*(\d{1,2})\s*sec$/i);
+        if (labelMatch) {
+            const minutes = Number(labelMatch[1]);
+            const seconds = Number(labelMatch[2]);
+            if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || seconds < 0 || seconds > 59) return "";
+            return minutes + (seconds / 60);
+        }
+
         if (text.includes(':')) {
             const parts = text.split(':');
             const minutes = Number(parts[0]);
@@ -2690,9 +3063,9 @@
 
     function formatDownwindMinutes(minutes) {
         const value = Number(minutes);
-        if (!Number.isFinite(value) || value <= 0) return "";
+        if (!Number.isFinite(value) || value < 0) return "";
 
-        const totalSeconds = Math.max(1, Math.round(value * 60));
+        const totalSeconds = Math.max(0, Math.round(value * 60));
         const displayMinutes = Math.floor(totalSeconds / 60);
         const displaySeconds = totalSeconds % 60;
 
@@ -2702,7 +3075,16 @@
     function setDownwindCalcField(id, value) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.value = value !== undefined && value !== null ? value : "";
+        const nextValue = value !== undefined && value !== null ? value : "";
+        if (id === 'sDownwind') {
+            el.value = nextValue === "" ? "" : formatNmDisplay(nextValue, 1);
+        } else if (id === 'downwindTime') {
+            el.value = nextValue === "" ? "" : formatDownwindMinutes(parseDownwindTimeMinutes(nextValue));
+        } else if (id === 'gsAppr') {
+            el.value = nextValue === "" ? "" : formatKtDisplay(nextValue);
+        } else {
+            el.value = nextValue;
+        }
         scheduleNpaCurrentPageStateSave();
     }
 
@@ -2805,8 +3187,8 @@
         setSplitDisplay(
             'inboundCrsMain',
             'inboundCrsSub',
-            course,
-            `/ ${getReciprocalCourse(course)}`
+            `${course}°`,
+            `/ ${getReciprocalCourse(course)}°`
         );
     }
 
@@ -2929,10 +3311,9 @@
             setFieldValue('sectOffset', data.sectOffset);
             updateRacetrackSectors();
             setFieldValue('downwindRadioFixShift', data.downwindRadioFixShift);
-            setFieldValue('sDownwind', data.sDownwind);
             setFieldValue('downwindTime', data.downwindTime);
             setFieldValue('gsAppr', data.gsAppr);
-            updateDownwindCalculation('load');
+            updateDownwindFinalDescent();
 
             const profileRows = Array.isArray(data.profileRows) ? data.profileRows : [];
             for (let i = 1; i <= 3; i += 1) {
