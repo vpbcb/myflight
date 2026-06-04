@@ -933,14 +933,17 @@ html.light-theme .shift-btn.active-shift {
     border-top: 1px solid rgba(251, 146, 60, 0.23);
     border-bottom: 1px solid rgba(251, 146, 60, 0.23);
     color: #fb923c;
-    padding: 5px 14px;
-    font-size: 8.5px;
+    /* Уменьшены боковые отступы с 14px до 8px для расширения зоны текста */
+    padding: 5px 8px;
+    /* Динамический размер: минимум 6px, зависит от ширины (2.2vw), максимум 8.5px */
+    font-size: clamp(6px, 2.2vw, 8.5px);
     font-weight: 800;
     text-align: center;
     line-height: 1.3;
     box-sizing: border-box;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    /* Слегка уменьшена разрядка для экономии места */
+    letter-spacing: 0.1px;
     z-index: 90;
     pointer-events: none;
 }
