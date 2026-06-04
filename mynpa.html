@@ -1560,6 +1560,20 @@
             overflow-y: auto;
             padding: 0.65rem;
         }
+        #addAirportModal.active {
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: max(0.5rem, env(safe-area-inset-top)) 0.25rem max(0.75rem, env(safe-area-inset-bottom));
+        }
+        #addAirportModal .npa-form-modal {
+            max-height: min(86vh, calc(var(--airport-modal-vh, var(--app-height)) - 1.5rem));
+        }
+        #addAirportModal.keyboard-open {
+            padding-top: max(0.25rem, env(safe-area-inset-top));
+        }
+        #addAirportModal.keyboard-open .npa-form-modal {
+            max-height: calc(var(--airport-modal-vh, 100vh) - 0.75rem);
+        }
         .npa-modal-section {
             display: flex;
             flex-direction: column;
@@ -5483,6 +5497,32 @@
         maybeAdvanceAirportIcaoCarousel();
     }
 
+    function syncAddAirportModalViewport() {
+        const modal = document.getElementById('addAirportModal');
+        if (!modal) return;
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        modal.style.setProperty('--airport-modal-vh', `${viewportHeight}px`);
+        modal.classList.toggle('keyboard-open', viewportHeight < window.innerHeight * 0.82);
+    }
+
+    function keepAddAirportFieldVisible(element) {
+        if (!element?.closest?.('#addAirportModal')) return;
+        syncAddAirportModalViewport();
+        setTimeout(() => {
+            element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+        }, 120);
+    }
+
+    function initAddAirportModalKeyboardGuard() {
+        const viewport = window.visualViewport;
+        viewport?.addEventListener('resize', syncAddAirportModalViewport);
+        viewport?.addEventListener('scroll', syncAddAirportModalViewport);
+        window.addEventListener('resize', syncAddAirportModalViewport);
+        document.addEventListener('focusin', event => keepAddAirportFieldVisible(event.target));
+    }
+
+    initAddAirportModalKeyboardGuard();
+
     function sanitizeUpperLetters(value) {
         return String(value || "").toUpperCase().replace(/[^A-Z]/g, '');
     }
@@ -5596,10 +5636,12 @@
         document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
         if (navigator.vibrate) navigator.vibrate(20);
         modal.classList.add('active');
+        syncAddAirportModalViewport();
         setTimeout(() => {
             if (!isEdit) {
                 input?.focus();
             }
+            keepAddAirportFieldVisible(input);
         }, 50);
     }
 
@@ -5615,7 +5657,8 @@
 
     function closeAddAirportModal(event) {
         if (event && event !== 'button' && event.target !== event.currentTarget) return;
-        document.getElementById('addAirportModal')?.classList.remove('active');
+        const modal = document.getElementById('addAirportModal');
+        modal?.classList.remove('active', 'keyboard-open');
     }
 
     function openAirportDeleteConfirm(kind, button) {
@@ -5810,7 +5853,7 @@
                 <button type="button" class="npa-modal-delete-btn" onclick="openAirportDeleteConfirm('radio', this)" aria-label="Delete radio aid">×</button>
                 <div class="npa-modal-section-title">${normalizedType}</div>
                 <div class="npa-modal-grid two">
-                    <div class="npa-modal-field"><label>Name</label><input class="npa-modal-input" data-radio-field="name" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+                    <div class="npa-modal-field"><label>Name</label><input class="npa-modal-input" data-radio-field="name" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" onfocus="keepAddAirportFieldVisible(this)"></div>
                     <div class="npa-modal-field"><label>Coord</label><input class="npa-modal-input" data-radio-field="coord" type="text" placeholder="5500.6N 08237.4E" readonly autocomplete="off" onclick="openNpaAirportRadioCoordKeypad(this)"></div>
                 </div>`;
             const nameInput = block.querySelector('[data-radio-field="name"]');
