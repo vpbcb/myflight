@@ -886,19 +886,38 @@ html.light-theme .t-head {
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
-    padding: 3px 10px;
-    font-size: 0.6rem;
+    
+    /* Жестко фиксируем габариты кнопки */
+    width: 120px;
+    height: 28px; 
+    padding: 0; 
+    box-sizing: border-box;
+    
+    /* Выводим кнопку из потока: она больше не влияет на высоту строки */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* Идеальное центрирование текста по вертикали и горизонтали */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     outline: none;
-    transition: background 0.2s, color 0.2s;
+    /* Добавлен transform для плавной анимации нажатия */
+    transition: background 0.2s, color 0.2s, transform 0.1s;
     white-space: nowrap;
     font-family: inherit;
 }
 
 .shift-btn:active {
-    transform: scale(0.95);
+    /* Критичное исправление: жестко сохраняем центрирование при масштабировании */
+    transform: translate(-50%, -50%) scale(0.95);
 }
 
 .shift-btn.active-shift {
@@ -1011,9 +1030,9 @@ html.light-theme .shift-alert-plate {
 
 <div class="table">
         <input type="hidden" id="pathShiftInput" value="0">
-        <div class="t-head">
-            <div style="width: 90px;text-align: right;">Dist (NM)</div>
-            <div style="flex: 1; display: flex; justify-content: center; align-items: center; margin-top: -3px; margin-bottom: -3px;">
+        <div class="t-head" style="align-items: center;">
+            <div style="width: 90px; text-align: right;">Dist (NM)</div>
+            <div style="flex: 1; position: relative;">
                 <button id="shiftBtn" class="shift-btn" onclick="openKeypad('pathShiftInput', 'PATH SHIFT')">ADD SHIFT</button>
             </div>
             <div style="width: 90px; text-align: left;">Alt (FT)</div>
