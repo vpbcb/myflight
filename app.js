@@ -287,11 +287,6 @@
         const merged = window.airportsDb && typeof window.airportsDb === 'object'
             ? window.airportsDb
             : loadNpaAirportsDb();
-        const pendingAirports = new Set(
-            getPendingAirportSaves()
-                .filter(item => item && item.airportCode)
-                .map(item => normalizeAirportCode(item.airportCode))
-        );
         const removedAirports = new Set(
             Array.isArray(options.removedAirportCodes)
                 ? options.removedAirportCodes.map(normalizeAirportCode).filter(Boolean)
@@ -316,8 +311,9 @@
         if (options.completeCloudSnapshot) {
             Object.keys(merged).forEach(airportCode => {
                 const normalizedCode = normalizeAirportCode(airportCode);
-                if (!cloudAirports.has(normalizedCode) && !pendingAirports.has(normalizedCode)) {
+                if (!cloudAirports.has(normalizedCode)) {
                     delete merged[airportCode];
+                    removedAirports.add(normalizedCode);
                 }
             });
         }
@@ -389,6 +385,10 @@
 
         npaCloudRefreshInProgress = true;
         try {
+            if (getPendingAirportSaves().length && !sharedNpaSyncInProgress) {
+                await requestPendingNpaSync();
+            }
+
             const snapshot = await window.npaDb.collection('airports').get({ source: 'server' });
             applyCloudSnapshot(snapshot, 'server-pull');
             return true;

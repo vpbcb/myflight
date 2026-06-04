@@ -248,6 +248,7 @@
             min-width: 0;
         }
         .npa-gpa-field {
+            container-type: inline-size;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -286,8 +287,10 @@
             margin-top: 0;
         }
         .npa-gpa-field .gpa-input {
-            height: 20px !important;
-            font-size: 15px !important;
+            height: 1.35em !important;
+            font-size: 0.95rem !important;
+            font-size: clamp(0.86rem, 24cqw, 1rem) !important;
+            line-height: 1.08 !important;
         }
 
         /* АНИМАЦИЯ СВОРАЧИВАНИЯ КОНТЕНТА */
@@ -340,6 +343,7 @@
 
         .npa-fdp-field,
         .npa-fap-field {
+            container-type: inline-size;
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
@@ -353,7 +357,7 @@
             align-items: center;
             gap: 0.375rem;
             min-width: 0;
-            flex: 0 0 auto;
+            flex: 0 1 42%;
         }
 
         .npa-fdp-fap-label .npa-icon {
@@ -372,15 +376,20 @@
         }
 
         .npa-fdp-fap-input {
-            width: clamp(3.625rem, 16vw, 4.75rem) !important;
+            width: auto !important;
             height: 1.75rem !important;
-            flex: 0 1 clamp(3.625rem, 16vw, 4.75rem);
-            max-width: 4.75rem;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: min(58%, 6.2em);
+            padding-left: 0.2em !important;
+            padding-right: 0.2em !important;
             border-radius: 0.625rem !important;
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-size: 1.125rem !important;
+            font-size: 0.9rem !important;
+            font-size: clamp(0.78rem, 15cqw, 1.06rem) !important;
+            line-height: 1 !important;
             font-weight: 600 !important;
             color: var(--accent-blue) !important;
         }
@@ -931,10 +940,11 @@
         }
 
         .cell-wrapper .npa-fdp-fap-input {
-            flex: 0 1 clamp(3.625rem, 16vw, 4.75rem);
+            flex: 1 1 0;
             min-width: 0;
             min-height: 1.75rem;
             max-height: 1.75rem;
+            max-width: min(58%, 6.2em);
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
         }
@@ -1158,17 +1168,21 @@
         }
 
         .cell-input.npa-fdp-fap-input {
-            width: clamp(3.625rem, 16vw, 4.75rem) !important;
+            width: auto !important;
             height: 1.75rem !important;
-            flex: 0 1 clamp(3.625rem, 16vw, 4.75rem);
+            flex: 1 1 0;
             min-width: 0;
-            max-width: 4.75rem;
+            max-width: min(58%, 6.2em);
             max-height: 1.75rem;
+            padding-left: 0.2em !important;
+            padding-right: 0.2em !important;
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
             border-radius: 0.625rem !important;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-size: 1.125rem !important;
+            font-size: 0.9rem !important;
+            font-size: clamp(0.78rem, 15cqw, 1.06rem) !important;
+            line-height: 1 !important;
         }
 
         html.dark-theme .cell-input.npa-fdp-fap-input {
@@ -1245,22 +1259,24 @@
             cursor: pointer;
             z-index: 60;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 14px;
+            grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
-            column-gap: 4px;
+            column-gap: 0.18em;
         }
 
         .gpa-input {
             cursor: pointer;
             width: 100%;
             min-width: 0;
-            padding-right: 6px !important;
+            padding: 0 !important;
+            line-height: 1.1 !important;
+            overflow: visible;
         }
 
         .gpa-arrow {
             position: static;
             justify-self: end;
-            font-size: 0.6rem;
+            font-size: 0.62em;
             line-height: 1;
             color: var(--accent-blue);
             pointer-events: none;
@@ -1270,25 +1286,31 @@
         .gpa-menu {
             position: absolute;
             top: calc(100% + 5px);
-            left: 0;
-            width: 100%;
+            left: 50%;
+            width: max(100%, 5.6em);
+            min-width: 5.6em;
             box-sizing: border-box;
             z-index: 3000;
             display: none;
             background: var(--card-bg);
             border: 1px solid var(--accent-blue);
             border-radius: 10px;
+            overflow: hidden;
+            transform: translateX(-50%);
         }
 
         .gpa-menu-item {
-            padding: 12px;
+            padding: 0.7em 0.35em;
             color: var(--text-main);
-            font-size: 0.9rem;
+            font-size: clamp(0.72rem, 4vw, 0.9rem);
             font-weight: 700;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
             background: transparent;
             cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .gpa-menu-item:last-child {
@@ -1404,10 +1426,11 @@
             }
             .cell-input.npa-fdp-fap-input,
             .cell-wrapper .npa-fdp-fap-input {
-                width: clamp(3.5rem, 16vw, 4.25rem) !important;
-                flex-basis: clamp(3.5rem, 16vw, 4.25rem);
-                max-width: 4.25rem;
-                font-size: 1.125rem !important;
+                width: auto !important;
+                flex-basis: 0;
+                max-width: min(58%, 6.2em);
+                font-size: 0.82rem !important;
+                font-size: clamp(0.72rem, 14cqw, 0.98rem) !important;
             }
         }
 
@@ -3028,11 +3051,6 @@
             : {};
         const currentAirportCode = getNpaAirportCode();
         const currentApproachType = getSelectedNpaType();
-        const pendingAirports = new Set(
-            getPendingAirportSaves()
-                .filter(item => item && item.airportCode)
-                .map(item => sanitizeNpaAirportCode(item.airportCode))
-        );
         const removedAirports = new Set(
             Array.isArray(options.removedAirportCodes)
                 ? options.removedAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
@@ -3064,8 +3082,9 @@
         if (options.completeCloudSnapshot) {
             Object.keys(merged).forEach(airportCode => {
                 const normalizedCode = sanitizeNpaAirportCode(airportCode);
-                if (!cloudAirports.has(normalizedCode) && !pendingAirports.has(normalizedCode)) {
+                if (!cloudAirports.has(normalizedCode)) {
                     delete merged[airportCode];
+                    removedAirports.add(normalizedCode);
                 }
             });
         }
@@ -3438,10 +3457,9 @@
             inputEl.placeholder = "ICAO";
         }
         closeNpaAirportDropdown();
-        closeNpaApproachDropdown();
         setSelectedNpaType("");
         clearNpaFields();
-        renderNpaApproachDropdown(false);
+        renderNpaApproachDropdown(true);
         scheduleNpaCurrentPageStateSave();
     }
 
