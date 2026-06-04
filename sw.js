@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260604-6';
+const CACHE_NAME = 'myflight_v.260604-syncfix-1';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
@@ -125,6 +125,14 @@ const cache_or_inet = async (request) => {
     return null;
 };
 
+const isExternalRequest = (request) => {
+    try {
+        return new URL(request.url).origin !== self.location.origin;
+    } catch (error) {
+        return false;
+    }
+};
+
 // --- Жизненный цикл Service Worker ---
 
 self.addEventListener('install', event => {
@@ -199,6 +207,11 @@ self.addEventListener('fetch', (event) => {
             }
         } else {
             // Для ресурсов (JS, CSS, картинки) оставляем Cache First
+            if (isExternalRequest(event.request)) {
+                const networkResponse = await inet(event.request);
+                return networkResponse || Response.error();
+            }
+
             const response = await cache_or_inet(event.request);
             return response || new Response('', { status: 200 });
         }

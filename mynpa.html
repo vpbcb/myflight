@@ -3021,21 +3021,22 @@
         };
     }
 
-    function mergeNpaAirportsDb(source) {
+    function mergeNpaAirportsDb(source, options = {}) {
         if (!source || typeof source !== 'object') return;
         const merged = window.airportsDb && typeof window.airportsDb === 'object'
             ? window.airportsDb
             : {};
-        const pendingAirports = new Set(
-            getPendingAirportSaves()
-                .filter(item => item && item.airportCode)
-                .map(item => item.airportCode)
-        );
+        const currentAirportCode = getNpaAirportCode();
+        const currentApproachType = getSelectedNpaType();
+        const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
+            currentAirportCode &&
+            currentApproachType &&
+            currentApproachType !== "—" &&
+            Object.prototype.hasOwnProperty.call(source, currentAirportCode);
 
         Object.keys(source).forEach(airportCode => {
             const airportData = source[airportCode];
             if (!airportData || typeof airportData !== 'object') return;
-            if (pendingAirports.has(airportCode)) return;
             merged[airportCode] = normalizeNpaAirportDocument(airportCode, airportData);
         });
 
@@ -3045,6 +3046,9 @@
             renderNpaAirportDropdown(true);
         }
         renderNpaApproachDropdown(false);
+        if (shouldRefreshCurrentApproach && window.airportsDb[currentAirportCode]?.approaches?.[currentApproachType]) {
+            checkAndFillFromDB();
+        }
     }
 
     function upsertLocalAirport(airportCode, airportData) {
@@ -3086,7 +3090,13 @@
     }
 
     async function syncPendingAirportSaves() {
-        if (npaSyncInProgress || !navigator.onLine || !isFirebaseReady()) return;
+        if (npaSyncInProgress || !navigator.onLine) return;
+
+        if (!isFirebaseReady() && typeof window.initNpaFirebase === 'function') {
+            await window.initNpaFirebase();
+        }
+
+        if (!isFirebaseReady()) return;
 
         const queue = getPendingAirportSaves();
         if (!queue.length) return;
