@@ -272,6 +272,10 @@
         writeJsonStorage(NPA_AIRPORTS_DB_KEY, cache || {});
     }
 
+    function normalizeAirportCode(code) {
+        return String(code || '').trim().toUpperCase();
+    }
+
     function mergeCloudNpaAirportsDb(source, options = {}) {
         if (!source || typeof source !== 'object') return;
 
@@ -283,12 +287,47 @@
         const merged = window.airportsDb && typeof window.airportsDb === 'object'
             ? window.airportsDb
             : loadNpaAirportsDb();
+        const pendingAirports = new Set(
+            getPendingAirportSaves()
+                .filter(item => item && item.airportCode)
+                .map(item => normalizeAirportCode(item.airportCode))
+        );
+        const removedAirports = new Set(
+            Array.isArray(options.removedAirportCodes)
+                ? options.removedAirportCodes.map(normalizeAirportCode).filter(Boolean)
+                : []
+        );
+        const cloudAirports = new Set(
+            Array.isArray(options.cloudAirportCodes)
+                ? options.cloudAirportCodes.map(normalizeAirportCode).filter(Boolean)
+                : Object.keys(source).map(normalizeAirportCode).filter(Boolean)
+        );
 
         Object.keys(source).forEach(airportCode => {
             const airportData = source[airportCode];
             if (!airportData || typeof airportData !== 'object') return;
-            merged[airportCode] = airportData;
+            merged[normalizeAirportCode(airportCode)] = airportData;
         });
+
+        removedAirports.forEach(airportCode => {
+            delete merged[airportCode];
+        });
+
+        if (options.completeCloudSnapshot) {
+            Object.keys(merged).forEach(airportCode => {
+                const normalizedCode = normalizeAirportCode(airportCode);
+                if (!cloudAirports.has(normalizedCode) && !pendingAirports.has(normalizedCode)) {
+                    delete merged[airportCode];
+                }
+            });
+        }
+
+        if (removedAirports.size) {
+            setPendingAirportSaves(
+                getPendingAirportSaves()
+                    .filter(item => item && !removedAirports.has(normalizeAirportCode(item.airportCode)))
+            );
+        }
 
         window.airportsDb = merged;
         persistNpaAirportsDb(merged);
@@ -306,16 +345,39 @@
     function collectCloudSnapshotData(snapshot) {
         const cloudData = {};
         snapshot.forEach(doc => {
-            cloudData[doc.id] = doc.data();
+            cloudData[normalizeAirportCode(doc.id)] = doc.data();
         });
         return cloudData;
     }
 
+    function getRemovedAirportCodes(snapshot) {
+        if (!snapshot || typeof snapshot.docChanges !== 'function') return [];
+
+        try {
+            return snapshot.docChanges()
+                .filter(change => change && change.type === 'removed' && change.doc)
+                .map(change => normalizeAirportCode(change.doc.id))
+                .filter(Boolean);
+        } catch (error) {
+            console.error('NPA snapshot change read error:', error);
+            return [];
+        }
+    }
+
     function applyCloudSnapshot(snapshot, source) {
         const cloudData = collectCloudSnapshotData(snapshot);
-        if (Object.keys(cloudData).length > 0) {
+        const cloudAirportCodes = Object.keys(cloudData);
+        const removedAirportCodes = source === 'snapshot' && !(snapshot.metadata && snapshot.metadata.fromCache)
+            ? getRemovedAirportCodes(snapshot)
+            : [];
+        const completeCloudSnapshot = source === 'server-pull' || !(snapshot.metadata && snapshot.metadata.fromCache);
+
+        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0 || completeCloudSnapshot) {
             mergeCloudNpaAirportsDb(cloudData, {
                 fromCache: Boolean(snapshot.metadata && snapshot.metadata.fromCache),
+                completeCloudSnapshot,
+                cloudAirportCodes,
+                removedAirportCodes,
                 source
             });
         }
