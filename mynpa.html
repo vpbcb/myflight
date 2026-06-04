@@ -3061,6 +3061,7 @@
                 ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
                 : Object.keys(source).map(sanitizeNpaAirportCode).filter(Boolean)
         );
+        const authoritativeCloudSnapshot = options.source === 'rest-pull' && options.authoritativeCloudSnapshot === true;
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
             currentAirportCode &&
             currentApproachType &&
@@ -3079,7 +3080,7 @@
             delete merged[airportCode];
         });
 
-        if (options.completeCloudSnapshot) {
+        if (authoritativeCloudSnapshot) {
             Object.keys(merged).forEach(airportCode => {
                 const normalizedCode = sanitizeNpaAirportCode(airportCode);
                 if (!cloudAirports.has(normalizedCode)) {
