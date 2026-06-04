@@ -887,8 +887,9 @@ html.light-theme .t-head {
     color: var(--text);
     border-radius: 8px;
     
-    /* Жестко фиксируем габариты кнопки */
-    width: 120px;
+    /* Адаптивная ширина: занимает свободное место, но не более 120px */
+    width: 100%;
+    max-width: 100px;
     height: 28px; 
     padding: 0; 
     box-sizing: border-box;
@@ -904,7 +905,8 @@ html.light-theme .t-head {
     justify-content: center;
     align-items: center;
     
-    font-size: 0.65rem;
+    /* Динамический шрифт для узких экранов */
+    font-size: clamp(0.5rem, 3vw, 0.65rem);
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
