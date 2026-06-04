@@ -880,6 +880,76 @@ html.light-theme .t-head {
     /* Например, светло-серый с легким голубым оттенком */
     background: rgba(135, 166, 207, 0.3); 
 }
+
+.shift-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.shift-btn:active {
+    transform: scale(0.95);
+}
+
+.shift-btn.active-shift {
+    color: #fb923c;
+    border-color: #fb923c;
+    background: rgba(251, 146, 60, 0.2);
+}
+
+html.light-theme .shift-btn {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+html.light-theme .shift-btn.active-shift {
+    color: #ea580c;
+    border-color: #ea580c;
+    background: rgba(234, 88, 12, 0.15);
+}
+
+.kp-shift-sign {
+    color: var(--text) !important;
+}
+
+.shift-alert-plate {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(max(12px, calc(var(--safe-bottom) + 8px)) + 35px);
+    width: 100%;
+    background: rgba(251, 146, 60, 0.14);
+    border-top: 1px solid rgba(251, 146, 60, 0.23);
+    border-bottom: 1px solid rgba(251, 146, 60, 0.23);
+    color: #fb923c;
+    padding: 5px 14px;
+    font-size: 8.5px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.3;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    z-index: 90;
+    pointer-events: none;
+}
+
+html.light-theme .shift-alert-plate {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
     </style>
     
     <!-- Микро-скрипт синхронизации темы с Хабом -->
@@ -937,9 +1007,12 @@ html.light-theme .t-head {
     <h2>Approach path calc</h2>
 
 <div class="table">
+        <input type="hidden" id="pathShiftInput" value="0">
         <div class="t-head">
             <div style="width: 90px;text-align: right;">Dist (NM)</div>
-            <div style="flex: 1;"></div>
+            <div style="flex: 1; display: flex; justify-content: center; align-items: center; margin-top: -3px; margin-bottom: -3px;">
+                <button id="shiftBtn" class="shift-btn" onclick="openKeypad('pathShiftInput', 'PATH SHIFT')">ADD SHIFT</button>
+            </div>
             <div style="width: 90px; text-align: left;">Alt (FT)</div>
         </div>
         <div id="tableBody"></div>
@@ -1019,6 +1092,10 @@ html.light-theme .t-head {
         </div>
     </div>
 
+    <div id="shiftAlert" class="shift-alert-plate">
+        ATTENTION! The calculation perfomed NOT from the landing runway threshold. Manual shift from the threshold was inserted!
+    </div>
+
 </div>
 
 
@@ -1066,7 +1143,7 @@ html.light-theme .t-head {
             <button class="kp-btn" onclick="kpPress('9')">9</button>
             <button class="kp-btn" id="dotBtn" onclick="kpPress('.')">.</button>
             <button class="kp-btn" onclick="kpPress('0')">0</button>
-            <button class="kp-btn kp-del" onclick="kpPress('del')">⌫</button>
+            <button class="kp-btn kp-del" id="delBtn" onclick="kpPress('del')">⌫</button>
         </div>
         
         <div style="display: flex; gap: 8px;">
@@ -1144,7 +1221,6 @@ html.light-theme .t-head {
     function openKeypad(id, title) {
     activeKp = document.getElementById(id);
     
-    // --- ДОБАВЛЯЕМ ИКОНКИ В ЗАГОЛОВОК ---
     let iconHTML = "";
     if (id === 'elev') {
         iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>';
@@ -1153,51 +1229,55 @@ html.light-theme .t-head {
     } else if (id === 'fap') {
         iconHTML = '<img src="fap.png" class="icon-img" style="height: 12px; width: auto; margin-right: 4px; margin-bottom: 2px;">';
     } else if (id === 'temp') {
-        // НОВОЕ: Добавляем иконку термометра для OAT
-        iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"      stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>';
+        iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>';
+    } else if (id === 'pathShiftInput') {
+        iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l-4-4m4 4l4-4"/></svg>';
     }
     
-    // Вставляем иконку и текст с выравниванием по центру
-    document.getElementById('kpTitle').innerHTML = '<span style="display: flex; align-items: center; justify-content: center;">' + iconHTML + title + '</span>';
-    // ------------------------------------
+    if (id === 'pathShiftInput') {
+        document.getElementById('kpTitle').innerHTML = '<div style="text-align: center; line-height: 1.25; font-size: 0.68rem;">Shift from the threshold <br> <span style="font-size: 0.48rem; font-weight: 600; text-transform: none; color: var(--dim); display: block; margin-top: 2px;">+ radio aid behind the THR / - radio aid is in front of THR</span></div>';
+    } else {
+        document.getElementById('kpTitle').innerHTML = '<span style="display: flex; align-items: center; justify-content: center;">' + iconHTML + title + '</span>';
+    }
 
-    // Сохраняем то, что уже было в поле, как подсказку
     placeholderVal = activeKp.value || ""; 
-    currentKpVal = ""; // Набор начинаем с чистого листа
+    currentKpVal = ""; 
     
-    // Логика кастомизации кнопки (точка / плюс-минус / 00)
     const dotBtn = document.getElementById('dotBtn');
-    dotBtn.style.visibility = 'visible'; // Сбрасываем невидимость на всякий случай
+    const delBtn = document.getElementById('delBtn');
+    
+    dotBtn.style.visibility = 'visible'; 
+    delBtn.style.visibility = 'visible'; 
+    delBtn.innerText = "⌫";
+    delBtn.onclick = function() { kpPress('del'); };
+    delBtn.classList.add('kp-del');
+    delBtn.classList.remove('kp-shift-sign');
 
     if (id === 'temp') {
-        // Для температуры — смена знака
         dotBtn.innerText = "+/−";
         dotBtn.onclick = function() { kpPress('+/-'); };
-        
     } else if (id === 'fdp' || id === 'fap') {
-        // Для FDP и FAP — кнопка двойного нуля
         dotBtn.innerText = "00";
         dotBtn.onclick = function() { kpPress('00'); };
-        
     } else if (id === 'elev') {
-        // НОВОЕ УСЛОВИЕ ДЛЯ ELEV: кнопка минуса
         dotBtn.innerText = "−"; 
         dotBtn.onclick = function() { kpPress('minus_toggle'); };
-
     } else if (id === 'minInput') {
-        // Для DA/MDA дробные и минусы не нужны, прячем кнопку
         dotBtn.style.visibility = 'hidden'; 
-        
+    } else if (id === 'pathShiftInput') {
+        dotBtn.innerText = ".";
+        dotBtn.onclick = function() { kpPress('.'); };
+        delBtn.innerText = "+/−";
+        delBtn.onclick = function() { kpPress('shift_sign'); };
+        delBtn.classList.remove('kp-del');
+        delBtn.classList.add('kp-shift-sign');
     } else {
-        // Для всех остальных (Angle) — обычная точка
         dotBtn.innerText = ".";
         dotBtn.onclick = function() { kpPress('.'); };
     }
 
-    // --- НОВАЯ ЛОГИКА: МЕНЯЕМ DONE НА NEXT ДЛЯ ЦЕПОЧКИ ---
     const doneBtn = document.getElementById('doneBtn');
     if (doneBtn) {
-        // В режиме цепочки кнопка показывает NEXT для всех этапов ввода
         if (isSequentialFlow && (id === 'elev' || id === 'fdp' || id === 'fap' || id === 'temp')) {
             doneBtn.innerText = "NEXT";
         } else {
@@ -1241,6 +1321,16 @@ html.light-theme .t-head {
     }
 
     // --- СТАНДАРТНОЕ ЗАКРЫТИЕ (или конец цепочки) ---
+    if (e === 'done' && activeKp && activeKp.id === 'pathShiftInput') {
+        let parsed = parseFloat(currentKpVal);
+        if (currentKpVal === "" || isNaN(parsed)) {
+            let oldParsed = parseFloat(activeKp.value);
+            activeKp.value = !isNaN(oldParsed) ? oldParsed.toFixed(1) : "0.0";
+        } else {
+            activeKp.value = parsed.toFixed(1);
+        }
+    }
+
     let closedId = activeKp ? activeKp.id : null;
     document.getElementById('keypadModal').classList.remove('active');
     isSequentialFlow = false; // Обязательно сбрасываем флаг
@@ -1253,17 +1343,27 @@ html.light-theme .t-head {
         toggleSign();
         return;
     }
+    
+    if (key === 'shift_sign') {
+        if (currentKpVal === "") {
+            currentKpVal = "-";
+        } else if (currentKpVal.startsWith('-')) {
+            currentKpVal = currentKpVal.substring(1);
+        } else {
+            currentKpVal = "-" + currentKpVal;
+        }
+        updateKpDisplay();
+        if (activeKp) {
+            activeKp.value = currentKpVal;
+            calculate();
+        }
+        return;
+    }
 
-    // --- НОВАЯ ЛОГИКА ДЛЯ МИНУСА В ELEVATION ---
     if (key === 'minus_toggle') {
-        
-        // Если ввод только начался (горит бледная подсказка), 
-        // нажатие минуса жестко сбрасывает старое значение и начинает новый ввод!
         if (currentKpVal === "") {
             currentKpVal = "- "; 
         } else {
-            // Если пользователь уже ввел какие-то новые цифры, 
-            // кнопка работает просто как переключатель знака
             let cleanVal = currentKpVal.replace(/^-\s*/, '');
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = cleanVal;
@@ -1271,33 +1371,30 @@ html.light-theme .t-head {
                 currentKpVal = '- ' + cleanVal;
             }
         }
-        
         updateKpDisplay();
-        
         if (activeKp) {
             activeKp.value = currentKpVal;
             calculate();
         }
         return; 
     }
-    // ---------------------------------------------
 
     if (key === 'clear') {
         currentKpVal = "";
-        if (activeKp) activeKp.value = ""; // ДОБАВЛЕНО: жестко очищаем базовое поле, чтобы не было фантомной подсказки
+        if (activeKp) activeKp.value = (activeKp.id === 'pathShiftInput') ? "0" : ""; 
     } else if (key === 'del') {
         currentKpVal = currentKpVal.slice(0, -1);
     } else {
         if (key === '.' && currentKpVal.includes('.')) return;
-
-        if (activeKp && activeKp.id !== 'temp') {
+        if (activeKp && activeKp.id !== 'temp' && activeKp.id !== 'pathShiftInput') {
             if ((key === '0' || key === '00') && currentKpVal === "") return;
         }
 
-        // Формируем новое значение
         let newVal = (currentKpVal === "0" && key !== '.') ? key : currentKpVal + key;
+        
+        if (currentKpVal === "-0" && key !== '.') newVal = "-" + key;
+        if (currentKpVal === "-" && key === '.') newVal = "-0.";
 
-        // ПРОВЕРКА ЛИМИТОВ ТЕМПЕРАТУРЫ
         if (activeKp && activeKp.id === 'temp') {
             let num = parseFloat(newVal);
             if (!isNeg && num > 55) { showLimitWarning(); return; }
@@ -1310,13 +1407,11 @@ html.light-theme .t-head {
     updateKpDisplay();
 
     if (activeKp) {
-        // --- ВОТ ЗДЕСЬ МАГИЯ СИМВОЛОВ ---
         if (activeKp.id === 'angleInput' && currentKpVal !== "") {
             activeKp.value = currentKpVal + "°";
         } else {
             activeKp.value = currentKpVal;
         }
-
         updateTempColors(); 
     }
 }
@@ -1351,6 +1446,29 @@ html.light-theme .t-head {
             displayEl.style.opacity = '1';
         }
         return; // Обязательно выходим, чтобы код не пошел дальше
+    }
+
+    // --- 1.5. УНИКАЛЬНАЯ ЛОГИКА ДЛЯ PATH SHIFT ---
+    if (activeKp && activeKp.id === 'pathShiftInput') {
+        if (val === "") {
+            let baseVal = parseFloat(activeKp.value);
+            let hintText = "+0.0";
+            if (!isNaN(baseVal) && baseVal !== 0) {
+                hintText = (baseVal > 0 ? "+" : "") + baseVal.toFixed(1);
+            }
+            displayEl.textContent = hintText;
+            displayEl.style.color = 'var(--text)';
+            displayEl.style.opacity = '0.15';
+        } else {
+            let displayVal = val;
+            if (!val.startsWith('-') && !val.startsWith('+')) {
+                displayVal = "+" + val;
+            }
+            displayEl.textContent = displayVal;
+            displayEl.style.color = 'var(--accent)';
+            displayEl.style.opacity = '1';
+        }
+        return;
     }
 
     // --- 2. СТАНДАРТНАЯ ЛОГИКА ДЛЯ ОСТАЛЬНЫХ ПОЛЕЙ (Elev, FDP, FAP) ---
@@ -1457,6 +1575,29 @@ function openModal(id) {
     const angle  = getNumVal('angleInput');
     const h_min  = getNumVal('minInput'); 
     
+    const pathShiftRaw = document.getElementById('pathShiftInput') ? document.getElementById('pathShiftInput').value : "0";
+    const pathShift = (pathShiftRaw === "" || pathShiftRaw === "-" || isNaN(parseFloat(pathShiftRaw))) ? 0 : parseFloat(pathShiftRaw);
+
+    const shiftBtn = document.getElementById('shiftBtn');
+    if (shiftBtn) {
+        if (pathShift === 0) {
+            shiftBtn.innerText = "ADD SHIFT";
+            shiftBtn.classList.remove('active-shift');
+        } else {
+            shiftBtn.innerText = "SHIFT: " + (pathShift > 0 ? "+" : "") + pathShift.toFixed(1) + " NM";
+            shiftBtn.classList.add('active-shift');
+        }
+    }
+
+    const shiftAlert = document.getElementById('shiftAlert');
+    if (shiftAlert) {
+        if (pathShift !== 0) {
+            shiftAlert.style.display = 'block';
+        } else {
+            shiftAlert.style.display = 'none';
+        }
+    }
+    
     const tempRaw = document.getElementById('temp').value.replace(',', '.').replace(/[^\d.-]/g, '');
     let t_val = (tempRaw === "") ? NaN : parseFloat(tempRaw);
     
@@ -1548,10 +1689,12 @@ function openModal(id) {
 
     // Функции пересчета
     const getDistFromInd = (h) => Math.max(0, Math.ceil(((h - h_elev) / K_table - 50) / (Math.tan(angRad) * FT_NM) * 10) / 10);
-    const getIndFromDist = (d) => Math.round(((d * Math.tan(angRad) * FT_NM + 50) * K_table + h_elev) / 10) * 10;
+    // Высота считается от очищенной дистанции (d - pathShift)
+    const getIndFromDist = (d) => Math.round((((d - pathShift) * Math.tan(angRad) * FT_NM + 50) * K_table + h_elev) / 10) * 10;
 
-    const d_fdp = fdpValid ? getDistFromInd(h_fdp) : null;
-    const d_fap = fapValid ? getDistFromInd(h_fap) : null;
+    // Сдвиг прибавляется к дистанции FDP/FAP
+    const d_fdp = fdpValid ? getDistFromInd(h_fdp) + pathShift : null;
+    const d_fap = fapValid ? getDistFromInd(h_fap) + pathShift : null;
 
     let tableHTML = ''; 
     let fdpIns = false, fapIns = false;
@@ -1690,6 +1833,7 @@ for (let d = topMile; d >= 2; d--) {
         document.getElementById('fdp').value = "2500";
         document.getElementById('fap').value = "2000";
         document.getElementById('angleInput').value = "3.0°"; 
+        if (document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = "0"; 
         
         // Температуру НЕ сбрасываем, оставляем прошлое значение как подсказку
         
@@ -1717,6 +1861,7 @@ for (let d = topMile; d >= 2; d--) {
             fdp: document.getElementById('fdp').value,
             fap: document.getElementById('fap').value,
             temp: document.getElementById('temp').value,
+            pathShift: document.getElementById('pathShiftInput') ? document.getElementById('pathShiftInput').value : "0",
             isNeg: isNeg,
             // СЛЕПОК: Сохраняем всю сгенерированную таблицу
             tableHTML: document.getElementById('tableBody') ? document.getElementById('tableBody').innerHTML : ''
@@ -1735,6 +1880,7 @@ for (let d = topMile; d >= 2; d--) {
             if (state.fdp) document.getElementById('fdp').value = state.fdp;
             if (state.fap) document.getElementById('fap').value = state.fap;
             if (state.temp) document.getElementById('temp').value = state.temp;
+            if (state.pathShift !== undefined && document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = state.pathShift;
             if (state.isNeg !== undefined) {
                 isNeg = state.isNeg;
                 const signBtn = document.getElementById('signBtn');
