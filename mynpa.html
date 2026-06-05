@@ -123,6 +123,8 @@
         }
 
         .app-title { 
+            position: relative;
+            z-index: 30;
             font-size: 0.6rem; 
             text-align: center; 
             letter-spacing: 5px; 
@@ -133,6 +135,10 @@
             font-weight: 800; 
             opacity: 0.6; 
             line-height: normal;
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .header-actions {
@@ -145,7 +151,24 @@
     justify-content: space-between;
     gap: 6px;
     z-index: 20;
+    pointer-events: none;
 }
+
+        body.npa-header-actions-unlocked .header-actions {
+            pointer-events: auto;
+        }
+
+        body.npa-header-actions-unlocked .header-action-btn {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        body:not(.npa-header-actions-unlocked) .header-action-btn {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
         .header-action-btn {
             height: 28px;
@@ -164,6 +187,7 @@
             cursor: pointer;
             outline: none;
             -webkit-tap-highlight-color: transparent;
+            transition: opacity 140ms ease, visibility 140ms ease, transform 120ms ease;
         }
 
         .header-action-btn.save {
@@ -2247,6 +2271,15 @@
             font-weight: 900;
             white-space: nowrap;
         }
+        .npa-profile-head-tiny {
+            display: block;
+            font-size: 0.4375rem;
+            line-height: 1;
+            font-weight: 800;
+            white-space: nowrap;
+            text-transform: none;
+            opacity: 0.78;
+        }
         #npaProfileRadioHeader .npa-profile-head-large {
             color: var(--accent-blue);
         }
@@ -2285,6 +2318,23 @@
             text-transform: none;
             letter-spacing: 0;
             pointer-events: none;
+        }
+        .npa-profile-unit-hint {
+            margin: 1px 0 0;
+            padding: 0 4px;
+            min-height: 12px;
+            color: var(--text-muted);
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            text-transform: none;
+        }
+        html.dark-theme .npa-profile-unit-hint {
+            color: #94a3b8;
         }
         .npa-profile-shift-label {
             display: none;
@@ -2444,7 +2494,7 @@
 
 <div class="app-wrapper">
     <div class="app-header">
-        <h2 class="app-title" ondblclick="adminLogin()" title="Double tap for admin login">=NPA CALC=</h2>
+        <h2 class="app-title" id="npaCalcTitle" title="4 quick taps to show actions">=NPA CALC=</h2>
         <div class="header-actions">
             <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
             <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
@@ -2617,6 +2667,7 @@
                                 </div>
                                 <div class="npa-profile-body" id="npaProfileTableBody"></div>
                             </div>
+                            <div class="npa-profile-unit-hint">long tap on either column to switch nm/km</div>
                         </div>
                     </div>
                 </div>
@@ -2647,6 +2698,54 @@
 </div>
 
 <script>
+    const NPA_HEADER_ACTION_TAPS_REQUIRED = 4;
+    const NPA_HEADER_ACTION_TAP_WINDOW_MS = 700;
+    let npaHeaderActionTapCount = 0;
+    let npaHeaderActionLastTap = 0;
+    let npaHeaderAdminTapTimer = null;
+
+    function unlockNpaHeaderActions() {
+        document.body.classList.add('npa-header-actions-unlocked');
+    }
+
+    function cancelNpaHeaderAdminTapTimer() {
+        if (!npaHeaderAdminTapTimer) return;
+        clearTimeout(npaHeaderAdminTapTimer);
+        npaHeaderAdminTapTimer = null;
+    }
+
+    function handleNpaCalcTitleTap(event) {
+        event.preventDefault();
+        const now = Date.now();
+        npaHeaderActionTapCount = now - npaHeaderActionLastTap <= NPA_HEADER_ACTION_TAP_WINDOW_MS
+            ? npaHeaderActionTapCount + 1
+            : 1;
+        npaHeaderActionLastTap = now;
+
+        if (npaHeaderActionTapCount >= NPA_HEADER_ACTION_TAPS_REQUIRED) {
+            cancelNpaHeaderAdminTapTimer();
+            npaHeaderActionTapCount = 0;
+            unlockNpaHeaderActions();
+            return;
+        }
+
+        cancelNpaHeaderAdminTapTimer();
+        if (npaHeaderActionTapCount === 2) {
+            npaHeaderAdminTapTimer = setTimeout(() => {
+                npaHeaderAdminTapTimer = null;
+                if (npaHeaderActionTapCount === 2 && typeof adminLogin === 'function') adminLogin();
+                npaHeaderActionTapCount = 0;
+            }, NPA_HEADER_ACTION_TAP_WINDOW_MS);
+        }
+    }
+
+    function initNpaHeaderActionUnlock() {
+        document.body.classList.remove('npa-header-actions-unlocked');
+        const title = document.getElementById('npaCalcTitle');
+        if (!title) return;
+        title.addEventListener('click', handleNpaCalcTitleTap);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const lockAppHeight = () => {
             const visualViewport = window.visualViewport;
@@ -2701,6 +2800,7 @@
         }
         
         if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
+        initNpaHeaderActionUnlock();
         initNpaRefreshButton();
         initNpaEditLockMode();
         initNpaProfileUnitToggles();
@@ -3061,7 +3161,6 @@
                 ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
                 : Object.keys(source).map(sanitizeNpaAirportCode).filter(Boolean)
         );
-        const authoritativeCloudSnapshot = options.source === 'rest-pull' && options.authoritativeCloudSnapshot === true;
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
             currentAirportCode &&
             currentApproachType &&
@@ -3080,7 +3179,7 @@
             delete merged[airportCode];
         });
 
-        if (authoritativeCloudSnapshot) {
+        if (options.completeCloudSnapshot) {
             Object.keys(merged).forEach(airportCode => {
                 const normalizedCode = sanitizeNpaAirportCode(airportCode);
                 if (!cloudAirports.has(normalizedCode)) {
@@ -3702,7 +3801,7 @@
         return normalizeNpaProfileUnit(npaProfileUnits[column]).toUpperCase();
     }
 
-    function renderNpaProfileHeaderCell(host, firstLine, secondLine) {
+    function renderNpaProfileHeaderCell(host, firstLine, secondLine, thirdLine = "") {
         if (!host) return;
         host.textContent = "";
         const small = document.createElement('span');
@@ -3712,16 +3811,25 @@
         large.className = 'npa-profile-head-large';
         large.textContent = secondLine;
         host.append(small, large);
+        if (thirdLine) {
+            const tiny = document.createElement('span');
+            tiny.className = 'npa-profile-head-tiny';
+            tiny.textContent = thirdLine;
+            host.append(tiny);
+        }
     }
 
     function getProfileRadioHeaderLines() {
         if (profileRadioSourceLabel) {
-            return ['dist from', normalizeProfileRadioHeaderLabel(profileRadioSourceLabel)];
+            return ['dist from', normalizeProfileRadioHeaderLabel(profileRadioSourceLabel), 'long tap avail'];
         }
 
         const rawValue = document.getElementById('radioDistValDisplay')?.innerText || "";
         const numeric = getCleanDisplayNumber(rawValue);
         const value = numeric === "" ? 0 : Number(numeric);
+        if (value === 0) {
+            return ['long tap to', 'add dist'];
+        }
         const sign = value >= 0 ? '+' : '-';
         return ['dist', `THR${sign}${Math.abs(value).toFixed(1)}nm`];
     }
@@ -3737,7 +3845,7 @@
         const radioHeaderLines = getProfileRadioHeaderLines();
 
         renderNpaProfileHeaderCell(distHeader, 'dist from', 'RW THR');
-        renderNpaProfileHeaderCell(radioHeader, radioHeaderLines[0], radioHeaderLines[1]);
+        renderNpaProfileHeaderCell(radioHeader, radioHeaderLines[0], radioHeaderLines[1], radioHeaderLines[2] || "");
         renderNpaProfileHeaderCell(tarHeader, 'dist from', getProfileTarHeaderTargetLabel());
     }
 
@@ -3975,6 +4083,7 @@
         const table = document.querySelector('.npa-profile-table');
         const body = document.getElementById('npaProfileTableBody');
         const head = table ? table.querySelector('.npa-profile-head') : null;
+        const hint = block ? block.querySelector('.npa-profile-unit-hint') : null;
         const content = document.querySelector('.npa-tab-content-area');
         const activePanel = document.querySelector('.npa-tab-panel.open');
 
@@ -4012,8 +4121,9 @@
         const tableRect = table.getBoundingClientRect();
         const minTableHeight = 80;
         const minBodyHeight = 50;
+        const hintHeight = hint ? Math.ceil(hint.getBoundingClientRect().height) + 8 : 0;
 
-        const availableTableHeight = Math.floor(contentBottom - tableRect.top);
+        const availableTableHeight = Math.floor(contentBottom - tableRect.top - hintHeight);
         const blockHeight = Math.max(0, contentHeight - 16);
         const tableHeight = Math.max(minTableHeight, availableTableHeight);
         const bodyHeight = Math.max(minBodyHeight, tableHeight - head.offsetHeight);
