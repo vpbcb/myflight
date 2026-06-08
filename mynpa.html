@@ -188,6 +188,13 @@
             display: flex;
         }
 
+        .npa-pending-sync-indicator.manual-sync-available {
+            color: var(--accent-blue);
+            opacity: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
         .npa-pending-sync-indicator svg {
             width: 17px;
             height: 17px;
@@ -197,6 +204,10 @@
         html.dark-theme .npa-admin-mode-label,
         html.dark-theme .npa-pending-sync-indicator {
             color: #94a3b8;
+        }
+
+        html.dark-theme .npa-pending-sync-indicator.manual-sync-available {
+            color: #38bdf8;
         }
 
         .header-actions {
@@ -2567,7 +2578,7 @@
             <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
             <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
         </div>
-        <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync">
+        <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M16 16l-4-4-4 4"></path>
                 <path d="M12 12v9"></path>
@@ -3171,6 +3182,7 @@
         const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
         const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_airport_saves_v2';
         const NPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
+        const NPA_MANUAL_SYNC_DELAY_MS = 15000;
         const NPA_PAGE_STATE_FIELD_IDS = [
             'apprName',
             'rwLength', 'elevation', 'gpa', 'fdp', 'fap',
@@ -3179,6 +3191,9 @@
             'tempC'
         ];
         let npaSyncInProgress = false;
+        let npaPendingOnlineSince = 0;
+        let npaPendingManualSyncTimer = null;
+        let npaManualSyncInProgress = false;
 
     function readJsonStorage(key, fallbackValue) {
         try {
@@ -3304,12 +3319,6 @@
                 : []
         );
 
-        if (options.authoritativeCloudSnapshot === true) {
-            confirmedCloudAirports.forEach(airportCode => {
-                if (!cloudAirportCodes.has(airportCode)) removedAirports.add(airportCode);
-            });
-        }
-
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
             currentAirportCode &&
             currentApproachType &&
@@ -3403,19 +3412,91 @@
         const indicator = document.getElementById('npaPendingSyncIndicator');
         if (!indicator) return;
         const pendingCount = getPendingAirportSaves().length;
+        const isOnline = navigator.onLine !== false;
+
+        if (!pendingCount || !isOnline) {
+            npaPendingOnlineSince = 0;
+            if (npaPendingManualSyncTimer) {
+                clearTimeout(npaPendingManualSyncTimer);
+                npaPendingManualSyncTimer = null;
+            }
+        } else if (!npaPendingOnlineSince) {
+            npaPendingOnlineSince = Date.now();
+        }
+
+        const manualSyncAvailable = Boolean(
+            pendingCount &&
+            isOnline &&
+            !npaManualSyncInProgress &&
+            Date.now() - npaPendingOnlineSince >= NPA_MANUAL_SYNC_DELAY_MS
+        );
+
+        if (pendingCount && isOnline && !manualSyncAvailable && !npaPendingManualSyncTimer) {
+            const elapsedMs = Date.now() - npaPendingOnlineSince;
+            npaPendingManualSyncTimer = setTimeout(() => {
+                npaPendingManualSyncTimer = null;
+                renderNpaPendingSyncIndicator();
+            }, Math.max(0, NPA_MANUAL_SYNC_DELAY_MS - elapsedMs));
+        }
+
         indicator.classList.toggle('active', pendingCount > 0);
-        indicator.title = pendingCount > 0
-            ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
-            : '';
+        indicator.classList.toggle('manual-sync-available', manualSyncAvailable);
+        indicator.tabIndex = manualSyncAvailable ? 0 : -1;
+        indicator.setAttribute('role', manualSyncAvailable ? 'button' : 'status');
+        indicator.title = manualSyncAvailable
+            ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting. Tap to sync now`
+            : pendingCount > 0
+                ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
+                : '';
         indicator.setAttribute(
             'aria-label',
-            pendingCount > 0
-                ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
+            manualSyncAvailable
+                ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting. Sync now`
+                : pendingCount > 0
+                    ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
                 : 'Firebase sync complete'
         );
     }
 
+    async function runNpaManualPendingSync() {
+        if (npaManualSyncInProgress || navigator.onLine === false || !getPendingAirportSaves().length) return;
+
+        npaManualSyncInProgress = true;
+        npaPendingOnlineSince = Date.now();
+        renderNpaPendingSyncIndicator();
+        try {
+            if (window.MyFlightNpaSync?.syncPending) {
+                await window.MyFlightNpaSync.syncPending();
+            } else {
+                await syncPendingAirportSaves();
+            }
+        } catch (error) {
+            console.error('Manual pending sync error:', error);
+        } finally {
+            npaManualSyncInProgress = false;
+            npaPendingOnlineSince = getPendingAirportSaves().length && navigator.onLine !== false
+                ? Date.now()
+                : 0;
+            renderNpaPendingSyncIndicator();
+        }
+    }
+
+    function handleNpaPendingSyncIndicatorClick(event) {
+        if (!event.currentTarget?.classList.contains('manual-sync-available')) return;
+        event.preventDefault();
+        runNpaManualPendingSync();
+    }
+
+    function handleNpaPendingSyncIndicatorKeydown(event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        if (!event.currentTarget?.classList.contains('manual-sync-available')) return;
+        event.preventDefault();
+        runNpaManualPendingSync();
+    }
+
     window.addEventListener('npa-pending-sync-changed', renderNpaPendingSyncIndicator);
+    window.addEventListener('online', renderNpaPendingSyncIndicator);
+    window.addEventListener('offline', renderNpaPendingSyncIndicator);
     window.addEventListener('storage', event => {
         if (event.key === NPA_PENDING_AIRPORT_SAVES_KEY) renderNpaPendingSyncIndicator();
     });
