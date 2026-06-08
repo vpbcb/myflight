@@ -141,6 +141,64 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        .npa-title-stack {
+            position: relative;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .npa-admin-mode-label {
+            display: none;
+            margin-top: -3px;
+            color: #64748b;
+            font-size: 6px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.45px;
+            text-transform: lowercase;
+            opacity: 0.48;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .npa-admin-mode-label.active {
+            display: block;
+        }
+
+        .npa-pending-sync-indicator {
+            position: absolute;
+            right: 7px;
+            top: max(12px, calc(var(--safe-top) + 6px));
+            width: 20px;
+            height: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            opacity: 0.62;
+            pointer-events: none;
+            z-index: 110;
+        }
+
+        .npa-pending-sync-indicator.active {
+            display: flex;
+        }
+
+        .npa-pending-sync-indicator svg {
+            width: 17px;
+            height: 17px;
+            display: block;
+        }
+
+        html.dark-theme .npa-admin-mode-label,
+        html.dark-theme .npa-pending-sync-indicator {
+            color: #94a3b8;
+        }
+
         .header-actions {
             position: absolute;
             left: 13px;
@@ -773,7 +831,7 @@
         .menu-btn { right: 16px; justify-content: flex-end; }
         .bottom-edit-lock-btn {
             position: absolute;
-            right: 13px;
+            right: 28px;
             top: max(8px, calc(var(--safe-top) + 2px));
             left: auto;
             bottom: auto;
@@ -2501,11 +2559,22 @@
 
 <div class="app-wrapper">
     <div class="app-header">
-        <h2 class="app-title" id="npaCalcTitle" title="4 quick taps to show actions">=NPA CALC=</h2>
+        <div class="npa-title-stack">
+            <h2 class="app-title" id="npaCalcTitle" title="4 quick taps to show actions">=NPA CALC=</h2>
+            <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode</span>
+        </div>
         <div class="header-actions">
             <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
             <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
         </div>
+        <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 16l-4-4-4 4"></path>
+                <path d="M12 12v9"></path>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                <path d="M16 16h4"></path>
+            </svg>
+        </span>
     </div>
 
     <div class="precision-scroll-container" id="mainScroll">
@@ -2763,6 +2832,7 @@
 
     window.handleNpaAdminAuthState = user => {
         document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
+        document.getElementById('npaAdminModeLabel')?.classList.toggle('active', Boolean(user));
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -3276,8 +3346,34 @@
     }
 
     function setPendingAirportSaves(queue) {
-        writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, Array.isArray(queue) ? queue : []);
+        const normalizedQueue = Array.isArray(queue) ? queue : [];
+        writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, normalizedQueue);
+        renderNpaPendingSyncIndicator();
+        window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
+            detail: { pendingCount: normalizedQueue.length }
+        }));
     }
+
+    function renderNpaPendingSyncIndicator() {
+        const indicator = document.getElementById('npaPendingSyncIndicator');
+        if (!indicator) return;
+        const pendingCount = getPendingAirportSaves().length;
+        indicator.classList.toggle('active', pendingCount > 0);
+        indicator.title = pendingCount > 0
+            ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
+            : '';
+        indicator.setAttribute(
+            'aria-label',
+            pendingCount > 0
+                ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} waiting for Firebase sync`
+                : 'Firebase sync complete'
+        );
+    }
+
+    window.addEventListener('npa-pending-sync-changed', renderNpaPendingSyncIndicator);
+    window.addEventListener('storage', event => {
+        if (event.key === NPA_PENDING_AIRPORT_SAVES_KEY) renderNpaPendingSyncIndicator();
+    });
 
     function queueAirportSave(airportCode, airportData) {
         const normalizedCode = sanitizeNpaAirportCode(airportCode);
@@ -3364,6 +3460,7 @@
         window.airportsDb = loadNpaAirportsDb();
         window.mergeNpaAirportsDb = mergeNpaAirportsDb;
         window.syncPendingAirportSaves = syncPendingAirportSaves;
+        renderNpaPendingSyncIndicator();
 
         let airportInputTimeout; // Переменная для хранения таймера
         let downwindCalcSource = "";

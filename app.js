@@ -265,7 +265,11 @@
     }
 
     function setPendingAirportSaves(queue) {
-        writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, Array.isArray(queue) ? queue : []);
+        const normalizedQueue = Array.isArray(queue) ? queue : [];
+        writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, normalizedQueue);
+        window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
+            detail: { pendingCount: normalizedQueue.length }
+        }));
     }
 
     function loadNpaAirportsDb() {
