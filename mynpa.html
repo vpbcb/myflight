@@ -2761,6 +2761,10 @@
         title.addEventListener('click', handleNpaCalcTitleTap);
     }
 
+    window.handleNpaAdminAuthState = user => {
+        document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         const lockAppHeight = () => {
             const visualViewport = window.visualViewport;
@@ -3156,22 +3160,46 @@
         };
     }
 
+    function getNpaAirportUpdatedAt(value) {
+        const updatedAt = Number(value?.updatedAt);
+        return Number.isFinite(updatedAt) ? updatedAt : 0;
+    }
+
+    function getPendingAirportSaveMap(queue = getPendingAirportSaves()) {
+        const pendingByAirport = new Map();
+
+        queue.forEach(item => {
+            const airportCode = sanitizeNpaAirportCode(item?.airportCode);
+            if (!airportCode || !item?.airportData) return;
+
+            const updatedAt = Math.max(
+                getNpaAirportUpdatedAt(item),
+                getNpaAirportUpdatedAt(item.airportData)
+            );
+            const existing = pendingByAirport.get(airportCode);
+            if (!existing || updatedAt >= existing.updatedAt) {
+                pendingByAirport.set(airportCode, { item, updatedAt });
+            }
+        });
+
+        return pendingByAirport;
+    }
+
     function mergeNpaAirportsDb(source, options = {}) {
         if (!source || typeof source !== 'object') return;
         const merged = window.airportsDb && typeof window.airportsDb === 'object'
             ? window.airportsDb
             : {};
+        const pendingQueue = getPendingAirportSaves();
+        const pendingByAirport = getPendingAirportSaveMap(pendingQueue);
+        const confirmedPendingAirports = new Set();
+        const canConfirmPending = options.fromCache !== true && options.hasPendingWrites !== true;
         const currentAirportCode = getNpaAirportCode();
         const currentApproachType = getSelectedNpaType();
         const removedAirports = new Set(
             Array.isArray(options.removedAirportCodes)
                 ? options.removedAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
                 : []
-        );
-        const cloudAirports = new Set(
-            Array.isArray(options.cloudAirportCodes)
-                ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
-                : Object.keys(source).map(sanitizeNpaAirportCode).filter(Boolean)
         );
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
             currentAirportCode &&
@@ -3184,27 +3212,30 @@
             if (!airportData || typeof airportData !== 'object') return;
             const normalizedCode = sanitizeNpaAirportCode(airportCode);
             if (!normalizedCode) return;
+
+            const pending = pendingByAirport.get(normalizedCode);
+            const localUpdatedAt = getNpaAirportUpdatedAt(merged[normalizedCode]);
+            const pendingUpdatedAt = pending ? pending.updatedAt : 0;
+            const cloudUpdatedAt = getNpaAirportUpdatedAt(airportData);
+
+            if (Math.max(localUpdatedAt, pendingUpdatedAt) > cloudUpdatedAt) return;
+
             merged[normalizedCode] = normalizeNpaAirportDocument(normalizedCode, airportData);
+            if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
+                confirmedPendingAirports.add(normalizedCode);
+            }
         });
 
         removedAirports.forEach(airportCode => {
+            if (pendingByAirport.has(airportCode)) return;
             delete merged[airportCode];
         });
 
-        if (options.completeCloudSnapshot) {
-            Object.keys(merged).forEach(airportCode => {
-                const normalizedCode = sanitizeNpaAirportCode(airportCode);
-                if (!cloudAirports.has(normalizedCode)) {
-                    delete merged[airportCode];
-                    removedAirports.add(normalizedCode);
-                }
-            });
-        }
-
-        if (removedAirports.size) {
+        if (confirmedPendingAirports.size) {
             setPendingAirportSaves(
-                getPendingAirportSaves()
-                    .filter(item => item && !removedAirports.has(sanitizeNpaAirportCode(item.airportCode)))
+                pendingQueue.filter(item =>
+                    item && !confirmedPendingAirports.has(sanitizeNpaAirportCode(item.airportCode))
+                )
             );
         }
 
@@ -3250,13 +3281,18 @@
 
     function queueAirportSave(airportCode, airportData) {
         const normalizedCode = sanitizeNpaAirportCode(airportCode);
+        const updatedAt = getNpaAirportUpdatedAt(airportData) || Date.now();
+        const queuedAirportData = {
+            ...airportData,
+            updatedAt
+        };
         const nextQueue = getPendingAirportSaves()
             .filter(item => item && item.airportCode !== normalizedCode);
 
         nextQueue.push({
             airportCode: normalizedCode,
-            airportData,
-            updatedAt: Date.now()
+            airportData: queuedAirportData,
+            updatedAt
         });
         setPendingAirportSaves(nextQueue);
     }
@@ -3283,7 +3319,8 @@
         if (!queue.length) return;
 
         npaSyncInProgress = true;
-        const remaining = [];
+        const failedAirportCodes = new Set();
+        const successfullySynced = new Map();
 
         try {
             for (let i = 0; i < queue.length; i += 1) {
@@ -3292,13 +3329,33 @@
 
                 try {
                     await writeAirportToCloud(item.airportCode, item.airportData);
+                    successfullySynced.set(
+                        sanitizeNpaAirportCode(item.airportCode),
+                        Math.max(getNpaAirportUpdatedAt(item), getNpaAirportUpdatedAt(item.airportData))
+                    );
                 } catch (error) {
                     console.error('Pending sync error:', error);
-                    remaining.push(item, ...queue.slice(i + 1));
+                    queue.slice(i).forEach(remainingItem => {
+                        const code = sanitizeNpaAirportCode(remainingItem?.airportCode);
+                        if (code) failedAirportCodes.add(code);
+                    });
                     break;
                 }
             }
         } finally {
+            const remaining = getPendingAirportSaves().filter(item => {
+                const code = sanitizeNpaAirportCode(item?.airportCode);
+                if (!code || failedAirportCodes.has(code)) return true;
+
+                const syncedUpdatedAt = successfullySynced.get(code);
+                if (syncedUpdatedAt === undefined) return true;
+
+                const currentUpdatedAt = Math.max(
+                    getNpaAirportUpdatedAt(item),
+                    getNpaAirportUpdatedAt(item?.airportData)
+                );
+                return currentUpdatedAt > syncedUpdatedAt;
+            });
             setPendingAirportSaves(remaining);
             npaSyncInProgress = false;
         }
@@ -7293,17 +7350,25 @@
             return;
         }
 
+        if (window.npaAuth.currentUser) {
+            alert("Admin mode already ON: " + window.npaAuth.currentUser.email);
+            if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
+            return;
+        }
+
         const email = prompt("Admin Email:");
         if (!email) return;
         const pass = prompt("Password:");
         if (!pass) return;
-        
-        window.npaAuth.signInWithEmailAndPassword(email, pass)
-            .then(u => {
-                alert("Admin mode ON: " + u.user.email);
-                if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
-            })
-            .catch(e => alert("Login Error: " + e.message));
+
+        try {
+            await window.npaAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            const result = await window.npaAuth.signInWithEmailAndPassword(email, pass);
+            alert("Admin mode ON: " + result.user.email);
+            if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
+        } catch (error) {
+            alert("Login Error: " + error.message);
+        }
     }
 </script>
 
