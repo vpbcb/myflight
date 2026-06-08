@@ -1712,7 +1712,7 @@ function openModal(id) {
     const angRad = angle * (Math.PI / 180);
 
     // Функции пересчета
-    const getDistFromInd = (h) => Math.max(0, Math.ceil(((h - h_elev) / K_table - 50) / (Math.tan(angRad) * FT_NM) * 10) / 10);
+    const getDistFromInd = (h) => Math.max(0, Math.round(((h - h_elev) / K_table - 50) / (Math.tan(angRad) * FT_NM) * 10) / 10);
     // Высота считается от очищенной дистанции (d - pathShift)
     const getIndFromDist = (d) => Math.round((((d - pathShift) * Math.tan(angRad) * FT_NM + 50) * K_table + h_elev) / 10) * 10;
 
@@ -1751,7 +1751,7 @@ for (let d = topMile; d >= 2; d--) {
 
     // ... остальной код (пропуски миль и обычные мили) без изменений ...
     if ((fdpValid && d === d_fdp) || (fapValid && d === d_fap)) continue;
-    if (fdpValid && fapValid && d < d_fdp && d > d_fap) continue;
+    //if (fdpValid && fapValid && d < d_fdp && d > d_fap) continue; УСЛОВИЕ ДЛЯ ПРОПУСКА ПРОМЕЖУТОЧНЫХ ДАЛЬНОСТЕЙ МЕЖДУ FDP И FAP
 
     tableHTML += `
         <div class="t-row">
