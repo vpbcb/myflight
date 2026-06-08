@@ -231,7 +231,9 @@
 
     let npaFirebaseInitPromise = null;
     let sharedNpaSyncInProgress = false;
+    let npaForceSyncInProgress = false;
     let npaCloudRefreshInProgress = false;
+    let npaCloudDeleteAuditInProgress = false;
     let npaRestPullInProgress = false;
     let npaCloudRefreshTimer = null;
     let npaPendingSyncRetryTimer = null;
@@ -239,6 +241,7 @@
     let npaSyncStatus = {};
     const NPA_CLOUD_REFRESH_INTERVAL_MS = 15000;
     const NPA_PENDING_SYNC_RETRY_MAX_MS = 30000;
+    const NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS = 12000;
     const NPA_BOOT_RETRY_DELAYS_MS = [0, 1000, 3000, 7000, 15000];
 
     function readJsonStorage(key, fallbackValue) {
@@ -394,6 +397,25 @@
         return error && error.message ? error.message : String(error || 'Unknown error');
     }
 
+    function withNpaTimeout(promise, timeoutMs, label) {
+        return new Promise((resolve, reject) => {
+            const timeoutId = window.setTimeout(() => {
+                reject(new Error(`${label} timed out after ${timeoutMs} ms`));
+            }, timeoutMs);
+
+            Promise.resolve(promise).then(
+                value => {
+                    window.clearTimeout(timeoutId);
+                    resolve(value);
+                },
+                error => {
+                    window.clearTimeout(timeoutId);
+                    reject(error);
+                }
+            );
+        });
+    }
+
     function mergeCloudNpaAirportsDb(source, options = {}) {
         if (!source || typeof source !== 'object') return;
 
@@ -421,12 +443,6 @@
                 ? options.removedAirportCodes.map(normalizeAirportCode).filter(Boolean)
                 : []
         );
-
-        if (options.authoritativeCloudSnapshot === true) {
-            confirmedCloudAirports.forEach(airportCode => {
-                if (!cloudAirportCodes.has(airportCode)) removedAirports.add(airportCode);
-            });
-        }
 
         Object.keys(source).forEach(airportCode => {
             const airportData = source[airportCode];
@@ -497,6 +513,75 @@
             source: 'pending-delete-check'
         });
         return true;
+    }
+
+    async function discardPendingAirportDeletedFromCloudWithTimeout(airportCode) {
+        return withNpaTimeout(
+            discardPendingAirportDeletedFromCloud(airportCode),
+            NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
+            `Cloud delete check for ${normalizeAirportCode(airportCode)}`
+        );
+    }
+
+    async function restartNpaFirestoreNetwork() {
+        if (!isFirebaseReady()) return false;
+
+        try {
+            if (typeof window.npaDb.disableNetwork === 'function') {
+                await withNpaTimeout(
+                    window.npaDb.disableNetwork(),
+                    NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
+                    'Firestore disableNetwork'
+                );
+            }
+        } catch (error) {
+            console.warn('NPA force sync network disable skipped:', error);
+        }
+
+        if (typeof window.npaDb.enableNetwork === 'function') {
+            await withNpaTimeout(
+                window.npaDb.enableNetwork(),
+                NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
+                'Firestore enableNetwork'
+            );
+        }
+        return true;
+    }
+
+    async function auditConfirmedCloudAirportDeletes(presentCloudAirportCodes = []) {
+        if (npaCloudDeleteAuditInProgress || !navigator.onLine || !isFirebaseReady()) return false;
+
+        const presentCodes = new Set(
+            Array.from(presentCloudAirportCodes || [])
+                .map(normalizeAirportCode)
+                .filter(Boolean)
+        );
+        const missingConfirmedCodes = [...getConfirmedCloudAirportCodes()]
+            .filter(airportCode => !presentCodes.has(airportCode));
+        if (!missingConfirmedCodes.length) return true;
+
+        npaCloudDeleteAuditInProgress = true;
+        try {
+            const removedAirportCodes = [];
+            for (const airportCode of missingConfirmedCodes) {
+                try {
+                    const snapshot = await window.npaDb.collection('airports').doc(airportCode).get({ source: 'server' });
+                    if (!snapshot.exists) removedAirportCodes.push(airportCode);
+                } catch (error) {
+                    console.warn(`NPA cloud delete audit skipped for ${airportCode}:`, error);
+                }
+            }
+
+            if (removedAirportCodes.length) {
+                mergeCloudNpaAirportsDb({}, {
+                    removedAirportCodes,
+                    source: 'cloud-delete-audit'
+                });
+            }
+            return true;
+        } finally {
+            npaCloudDeleteAuditInProgress = false;
+        }
     }
 
     function collectCloudSnapshotData(snapshot) {
@@ -607,7 +692,7 @@
 
             mergeCloudNpaAirportsDb(cloudData, {
                 source: 'rest-pull',
-                authoritativeCloudSnapshot: true,
+                authoritativeCloudSnapshot: false,
                 cloudAirportCodes: Object.keys(cloudData),
                 reason
             });
@@ -656,13 +741,12 @@
             lastSnapshotRemovedCount: removedAirportCodes.length
         });
 
-        const authoritativeCloudSnapshot = source === 'server-pull';
-        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0 || authoritativeCloudSnapshot) {
+        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0) {
             mergeCloudNpaAirportsDb(cloudData, {
                 fromCache,
                 hasPendingWrites,
-                completeCloudSnapshot: authoritativeCloudSnapshot,
-                authoritativeCloudSnapshot,
+                completeCloudSnapshot: false,
+                authoritativeCloudSnapshot: false,
                 cloudAirportCodes,
                 removedAirportCodes,
                 source
@@ -684,7 +768,8 @@
             }
 
             const snapshot = await window.npaDb.collection('airports').get({ source: 'server' });
-            applyCloudSnapshot(snapshot, 'server-pull');
+            const cloudData = applyCloudSnapshot(snapshot, 'server-pull');
+            await auditConfirmedCloudAirportDeletes(Object.keys(cloudData));
             if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest('after-server-pull');
             return true;
         } catch (error) {
@@ -803,6 +888,92 @@
             } else {
                 resetPendingSyncRetry();
             }
+        }
+    }
+
+    async function forceSyncPendingAirportSaves() {
+        if (npaForceSyncInProgress || navigator.onLine === false) return false;
+
+        const queueBeforeSync = getPendingAirportSaves();
+        if (!queueBeforeSync.length) return true;
+
+        npaForceSyncInProgress = true;
+        updateNpaSyncStatus({
+            lastForceSyncAt: Date.now(),
+            lastForceSyncError: ''
+        });
+
+        const successfullySynced = new Map();
+        try {
+            if (!isFirebaseReady()) {
+                const ready = await withNpaTimeout(
+                    initNpaFirebase(),
+                    NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
+                    'Firebase initialization'
+                );
+                if (!ready || !isFirebaseReady()) throw new Error('Firebase is not ready');
+            }
+
+            await restartNpaFirestoreNetwork();
+
+            for (const item of getPendingAirportSaves()) {
+                if (!item || !item.airportCode || !item.airportData) continue;
+
+                try {
+                    if (await discardPendingAirportDeletedFromCloudWithTimeout(item.airportCode)) continue;
+                    await withNpaTimeout(
+                        writeAirportToCloud(item.airportCode, item.airportData),
+                        NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
+                        `Firebase write for ${normalizeAirportCode(item.airportCode)}`
+                    );
+                    successfullySynced.set(
+                        normalizeAirportCode(item.airportCode),
+                        Math.max(getAirportUpdatedAt(item), getAirportUpdatedAt(item.airportData))
+                    );
+                } catch (error) {
+                    console.error('NPA force pending sync error:', error);
+                    updateNpaSyncStatus({
+                        lastForceSyncErrorAt: Date.now(),
+                        lastForceSyncError: getNpaErrorMessage(error)
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('NPA force sync error:', error);
+            updateNpaSyncStatus({
+                lastForceSyncErrorAt: Date.now(),
+                lastForceSyncError: getNpaErrorMessage(error)
+            });
+        } finally {
+            if (successfullySynced.size) {
+                confirmCloudAirportCodes(successfullySynced.keys());
+            }
+
+            const remaining = getPendingAirportSaves().filter(item => {
+                const code = normalizeAirportCode(item && item.airportCode);
+                const syncedUpdatedAt = successfullySynced.get(code);
+                if (!code || syncedUpdatedAt === undefined) return true;
+
+                const currentUpdatedAt = Math.max(
+                    getAirportUpdatedAt(item),
+                    getAirportUpdatedAt(item && item.airportData)
+                );
+                return currentUpdatedAt > syncedUpdatedAt;
+            });
+            setPendingAirportSaves(remaining);
+            npaForceSyncInProgress = false;
+            updateNpaSyncStatus({
+                lastForceSyncCompletedAt: Date.now(),
+                lastForceSyncSuccessCount: successfullySynced.size,
+                lastForceSyncRemainingCount: remaining.length
+            });
+
+            if (remaining.length) {
+                schedulePendingSyncRetry();
+            } else {
+                resetPendingSyncRetry();
+            }
+            return remaining.length === 0;
         }
     }
 
@@ -1051,6 +1222,7 @@
     window.MyFlightNpaSync = {
         init: initNpaFirebase,
         syncPending: requestPendingNpaSync,
+        forceSyncPending: forceSyncPendingAirportSaves,
         refreshCloud: refreshCloudNpaAirportsDbFromServer,
         restPull: fetchNpaAirportsViaRest,
         getPending: getPendingAirportSaves,

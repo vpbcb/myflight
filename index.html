@@ -1179,7 +1179,20 @@
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Двойная жесткая вибрация
             
             // Чистим память полностью
+            const preservedMyNpaStorage = {};
+            [
+                'mynpa_airports_v2',
+                'mynpa_pending_airport_saves_v2',
+                'mynpa_confirmed_cloud_airports_v1'
+            ].forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value !== null) preservedMyNpaStorage[key] = value;
+            });
+
             localStorage.clear();
+            Object.entries(preservedMyNpaStorage).forEach(([key, value]) => {
+                localStorage.setItem(key, value);
+            });
             sessionStorage.clear();
 
             try {

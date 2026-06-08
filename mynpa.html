@@ -254,7 +254,8 @@
             font-weight: 800;
             letter-spacing: 0.35px;
             text-transform: uppercase;
-            white-space: nowrap;
+            white-space: normal;
+            line-height: 1.05;
             cursor: pointer;
             outline: none;
             -webkit-tap-highlight-color: transparent;
@@ -842,12 +843,12 @@
         .menu-btn { right: 16px; justify-content: flex-end; }
         .bottom-edit-lock-btn {
             position: absolute;
-            right: 28px;
+            right: 29px;
             top: max(8px, calc(var(--safe-top) + 2px));
             left: auto;
             bottom: auto;
             transform: none;
-            width: 116px;
+            width: 104px;
             height: 32px;
             margin: 0;
             padding: 4px;
@@ -916,7 +917,7 @@
             top: -15px;
             bottom: -15px;
             left: -15px;
-            right: -10px;
+            right: 0;
         }
         .refresh-btn:active, .menu-btn:active { transform: scale(0.9); }
         .wind-btn:active { transform: translateX(-50%) scale(0.9); }
@@ -1954,7 +1955,7 @@
             color: var(--text-main);
             font-family: inherit;
             font-size: 0.9rem;
-            font-weight: 800;
+            font-weight: 500;
             outline: none;
             text-align: center;
             cursor: pointer;
@@ -1962,7 +1963,7 @@
         .npa-runway-elev-display .unit {
             margin-left: 0.12rem;
             font-size: 0.62rem;
-            font-weight: 700;
+            font-weight: 500;
             text-transform: lowercase;
         }
         .npa-runway-elev-display.placeholder,
@@ -1981,20 +1982,30 @@
             padding: 0.375rem 0.5rem;
             text-align: center;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            overflow: hidden;
         }
         html.dark-theme .npa-runway-length-display {
             background: rgba(255, 255, 255, 0.04);
         }
         .npa-runway-length-main {
-            font-size: 0.95rem;
+            min-width: 0;
+            font-size: clamp(0.66rem, 4.1vw, 0.95rem);
             font-weight: 500;
+            white-space: nowrap;
         }
         .npa-runway-length-sub {
             margin-left: 0.2rem;
             color: #64748b;
-            font-size: 0.7rem;
+            flex: 0 0 auto;
+            font-size: clamp(0.52rem, 2.9vw, 0.7rem);
             font-weight: 800;
             text-transform: none;
+            white-space: nowrap;
         }
         .npa-coord-row {
             display: grid;
@@ -2544,6 +2555,16 @@
             grid-column: span 2;
         }
 
+        html,
+        body,
+        body *,
+        body *::before,
+        body *::after {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none;
+        }
+
         /* Стили для Контейнера 2 */
     </style>
 
@@ -2575,7 +2596,7 @@
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode</span>
         </div>
         <div class="header-actions">
-            <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add Airport</button>
+            <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add<br>Airport</button>
             <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
         </div>
         <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
@@ -3465,7 +3486,9 @@
         npaPendingOnlineSince = Date.now();
         renderNpaPendingSyncIndicator();
         try {
-            if (window.MyFlightNpaSync?.syncPending) {
+            if (window.MyFlightNpaSync?.forceSyncPending) {
+                await window.MyFlightNpaSync.forceSyncPending();
+            } else if (window.MyFlightNpaSync?.syncPending) {
                 await window.MyFlightNpaSync.syncPending();
             } else {
                 await syncPendingAirportSaves();
