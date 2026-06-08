@@ -5552,13 +5552,13 @@
             if (i === 4) chars.push('<span class="kp-mask-dot">.</span>');
             pushDigit(i);
         }
-        chars.push(`<span class="${parts.latHem === 'N' ? 'kp-mask-hint' : 'kp-mask-typed'}">${parts.latHem}</span>`);
+        chars.push(`<span class="kp-mask-typed">${parts.latHem}</span>`);
         chars.push(' ');
         for (let i = 5; i < 11; i += 1) {
             if (i === 10) chars.push('<span class="kp-mask-dot">.</span>');
             pushDigit(i);
         }
-        chars.push(`<span class="${parts.lonHem === 'E' ? 'kp-mask-hint' : 'kp-mask-typed'}">${parts.lonHem}</span>`);
+        chars.push(`<span class="kp-mask-typed">${parts.lonHem}</span>`);
         return chars.join('');
     }
 
@@ -5620,10 +5620,10 @@
             { type: 'length', block, input: block.querySelector('[data-rwy-field="rwLength"]'), display: block.querySelector('[data-rwy-length-display]') },
             { type: 'thr', block, input: block.querySelector('[data-rwy-field="thr1"]') },
             { type: 'elev', block, input: block.querySelector('[data-rwy-field="thr1Elev"]'), display: block.querySelector('[data-rwy-field="thr1Elev"]')?.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') },
-            { type: 'coord', block, input: coordInput('thr1', 'lat'), coordPrefix: 'thr1', coordKind: 'lat' },
-            { type: 'coord', block, input: coordInput('thr1', 'lon'), coordPrefix: 'thr1', coordKind: 'lon' },
             { type: 'thr', block, input: block.querySelector('[data-rwy-field="thr2"]') },
             { type: 'elev', block, input: block.querySelector('[data-rwy-field="thr2Elev"]'), display: block.querySelector('[data-rwy-field="thr2Elev"]')?.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') },
+            { type: 'coord', block, input: coordInput('thr1', 'lat'), coordPrefix: 'thr1', coordKind: 'lat' },
+            { type: 'coord', block, input: coordInput('thr1', 'lon'), coordPrefix: 'thr1', coordKind: 'lon' },
             { type: 'coord', block, input: coordInput('thr2', 'lat'), coordPrefix: 'thr2', coordKind: 'lat' },
             { type: 'coord', block, input: coordInput('thr2', 'lon'), coordPrefix: 'thr2', coordKind: 'lon' }
         ].filter(target => target.input || target.display);
@@ -5755,7 +5755,12 @@
         if (event.key !== 'Enter') return;
         event.preventDefault();
         sanitizeAddAirportIcaoInput();
-        maybeAdvanceAirportIcaoCarousel();
+        const input = event.currentTarget;
+        input?.blur();
+        setTimeout(() => {
+            maybeAdvanceAirportIcaoCarousel();
+            syncAddAirportModalViewport();
+        }, 150);
     }
 
     function syncAddAirportModalViewport() {
@@ -5898,10 +5903,11 @@
         if (navigator.vibrate) navigator.vibrate(20);
         modal.classList.add('active');
         syncAddAirportModalViewport();
+        if (!isEdit) {
+            input?.focus({ preventScroll: true });
+            input?.select();
+        }
         setTimeout(() => {
-            if (!isEdit) {
-                input?.focus();
-            }
             keepAddAirportFieldVisible(input);
         }, 50);
     }
@@ -6080,7 +6086,19 @@
         });
     }
 
-    function addAirportRadioAidBlock(type, data = {}) {
+    function handleAirportRadioAidNameKeydown(event, coordInput) {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        const input = event.currentTarget;
+        input.value = String(input.value || '').trim().toUpperCase();
+        input.blur();
+        setTimeout(() => {
+            openNpaAirportRadioCoordKeypad(coordInput);
+            syncAddAirportModalViewport();
+        }, 150);
+    }
+
+    function addAirportRadioAidBlock(type, data = {}, startCarousel = false) {
         const normalizedType = type === 'NDB' ? 'NDB' : type === 'TAR' ? 'TAR' : 'VOR';
         const container = document.getElementById('airportRadioAidsContainer');
         if (!container) return;
@@ -6124,10 +6142,19 @@
             nameInput?.addEventListener('input', event => {
                 event.target.value = String(event.target.value || '').toUpperCase();
             });
+            nameInput?.addEventListener('keydown', event => {
+                handleAirportRadioAidNameKeydown(event, coordInput);
+            });
         }
         container.appendChild(block);
         updateAirportTarThresholdLabels();
         document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
+        if (startCarousel && normalizedType !== 'TAR') {
+            const nameInput = block.querySelector('[data-radio-field="name"]');
+            nameInput?.focus({ preventScroll: true });
+            nameInput?.select();
+            setTimeout(() => keepAddAirportFieldVisible(nameInput), 50);
+        }
     }
 
     async function saveAirportFromModal() {
@@ -7237,8 +7264,8 @@
             <div class="npa-modal-section-title">Radio Aids</div>
             <div id="airportRadioAidsContainer" class="npa-modal-section"></div>
             <div id="airportRadioAidTypeChoices" class="npa-choice-row npa-hidden">
-                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('VOR')">VOR</button>
-                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('NDB')">NDB</button>
+                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('VOR', {}, true)">VOR</button>
+                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('NDB', {}, true)">NDB</button>
                 <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('TAR')">TAR</button>
             </div>
             <button type="button" class="modal-opt-btn" onclick="addAirportRadioAidStart()">Add Radio Aid</button>
