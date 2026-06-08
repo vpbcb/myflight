@@ -2782,15 +2782,10 @@
 </div>
 
 <script>
-    const NPA_HEADER_ACTION_TAPS_REQUIRED = 4;
     const NPA_HEADER_ACTION_TAP_WINDOW_MS = 700;
     let npaHeaderActionTapCount = 0;
     let npaHeaderActionLastTap = 0;
     let npaHeaderAdminTapTimer = null;
-
-    function unlockNpaHeaderActions() {
-        document.body.classList.add('npa-header-actions-unlocked');
-    }
 
     function cancelNpaHeaderAdminTapTimer() {
         if (!npaHeaderAdminTapTimer) return;
@@ -2805,13 +2800,6 @@
             ? npaHeaderActionTapCount + 1
             : 1;
         npaHeaderActionLastTap = now;
-
-        if (npaHeaderActionTapCount >= NPA_HEADER_ACTION_TAPS_REQUIRED) {
-            cancelNpaHeaderAdminTapTimer();
-            npaHeaderActionTapCount = 0;
-            unlockNpaHeaderActions();
-            return;
-        }
 
         cancelNpaHeaderAdminTapTimer();
         if (npaHeaderActionTapCount === 2) {
@@ -3180,6 +3168,7 @@
     }
 
     const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_v2';
+        const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
         const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_airport_saves_v2';
         const NPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
         const NPA_PAGE_STATE_FIELD_IDS = [
@@ -3235,6 +3224,43 @@
         return Number.isFinite(updatedAt) ? updatedAt : 0;
     }
 
+    function getConfirmedCloudAirportCodes() {
+        const storedCodes = readJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, null);
+        if (Array.isArray(storedCodes)) {
+            return new Set(storedCodes.map(sanitizeNpaAirportCode).filter(Boolean));
+        }
+
+        const pendingCodes = new Set(
+            getPendingAirportSaves()
+                .map(item => sanitizeNpaAirportCode(item?.airportCode))
+                .filter(Boolean)
+        );
+        const legacyConfirmedCodes = new Set(
+            Object.keys(loadNpaAirportsDb() || {})
+                .map(sanitizeNpaAirportCode)
+                .filter(code => code && !pendingCodes.has(code))
+        );
+        setConfirmedCloudAirportCodes(legacyConfirmedCodes);
+        return legacyConfirmedCodes;
+    }
+
+    function setConfirmedCloudAirportCodes(codes) {
+        const normalizedCodes = Array.from(codes || [])
+            .map(sanitizeNpaAirportCode)
+            .filter(Boolean)
+            .sort();
+        writeJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, [...new Set(normalizedCodes)]);
+    }
+
+    function confirmCloudAirportCodes(codes) {
+        const confirmedCodes = getConfirmedCloudAirportCodes();
+        Array.from(codes || []).forEach(code => {
+            const normalizedCode = sanitizeNpaAirportCode(code);
+            if (normalizedCode) confirmedCodes.add(normalizedCode);
+        });
+        setConfirmedCloudAirportCodes(confirmedCodes);
+    }
+
     function getPendingAirportSaveMap(queue = getPendingAirportSaves()) {
         const pendingByAirport = new Map();
 
@@ -3264,6 +3290,12 @@
         const pendingByAirport = getPendingAirportSaveMap(pendingQueue);
         const confirmedPendingAirports = new Set();
         const canConfirmPending = options.fromCache !== true && options.hasPendingWrites !== true;
+        const confirmedCloudAirports = getConfirmedCloudAirportCodes();
+        const cloudAirportCodes = new Set(
+            Array.isArray(options.cloudAirportCodes)
+                ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
+                : Object.keys(source).map(sanitizeNpaAirportCode).filter(Boolean)
+        );
         const currentAirportCode = getNpaAirportCode();
         const currentApproachType = getSelectedNpaType();
         const removedAirports = new Set(
@@ -3271,6 +3303,13 @@
                 ? options.removedAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
                 : []
         );
+
+        if (options.authoritativeCloudSnapshot === true) {
+            confirmedCloudAirports.forEach(airportCode => {
+                if (!cloudAirportCodes.has(airportCode)) removedAirports.add(airportCode);
+            });
+        }
+
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
             currentAirportCode &&
             currentApproachType &&
@@ -3294,21 +3333,27 @@
             if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
                 confirmedPendingAirports.add(normalizedCode);
             }
+            if (canConfirmPending) confirmedCloudAirports.add(normalizedCode);
         });
 
         removedAirports.forEach(airportCode => {
-            if (pendingByAirport.has(airportCode)) return;
             delete merged[airportCode];
+            confirmedCloudAirports.delete(airportCode);
         });
 
-        if (confirmedPendingAirports.size) {
+        const pendingAirportsToRemove = new Set([
+            ...confirmedPendingAirports,
+            ...removedAirports
+        ]);
+        if (pendingAirportsToRemove.size) {
             setPendingAirportSaves(
                 pendingQueue.filter(item =>
-                    item && !confirmedPendingAirports.has(sanitizeNpaAirportCode(item.airportCode))
+                    item && !pendingAirportsToRemove.has(sanitizeNpaAirportCode(item.airportCode))
                 )
             );
         }
 
+        setConfirmedCloudAirportCodes(confirmedCloudAirports);
         window.airportsDb = merged;
         persistNpaAirportsDb();
         if (document.activeElement === document.getElementById('apprName') || document.getElementById('npaAirportDropdown')?.classList.contains('open')) {
@@ -3402,6 +3447,20 @@
         await window.npaDb.collection('airports').doc(airportCode).set(airportData, { merge: true });
     }
 
+    async function discardPendingAirportDeletedFromCloud(airportCode) {
+        const normalizedCode = sanitizeNpaAirportCode(airportCode);
+        if (!normalizedCode || !getConfirmedCloudAirportCodes().has(normalizedCode)) return false;
+
+        const snapshot = await window.npaDb.collection('airports').doc(normalizedCode).get({ source: 'server' });
+        if (snapshot.exists) return false;
+
+        mergeNpaAirportsDb({}, {
+            removedAirportCodes: [normalizedCode],
+            source: 'pending-delete-check'
+        });
+        return true;
+    }
+
     async function syncPendingAirportSaves() {
         if (npaSyncInProgress || !navigator.onLine) return;
 
@@ -3424,6 +3483,7 @@
                 if (!item || !item.airportCode || !item.airportData) continue;
 
                 try {
+                    if (await discardPendingAirportDeletedFromCloud(item.airportCode)) continue;
                     await writeAirportToCloud(item.airportCode, item.airportData);
                     successfullySynced.set(
                         sanitizeNpaAirportCode(item.airportCode),
@@ -3439,6 +3499,9 @@
                 }
             }
         } finally {
+            if (successfullySynced.size) {
+                confirmCloudAirportCodes(successfullySynced.keys());
+            }
             const remaining = getPendingAirportSaves().filter(item => {
                 const code = sanitizeNpaAirportCode(item?.airportCode);
                 if (!code || failedAirportCodes.has(code)) return true;

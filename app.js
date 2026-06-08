@@ -215,6 +215,7 @@
 (function () {
     const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_v2';
     const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_airport_saves_v2';
+    const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
     const NPA_SYNC_STATUS_KEY = 'mynpa_sync_status_v1';
     const FIREBASE_APP_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
     const FIREBASE_FIRESTORE_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
@@ -282,6 +283,43 @@
 
     function normalizeAirportCode(code) {
         return String(code || '').trim().toUpperCase();
+    }
+
+    function getConfirmedCloudAirportCodes() {
+        const storedCodes = readJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, null);
+        if (Array.isArray(storedCodes)) {
+            return new Set(storedCodes.map(normalizeAirportCode).filter(Boolean));
+        }
+
+        const pendingCodes = new Set(
+            getPendingAirportSaves()
+                .map(item => normalizeAirportCode(item && item.airportCode))
+                .filter(Boolean)
+        );
+        const legacyConfirmedCodes = new Set(
+            Object.keys(loadNpaAirportsDb() || {})
+                .map(normalizeAirportCode)
+                .filter(code => code && !pendingCodes.has(code))
+        );
+        setConfirmedCloudAirportCodes(legacyConfirmedCodes);
+        return legacyConfirmedCodes;
+    }
+
+    function setConfirmedCloudAirportCodes(codes) {
+        const normalizedCodes = Array.from(codes || [])
+            .map(normalizeAirportCode)
+            .filter(Boolean)
+            .sort();
+        writeJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, [...new Set(normalizedCodes)]);
+    }
+
+    function confirmCloudAirportCodes(codes) {
+        const confirmedCodes = getConfirmedCloudAirportCodes();
+        Array.from(codes || []).forEach(code => {
+            const normalizedCode = normalizeAirportCode(code);
+            if (normalizedCode) confirmedCodes.add(normalizedCode);
+        });
+        setConfirmedCloudAirportCodes(confirmedCodes);
     }
 
     function getAirportUpdatedAt(value) {
@@ -372,11 +410,23 @@
         const confirmedPendingAirports = new Set();
         const actuallyRemovedAirports = new Set();
         const canConfirmPending = options.fromCache !== true && options.hasPendingWrites !== true;
+        const confirmedCloudAirports = getConfirmedCloudAirportCodes();
+        const cloudAirportCodes = new Set(
+            Array.isArray(options.cloudAirportCodes)
+                ? options.cloudAirportCodes.map(normalizeAirportCode).filter(Boolean)
+                : Object.keys(source).map(normalizeAirportCode).filter(Boolean)
+        );
         const removedAirports = new Set(
             Array.isArray(options.removedAirportCodes)
                 ? options.removedAirportCodes.map(normalizeAirportCode).filter(Boolean)
                 : []
         );
+
+        if (options.authoritativeCloudSnapshot === true) {
+            confirmedCloudAirports.forEach(airportCode => {
+                if (!cloudAirportCodes.has(airportCode)) removedAirports.add(airportCode);
+            });
+        }
 
         Object.keys(source).forEach(airportCode => {
             const airportData = source[airportCode];
@@ -395,22 +445,28 @@
             if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
                 confirmedPendingAirports.add(normalizedCode);
             }
+            if (canConfirmPending) confirmedCloudAirports.add(normalizedCode);
         });
 
         removedAirports.forEach(airportCode => {
-            if (pendingByAirport.has(airportCode)) return;
             delete merged[airportCode];
+            confirmedCloudAirports.delete(airportCode);
             actuallyRemovedAirports.add(airportCode);
         });
 
-        if (confirmedPendingAirports.size) {
+        const pendingAirportsToRemove = new Set([
+            ...confirmedPendingAirports,
+            ...actuallyRemovedAirports
+        ]);
+        if (pendingAirportsToRemove.size) {
             setPendingAirportSaves(
                 pendingQueue.filter(item =>
-                    item && !confirmedPendingAirports.has(normalizeAirportCode(item.airportCode))
+                    item && !pendingAirportsToRemove.has(normalizeAirportCode(item.airportCode))
                 )
             );
         }
 
+        setConfirmedCloudAirportCodes(confirmedCloudAirports);
         window.airportsDb = merged;
         persistNpaAirportsDb(merged);
         updateNpaSyncStatus({
@@ -427,6 +483,20 @@
     async function writeAirportToCloud(airportCode, airportData) {
         if (!isFirebaseReady()) throw new Error('Firebase is not ready');
         await window.npaDb.collection('airports').doc(airportCode).set(airportData, { merge: true });
+    }
+
+    async function discardPendingAirportDeletedFromCloud(airportCode) {
+        const normalizedCode = normalizeAirportCode(airportCode);
+        if (!normalizedCode || !getConfirmedCloudAirportCodes().has(normalizedCode)) return false;
+
+        const snapshot = await window.npaDb.collection('airports').doc(normalizedCode).get({ source: 'server' });
+        if (snapshot.exists) return false;
+
+        mergeCloudNpaAirportsDb({}, {
+            removedAirportCodes: [normalizedCode],
+            source: 'pending-delete-check'
+        });
+        return true;
     }
 
     function collectCloudSnapshotData(snapshot) {
@@ -586,12 +656,13 @@
             lastSnapshotRemovedCount: removedAirportCodes.length
         });
 
-        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0) {
+        const authoritativeCloudSnapshot = source === 'server-pull';
+        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0 || authoritativeCloudSnapshot) {
             mergeCloudNpaAirportsDb(cloudData, {
                 fromCache,
                 hasPendingWrites,
-                completeCloudSnapshot: false,
-                authoritativeCloudSnapshot: false,
+                completeCloudSnapshot: authoritativeCloudSnapshot,
+                authoritativeCloudSnapshot,
                 cloudAirportCodes,
                 removedAirportCodes,
                 source
@@ -693,6 +764,7 @@
                 if (!item || !item.airportCode || !item.airportData) continue;
 
                 try {
+                    if (await discardPendingAirportDeletedFromCloud(item.airportCode)) continue;
                     await writeAirportToCloud(item.airportCode, item.airportData);
                     successfullySynced.set(
                         normalizeAirportCode(item.airportCode),
@@ -708,6 +780,9 @@
                 }
             }
         } finally {
+            if (successfullySynced.size) {
+                confirmCloudAirportCodes(successfullySynced.keys());
+            }
             const remaining = getPendingAirportSaves().filter(item => {
                 const code = normalizeAirportCode(item && item.airportCode);
                 if (!code || failedAirportCodes.has(code)) return true;
