@@ -2022,33 +2022,12 @@
             text-transform: none;
             white-space: nowrap;
         }
-        .npa-coord-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 1.65rem minmax(0, 1fr) 1.65rem;
-            gap: 0.12rem;
-            align-items: stretch;
-            width: 100%;
-            min-width: 0;
-        }
-        .npa-coord-num,
-        .npa-coord-hem {
+        .npa-coord-field .npa-modal-input {
             min-height: 2rem;
             padding: 0.375rem 0.125rem;
             text-align: center;
-        }
-        .npa-coord-num {
             min-width: 0;
-            font-size: 0.68rem;
-        }
-        .npa-coord-hem {
-            border: 1px solid var(--border-color);
-            border-radius: 0.5625rem;
-            background: rgba(14, 165, 233, 0.08);
-            color: var(--text-main);
-            font-family: inherit;
-            font-size: 0.78rem;
-            font-weight: 900;
-            cursor: pointer;
+            font-size: clamp(0.62rem, 3vw, 0.8rem);
         }
         .kp-mask-typed,
         .kp-mask-dot {
@@ -5646,6 +5625,7 @@
     let activeAirportRunwayLengthInput = null;
     let activeAirportKeypad = null;
     let activeAirportRadioCoordInput = null;
+    let activeAirportRadioCoordAutoAdvance = false;
     let airportDeleteConfirmTarget = null;
     let activeRadioAidShiftTarget = 'downwind';
     let radioAidShiftModalAllowsLockedRadio = false;
@@ -5661,64 +5641,6 @@
         if (normalized === "" || normalized === "-" || normalized === ".") return "";
         const numeric = Number(normalized);
         return Number.isFinite(numeric) ? numeric : "";
-    }
-
-    function formatAirportCoordNumber(value, wholeDigits) {
-        const digits = String(value || '').replace(/\D/g, '').slice(0, wholeDigits + 1);
-        if (digits.length <= wholeDigits) return digits;
-        return `${digits.slice(0, wholeDigits)}.${digits.slice(wholeDigits)}`;
-    }
-
-    function normalizeAirportCoordNumberInput(input) {
-        const wholeDigits = input.dataset.rwyCoord === 'lon' ? 5 : 4;
-        input.value = formatAirportCoordNumber(input.value, wholeDigits);
-    }
-
-    function parseAirportCoordFields(coordText) {
-        const text = String(coordText || '').toUpperCase().replace(/[(),;]/g, ' ').replace(/\s+/g, ' ').trim();
-        const result = { lat: "", latHem: "N", lon: "", lonHem: "E" };
-        if (!text) return result;
-
-        const direct = text.match(/([NS])\s*([0-9.]+)\s*([EW])\s*([0-9.]+)/);
-        const reverse = text.match(/([0-9.]+)\s*([NS])\s*([0-9.]+)\s*([EW])/);
-        if (direct) {
-            result.latHem = direct[1];
-            result.lat = formatAirportCoordNumber(direct[2], 4);
-            result.lonHem = direct[3];
-            result.lon = formatAirportCoordNumber(direct[4], 5);
-        } else if (reverse) {
-            result.lat = formatAirportCoordNumber(reverse[1], 4);
-            result.latHem = reverse[2];
-            result.lon = formatAirportCoordNumber(reverse[3], 5);
-            result.lonHem = reverse[4];
-        }
-        return result;
-    }
-
-    function updateAirportCoordHidden(block, prefix) {
-        const row = block.querySelector(`[data-rwy-coord-prefix="${prefix}"]`);
-        const hidden = block.querySelector(`[data-rwy-field="${prefix}Coord"]`);
-        if (!row || !hidden) return;
-        const lat = row.querySelector('[data-rwy-coord="lat"]')?.value || "";
-        const latHem = row.querySelector('[data-rwy-coord="latHem"]')?.innerText || "N";
-        const lon = row.querySelector('[data-rwy-coord="lon"]')?.value || "";
-        const lonHem = row.querySelector('[data-rwy-coord="lonHem"]')?.innerText || "E";
-        hidden.value = lat && lon ? `${lat}${latHem} ${lon}${lonHem}` : "";
-    }
-
-    function setAirportCoordFields(block, prefix, coordText) {
-        const row = block.querySelector(`[data-rwy-coord-prefix="${prefix}"]`);
-        if (!row) return;
-        const coord = parseAirportCoordFields(coordText);
-        const lat = row.querySelector('[data-rwy-coord="lat"]');
-        const latHem = row.querySelector('[data-rwy-coord="latHem"]');
-        const lon = row.querySelector('[data-rwy-coord="lon"]');
-        const lonHem = row.querySelector('[data-rwy-coord="lonHem"]');
-        if (lat) lat.value = coord.lat;
-        if (latHem) latHem.innerText = coord.latHem === 'S' ? 'S' : 'N';
-        if (lon) lon.value = coord.lon;
-        if (lonHem) lonHem.innerText = coord.lonHem === 'W' ? 'W' : 'E';
-        updateAirportCoordHidden(block, prefix);
     }
 
     function renderAirportRunwayLengthDisplay(button) {
@@ -5760,29 +5682,6 @@
         if (unitEl) unitEl.textContent = "ft";
     }
 
-    function getAirportCoordMaskedValue(target, value) {
-        const placeholderDigits = String(target?.input?.placeholder || '').replace(/\D/g, '');
-        const maxDigits = getAirportKeypadMaxDigits(target);
-        const typedDigits = String(value || '').replace(/\D/g, '').slice(0, maxDigits);
-        const merged = (typedDigits + placeholderDigits.slice(typedDigits.length)).slice(0, maxDigits);
-        return formatAirportCoordNumber(merged, target?.coordKind === 'lon' ? 5 : 4);
-    }
-
-    function getAirportCoordMaskedHtml(target, value) {
-        const placeholderDigits = String(target?.input?.placeholder || '').replace(/\D/g, '');
-        const maxDigits = getAirportKeypadMaxDigits(target);
-        const wholeDigits = target?.coordKind === 'lon' ? 5 : 4;
-        const typedDigits = String(value || '').replace(/\D/g, '').slice(0, maxDigits);
-        const chars = [];
-        for (let i = 0; i < maxDigits; i += 1) {
-            if (i === wholeDigits) chars.push('<span class="kp-mask-dot">.</span>');
-            const digit = i < typedDigits.length ? typedDigits[i] : (placeholderDigits[i] || '');
-            const cls = i < typedDigits.length ? 'kp-mask-typed' : 'kp-mask-hint';
-            chars.push(`<span class="${cls}">${digit}</span>`);
-        }
-        return chars.join('');
-    }
-
     function getRadioCoordParts(value) {
         const text = String(value || '').toUpperCase();
         const digits = text.replace(/\D/g, '').slice(0, 11);
@@ -5803,6 +5702,12 @@
         const latText = `${lat.slice(0, 4)}.${lat.slice(4, 5)}`;
         const lonText = `${lon.slice(0, 5)}.${lon.slice(5, 6)}`;
         return `${latText}${parts.latHem} ${lonText}${parts.lonHem}`.trim();
+    }
+
+    function normalizeStoredCoordinate(value) {
+        const text = String(value || '').trim();
+        if (!text) return "";
+        return getRadioCoordParts(text).digits.length === 11 ? getRadioCoordMaskedValue(text, false) : text;
     }
 
     function getRadioCoordMaskedHtml(value) {
@@ -5838,7 +5743,6 @@
         if (!target) return 5;
         if (target.type === 'thr') return 4;
         if (target.type === 'elev') return 4;
-        if (target.type === 'coord') return target.coordKind === 'lon' ? 6 : 5;
         return 5;
     }
 
@@ -5860,9 +5764,6 @@
             return String(value || '').toUpperCase().replace(/[^0-9LCR]/g, '').slice(0, getAirportKeypadMaxDigits(target));
         }
         const digits = String(value || '').replace(/\D/g, '').slice(0, getAirportKeypadMaxDigits(target));
-        if (target?.type === 'coord') {
-            return formatAirportCoordNumber(digits, target.coordKind === 'lon' ? 5 : 4);
-        }
         if (target?.type === 'elev') return digits ? `${digits} ft` : "";
         return digits;
     }
@@ -5872,26 +5773,19 @@
         if (target.type === 'length') return `RW LENGTH (${getRwLengthUnitLabel()})`;
         if (target.type === 'thr') return target.input?.dataset.rwyField === 'thr2' ? 'THR2' : 'THR1';
         if (target.type === 'elev') return target.input?.dataset.rwyField === 'thr2Elev' ? 'THR2 ELEV' : 'THR1 ELEV';
-        if (target.type === 'coord') {
-            const prefix = target.coordPrefix === 'thr2' ? 'THR2' : 'THR1';
-            return `${prefix} ${target.coordKind === 'lon' ? 'LON' : 'LAT'}`;
-        }
         return 'AIRPORT';
     }
 
     function getAirportKeypadTargets(block) {
         if (!block) return [];
-        const coordInput = (prefix, kind) => block.querySelector(`[data-rwy-coord-prefix="${prefix}"] [data-rwy-coord="${kind}"]`);
         return [
             { type: 'length', block, input: block.querySelector('[data-rwy-field="rwLength"]'), display: block.querySelector('[data-rwy-length-display]') },
             { type: 'thr', block, input: block.querySelector('[data-rwy-field="thr1"]') },
             { type: 'elev', block, input: block.querySelector('[data-rwy-field="thr1Elev"]'), display: block.querySelector('[data-rwy-field="thr1Elev"]')?.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') },
             { type: 'thr', block, input: block.querySelector('[data-rwy-field="thr2"]') },
             { type: 'elev', block, input: block.querySelector('[data-rwy-field="thr2Elev"]'), display: block.querySelector('[data-rwy-field="thr2Elev"]')?.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') },
-            { type: 'coord', block, input: coordInput('thr1', 'lat'), coordPrefix: 'thr1', coordKind: 'lat' },
-            { type: 'coord', block, input: coordInput('thr1', 'lon'), coordPrefix: 'thr1', coordKind: 'lon' },
-            { type: 'coord', block, input: coordInput('thr2', 'lat'), coordPrefix: 'thr2', coordKind: 'lat' },
-            { type: 'coord', block, input: coordInput('thr2', 'lon'), coordPrefix: 'thr2', coordKind: 'lon' }
+            { type: 'runwayCoord', block, input: block.querySelector('[data-rwy-field="thr1Coord"]') },
+            { type: 'runwayCoord', block, input: block.querySelector('[data-rwy-field="thr2Coord"]') }
         ].filter(target => target.input || target.display);
     }
 
@@ -5899,8 +5793,6 @@
         const targets = getAirportKeypadTargets(target?.block);
         return targets.findIndex(item => {
             if (item.type !== target?.type) return false;
-            if ((item.coordKind || "") !== (target?.coordKind || "")) return false;
-            if ((item.coordPrefix || "") !== (target?.coordPrefix || "")) return false;
             if (target?.input && item.input === target.input) return true;
             if (target?.display && item.display === target.display) return true;
             return false;
@@ -5930,7 +5822,11 @@
         const index = getAirportKeypadTargetIndex(target);
         const next = index >= 0 ? targets[index + 1] : null;
         if (next) {
-            openAirportKeypadTarget(next, true);
+            if (next.type === 'runwayCoord') {
+                openNpaAirportRadioCoordKeypad(next.input, true);
+            } else {
+                openAirportKeypadTarget(next, true);
+            }
         } else {
             clearAirportActiveField();
             activeAirportKeypad = null;
@@ -5940,14 +5836,11 @@
     function openNpaAirportFieldKeypad(input, type, autoAdvance = false) {
         if (!input) return;
         const block = input.closest('.airport-runway-block');
-        const row = input.closest('[data-rwy-coord-prefix]');
         openAirportKeypadTarget({
             type,
             input,
             block,
-            display: type === 'elev' ? input.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') : null,
-            coordPrefix: row?.dataset.rwyCoordPrefix || "",
-            coordKind: input.dataset.rwyCoord || ""
+            display: type === 'elev' ? input.closest('.npa-modal-field')?.querySelector('.npa-runway-elev-display') : null
         }, autoAdvance);
     }
 
@@ -5967,9 +5860,6 @@
         } else if (target.type === 'elev') {
             target.input.value = digits ? `${digits} ft` : "";
             renderAirportElevDisplay(target.input);
-        } else if (target.type === 'coord') {
-            target.input.value = getAirportCoordMaskedValue(target, digits);
-            updateAirportCoordHidden(target.block, target.coordPrefix);
         }
     }
 
@@ -6257,24 +6147,12 @@
                 <div class="npa-runway-coords">
                     <div class="npa-modal-field npa-coord-field">
                         <label>THR1 coord</label>
-                        <input class="npa-runway-hidden" data-rwy-field="thr1Coord" type="hidden">
-                        <div class="npa-coord-row" data-rwy-coord-prefix="thr1">
-                            <input class="npa-modal-input npa-coord-num" data-rwy-coord="lat" type="text" inputmode="numeric" placeholder="5500.6" readonly autocomplete="off" onclick="openNpaAirportFieldKeypad(this, 'coord')">
-                            <button type="button" class="npa-coord-hem" data-rwy-coord="latHem">N</button>
-                            <input class="npa-modal-input npa-coord-num" data-rwy-coord="lon" type="text" inputmode="numeric" placeholder="08237.4" readonly autocomplete="off" onclick="openNpaAirportFieldKeypad(this, 'coord')">
-                            <button type="button" class="npa-coord-hem" data-rwy-coord="lonHem">E</button>
-                        </div>
+                        <input class="npa-modal-input" data-rwy-field="thr1Coord" type="text" placeholder="5500.6N 08237.4E" readonly autocomplete="off" onclick="openNpaAirportRadioCoordKeypad(this, true)">
                     </div>
                     <div class="npa-runway-separator" aria-hidden="true"></div>
                     <div class="npa-modal-field npa-coord-field">
                         <label>THR2 coord</label>
-                        <input class="npa-runway-hidden" data-rwy-field="thr2Coord" type="hidden">
-                        <div class="npa-coord-row" data-rwy-coord-prefix="thr2">
-                            <input class="npa-modal-input npa-coord-num" data-rwy-coord="lat" type="text" inputmode="numeric" placeholder="5500.6" readonly autocomplete="off" onclick="openNpaAirportFieldKeypad(this, 'coord')">
-                            <button type="button" class="npa-coord-hem" data-rwy-coord="latHem">N</button>
-                            <input class="npa-modal-input npa-coord-num" data-rwy-coord="lon" type="text" inputmode="numeric" placeholder="08237.4" readonly autocomplete="off" onclick="openNpaAirportFieldKeypad(this, 'coord')">
-                            <button type="button" class="npa-coord-hem" data-rwy-coord="lonHem">E</button>
-                        </div>
+                        <input class="npa-modal-input" data-rwy-field="thr2Coord" type="text" placeholder="5500.6N 08237.4E" readonly autocomplete="off" onclick="openNpaAirportRadioCoordKeypad(this)">
                     </div>
                 </div>
             </div>`;
@@ -6290,23 +6168,6 @@
                 renderAirportElevDisplay(input);
             });
         });
-        block.querySelectorAll('.npa-coord-num').forEach(input => {
-            input.addEventListener('input', () => {
-                normalizeAirportCoordNumberInput(input);
-                const row = input.closest('[data-rwy-coord-prefix]');
-                if (row) updateAirportCoordHidden(block, row.dataset.rwyCoordPrefix);
-            });
-        });
-        block.querySelectorAll('.npa-coord-hem').forEach(button => {
-            button.addEventListener('click', () => {
-                const isLat = button.dataset.rwyCoord === 'latHem';
-                button.innerText = isLat
-                    ? (button.innerText === 'N' ? 'S' : 'N')
-                    : (button.innerText === 'E' ? 'W' : 'E');
-                const row = button.closest('[data-rwy-coord-prefix]');
-                if (row) updateAirportCoordHidden(block, row.dataset.rwyCoordPrefix);
-            });
-        });
         container.appendChild(block);
         ['thr1', 'thr1Elev', 'rwLength', 'thr2', 'thr2Elev'].forEach(field => {
             const input = block.querySelector(`[data-rwy-field="${field}"]`);
@@ -6317,8 +6178,10 @@
             input.value = value === "" ? "" : `${value} ft`;
             renderAirportElevDisplay(input);
         });
-        setAirportCoordFields(block, 'thr1', data.thr1Coord || "");
-        setAirportCoordFields(block, 'thr2', data.thr2Coord || "");
+        const thr1CoordInput = block.querySelector('[data-rwy-field="thr1Coord"]');
+        const thr2CoordInput = block.querySelector('[data-rwy-field="thr2Coord"]');
+        if (thr1CoordInput) thr1CoordInput.value = normalizeStoredCoordinate(data.thr1Coord);
+        if (thr2CoordInput) thr2CoordInput.value = normalizeStoredCoordinate(data.thr2Coord);
         const lengthInput = block.querySelector('[data-rwy-field="rwLength"]');
         if (lengthInput) lengthInput.dataset.displayUnit = data.rwLengthDisplayUnit === 'ft' ? 'ft' : 'm';
         renderAirportRunwayLengthDisplay(block.querySelector('[data-rwy-length-display]'));
@@ -6935,9 +6798,29 @@
         document.getElementById('keypadModal').style.display = 'flex';
     }
 
-    function openNpaAirportRadioCoordKeypad(input) {
+    function getAirportCoordKeypadTitle(input) {
+        const runwayField = input?.dataset?.rwyField;
+        if (runwayField === 'thr1Coord' || runwayField === 'thr2Coord') {
+            const block = input.closest('.airport-runway-block');
+            const thresholdField = runwayField === 'thr2Coord' ? 'thr2' : 'thr1';
+            const threshold = String(block?.querySelector(`[data-rwy-field="${thresholdField}"]`)?.value || '').trim().toUpperCase();
+            return threshold ? `RW${threshold} COORD` : `${thresholdField.toUpperCase()} COORD`;
+        }
+        return 'RADIO AID COORD';
+    }
+
+    function openNextRunwayCoordInput(input) {
+        if (input?.dataset?.rwyField !== 'thr1Coord') return false;
+        const nextInput = input.closest('.airport-runway-block')?.querySelector('[data-rwy-field="thr2Coord"]');
+        if (!nextInput) return false;
+        openNpaAirportRadioCoordKeypad(nextInput);
+        return true;
+    }
+
+    function openNpaAirportRadioCoordKeypad(input, autoAdvance = false) {
         if (!input) return;
         activeAirportRadioCoordInput = input;
+        activeAirportRadioCoordAutoAdvance = autoAdvance === true;
         if (navigator.vibrate) navigator.vibrate(15);
         activeNpaField = 'airportRadioCoord';
         currentKpVal = "";
@@ -6999,7 +6882,7 @@
         }
 
         if (type === 'airportRadioCoord') {
-            if (titleEl) titleEl.innerText = 'RADIO AID COORD';
+            if (titleEl) titleEl.innerText = getAirportCoordKeypadTitle(activeAirportRadioCoordInput);
             if (subtitleEl) subtitleEl.innerText = '';
             if (dotBtn) dotBtn.style.visibility = 'hidden';
             configureNpaExtraButtons(['N', 'S', 'E', 'W']);
@@ -7244,10 +7127,18 @@
             return;
         }
         if (!hasNewValue) {
+            if (activeNpaField === 'airportRadioCoord') {
+                const coordInput = activeAirportRadioCoordInput;
+                const shouldAdvance = e === 'done' && activeAirportRadioCoordAutoAdvance;
+                activeAirportRadioCoordInput = null;
+                activeAirportRadioCoordAutoAdvance = false;
+                keypadModal.style.display = 'none';
+                if (shouldAdvance) setTimeout(() => openNextRunwayCoordInput(coordInput), 0);
+                return;
+            }
             keypadModal.style.display = 'none';
             if (activeNpaField === 'airportTarDistance') activeAirportTarInput = null;
             if (activeNpaField === 'airportRunwayLength') activeAirportRunwayLengthInput = null;
-            if (activeNpaField === 'airportRadioCoord') activeAirportRadioCoordInput = null;
             return;
         }
 
@@ -7302,10 +7193,14 @@
             }
             activeAirportTarInput = null;
         } else if (activeNpaField === 'airportRadioCoord') {
+            const coordInput = activeAirportRadioCoordInput;
+            const shouldAdvance = e === 'done' && activeAirportRadioCoordAutoAdvance;
             if (activeAirportRadioCoordInput) {
                 activeAirportRadioCoordInput.value = finalVal === "" && keypadWasCleared ? "" : getRadioCoordMaskedValue(finalVal, true);
             }
             activeAirportRadioCoordInput = null;
+            activeAirportRadioCoordAutoAdvance = false;
+            if (shouldAdvance) setTimeout(() => openNextRunwayCoordInput(coordInput), 0);
         } else if (activeNpaField === 'tempC') {
             setNpaTemperatureValue(finalVal === "" ? "" : `${npaTempIsNegative ? '-' : ''}${finalVal}`);
             renderNpaProfileTable();
@@ -7485,19 +7380,12 @@
             const rawValue = getAirportKeypadRawValue(activeAirportKeypad);
             const hint = activeAirportKeypad?.input?.placeholder || "";
             displayEl.style.color = 'var(--text-main)';
-            if (activeAirportKeypad?.type === 'coord' && currentKpVal !== "") {
-                displayEl.style.opacity = '1';
-                displayEl.innerHTML = getAirportCoordMaskedHtml(activeAirportKeypad, currentKpVal);
-            } else if (currentKpVal !== "") {
+            if (currentKpVal !== "") {
                 displayEl.style.opacity = '1';
                 displayEl.textContent = formatAirportKeypadValue(activeAirportKeypad, currentKpVal);
             } else if (rawValue !== "") {
                 displayEl.style.opacity = '1';
-                if (activeAirportKeypad?.type === 'coord') {
-                    displayEl.innerHTML = getAirportCoordMaskedHtml(activeAirportKeypad, rawValue);
-                } else {
-                    displayEl.textContent = formatAirportKeypadValue(activeAirportKeypad, rawValue);
-                }
+                displayEl.textContent = formatAirportKeypadValue(activeAirportKeypad, rawValue);
             } else if (hint) {
                 displayEl.style.opacity = '0.22';
                 displayEl.textContent = hint;
