@@ -71,8 +71,7 @@
             min-height: var(--app-height);
             max-height: var(--app-height);
             color: var(--text-main);
-            position: fixed;
-            inset: 0;
+            position: relative;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -1645,8 +1644,6 @@
             padding: 16px;
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             color: var(--text-main);
-            transform: scale(0.95);
-            transition: transform 0.2s ease;
         }
         .modal-header {
             font-size: 13px;
@@ -1906,25 +1903,52 @@
             min-width: 0;
             min-height: 32px;
         }
-        .npa-manual-suffix-host .npa-choice-btn {
+        .npa-manual-suffix-host .npa-manual-suffix-input {
             width: 100%;
             height: 100%;
         }
         .npa-manual-suffix-input {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-            padding: 0;
-            opacity: 1;
-            color: transparent;
-            background: transparent;
-            caret-color: transparent;
+            position: static;
+            padding: 0 6px;
+            color: var(--text-main);
+            background: rgba(14, 165, 233, 0.08);
+            caret-color: var(--accent-blue);
             font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            text-align: center;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
             outline: none;
-            z-index: 2;
-            pointer-events: none;
+            pointer-events: auto;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .npa-manual-suffix-input.active,
+        .npa-manual-suffix-input:focus {
+            border-color: var(--accent-blue);
+            background: rgba(14, 165, 233, 0.16);
+        }
+        .npa-manual-suffix-input::placeholder {
+            color: var(--text-main);
+            opacity: 1;
+        }
+        #npaAdminEmail,
+        #npaAdminPassword,
+        #addAirportIcao,
+        .airport-radio-aid-block [data-radio-field="name"] {
+            font-size: 16px;
+        }
+        #npaAdminEmail,
+        #npaAdminPassword,
+        #addAirportIcao,
+        #apprName,
+        .npa-manual-suffix-input,
+        .airport-radio-aid-block [data-radio-field="name"] {
+            touch-action: auto;
+            -webkit-user-select: text;
+            user-select: text;
         }
         .npa-choice-btn {
             flex: 1 1 58px;
@@ -2929,7 +2953,26 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        const lockAppHeight = () => {
+        let lockedNpaAppHeight = 0;
+
+        const isNpaNativeEditableFocused = () => {
+            const active = document.activeElement;
+            return Boolean(
+                active &&
+                /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) &&
+                !active.readOnly &&
+                !active.disabled
+            );
+        };
+
+        const keepNpaViewportPinned = () => {
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            window.scrollTo(0, 0);
+        };
+
+        const lockAppHeight = options => {
+            const forceHeight = Boolean(options?.forceHeight);
             const visualViewport = window.visualViewport;
             const widthCandidates = [
                 window.innerWidth,
@@ -2939,7 +2982,21 @@
             ].map(Number).filter(width => Number.isFinite(width) && width > 0);
             const viewportWidth = Math.floor(Math.min(...widthCandidates, 440));
             const appWidth = Math.min(viewportWidth || 440, 440) + 'px';
-            const staticHeight = window.innerHeight + 'px';
+            const nextHeight = Math.floor(window.innerHeight || 0);
+            const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : nextHeight;
+            const nativeInputFocused = isNpaNativeEditableFocused();
+            const keyboardLikelyOpen = nativeInputFocused && lockedNpaAppHeight && (
+                (visualHeight && visualHeight < lockedNpaAppHeight - 80) ||
+                (nextHeight && nextHeight < lockedNpaAppHeight - 80)
+            );
+
+            if (!lockedNpaAppHeight || forceHeight) {
+                lockedNpaAppHeight = nextHeight || lockedNpaAppHeight;
+            } else if (!keyboardLikelyOpen && !nativeInputFocused && nextHeight > lockedNpaAppHeight) {
+                lockedNpaAppHeight = nextHeight;
+            }
+
+            const staticHeight = `${lockedNpaAppHeight || nextHeight}px`;
             const root = document.documentElement;
             const body = document.body;
             root.style.setProperty('--app-height', staticHeight);
@@ -2958,14 +3015,20 @@
                 wrapper.style.height = staticHeight;
                 wrapper.style.width = appWidth;
             }
+
+            if (keyboardLikelyOpen || nativeInputFocused) {
+                keepNpaViewportPinned();
+                setTimeout(keepNpaViewportPinned, 50);
+            }
         };
         const relockNpaViewport = () => {
-            lockAppHeight();
-            setTimeout(lockAppHeight, 150);
-            setTimeout(lockAppHeight, 350);
-            setTimeout(lockAppHeight, 700);
+            lockedNpaAppHeight = 0;
+            lockAppHeight({ forceHeight: true });
+            setTimeout(() => lockAppHeight({ forceHeight: true }), 150);
+            setTimeout(() => lockAppHeight({ forceHeight: true }), 350);
+            setTimeout(() => lockAppHeight({ forceHeight: true }), 700);
         };
-        lockAppHeight();
+        lockAppHeight({ forceHeight: true });
         window.addEventListener('orientationchange', () => setTimeout(() => {
             relockNpaViewport();
             scheduleNpaProfileLayoutUpdate();
@@ -2980,8 +3043,18 @@
                 scheduleNpaProfileLayoutUpdate();
             });
         }
-        
-        if ('virtualKeyboard' in navigator) navigator.virtualKeyboard.overlaysContent = true;
+
+        document.addEventListener('focusin', event => {
+            if (!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.readOnly || event.target.disabled) return;
+            lockAppHeight();
+            keepNpaViewportPinned();
+        });
+        document.addEventListener('focusout', () => setTimeout(lockAppHeight, 250));
+
+        if ('virtualKeyboard' in navigator) {
+            navigator.virtualKeyboard.overlaysContent = true;
+            navigator.virtualKeyboard.addEventListener?.('geometrychange', lockAppHeight);
+        }
         initNpaHeaderActionUnlock();
         initNpaRefreshButton();
         initNpaEditLockMode();
@@ -6557,36 +6630,35 @@
             container.appendChild(btn);
         });
 
-        const manualBtn = document.createElement('button');
-        manualBtn.type = 'button';
-        manualBtn.className = `npa-choice-btn${newApproachState.suffixMode === 'MAN' ? ' active' : ''}`;
-        manualBtn.innerText = newApproachState.suffixMode === 'MAN' && newApproachState.suffix
-            ? newApproachState.suffix
-            : 'MAN';
-        manualBtn.onclick = focusManualApproachSuffixInput;
         const manualHost = document.createElement('div');
         manualHost.className = 'npa-manual-suffix-host';
-        manualHost.appendChild(manualBtn);
-        if (manualInput) manualHost.appendChild(manualInput);
+        if (manualInput) {
+            manualInput.className = `npa-manual-suffix-input${newApproachState.suffixMode === 'MAN' ? ' active' : ''}`;
+            manualInput.value = newApproachState.suffixMode === 'MAN' ? newApproachState.suffix : "";
+            manualInput.placeholder = 'MAN';
+            manualHost.appendChild(manualInput);
+        }
         container.appendChild(manualHost);
     }
 
-    function focusManualApproachSuffixInput() {
-        const input = document.getElementById('manualApproachSuffixInput');
-        if (!input) return;
-        input.value = "";
-        input.focus({ preventScroll: true });
+    function prepareManualApproachSuffixInput(event) {
+        event.currentTarget?.select();
     }
 
     function handleManualApproachSuffixInput(event) {
         const input = event.currentTarget;
         const suffix = String(input.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
         input.value = suffix;
-        if (!suffix) return;
+        if (!suffix) {
+            newApproachState.suffixMode = '';
+            newApproachState.suffix = '';
+            input.classList.remove('active');
+            return;
+        }
 
         newApproachState.suffixMode = 'MAN';
         newApproachState.suffix = suffix;
-        renderNewApproachSuffixOptions();
+        input.classList.add('active');
         input.blur();
     }
 
@@ -7635,6 +7707,7 @@
                 autocomplete="off"
                 spellcheck="false"
                 aria-label="Manual approach suffix"
+                onfocus="prepareManualApproachSuffixInput(event)"
                 oninput="handleManualApproachSuffixInput(event)"
                 class="npa-manual-suffix-input"
             >
@@ -7666,11 +7739,11 @@
         <div class="npa-modal-section">
             <div class="npa-modal-field">
                 <label for="npaAdminEmail">Email</label>
-                <input id="npaAdminEmail" class="npa-modal-input" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                <input id="npaAdminEmail" class="npa-modal-input" type="email" inputmode="email" enterkeyhint="next" autocomplete="username" autocapitalize="none" spellcheck="false" required>
             </div>
             <div class="npa-modal-field">
                 <label for="npaAdminPassword">Password</label>
-                <input id="npaAdminPassword" class="npa-modal-input" type="password" autocomplete="current-password" required>
+                <input id="npaAdminPassword" class="npa-modal-input" type="password" enterkeyhint="done" autocomplete="current-password" required>
             </div>
             <div id="npaAdminLoginError" class="clear-data-text npa-hidden" role="alert"></div>
         </div>
