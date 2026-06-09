@@ -1924,6 +1924,7 @@
             font-size: 16px;
             outline: none;
             z-index: 2;
+            pointer-events: none;
         }
         .npa-choice-btn {
             flex: 1 1 58px;
@@ -2924,6 +2925,7 @@
             label.textContent = 'admin mode ON';
             label.classList.toggle('active', Boolean(user));
         }
+        if (user && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -3412,6 +3414,7 @@
         );
 
         const shouldRefreshCurrentApproach = !npaEditModeUnlocked &&
+            !npaCurrentApproachDirty &&
             currentAirportCode &&
             currentApproachType &&
             currentApproachType !== "—" &&
@@ -3717,6 +3720,7 @@
         let npaProfileLongPressFired = false;
         let npaProfileLongPressColumn = "";
         let npaAirportGhostValue = "";
+        let npaCurrentApproachDirty = false;
         let finalDescentFromSource = "fap";
         const DOWNWIND_MANUAL_SHIFT_MESSAGE = "S downwind was manually changed";
         let sDownwindManualMode = false;
@@ -3953,6 +3957,7 @@
     }
 
     function selectNpaAirport(airportCode) {
+        npaCurrentApproachDirty = false;
         const inputEl = document.getElementById('apprName');
         const code = sanitizeNpaAirportCode(airportCode);
         if (inputEl) {
@@ -4027,6 +4032,7 @@
 
     function handleAirportInput() {
         clearTimeout(airportInputTimeout);
+        npaCurrentApproachDirty = false;
 
         const inputEl = document.getElementById('apprName');
         if (inputEl) {
@@ -4121,6 +4127,7 @@
 
     function selectNpaType(type) {
         if (navigator.vibrate) navigator.vibrate(30);
+        npaCurrentApproachDirty = false;
         setSelectedNpaType(type);
         const modal = document.getElementById('npaModal');
         if (modal) modal.style.display = 'none';
@@ -5394,6 +5401,7 @@
 
     function applyRadioAidShiftValue(shiftValue) {
         if (activeRadioAidShiftTarget === 'profileRadio') {
+            npaCurrentApproachDirty = true;
             document.getElementById('radioDistValDisplay').innerText = shiftValue === "" ? "0.0" : shiftValue;
             updateNpaProfileUnitHeaders();
             renderNpaProfileTable();
@@ -6555,11 +6563,19 @@
         manualBtn.innerText = newApproachState.suffixMode === 'MAN' && newApproachState.suffix
             ? newApproachState.suffix
             : 'MAN';
+        manualBtn.onclick = focusManualApproachSuffixInput;
         const manualHost = document.createElement('div');
         manualHost.className = 'npa-manual-suffix-host';
         manualHost.appendChild(manualBtn);
         if (manualInput) manualHost.appendChild(manualInput);
         container.appendChild(manualHost);
+    }
+
+    function focusManualApproachSuffixInput() {
+        const input = document.getElementById('manualApproachSuffixInput');
+        if (!input) return;
+        input.value = "";
+        input.focus({ preventScroll: true });
     }
 
     function handleManualApproachSuffixInput(event) {
@@ -6646,6 +6662,7 @@
         closeAddApproachModal('button');
         setSelectedNpaType(approachName);
         clearNpaFields();
+        npaCurrentApproachDirty = true;
         setNpaEditModeUnlocked(true, true);
         scheduleNpaCurrentPageStateSave();
         startNewApproachCarousel();
@@ -6809,6 +6826,7 @@
 
         upsertLocalAirport(airportCode, airport);
         queueAirportSave(airportCode, airport);
+        npaCurrentApproachDirty = false;
         renderNpaApproachDropdown(false);
 
         try {
@@ -7290,7 +7308,10 @@
         } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
-            if (activeNpaField === 'radio') profileRadioSourceLabel = "";
+            if (activeNpaField === 'radio') {
+                profileRadioSourceLabel = "";
+                npaCurrentApproachDirty = true;
+            }
             updateNpaProfileUnitHeaders();
             renderNpaProfileTable();
         } else if (activeNpaField === 'downwindRadioFixShift') {
@@ -7725,25 +7746,21 @@
             error.classList.add('npa-hidden');
         }
         modal?.classList.add('active');
-        setTimeout(() => document.getElementById('npaAdminEmail')?.focus({ preventScroll: true }), 0);
     }
 
-    async function adminLogin() {
-        const firebaseReady = typeof window.initNpaFirebase === 'function'
-            ? await window.initNpaFirebase()
-            : false;
-        if (!firebaseReady || !window.npaAuth) {
-            alert("Firebase is not available yet. Check internet connection and reload once.");
-            return;
-        }
-
-        if (window.npaAuth.currentUser) {
+    function adminLogin() {
+        if (window.npaAuth?.currentUser) {
             alert("Admin mode already ON: " + window.npaAuth.currentUser.email);
             if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
             return;
         }
 
         openNpaAdminLoginModal();
+        if (typeof window.initNpaFirebase === 'function') {
+            window.initNpaFirebase().catch(error => {
+                console.warn("Admin Firebase init error:", error);
+            });
+        }
     }
 
     async function submitNpaAdminLogin(event) {
@@ -7752,10 +7769,16 @@
         const pass = document.getElementById('npaAdminPassword')?.value || '';
         const button = document.getElementById('npaAdminLoginButton');
         const errorEl = document.getElementById('npaAdminLoginError');
-        if (!email || !pass || !window.npaAuth) return;
+        if (!email || !pass) return;
 
         try {
             if (button) button.disabled = true;
+            const firebaseReady = typeof window.initNpaFirebase === 'function'
+                ? await window.initNpaFirebase()
+                : Boolean(window.npaAuth);
+            if (!firebaseReady || !window.npaAuth) {
+                throw new Error("Firebase is not available. Check internet connection and try again.");
+            }
             await window.npaAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
             const result = await window.npaAuth.signInWithEmailAndPassword(email, pass);
             if (typeof window.handleNpaAdminAuthState === 'function') window.handleNpaAdminAuthState(result.user);
