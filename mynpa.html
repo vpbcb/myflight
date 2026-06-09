@@ -6644,15 +6644,47 @@
         });
 
         const manualHost = document.createElement('div');
-        manualHost.className = 'npa-manual-suffix-host';
-        if (manualInput) {
-            manualInput.className = `npa-manual-suffix-input${newApproachState.suffixMode === 'MAN' ? ' active' : ''}`;
-            manualInput.value = newApproachState.suffixMode === 'MAN' ? newApproachState.suffix : "";
-            manualInput.placeholder = 'MAN';
-            manualHost.appendChild(manualInput);
-        }
-        container.appendChild(manualHost);
+manualHost.className = 'npa-manual-suffix-host';
+
+manualHost.addEventListener('pointerup', focusManualApproachSuffixInput);
+manualHost.addEventListener('click', focusManualApproachSuffixInput);
+
+if (manualInput) {
+    manualInput.className = `npa-manual-suffix-input${newApproachState.suffixMode === 'MAN' ? ' active' : ''}`;
+    manualInput.value = newApproachState.suffixMode === 'MAN' ? newApproachState.suffix : "";
+    manualInput.placeholder = 'MAN';
+
+    manualInput.onpointerup = focusManualApproachSuffixInput;
+    manualInput.onclick = focusManualApproachSuffixInput;
+
+    manualHost.appendChild(manualInput);
+}
+
+container.appendChild(manualHost);
     }
+    function focusManualApproachSuffixInput(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    const input = document.getElementById('manualApproachSuffixInput');
+    if (!input) return;
+
+    newApproachState.suffixMode = 'MAN';
+    input.classList.add('active');
+
+    input.removeAttribute('readonly');
+    input.disabled = false;
+
+    input.focus();
+
+    const length = input.value.length;
+    try {
+        input.setSelectionRange(length, length);
+    } catch (error) {
+        // ignore selection errors on old iOS
+    }
+}
 
     function handleManualApproachSuffixInput(event) {
         const input = event.currentTarget;
