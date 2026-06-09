@@ -1947,8 +1947,8 @@
         .npa-manual-suffix-input,
         .airport-radio-aid-block [data-radio-field="name"] {
             touch-action: auto;
-            -webkit-user-select: text !important;
-            user-select: text !important;
+            -webkit-user-select: text;
+            user-select: text;
         }
         .npa-choice-btn {
             flex: 1 1 58px;
@@ -2878,6 +2878,19 @@
         clearTimeout(npaHeaderAdminTapTimer);
         npaHeaderAdminTapTimer = null;
     }
+
+    function focusManualApproachSuffixInput(event) {
+    if (event) event.stopPropagation();
+
+    const input = document.getElementById('manualApproachSuffixInput');
+    if (!input) return;
+
+    newApproachState.suffixMode = 'MAN';
+    input.classList.add('active');
+
+    input.focus({ preventScroll: true });
+    input.select();
+}
 
     function handleNpaCalcTitleTap(event) {
         event.preventDefault();
@@ -7703,6 +7716,7 @@
                 autocomplete="off"
                 spellcheck="false"
                 aria-label="Manual approach suffix"
+                onclick="focusManualApproachSuffixInput(event)"
                 oninput="handleManualApproachSuffixInput(event)"
                 class="npa-manual-suffix-input"
             >
