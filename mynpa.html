@@ -1657,6 +1657,21 @@
             flex-direction: column;
             gap: 8px;
         }
+        .modal-options.profile-radio-options {
+            flex-direction: row;
+            align-items: stretch;
+            overflow-x: auto;
+        }
+        .modal-options.profile-radio-options .radio-aid-option {
+            flex: 1 0 max-content;
+            min-width: 0;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+        }
+        .modal-options.profile-radio-options .radio-aid-option-sub {
+            text-align: center;
+        }
         .modal-opt-btn {
             background: rgba(0, 0, 0, 0.03);
             border: 1px solid var(--border-color);
@@ -4815,7 +4830,7 @@
 
         const kTable = (288.15 - (0.00198 * hElev)) / denominator;
         const ftPerNm = 6076.1155;
-        const getDistFromInd = (height) => Math.max(0, Math.ceil(((height - hElev) / kTable - 50) / (tanAngle * ftPerNm) * 10) / 10);
+        const getDistFromInd = (height) => Math.max(0, Math.round(((height - hElev) / kTable - 50) / (tanAngle * ftPerNm) * 10) / 10);
         const getIndFromDist = (distance) => Math.round(((distance * tanAngle * ftPerNm + 50) * kTable + hElev) / 10) * 10;
 
         return {
@@ -5195,19 +5210,6 @@
         return btn;
     }
 
-    function hasSavedOppositeIlsApproach(airport, oppositeThreshold) {
-        const target = String(oppositeThreshold || '').trim().toUpperCase();
-        if (!target || !airport?.approaches || typeof airport.approaches !== 'object') return false;
-
-        return Object.entries(airport.approaches).some(([name, approach]) => {
-            const navType = String(approach?.navType || '').trim().toUpperCase();
-            const threshold = String(approach?.threshold || '').trim().toUpperCase();
-            const approachName = String(approach?.name || name || '').trim().toUpperCase();
-            return (navType === 'ILS' && threshold === target) ||
-                (approachName.startsWith('ILS') && approachName.endsWith(target));
-        });
-    }
-
     function openRadioAidShiftModal(target = 'downwind', allowLockedProfileRadio = false) {
         activeRadioAidShiftTarget = target === 'profileRadio' ? 'profileRadio' : 'downwind';
         radioAidShiftModalAllowsLockedRadio = activeRadioAidShiftTarget === 'profileRadio' && allowLockedProfileRadio === true;
@@ -5222,6 +5224,7 @@
         const threshold = getCurrentLandingThreshold();
         const runwayInfo = findRunwayForThreshold(airport, threshold);
         options.innerHTML = "";
+        options.classList.toggle('profile-radio-options', activeRadioAidShiftTarget === 'profileRadio');
 
         const radioAids = Array.isArray(airport?.radioAids)
             ? airport.radioAids.filter(aid => {
@@ -5231,8 +5234,7 @@
             : [];
         if (
             activeRadioAidShiftTarget === 'profileRadio' &&
-            runwayInfo?.oppositeThreshold &&
-            hasSavedOppositeIlsApproach(airport, runwayInfo.oppositeThreshold)
+            runwayInfo?.oppositeThreshold
         ) {
             radioAids.push({
                 type: 'ILS_OPPOSITE',
@@ -6513,7 +6515,7 @@
             threshold: ''
         };
         renderApproachChoiceOptions('approachNavTypeOptions', ['VOR', 'NDB', 'ILS'], newApproachState.navType, setNewApproachNavType);
-        renderApproachChoiceOptions('approachSuffixOptions', ['X', 'Y', 'Z', 'MAN'], newApproachState.suffixMode, setNewApproachSuffix);
+        renderNewApproachSuffixOptions();
         renderApproachThresholdOptions(airportCode);
 
         closeNpaAirportDropdown();
@@ -6585,7 +6587,50 @@
         const nextValue = newApproachState.suffixMode === value ? "" : value;
         newApproachState.suffixMode = nextValue;
         newApproachState.suffix = nextValue;
-        renderApproachChoiceOptions('approachSuffixOptions', ['X', 'Y', 'Z', 'MAN'], newApproachState.suffixMode, setNewApproachSuffix);
+        renderNewApproachSuffixOptions();
+    }
+
+    function renderNewApproachSuffixOptions() {
+        const container = document.getElementById('approachSuffixOptions');
+        if (!container) return;
+        container.innerHTML = "";
+
+        ['X', 'Y', 'Z'].forEach(value => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `npa-choice-btn${value === newApproachState.suffixMode ? ' active' : ''}`;
+            btn.innerText = value;
+            btn.onclick = () => setNewApproachSuffix(value);
+            container.appendChild(btn);
+        });
+
+        const manualBtn = document.createElement('button');
+        manualBtn.type = 'button';
+        manualBtn.className = `npa-choice-btn${newApproachState.suffixMode === 'MAN' ? ' active' : ''}`;
+        manualBtn.innerText = newApproachState.suffixMode === 'MAN' && newApproachState.suffix
+            ? newApproachState.suffix
+            : 'MAN';
+        manualBtn.onclick = openManualApproachSuffixInput;
+        container.appendChild(manualBtn);
+    }
+
+    function openManualApproachSuffixInput() {
+        const input = document.getElementById('manualApproachSuffixInput');
+        if (!input) return;
+        input.value = "";
+        input.focus();
+    }
+
+    function handleManualApproachSuffixInput(event) {
+        const input = event.currentTarget;
+        const suffix = String(input.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
+        input.value = suffix;
+        if (!suffix) return;
+
+        newApproachState.suffixMode = 'MAN';
+        newApproachState.suffix = suffix;
+        renderNewApproachSuffixOptions();
+        input.blur();
     }
 
     function setNewApproachThreshold(value) {
@@ -7560,6 +7605,18 @@
         </div>
         <div class="npa-modal-section">
             <div id="approachSuffixOptions" class="npa-choice-row no-wrap"></div>
+            <input
+                id="manualApproachSuffixInput"
+                type="text"
+                maxlength="1"
+                inputmode="text"
+                autocapitalize="characters"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Manual approach suffix"
+                oninput="handleManualApproachSuffixInput(event)"
+                style="position: fixed; left: -100px; bottom: 0; width: 1px; height: 1px; opacity: 0;"
+            >
         </div>
         <div class="npa-modal-section">
             <div id="approachThresholdOptions" class="npa-choice-row"></div>
