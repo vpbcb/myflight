@@ -5629,6 +5629,7 @@
     let airportDeleteConfirmTarget = null;
     let activeRadioAidShiftTarget = 'downwind';
     let radioAidShiftModalAllowsLockedRadio = false;
+    let newApproachCarouselActive = false;
     let newApproachState = {
         navType: 'VOR',
         suffix: '',
@@ -6505,6 +6506,35 @@
         return `${String(navType || '').toUpperCase()}${String(suffix || '').toLowerCase()}${String(threshold || '').toUpperCase()}`;
     }
 
+    function startNewApproachCarousel() {
+        newApproachCarouselActive = true;
+        setTimeout(() => openNpaKeypad('gpa'), 0);
+    }
+
+    function advanceNewApproachCarousel(completedField) {
+        if (!newApproachCarouselActive) return false;
+
+        const nextField = completedField === 'gpa'
+            ? 'fdp'
+            : completedField === 'fdp'
+                ? 'fap'
+                : '';
+        if (nextField) {
+            setTimeout(() => openNpaKeypad(nextField), 0);
+            return true;
+        }
+
+        if (completedField === 'fap') {
+            newApproachCarouselActive = false;
+            document.activeElement?.blur();
+            setTimeout(() => toggleNpaBlock('npaBlock2'), 0);
+            return true;
+        }
+
+        newApproachCarouselActive = false;
+        return false;
+    }
+
     async function saveNewApproachFromModal() {
         const airportCode = getNpaAirportCode();
         const airport = getAirportDocument(airportCode);
@@ -6542,6 +6572,7 @@
         setNpaEditModeUnlocked(true, true);
         renderNpaApproachDropdown(false);
         scheduleNpaCurrentPageStateSave();
+        startNewApproachCarousel();
 
         try {
             await syncPendingAirportSaves();
@@ -7109,6 +7140,11 @@
         if (navigator.vibrate) navigator.vibrate(15);
 
         const keypadModal = document.getElementById('keypadModal');
+        const completedCarouselField = newApproachCarouselActive && ['gpa', 'fdp', 'fap'].includes(activeNpaField)
+            ? activeNpaField
+            : "";
+        const shouldAdvanceNewApproachCarousel = e === 'done' && completedCarouselField !== "";
+        if (completedCarouselField && e !== 'done') newApproachCarouselActive = false;
 
         const hasNewValue = currentKpVal !== "" || keypadWasCleared;
         if (activeNpaField === 'airportModal') {
@@ -7139,6 +7175,7 @@
             keypadModal.style.display = 'none';
             if (activeNpaField === 'airportTarDistance') activeAirportTarInput = null;
             if (activeNpaField === 'airportRunwayLength') activeAirportRunwayLengthInput = null;
+            if (shouldAdvanceNewApproachCarousel) advanceNewApproachCarousel(completedCarouselField);
             return;
         }
 
@@ -7217,6 +7254,7 @@
         }
 
         scheduleNpaCurrentPageStateSave();
+        if (shouldAdvanceNewApproachCarousel) advanceNewApproachCarousel(completedCarouselField);
     }
 
     function showNpaTempLimitWarning() {
