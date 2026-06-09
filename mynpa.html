@@ -2614,6 +2614,17 @@
             -webkit-touch-callout: none;
         }
 
+        .npa-native-editable,
+        input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([readonly]):not([disabled]),
+        textarea:not([readonly]):not([disabled]),
+        select:not([disabled]),
+        [contenteditable="true"] {
+            touch-action: auto !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+        }
+
         /* Стили для Контейнера 2 */
     </style>
 
@@ -2952,6 +2963,31 @@
         if (user && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
 
+    function isNpaNativeKeyboardEditable(target) {
+        if (!target || target.readOnly || target.disabled) return false;
+
+        const tagName = String(target.tagName || '').toUpperCase();
+        if (tagName === 'TEXTAREA' || tagName === 'SELECT') return true;
+        if (tagName === 'INPUT') {
+            const type = String(target.getAttribute?.('type') || 'text').toLowerCase();
+            return !['hidden', 'button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'file', 'color'].includes(type);
+        }
+
+        return target.isContentEditable || target.getAttribute?.('contenteditable') === 'true';
+    }
+
+    function focusNpaNativeEditableFromGesture(event) {
+        const target = event?.target?.closest?.('input, textarea, select, [contenteditable="true"]');
+        if (!isNpaNativeKeyboardEditable(target)) return;
+
+        target.classList?.add('npa-native-editable');
+        try {
+            target.focus({ preventScroll: true });
+        } catch (error) {
+            target.focus();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         let lockedNpaAppHeight = 0;
 
@@ -2959,9 +2995,7 @@
             const active = document.activeElement;
             return Boolean(
                 active &&
-                /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) &&
-                !active.readOnly &&
-                !active.disabled
+                isNpaNativeKeyboardEditable(active)
             );
         };
 
@@ -3050,6 +3084,8 @@
             keepNpaViewportPinned();
         });
         document.addEventListener('focusout', () => setTimeout(lockAppHeight, 250));
+        document.addEventListener('touchend', focusNpaNativeEditableFromGesture, { capture: true, passive: false });
+        document.addEventListener('pointerdown', focusNpaNativeEditableFromGesture, true);
 
         if ('virtualKeyboard' in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
