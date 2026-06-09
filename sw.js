@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260609-8';
+const CACHE_NAME = 'myflight_v.260609-9';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
