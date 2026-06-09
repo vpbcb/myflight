@@ -1895,6 +1895,31 @@
         .npa-choice-row.no-wrap {
             flex-wrap: nowrap;
         }
+        .npa-manual-suffix-host {
+            position: relative;
+            flex: 1 1 0;
+            min-width: 0;
+            min-height: 32px;
+        }
+        .npa-manual-suffix-host .npa-choice-btn {
+            width: 100%;
+            height: 100%;
+        }
+        .npa-manual-suffix-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            padding: 0;
+            opacity: 1;
+            color: transparent;
+            background: transparent;
+            caret-color: transparent;
+            font-size: 16px;
+            outline: none;
+            z-index: 2;
+        }
         .npa-choice-btn {
             flex: 1 1 58px;
             min-height: 32px;
@@ -6457,6 +6482,10 @@
     function renderNewApproachSuffixOptions() {
         const container = document.getElementById('approachSuffixOptions');
         if (!container) return;
+        const manualInput = document.getElementById('manualApproachSuffixInput');
+        if (manualInput?.parentNode === container || manualInput?.parentNode?.parentNode === container) {
+            manualInput.remove();
+        }
         container.innerHTML = "";
 
         ['X', 'Y', 'Z'].forEach(value => {
@@ -6474,15 +6503,11 @@
         manualBtn.innerText = newApproachState.suffixMode === 'MAN' && newApproachState.suffix
             ? newApproachState.suffix
             : 'MAN';
-        manualBtn.onclick = openManualApproachSuffixInput;
-        container.appendChild(manualBtn);
-    }
-
-    function openManualApproachSuffixInput() {
-        const input = document.getElementById('manualApproachSuffixInput');
-        if (!input) return;
-        input.value = "";
-        input.focus();
+        const manualHost = document.createElement('div');
+        manualHost.className = 'npa-manual-suffix-host';
+        manualHost.appendChild(manualBtn);
+        if (manualInput) manualHost.appendChild(manualInput);
+        container.appendChild(manualHost);
     }
 
     function handleManualApproachSuffixInput(event) {
@@ -6508,7 +6533,10 @@
 
     function startNewApproachCarousel() {
         newApproachCarouselActive = true;
-        setTimeout(() => openNpaKeypad('gpa'), 0);
+        setTimeout(() => {
+            const menu = document.getElementById('gpaMenu');
+            if (menu) menu.style.display = 'block';
+        }, 0);
     }
 
     function advanceNewApproachCarousel(completedField) {
@@ -6597,6 +6625,7 @@
         if (!guardNpaEditableField('gpa')) return;
         const menu = document.getElementById('gpaMenu');
         if (!menu) return;
+        if (menu.style.display === 'block' && newApproachCarouselActive) newApproachCarouselActive = false;
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
@@ -6614,11 +6643,13 @@
         }
 
         setFieldValue('gpa', value);
+        if (newApproachCarouselActive) advanceNewApproachCarousel('gpa');
     }
 
     document.addEventListener('click', (event) => {
         const menu = document.getElementById('gpaMenu');
         if (menu && !event.target.closest('.gpa-container') && !event.target.closest('#gpaMenu')) {
+            if (menu.style.display === 'block' && newApproachCarouselActive) newApproachCarouselActive = false;
             menu.style.display = 'none';
         }
         if (!event.target.closest('#approachTypeWrapper')) closeNpaApproachDropdown();
@@ -7541,7 +7572,7 @@
                 spellcheck="false"
                 aria-label="Manual approach suffix"
                 oninput="handleManualApproachSuffixInput(event)"
-                style="position: fixed; left: -100px; bottom: 0; width: 1px; height: 1px; opacity: 0;"
+                class="npa-manual-suffix-input"
             >
         </div>
         <div class="npa-modal-section">
