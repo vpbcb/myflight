@@ -6641,6 +6641,35 @@
         container.appendChild(manualHost);
     }
 
+    function focusManualApproachSuffixInput(event) {
+        const manualSuffixInput = event?.currentTarget?.id === 'manualApproachSuffixInput'
+            ? event.currentTarget
+            : document.getElementById('manualApproachSuffixInput');
+        if (!manualSuffixInput || manualSuffixInput.disabled || manualSuffixInput.readOnly) return;
+
+        if (event) {
+            event.stopPropagation();
+            if (event.type === 'touchend') event.preventDefault();
+        }
+
+        const suffix = String(manualSuffixInput.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
+        manualSuffixInput.value = suffix;
+        newApproachState.suffixMode = 'MAN';
+        newApproachState.suffix = suffix;
+        manualSuffixInput.classList.add('active');
+
+        try {
+            manualSuffixInput.focus({ preventScroll: true });
+        } catch (error) {
+            manualSuffixInput.focus();
+        }
+
+        if (typeof manualSuffixInput.setSelectionRange === 'function') {
+            const caretPosition = manualSuffixInput.value.length;
+            manualSuffixInput.setSelectionRange(caretPosition, caretPosition);
+        }
+    }
+
     function handleManualApproachSuffixInput(event) {
         const input = event.currentTarget;
         const suffix = String(input.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
@@ -7702,7 +7731,11 @@
                 autocapitalize="characters"
                 autocomplete="off"
                 spellcheck="false"
+                enterkeyhint="done"
                 aria-label="Manual approach suffix"
+                onpointerdown="focusManualApproachSuffixInput(event)"
+                ontouchend="focusManualApproachSuffixInput(event)"
+                onclick="focusManualApproachSuffixInput(event)"
                 oninput="handleManualApproachSuffixInput(event)"
                 class="npa-manual-suffix-input"
             >
