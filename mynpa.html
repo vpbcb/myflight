@@ -1912,7 +1912,7 @@
             padding: 0 6px;
             color: var(--text-main);
             background: rgba(14, 165, 233, 0.08);
-            caret-color: var(--accent-blue);
+            caret-color: transparent;
             font-size: 16px;
             font-weight: 800;
             font-family: inherit;
@@ -6641,10 +6641,6 @@
         container.appendChild(manualHost);
     }
 
-    function prepareManualApproachSuffixInput(event) {
-        event.currentTarget?.select();
-    }
-
     function handleManualApproachSuffixInput(event) {
         const input = event.currentTarget;
         const suffix = String(input.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
@@ -7707,7 +7703,6 @@
                 autocomplete="off"
                 spellcheck="false"
                 aria-label="Manual approach suffix"
-                onfocus="prepareManualApproachSuffixInput(event)"
                 oninput="handleManualApproachSuffixInput(event)"
                 class="npa-manual-suffix-input"
             >
