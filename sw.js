@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260609-4';
+const CACHE_NAME = 'myflight_v.260609-save-admin-1';
 
 // Правило 1: Только строгие относительные пути
 const ASSETS_TO_CACHE = [
@@ -17,6 +17,8 @@ const ASSETS_TO_CACHE = [
     './myflightlogo.png',// Логотип
     './icons/icon-192.png',
     './icons/icon-512.png',
+    './icons/icon-maskable-192.png',
+    './icons/icon-maskable-512.png',
     './toicon.png',      // Иконка взлета (MyWind)
     './landicon.png',    // Иконка посадки (MyWind)
     './fdp.png',         // Иконка (MyPath)

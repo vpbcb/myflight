@@ -151,6 +151,11 @@
             min-width: 0;
         }
 
+        #npaCalcTitle {
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
         .npa-admin-mode-label {
             display: none;
             margin-top: -3px;
@@ -2611,8 +2616,8 @@
 <div class="app-wrapper">
     <div class="app-header">
         <div class="npa-title-stack">
-            <h2 class="app-title" id="npaCalcTitle" title="4 quick taps to show actions">=NPA CALC=</h2>
-            <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode</span>
+            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
+            <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
         </div>
         <div class="header-actions">
             <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add<br>Airport</button>
@@ -2834,9 +2839,14 @@
 
 <script>
     const NPA_HEADER_ACTION_TAP_WINDOW_MS = 700;
+    const NPA_HEADER_ADMIN_LONG_PRESS_MS = 1500;
+    const NPA_HEADER_ADMIN_MOVE_LIMIT_PX = 12;
     let npaHeaderActionTapCount = 0;
     let npaHeaderActionLastTap = 0;
     let npaHeaderAdminTapTimer = null;
+    let npaHeaderAdminLongPressTimer = null;
+    let npaHeaderAdminLongPressFired = false;
+    let npaHeaderAdminPointerStart = null;
 
     function cancelNpaHeaderAdminTapTimer() {
         if (!npaHeaderAdminTapTimer) return;
@@ -2846,6 +2856,10 @@
 
     function handleNpaCalcTitleTap(event) {
         event.preventDefault();
+        if (npaHeaderAdminLongPressFired) {
+            npaHeaderAdminLongPressFired = false;
+            return;
+        }
         const now = Date.now();
         npaHeaderActionTapCount = now - npaHeaderActionLastTap <= NPA_HEADER_ACTION_TAP_WINDOW_MS
             ? npaHeaderActionTapCount + 1
@@ -2862,16 +2876,54 @@
         }
     }
 
+    function cancelNpaHeaderAdminLongPress() {
+        if (npaHeaderAdminLongPressTimer) clearTimeout(npaHeaderAdminLongPressTimer);
+        npaHeaderAdminLongPressTimer = null;
+        npaHeaderAdminPointerStart = null;
+    }
+
+    function startNpaHeaderAdminLongPress(event) {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        cancelNpaHeaderAdminLongPress();
+        npaHeaderAdminLongPressFired = false;
+        npaHeaderAdminPointerStart = { x: event.clientX, y: event.clientY };
+        npaHeaderAdminLongPressTimer = setTimeout(() => {
+            npaHeaderAdminLongPressTimer = null;
+            npaHeaderAdminLongPressFired = true;
+            npaHeaderActionTapCount = 0;
+            cancelNpaHeaderAdminTapTimer();
+            if (navigator.vibrate) navigator.vibrate(25);
+            if (typeof adminLogin === 'function') adminLogin();
+        }, NPA_HEADER_ADMIN_LONG_PRESS_MS);
+    }
+
+    function moveNpaHeaderAdminLongPress(event) {
+        if (!npaHeaderAdminPointerStart || !npaHeaderAdminLongPressTimer) return;
+        const dx = event.clientX - npaHeaderAdminPointerStart.x;
+        const dy = event.clientY - npaHeaderAdminPointerStart.y;
+        if (Math.hypot(dx, dy) > NPA_HEADER_ADMIN_MOVE_LIMIT_PX) cancelNpaHeaderAdminLongPress();
+    }
+
     function initNpaHeaderActionUnlock() {
         document.body.classList.remove('npa-header-actions-unlocked');
         const title = document.getElementById('npaCalcTitle');
         if (!title) return;
         title.addEventListener('click', handleNpaCalcTitleTap);
+        title.addEventListener('pointerdown', startNpaHeaderAdminLongPress);
+        title.addEventListener('pointermove', moveNpaHeaderAdminLongPress);
+        title.addEventListener('pointerup', cancelNpaHeaderAdminLongPress);
+        title.addEventListener('pointercancel', cancelNpaHeaderAdminLongPress);
+        title.addEventListener('pointerleave', cancelNpaHeaderAdminLongPress);
+        title.addEventListener('contextmenu', event => event.preventDefault());
     }
 
     window.handleNpaAdminAuthState = user => {
         document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
-        document.getElementById('npaAdminModeLabel')?.classList.toggle('active', Boolean(user));
+        const label = document.getElementById('npaAdminModeLabel');
+        if (label) {
+            label.textContent = 'admin mode ON';
+            label.classList.toggle('active', Boolean(user));
+        }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -6579,8 +6631,10 @@
         }
 
         const approachName = buildApproachName(newApproachState.navType, suffix, threshold);
-        airport.approaches = airport.approaches && typeof airport.approaches === 'object' ? airport.approaches : {};
-        if (airport.approaches[approachName]) {
+        const savedApproaches = airport.approaches && typeof airport.approaches === 'object'
+            ? airport.approaches
+            : {};
+        if (savedApproaches[approachName]) {
             setSelectedNpaType(approachName);
             closeAddApproachModal('button');
             closeNpaApproachDropdown();
@@ -6589,24 +6643,12 @@
             return;
         }
 
-        airport.approaches[approachName] = createEmptyApproachData(newApproachState.navType, suffix, threshold, approachName);
-        airport.updatedAt = Date.now();
-        upsertLocalAirport(airportCode, airport);
-        queueAirportSave(airportCode, airport);
-
         closeAddApproachModal('button');
         setSelectedNpaType(approachName);
         clearNpaFields();
         setNpaEditModeUnlocked(true, true);
-        renderNpaApproachDropdown(false);
         scheduleNpaCurrentPageStateSave();
         startNewApproachCarousel();
-
-        try {
-            await syncPendingAirportSaves();
-        } catch (error) {
-            console.error("Approach save sync error:", error);
-        }
     }
 
     function startNewApproachEntry() {
@@ -6767,6 +6809,7 @@
 
         upsertLocalAirport(airportCode, airport);
         queueAirportSave(airportCode, airport);
+        renderNpaApproachDropdown(false);
 
         try {
             await syncPendingAirportSaves();
@@ -7596,6 +7639,27 @@
     </div>
 </div>
 
+<div id="npaAdminLoginModal" class="modal-overlay" onclick="closeNpaAdminLoginModal(event)">
+    <form class="modal-content npa-form-modal" onclick="event.stopPropagation()" onsubmit="submitNpaAdminLogin(event)">
+        <div class="modal-header">Admin Login</div>
+        <div class="npa-modal-section">
+            <div class="npa-modal-field">
+                <label for="npaAdminEmail">Email</label>
+                <input id="npaAdminEmail" class="npa-modal-input" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+            </div>
+            <div class="npa-modal-field">
+                <label for="npaAdminPassword">Password</label>
+                <input id="npaAdminPassword" class="npa-modal-input" type="password" autocomplete="current-password" required>
+            </div>
+            <div id="npaAdminLoginError" class="clear-data-text npa-hidden" role="alert"></div>
+        </div>
+        <div class="npa-modal-actions">
+            <button type="button" class="modal-opt-btn" onclick="closeNpaAdminLoginModal('button')">Cancel</button>
+            <button id="npaAdminLoginButton" type="submit" class="modal-opt-btn primary">Login</button>
+        </div>
+    </form>
+</div>
+
 <div class="modal-overlay" id="npaModal" onclick="closeNpaModal(event)">
     <div class="modal-content">
         <div class="modal-header">Select Approach Type</div>
@@ -7646,6 +7710,24 @@
 
 
 <script>
+    function closeNpaAdminLoginModal(event) {
+        if (event && event !== 'button' && event.target !== event.currentTarget) return;
+        document.getElementById('npaAdminLoginModal')?.classList.remove('active');
+        const password = document.getElementById('npaAdminPassword');
+        if (password) password.value = '';
+    }
+
+    function openNpaAdminLoginModal() {
+        const modal = document.getElementById('npaAdminLoginModal');
+        const error = document.getElementById('npaAdminLoginError');
+        if (error) {
+            error.textContent = '';
+            error.classList.add('npa-hidden');
+        }
+        modal?.classList.add('active');
+        setTimeout(() => document.getElementById('npaAdminEmail')?.focus({ preventScroll: true }), 0);
+    }
+
     async function adminLogin() {
         const firebaseReady = typeof window.initNpaFirebase === 'function'
             ? await window.initNpaFirebase()
@@ -7661,18 +7743,32 @@
             return;
         }
 
-        const email = prompt("Admin Email:");
-        if (!email) return;
-        const pass = prompt("Password:");
-        if (!pass) return;
+        openNpaAdminLoginModal();
+    }
+
+    async function submitNpaAdminLogin(event) {
+        event.preventDefault();
+        const email = document.getElementById('npaAdminEmail')?.value?.trim() || '';
+        const pass = document.getElementById('npaAdminPassword')?.value || '';
+        const button = document.getElementById('npaAdminLoginButton');
+        const errorEl = document.getElementById('npaAdminLoginError');
+        if (!email || !pass || !window.npaAuth) return;
 
         try {
+            if (button) button.disabled = true;
             await window.npaAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
             const result = await window.npaAuth.signInWithEmailAndPassword(email, pass);
+            if (typeof window.handleNpaAdminAuthState === 'function') window.handleNpaAdminAuthState(result.user);
+            closeNpaAdminLoginModal('button');
             alert("Admin mode ON: " + result.user.email);
             if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
         } catch (error) {
-            alert("Login Error: " + error.message);
+            if (errorEl) {
+                errorEl.textContent = "Login Error: " + error.message;
+                errorEl.classList.remove('npa-hidden');
+            }
+        } finally {
+            if (button) button.disabled = false;
         }
     }
 </script>
