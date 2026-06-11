@@ -347,11 +347,33 @@
             }));
     }
 
+    function serializeRadioAids(radioAids) {
+        return normalizeRadioAids({ radioAids }).map(aid => {
+            if (aid.type === 'TAR') {
+                return {
+                    type: 'TAR',
+                    name: 'TAR',
+                    thr1: String(aid.thr1 || '').trim().toUpperCase(),
+                    thr1Distance: aid.thr1Distance ?? '',
+                    thr2: String(aid.thr2 || '').trim().toUpperCase(),
+                    thr2Distance: aid.thr2Distance ?? ''
+                };
+            }
+
+            return {
+                type: aid.sourceType === 'VORDME' ? 'VORDME' : aid.type,
+                name: aid.name || aid.id || '',
+                coord: aid.coord || ''
+            };
+        });
+    }
+
     function serializeReferenceAirport(airportCode, airportData) {
         const normalized = normalizeReferenceAirport(airportCode, airportData);
         return {
             icao: normalized.icao,
             runways: runwayObjectFromArray(normalized.runways),
+            radioAids: serializeRadioAids(normalized.radioAids),
             navaids: navaidsFromRadioAids(normalized.radioAids)
         };
     }
