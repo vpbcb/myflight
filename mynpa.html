@@ -1151,9 +1151,17 @@
             flex: 1 1 auto;
         }
         .airport-info-btn {
+            -webkit-appearance: none;
+            appearance: none;
+            box-sizing: border-box;
             flex: 0 0 28px;
             width: 28px;
             height: 28px;
+            min-width: 28px;
+            min-height: 28px;
+            max-width: 28px;
+            max-height: 28px;
+            padding: 0;
             border: 1px solid rgba(14, 165, 233, 0.35);
             border-radius: 50%;
             background: rgba(14, 165, 233, 0.1);
@@ -1161,7 +1169,10 @@
             font-family: inherit;
             font-size: 15px;
             font-weight: 900;
-            line-height: 1;
+            line-height: 28px;
+            display: grid;
+            place-items: center;
+            text-align: center;
             cursor: pointer;
         }
         .airport-info-btn:active {
@@ -2548,6 +2559,8 @@
             margin: 1px 0 0;
             padding: 0 4px;
             min-height: 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
             color: var(--text-muted);
             font-size: 9px;
             font-weight: 700;
@@ -2557,6 +2570,7 @@
             justify-content: center;
             text-align: center;
             text-transform: none;
+            white-space: nowrap;
         }
         html.dark-theme .npa-profile-unit-hint {
             color: #94a3b8;
@@ -3926,6 +3940,7 @@
         let npaProfileLongPressFired = false;
         let npaProfileLongPressColumn = "";
         let npaAirportGhostValue = "";
+        let npaAirportFocusActive = false;
         let npaCurrentApproachDirty = false;
         let finalDescentFromSource = "fap";
         const DOWNWIND_MANUAL_SHIFT_MESSAGE = "S downwind was manually changed";
@@ -3938,6 +3953,33 @@
         let profileRadioShiftExactNm = null;
         let profileTarFromAirport = false;
         let profileTarManualOverride = false;
+        const NPA_APPROACH_USER_EDIT_FIELDS = new Set([
+            'rwLength',
+            'elevation',
+            'gpa',
+            'fdp',
+            'fap',
+            'racetrack',
+            'inboundCrs',
+            'downwindRadioFixShift',
+            'sDownwind',
+            'downwindTime',
+            'gsAppr',
+            'radio',
+            'tar'
+        ]);
+
+        function markNpaCurrentApproachDirty() {
+            const airportCode = getNpaAirportCode();
+            const approachType = getSelectedNpaType();
+            if (!airportCode || !approachType || approachType === "—") return;
+            npaCurrentApproachDirty = true;
+        }
+
+        function markNpaCurrentApproachDirtyForField(field) {
+            if (!NPA_APPROACH_USER_EDIT_FIELDS.has(field)) return;
+            markNpaCurrentApproachDirty();
+        }
 
         function getNpaCurrentPageState() {
             const fields = {};
@@ -4190,6 +4232,8 @@
         npaCurrentApproachDirty = false;
         const inputEl = document.getElementById('apprName');
         const code = sanitizeNpaAirportCode(airportCode);
+        npaAirportGhostValue = code;
+        npaAirportFocusActive = false;
         if (inputEl) {
             inputEl.value = code;
             inputEl.classList.remove('airport-ghost-value');
@@ -4205,6 +4249,11 @@
     function handleAirportFocus() {
         const inputEl = document.getElementById('apprName');
         if (!inputEl) return;
+        if (!npaAirportFocusActive) {
+            npaAirportGhostValue = sanitizeNpaAirportCode(inputEl.value);
+            npaAirportFocusActive = true;
+            inputEl.value = "";
+        }
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
         closeNpaApproachDropdown();
@@ -4216,16 +4265,74 @@
         if (!inputEl) return;
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
-        getNpaAirportCode();
+        const airportCode = getNpaAirportCode();
+        if (!airportCode && npaAirportGhostValue) {
+            inputEl.value = npaAirportGhostValue;
+        } else {
+            npaAirportGhostValue = airportCode;
+        }
+        npaAirportFocusActive = false;
         window.setTimeout(closeNpaAirportDropdown, 120);
         scheduleNpaCurrentPageStateSave();
     }
 
     function getNpaApproachesForAirport(airportCode) {
         window.airportsDb = window.airportsDb || {};
-        return airportCode && window.airportsDb[airportCode]?.approaches
-            ? Object.keys(window.airportsDb[airportCode].approaches).sort()
+        const code = sanitizeNpaAirportCode(airportCode);
+        if (!code || !window.airportsDb[code]) return [];
+
+        const savedApproaches = window.airportsDb[code]?.approaches
+            ? Object.keys(window.airportsDb[code].approaches)
             : [];
+        const runwayApproaches = getVirtualRunwayApproachNamesForAirport(code)
+            .filter(name => !savedApproaches.includes(name));
+
+        return [...savedApproaches, ...runwayApproaches].sort();
+    }
+
+    function normalizeRunwayThresholdName(value) {
+        return String(value || '')
+            .trim()
+            .toUpperCase()
+            .replace(/^RW/, '')
+            .replace(/[^0-9A-Z]/g, '');
+    }
+
+    function getAirportRunwayThresholdNames(airportCode) {
+        const airport = getAirportDocument(sanitizeNpaAirportCode(airportCode));
+        const thresholds = [];
+        (airport?.runways || []).forEach(runway => {
+            [runway.thr1, runway.thr2].forEach(value => {
+                const threshold = normalizeRunwayThresholdName(value);
+                if (threshold && !thresholds.includes(threshold)) thresholds.push(threshold);
+            });
+        });
+        return thresholds;
+    }
+
+    function getVirtualRunwayApproachNamesForAirport(airportCode) {
+        return getAirportRunwayThresholdNames(airportCode).map(threshold => `RW${threshold}`);
+    }
+
+    function getVirtualRunwayApproachThreshold(airportCode, approachName) {
+        const rawName = String(approachName || '').trim().toUpperCase().replace(/\s+/g, '');
+        if (!rawName.startsWith('RW')) return "";
+        const target = normalizeRunwayThresholdName(rawName.slice(2));
+        return getAirportRunwayThresholdNames(airportCode).find(threshold => threshold === target) || "";
+    }
+
+    function isRunwayOnlyApproachName(airportCode, approachName) {
+        return Boolean(getVirtualRunwayApproachThreshold(airportCode, approachName));
+    }
+
+    function getVirtualRunwayApproachData(airportCode, approachName) {
+        const threshold = getVirtualRunwayApproachThreshold(airportCode, approachName);
+        if (!threshold) return null;
+
+        return {
+            ...createEmptyApproachData('RW', '', threshold, `RW${threshold}`),
+            profileTarManualOverride: true
+        };
     }
 
     function getSelectedNpaType() {
@@ -4237,7 +4344,7 @@
         const raw = String(type || "").trim().replace(/\s+/g, '');
         if (!raw) return "";
 
-        const navMatch = raw.match(/^(VOR|NDB|ILS)/i);
+        const navMatch = raw.match(/^(VOR|NDB|ILS|RW)/i);
         const prefix = navMatch ? navMatch[1].toUpperCase() : raw.slice(0, 3).toUpperCase();
         const tail = raw.slice(prefix.length);
         const tailParts = tail.match(/^([A-Z]+)?(.*)$/i);
@@ -4263,6 +4370,7 @@
     function handleAirportInput() {
         clearTimeout(airportInputTimeout);
         npaCurrentApproachDirty = false;
+        npaAirportFocusActive = true;
 
         const inputEl = document.getElementById('apprName');
         if (inputEl) {
@@ -4364,6 +4472,7 @@
         closeNpaApproachDropdown();
         
         checkAndFillFromDB();
+        setNpaEditModeUnlocked(isRunwayOnlyApproachName(getNpaAirportCode(), type), true);
         scheduleNpaCurrentPageStateSave();
     }
 
@@ -6022,7 +6131,7 @@
 
     function applyRadioAidShiftValue(shiftValue) {
         if (activeRadioAidShiftTarget === 'profileRadio') {
-            npaCurrentApproachDirty = true;
+            markNpaCurrentApproachDirtyForField('radio');
             document.getElementById('radioDistValDisplay').innerText = shiftValue === "" ? "0.0" : shiftValue;
             updateNpaProfileUnitHeaders();
             renderNpaProfileTable();
@@ -6030,6 +6139,7 @@
             return;
         }
 
+        markNpaCurrentApproachDirtyForField('downwindRadioFixShift');
         setSDownwindManualMode(false);
         setFieldValue('downwindRadioFixShift', shiftValue);
     }
@@ -6146,6 +6256,7 @@
         document.getElementById('tarDistValDisplay').innerText = Number(tarDistance).toFixed(1);
         profileTarFromAirport = true;
         profileTarManualOverride = false;
+        markNpaCurrentApproachDirtyForField('tar');
         updateNpaProfileUnitHeaders();
         renderNpaProfileTable();
         scheduleNpaCurrentPageStateSave();
@@ -7489,6 +7600,7 @@
         }
 
         setFieldValue('gpa', value);
+        markNpaCurrentApproachDirtyForField('gpa');
         if (newApproachCarouselActive) advanceNewApproachCarousel('gpa');
     }
 
@@ -7506,9 +7618,12 @@
         const airportCode = getNpaAirportCode();
         const type = getSelectedNpaType();
         window.airportsDb = window.airportsDb || {};
-        const data = airportCode && type && type !== "—"
+        const savedData = airportCode && type && type !== "—"
             ? window.airportsDb[airportCode]?.approaches?.[type]
             : null;
+        const virtualRunwayData = savedData ? null : getVirtualRunwayApproachData(airportCode, type);
+        const data = savedData || virtualRunwayData;
+        const isVirtualRunwayApproach = Boolean(virtualRunwayData && !savedData);
 
         if (data) {
             downwindCalcSource = "";
@@ -7551,9 +7666,11 @@
 
             document.getElementById('radioDistValDisplay').innerText = data.radioShift !== undefined ? data.radioShift : "0.0";
             document.getElementById('tarDistValDisplay').innerText = data.tarShift !== undefined ? data.tarShift : "0.0";
-            refreshProfileRadioReferenceFromAirport();
-            refreshDownwindRadioReferenceFromAirport();
-            refreshTarReferenceFromAirport();
+            if (!isVirtualRunwayApproach) {
+                refreshProfileRadioReferenceFromAirport();
+                refreshDownwindRadioReferenceFromAirport();
+                refreshTarReferenceFromAirport();
+            }
             updateNpaProfileUnitHeaders();
             setDefaultTemperature();
             scheduleNpaCurrentPageStateSave();
@@ -7620,7 +7737,10 @@
         updateDownwindCalculation('save');
 
         airport.approaches = airport.approaches && typeof airport.approaches === 'object' ? airport.approaches : {};
-        const approachData = collectCurrentApproachData(airport.approaches[type] || { name: type });
+        const baseApproachData = airport.approaches[type]
+            || getVirtualRunwayApproachData(airportCode, type)
+            || { name: type };
+        const approachData = collectCurrentApproachData(baseApproachData);
         approachData.name = type;
         approachData.updatedAt = Date.now();
         airport.approaches[type] = approachData;
@@ -7661,6 +7781,7 @@
         } else {
             el.innerText = 'Right';
         }
+        markNpaCurrentApproachDirtyForField('racetrack');
         updateRacetrackSectors();
         scheduleNpaCurrentPageStateSave();
     }
@@ -8162,6 +8283,7 @@
             }
         }
 
+        markNpaCurrentApproachDirtyForField(activeNpaField);
         scheduleNpaCurrentPageStateSave();
         if (shouldAdvanceNewApproachCarousel) advanceNewApproachCarousel(completedCarouselField);
     }
