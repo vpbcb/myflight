@@ -2782,7 +2782,7 @@
                         <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock4" onclick="toggleNpaBlock('npaBlock4')">
                             <span class="tab-line">Profile</span>
                             <div class="fcu-info-stacked">
-                                <div class="fcu-main">FCU FPA: xx&deg;</div>
+                                <div class="fcu-main">FCU FPA: <span id="npaFcuFpaValue">--</span>&deg;</div>
                                 <div class="fcu-sub">&#127777;&#xFE0F; corrected</div>
                             </div>
                         </div>
@@ -5112,6 +5112,39 @@
         container.scrollTop = anchor.scrollTop || 0;
     }
 
+    function calculateNpaFcuFpaCorrected() {
+        const elevationValue = getAirportThresholdElevationValue();
+        const angleValue = getNumberOrBlank('gpa');
+        const tempValue = getNumberOrBlank('tempC');
+
+        if (
+            !isFilledProfileNumber(elevationValue) ||
+            !isFilledProfileNumber(angleValue) ||
+            !isFilledProfileNumber(tempValue)
+        ) {
+            return "";
+        }
+
+        const hElev = Number(elevationValue);
+        const angle = Number(angleValue);
+        const temp = Number(tempValue);
+        const denominator = temp + 273.15;
+
+        if (!Number.isFinite(denominator) || denominator <= 0 || !Number.isFinite(angle)) {
+            return "";
+        }
+
+        const kTable = (288.15 - (0.00198 * hElev)) / denominator;
+        const correctedFpa = angle * kTable;
+        return Number.isFinite(correctedFpa) ? correctedFpa.toFixed(1) : "";
+    }
+
+    function updateNpaFcuFpaDisplay() {
+        const el = document.getElementById('npaFcuFpaValue');
+        if (!el) return;
+        el.textContent = calculateNpaFcuFpaCorrected() || "--";
+    }
+
     function getNpaProfileMetrics() {
         const elevationValue = getAirportThresholdElevationValue();
         const fdpValue = getNumberOrBlank('fdp');
@@ -5168,6 +5201,7 @@
 
     function renderNpaProfileTable() {
         const tableBody = document.getElementById('npaProfileTableBody');
+        updateNpaFcuFpaDisplay();
         if (!tableBody) return;
         const scrollAnchor = captureNpaProfileScrollAnchor(tableBody);
         updateNpaProfileUnitHeaders();
