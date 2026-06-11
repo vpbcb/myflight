@@ -5,6 +5,7 @@
     const LABEL_KEY = 'hubVersion';
     const CACHE_NAME_RE = /CACHE_NAME\s*=\s*['"]([^'"]+)['"]/;
     const WORKER_MESSAGE_TIMEOUT_MS = 2000;
+    const WORKER_UPDATE_TIMEOUT_MS = 18000;
 
     function fetchWithTimeout(url, options, timeoutMs) {
         const controller = new AbortController();
@@ -47,6 +48,15 @@
                 clearTimeout(timeoutId);
                 resolve(null);
             }
+        });
+    }
+
+    function withTimeout(promise, timeoutMs, message) {
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+            Promise.resolve(promise)
+                .then(resolve, reject)
+                .finally(() => clearTimeout(timeoutId));
         });
     }
 
@@ -134,25 +144,38 @@
         if (overlay) overlay.style.display = 'none';
     }
 
-    function waitForWorkerState(worker, targetStates) {
+    function waitForWorkerState(worker, targetStates, timeoutMs = 0) {
         return new Promise((resolve) => {
             if (!worker) {
                 resolve(null);
                 return;
             }
-            if (targetStates.includes(worker.state)) {
-                resolve(worker.state);
-                return;
+            let done = false;
+            let timeoutId = null;
+
+            function finish(state) {
+                if (done) return;
+                done = true;
+                if (timeoutId) clearTimeout(timeoutId);
+                worker.removeEventListener('statechange', onStateChange);
+                resolve(state);
             }
 
             function onStateChange() {
                 if (targetStates.includes(worker.state)) {
-                    worker.removeEventListener('statechange', onStateChange);
-                    resolve(worker.state);
+                    finish(worker.state);
                 }
             }
 
+            if (targetStates.includes(worker.state)) {
+                finish(worker.state);
+                return;
+            }
+
             worker.addEventListener('statechange', onStateChange);
+            if (timeoutMs > 0) {
+                timeoutId = setTimeout(() => finish(null), timeoutMs);
+            }
         });
     }
 
@@ -173,6 +196,8 @@
         const hadController = Boolean(navigator.serviceWorker.controller);
         let didReload = false;
         if (hadController) showUpdateOverlay();
+        const updateStartedAt = Date.now();
+        const getUpdateBudgetMs = () => Math.max(1000, WORKER_UPDATE_TIMEOUT_MS - (Date.now() - updateStartedAt));
 
         const reloadForNewWorker = () => {
             if (didReload) return;
@@ -188,7 +213,11 @@
         navigator.serviceWorker.addEventListener('controllerchange', onControllerChange, { once: true });
 
         try {
-            const updatedRegistration = await registration.update();
+            const updatedRegistration = await withTimeout(
+                registration.update(),
+                getUpdateBudgetMs(),
+                'Service worker update timed out'
+            );
             const worker = updatedRegistration.installing || updatedRegistration.waiting;
 
             if (updatedRegistration.waiting) {
@@ -196,12 +225,15 @@
             }
 
             const state = worker
-                ? await waitForWorkerState(worker, ['activated', 'redundant'])
+                ? await waitForWorkerState(worker, ['activated', 'redundant'], getUpdateBudgetMs())
                 : null;
             const installedCacheName = await getActiveCacheName(updatedRegistration);
 
             if (state === 'redundant') {
                 throw new Error('New service worker installation failed');
+            }
+            if (worker && state === null && installedCacheName !== remoteCacheName) {
+                throw new Error('Timed out waiting for new service worker activation');
             }
             if (installedCacheName === remoteCacheName) {
                 localStorage.setItem(CACHE_KEY, remoteCacheName);
