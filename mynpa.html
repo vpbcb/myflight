@@ -1173,6 +1173,20 @@
             box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
             z-index: 5000;
         }
+        .npa-airport-dropdown {
+            max-height: min(58vh, calc(var(--app-height) - 11rem));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .npa-airport-dropdown::-webkit-scrollbar {
+            width: 4px;
+        }
+        .npa-airport-dropdown::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.35);
+        }
         .npa-airport-dropdown.open,
         .npa-approach-dropdown.open {
             display: flex;
