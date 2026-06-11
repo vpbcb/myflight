@@ -4714,6 +4714,47 @@
         renderNpaProfileTable();
     }
 
+    function clearNpaProfileRadioColumn() {
+        const display = document.getElementById('radioDistValDisplay');
+        if (display) display.innerText = "0.0";
+        profileRadioSourceLabel = "";
+        profileRadioDirectSource = null;
+        profileRadioShiftExactNm = null;
+        npaProfileActiveColumns = npaProfileActiveColumns.filter(column => column !== 'radio');
+        markNpaCurrentApproachDirtyForField('radio');
+        updateNpaProfileUnitHeaders();
+        applyNpaProfileFocusClasses();
+        renderNpaProfileTable();
+        scheduleNpaCurrentPageStateSave();
+    }
+
+    function clearNpaProfileTarColumn() {
+        const display = document.getElementById('tarDistValDisplay');
+        if (display) display.innerText = "0.0";
+        profileTarFromAirport = false;
+        profileTarManualOverride = true;
+        npaProfileActiveColumns = npaProfileActiveColumns.filter(column => column !== 'tar');
+        markNpaCurrentApproachDirtyForField('tar');
+        updateNpaProfileUnitHeaders();
+        applyNpaProfileFocusClasses();
+        renderNpaProfileTable();
+        scheduleNpaCurrentPageStateSave();
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    function isNpaProfileTarColumnVisible() {
+        return hasNpaProfileShiftValue(parseNpaProfileShift('tarDistValDisplay'));
+    }
+
+    function toggleNpaProfileTarColumn() {
+        if (isNpaProfileTarColumnVisible()) {
+            clearNpaProfileTarColumn();
+            return;
+        }
+
+        applySavedTarShiftToProfile({ allowLocked: true });
+    }
+
     function cancelNpaProfileLongPress() {
         if (npaProfileLongPressTimer) {
             clearTimeout(npaProfileLongPressTimer);
@@ -4789,7 +4830,18 @@
 
             const target = event.target.closest('[data-profile-unit-column]');
             const column = target ? target.dataset.profileUnitColumn : "";
-            if (isValidNpaProfileUnitColumn(column)) setNpaProfileFocusColumn(column);
+            if (!isValidNpaProfileUnitColumn(column)) return;
+
+            const isHeaderCell = Boolean(target.closest('.npa-profile-head'));
+            if (isHeaderCell && column === 'tar') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                toggleNpaProfileTarColumn();
+                return;
+            }
+
+            setNpaProfileFocusColumn(column);
         }, true);
     }
 
@@ -4805,7 +4857,7 @@
         if (type === 'radio') return;
 
         if (type === 'tar') {
-            applySavedTarShiftToProfile();
+            toggleNpaProfileTarColumn();
         }
     }
 
@@ -5937,6 +5989,7 @@
         const modal = document.getElementById('radioAidShiftModal');
         const options = document.getElementById('radioAidShiftOptions');
         if (!modal || !options) return;
+        updateRadioAidShiftModalActions();
 
         const airportCode = getNpaAirportCode();
         const airport = getAirportDocument(airportCode);
@@ -5975,6 +6028,23 @@
 
         if (navigator.vibrate) navigator.vibrate(15);
         modal.classList.add('active');
+    }
+
+    function updateRadioAidShiftModalActions() {
+        const clearButton = document.getElementById('radioAidShiftClearButton');
+        if (!clearButton) return;
+        clearButton.textContent = activeRadioAidShiftTarget === 'profileRadio' ? 'Clear' : 'Cancel';
+    }
+
+    function handleRadioAidShiftClearButton() {
+        if (activeRadioAidShiftTarget !== 'profileRadio') {
+            closeRadioAidShiftModal('button');
+            return;
+        }
+
+        clearNpaProfileRadioColumn();
+        closeRadioAidShiftModal('button');
+        if (navigator.vibrate) navigator.vibrate(15);
     }
 
     function closeRadioAidShiftModal(event) {
@@ -6270,24 +6340,24 @@
         return true;
     }
 
-    function applySavedTarShiftToProfile() {
-        if (!guardNpaEditableField('tar')) return;
+    function applySavedTarShiftToProfile(options = {}) {
+        if (options.allowLocked !== true && !guardNpaEditableField('tar')) return false;
         const threshold = getCurrentLandingThreshold();
         if (!threshold) {
             alert("Please select an approach with landing threshold first.");
-            return;
+            return false;
         }
 
         const tarAid = getSavedTarAidForCurrentAirport();
         if (!tarAid) {
             alert("TAR distance is not saved for this airport.");
-            return;
+            return false;
         }
 
         const tarDistance = getTarDistanceForThreshold(tarAid, threshold);
         if (tarDistance === "") {
             alert(`TAR distance to ${threshold} is not saved.`);
-            return;
+            return false;
         }
 
         document.getElementById('tarDistValDisplay').innerText = Number(tarDistance).toFixed(1);
@@ -6297,6 +6367,7 @@
         updateNpaProfileUnitHeaders();
         renderNpaProfileTable();
         scheduleNpaCurrentPageStateSave();
+        return true;
     }
 
     function setSDownwindManualMode(isManual) {
@@ -6874,19 +6945,63 @@
         modal.classList.toggle('keyboard-open', viewportHeight < window.innerHeight * 0.82);
     }
 
+    function scrollAddAirportFieldIntoView(element, behavior = 'smooth') {
+        const modal = document.getElementById('addAirportModal');
+        const scroller = modal?.querySelector('.npa-form-modal');
+        if (!element?.closest?.('#addAirportModal') || !scroller) return;
+
+        syncAddAirportModalViewport();
+
+        const viewport = window.visualViewport;
+        const viewportTop = viewport?.offsetTop || 0;
+        const viewportBottom = viewportTop + (viewport?.height || window.innerHeight);
+        const modalRect = scroller.getBoundingClientRect();
+        const fieldRect = element.getBoundingClientRect();
+        const margin = 18;
+        const visibleTop = Math.max(modalRect.top, viewportTop) + margin;
+        const visibleBottom = Math.min(modalRect.bottom, viewportBottom) - margin;
+
+        if (fieldRect.bottom > visibleBottom) {
+            scroller.scrollTo({
+                top: scroller.scrollTop + fieldRect.bottom - visibleBottom,
+                behavior
+            });
+        } else if (fieldRect.top < visibleTop) {
+            scroller.scrollTo({
+                top: Math.max(0, scroller.scrollTop - (visibleTop - fieldRect.top)),
+                behavior
+            });
+        }
+    }
+
     function keepAddAirportFieldVisible(element) {
         if (!element?.closest?.('#addAirportModal')) return;
-        syncAddAirportModalViewport();
-        setTimeout(() => {
-            element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-        }, 120);
+        [40, 140, 320, 620].forEach((delay, index) => {
+            setTimeout(() => {
+                scrollAddAirportFieldIntoView(element, index === 0 ? 'auto' : 'smooth');
+            }, delay);
+        });
+    }
+
+    function keepActiveAddAirportFieldVisible() {
+        const active = document.activeElement;
+        if (active?.closest?.('#addAirportModal')) keepAddAirportFieldVisible(active);
     }
 
     function initAddAirportModalKeyboardGuard() {
         const viewport = window.visualViewport;
-        viewport?.addEventListener('resize', syncAddAirportModalViewport);
-        viewport?.addEventListener('scroll', syncAddAirportModalViewport);
-        window.addEventListener('resize', syncAddAirportModalViewport);
+        viewport?.addEventListener('resize', () => {
+            syncAddAirportModalViewport();
+            keepActiveAddAirportFieldVisible();
+        });
+        viewport?.addEventListener('scroll', () => {
+            syncAddAirportModalViewport();
+            keepActiveAddAirportFieldVisible();
+        });
+        window.addEventListener('resize', () => {
+            syncAddAirportModalViewport();
+            keepActiveAddAirportFieldVisible();
+        });
         document.addEventListener('focusin', event => keepAddAirportFieldVisible(event.target));
     }
 
@@ -7335,6 +7450,8 @@
             nameInput?.focus({ preventScroll: true });
             nameInput?.select();
             setTimeout(() => keepAddAirportFieldVisible(nameInput), 50);
+        } else if (startCarousel) {
+            setTimeout(() => keepAddAirportFieldVisible(block), 50);
         }
     }
 
@@ -8675,7 +8792,7 @@
         <div class="modal-header">Radio Aid Shift</div>
         <div class="modal-options" id="radioAidShiftOptions"></div>
         <div class="npa-modal-actions">
-            <button type="button" class="modal-opt-btn" onclick="closeRadioAidShiftModal('button')">Cancel</button>
+            <button id="radioAidShiftClearButton" type="button" class="modal-opt-btn" onclick="handleRadioAidShiftClearButton()">Cancel</button>
             <button type="button" class="modal-opt-btn primary" onclick="openManualRadioAidShift()">MANUAL DIST</button>
         </div>
     </div>

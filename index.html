@@ -705,11 +705,23 @@
 
         /* --- СТИЛИ МОДАЛЬНОГО ОКНА ДЛЯ БОРТОВ (Как в MyFuel) --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
-        #mailModal.modal-overlay { background-color: var(--bg-color); }
+        #mailModal.modal-overlay {
+            --mail-visible-height: 100vh;
+            background-color: var(--bg-color);
+            align-items: flex-start;
+            justify-content: center;
+            padding: max(52px, calc(var(--safe-top) + 44px)) 0 max(18px, calc(var(--safe-bottom) + 12px));
+            box-sizing: border-box;
+        }
         .modal-overlay.show { display: flex; opacity: 1; }
         .modal-content { background-color: var(--card-bg); padding: 20px; border-radius: 15px; width: 85%; max-width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; position: relative; font-size: 14px; line-height: 1.5; color: var(--text-main); border: 1px solid var(--border-color); }
         .modal-close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; font-weight: bold; color: var(--text-secondary); cursor: pointer; border: none; background: none; }
         .modal-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; display: block; color: var(--accent-color); }
+        #mailModal .mail-modal-content {
+            max-height: calc(var(--mail-visible-height, 100vh) - max(52px, calc(var(--safe-top) + 44px)) - max(18px, calc(var(--safe-bottom) + 12px)));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
         .ambiguity-list { text-align: left; margin-top: 10px; }
         .ambiguity-item { padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer; color: var(--accent-color); font-weight: bold; font-size: 15px; }
         .ambiguity-item:last-child { border-bottom: none; }
@@ -877,14 +889,14 @@
                 <div class="info"><span class="title">MyNPA</span></div>
             </a>
 
-            <a href="./mypath.html" class="project-card">
-                <div class="icon-box">📐</div>
-                <div class="info"><span class="title">MyPath</span></div>
-            </a>
-
             <a href="./mywind.html" class="project-card">
                 <div class="icon-box">💨</div>
                 <div class="info"><span class="title">MyWind</span></div>
+            </a>
+
+            <a href="./mypath.html" class="project-card">
+                <div class="icon-box">📐</div>
+                <div class="info"><span class="title">MyPath</span></div>
             </a>
         </div> <!-- Конец .container -->
 
@@ -1261,21 +1273,41 @@
         }
 
 // Логика Telegram Feedback
+        function updateMailModalViewport() {
+            const modal = document.getElementById('mailModal');
+            if (!modal) return;
+            const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            if (Number.isFinite(viewportHeight) && viewportHeight > 0) {
+                modal.style.setProperty('--mail-visible-height', `${Math.round(viewportHeight)}px`);
+            }
+        }
+
         function openMailModal() {
             const modal = document.getElementById('mailModal');
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            updateMailModalViewport();
             modal.style.display = 'flex';
             setTimeout(() => { 
-                modal.classList.add('show'); 
-                document.getElementById('mailText').focus(); 
+                updateMailModalViewport();
+                modal.classList.add('show');
             }, 10);
         }
         
         function closeMailModal(e) {
             if (e && e.target !== e.currentTarget) return;
+            document.getElementById('mailText')?.blur();
             const modal = document.getElementById('mailModal');
             modal.classList.remove('show');
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateMailModalViewport);
+            window.visualViewport.addEventListener('scroll', updateMailModalViewport);
+        }
+        window.addEventListener('resize', updateMailModalViewport);
 
         window.updateMailFileName = function(input) {
             const nameSpan = document.getElementById('mailFileName');
