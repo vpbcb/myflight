@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "airportsReference": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "airportsNpa": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    ".read": false,
+    ".write": false
+  }
+}
