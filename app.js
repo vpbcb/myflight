@@ -484,6 +484,23 @@
         await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
     }
 
+    async function deleteAirportReferenceFromCloud(airportCode) {
+        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        const code = sanitizeAirportCode(airportCode);
+        if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
+        await window.npaDb.ref(`airportsReference/${code}`).remove();
+    }
+
+    async function deleteAirportFromCloud(airportCode) {
+        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        const code = sanitizeAirportCode(airportCode);
+        if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
+        await Promise.all([
+            window.npaDb.ref(`airportsReference/${code}`).remove(),
+            window.npaDb.ref(`airportsNpa/${code}`).remove()
+        ]);
+    }
+
     async function writeApproachToCloud(airportCode, approachName, approachData) {
         if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
@@ -499,6 +516,14 @@
     async function writePendingItem(item) {
         if (item.kind === 'reference') {
             await writeAirportReferenceToCloud(item.airportCode, item.data);
+            return;
+        }
+        if (item.kind === 'deleteReference') {
+            await deleteAirportReferenceFromCloud(item.airportCode);
+            return;
+        }
+        if (item.kind === 'deleteAirport') {
+            await deleteAirportFromCloud(item.airportCode);
             return;
         }
         if (item.kind === 'approach') {
