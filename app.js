@@ -283,6 +283,15 @@
         return String(value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
     }
 
+    const IGNORED_AIRPORT_REFERENCE_KEYS = new Set(['AIRPORTS', 'FAILEDAIRPORTS', 'META', 'AIRP', 'FAIL']);
+
+    function isValidAirportReferenceKey(value) {
+        const raw = String(value || '').trim();
+        const upper = raw.toUpperCase();
+        if (IGNORED_AIRPORT_REFERENCE_KEYS.has(upper)) return false;
+        return /^[A-Z]{4}$/.test(raw) && raw === upper;
+    }
+
     function normalizeRunways(source) {
         if (Array.isArray(source)) return source.filter(Boolean);
         if (!source || typeof source !== 'object') return [];
@@ -337,16 +346,6 @@
         return result;
     }
 
-    function navaidsFromRadioAids(radioAids) {
-        return normalizeRadioAids({ radioAids })
-            .filter(aid => aid.type !== 'TAR')
-            .map(aid => ({
-                type: aid.sourceType === 'VORDME' ? 'VORDME' : aid.type,
-                id: aid.name || aid.id || '',
-                coord: aid.coord || ''
-            }));
-    }
-
     function serializeRadioAids(radioAids) {
         return normalizeRadioAids({ radioAids }).map(aid => {
             if (aid.type === 'TAR') {
@@ -373,8 +372,7 @@
         return {
             icao: normalized.icao,
             runways: runwayObjectFromArray(normalized.runways),
-            radioAids: serializeRadioAids(normalized.radioAids),
-            navaids: navaidsFromRadioAids(normalized.radioAids)
+            radioAids: serializeRadioAids(normalized.radioAids)
         };
     }
 
@@ -389,7 +387,12 @@
         const cloudApproaches = readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {});
         const merged = readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
 
+        Object.keys(merged || {}).forEach(rawCode => {
+            if (!isValidAirportReferenceKey(rawCode)) delete merged[rawCode];
+        });
+
         Object.keys(references || {}).forEach(rawCode => {
+            if (!isValidAirportReferenceKey(rawCode)) return;
             const code = sanitizeAirportCode(rawCode);
             const reference = references[rawCode];
             if (!code || !reference || typeof reference !== 'object') return;
@@ -403,6 +406,7 @@
         });
 
         Object.keys(cloudApproaches || {}).forEach(rawCode => {
+            if (!isValidAirportReferenceKey(rawCode)) return;
             const code = sanitizeAirportCode(rawCode);
             if (!code) return;
             const existing = merged[code] || normalizeReferenceAirport(code, { icao: code });
@@ -428,11 +432,15 @@
 
     function getPendingCloudWrites() {
         const queue = readJsonStorage(NPA_PENDING_CLOUD_WRITES_KEY, []);
-        return Array.isArray(queue) ? queue : [];
+        return Array.isArray(queue)
+            ? queue.filter(item => isValidAirportReferenceKey(sanitizeAirportCode(item?.airportCode)))
+            : [];
     }
 
     function setPendingCloudWrites(queue) {
-        const normalized = Array.isArray(queue) ? queue : [];
+        const normalized = Array.isArray(queue)
+            ? queue.filter(item => isValidAirportReferenceKey(sanitizeAirportCode(item?.airportCode)))
+            : [];
         writeJsonStorage(NPA_PENDING_CLOUD_WRITES_KEY, normalized);
         window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
             detail: { pendingCount: normalized.length }
@@ -444,10 +452,11 @@
     }
 
     function queueCloudWrite(item) {
-        if (!item || !item.kind || !sanitizeAirportCode(item.airportCode)) return;
+        const code = sanitizeAirportCode(item?.airportCode);
+        if (!item || !item.kind || !isValidAirportReferenceKey(code)) return;
         const queued = {
             ...item,
-            airportCode: sanitizeAirportCode(item.airportCode),
+            airportCode: code,
             updatedAt: Number(item.updatedAt) || Date.now()
         };
         const id = pendingWriteId(queued);
@@ -471,6 +480,7 @@
     async function writeAirportReferenceToCloud(airportCode, airportData) {
         if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
+        if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
     }
 
@@ -478,7 +488,7 @@
         if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         const key = safeApproachKey(approachName);
-        if (!code || !key) throw new Error('Airport and approach are required');
+        if (!isValidAirportReferenceKey(code) || !key) throw new Error('Airport and approach are required');
         await window.npaDb.ref(`airportsNpa/${code}/approaches/${key}`).set({
             ...approachData,
             name: approachName,

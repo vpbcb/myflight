@@ -3563,8 +3563,17 @@
         writeJsonStorage(NPA_AIRPORTS_DB_KEY, window.airportsDb || {});
     }
 
-    function loadNpaAirportsDb() {
-        return readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+        function loadNpaAirportsDb() {
+            return readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+        }
+
+    const NPA_IGNORED_AIRPORT_REFERENCE_KEYS = new Set(['AIRPORTS', 'FAILEDAIRPORTS', 'META', 'AIRP', 'FAIL']);
+
+    function isValidNpaAirportReferenceKey(value) {
+        const raw = String(value || '').trim();
+        const upper = raw.toUpperCase();
+        if (NPA_IGNORED_AIRPORT_REFERENCE_KEYS.has(upper)) return false;
+        return /^[A-Z]{4}$/.test(raw) && raw === upper;
     }
 
     function normalizeNpaAirportDocument(airportCode, airportData) {
@@ -3605,18 +3614,18 @@
     function getConfirmedCloudAirportCodes() {
         const storedCodes = readJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, null);
         if (Array.isArray(storedCodes)) {
-            return new Set(storedCodes.map(sanitizeNpaAirportCode).filter(Boolean));
+            return new Set(storedCodes.map(sanitizeNpaAirportCode).filter(isValidNpaAirportReferenceKey));
         }
 
         const pendingCodes = new Set(
             getPendingAirportSaves()
                 .map(item => sanitizeNpaAirportCode(item?.airportCode))
-                .filter(Boolean)
+                .filter(isValidNpaAirportReferenceKey)
         );
         const legacyConfirmedCodes = new Set(
             Object.keys(loadNpaAirportsDb() || {})
                 .map(sanitizeNpaAirportCode)
-                .filter(code => code && !pendingCodes.has(code))
+                .filter(code => isValidNpaAirportReferenceKey(code) && !pendingCodes.has(code))
         );
         setConfirmedCloudAirportCodes(legacyConfirmedCodes);
         return legacyConfirmedCodes;
@@ -3625,7 +3634,7 @@
     function setConfirmedCloudAirportCodes(codes) {
         const normalizedCodes = Array.from(codes || [])
             .map(sanitizeNpaAirportCode)
-            .filter(Boolean)
+            .filter(isValidNpaAirportReferenceKey)
             .sort();
         writeJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, [...new Set(normalizedCodes)]);
     }
@@ -3634,7 +3643,7 @@
         const confirmedCodes = getConfirmedCloudAirportCodes();
         Array.from(codes || []).forEach(code => {
             const normalizedCode = sanitizeNpaAirportCode(code);
-            if (normalizedCode) confirmedCodes.add(normalizedCode);
+            if (isValidNpaAirportReferenceKey(normalizedCode)) confirmedCodes.add(normalizedCode);
         });
         setConfirmedCloudAirportCodes(confirmedCodes);
     }
@@ -3644,7 +3653,7 @@
 
         queue.forEach(item => {
             const airportCode = sanitizeNpaAirportCode(item?.airportCode);
-            if (!airportCode || !item?.airportData) return;
+            if (!isValidNpaAirportReferenceKey(airportCode) || !item?.airportData) return;
 
             const updatedAt = Math.max(
                 getNpaAirportUpdatedAt(item),
@@ -3664,6 +3673,11 @@
         const merged = window.airportsDb && typeof window.airportsDb === 'object'
             ? window.airportsDb
             : {};
+
+        Object.keys(merged).forEach(rawCode => {
+            if (!isValidNpaAirportReferenceKey(rawCode)) delete merged[rawCode];
+        });
+
         const pendingQueue = getPendingAirportSaves();
         const pendingByAirport = getPendingAirportSaveMap(pendingQueue);
         const confirmedPendingAirports = new Set();
@@ -3671,14 +3685,14 @@
         const confirmedCloudAirports = getConfirmedCloudAirportCodes();
         const cloudAirportCodes = new Set(
             Array.isArray(options.cloudAirportCodes)
-                ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
-                : Object.keys(source).map(sanitizeNpaAirportCode).filter(Boolean)
+                ? options.cloudAirportCodes.map(sanitizeNpaAirportCode).filter(isValidNpaAirportReferenceKey)
+                : Object.keys(source).map(sanitizeNpaAirportCode).filter(isValidNpaAirportReferenceKey)
         );
         const currentAirportCode = getNpaAirportCode();
         const currentApproachType = getSelectedNpaType();
         const removedAirports = new Set(
             Array.isArray(options.removedAirportCodes)
-                ? options.removedAirportCodes.map(sanitizeNpaAirportCode).filter(Boolean)
+                ? options.removedAirportCodes.map(sanitizeNpaAirportCode).filter(isValidNpaAirportReferenceKey)
                 : []
         );
 
@@ -3692,8 +3706,9 @@
         Object.keys(source).forEach(airportCode => {
             const airportData = source[airportCode];
             if (!airportData || typeof airportData !== 'object') return;
+            if (!isValidNpaAirportReferenceKey(airportCode)) return;
             const normalizedCode = sanitizeNpaAirportCode(airportCode);
-            if (!normalizedCode) return;
+            if (!isValidNpaAirportReferenceKey(normalizedCode)) return;
 
             const pending = pendingByAirport.get(normalizedCode);
             const localUpdatedAt = getNpaAirportUpdatedAt(merged[normalizedCode]);
@@ -3755,18 +3770,23 @@
 
     function upsertLocalAirport(airportCode, airportData) {
         const normalizedCode = sanitizeNpaAirportCode(airportCode);
-        if (!normalizedCode || !airportData) return;
+        if (!isValidNpaAirportReferenceKey(normalizedCode) || !airportData) return;
         window.airportsDb = window.airportsDb || {};
         window.airportsDb[normalizedCode] = normalizeNpaAirportDocument(normalizedCode, airportData);
         persistNpaAirportsDb();
     }
 
     function getPendingAirportSaves() {
-        return readJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, []);
+        const queue = readJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, []);
+        return Array.isArray(queue)
+            ? queue.filter(item => isValidNpaAirportReferenceKey(sanitizeNpaAirportCode(item?.airportCode)))
+            : [];
     }
 
     function setPendingAirportSaves(queue) {
-        const normalizedQueue = Array.isArray(queue) ? queue : [];
+        const normalizedQueue = Array.isArray(queue)
+            ? queue.filter(item => isValidNpaAirportReferenceKey(sanitizeNpaAirportCode(item?.airportCode)))
+            : [];
         writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, normalizedQueue);
         renderNpaPendingSyncIndicator();
         window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
@@ -3875,9 +3895,11 @@
 
     function queueAirportSave(airportCode, airportData) {
         if (!isNpaAdminMode()) return;
+        const code = sanitizeNpaAirportCode(airportCode);
+        if (!isValidNpaAirportReferenceKey(code)) return;
         window.queueNpaCloudWrite?.({
             kind: 'reference',
-            airportCode: sanitizeNpaAirportCode(airportCode),
+            airportCode: code,
             data: airportData,
             updatedAt: Date.now()
         });
@@ -3885,9 +3907,11 @@
 
     function queueApproachSave(airportCode, approachName, approachData) {
         if (!isNpaAdminMode()) return;
+        const code = sanitizeNpaAirportCode(airportCode);
+        if (!isValidNpaAirportReferenceKey(code)) return;
         window.queueNpaCloudWrite?.({
             kind: 'approach',
-            airportCode: sanitizeNpaAirportCode(airportCode),
+            airportCode: code,
             approachName,
             data: approachData,
             updatedAt: Date.now()
@@ -4181,7 +4205,7 @@
         window.airportsDb = window.airportsDb || {};
         return Object.keys(window.airportsDb)
             .map(code => sanitizeNpaAirportCode(code))
-            .filter(code => code.length === 4)
+            .filter(isValidNpaAirportReferenceKey)
             .sort();
     }
 
