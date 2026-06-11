@@ -5321,18 +5321,16 @@
         };
     }
 
-    function getRadioAidProjectedShiftNm(runwayInfo, aidCoordText) {
+    function getRadioAidDirectDistanceNm(runwayInfo, aidCoordText) {
         const landingCoord = parseNpaCoordinatePair(runwayInfo?.landingCoord);
-        const oppositeCoord = parseNpaCoordinatePair(runwayInfo?.oppositeCoord);
         const aidCoord = parseNpaCoordinatePair(aidCoordText);
-        if (!landingCoord || !oppositeCoord || !aidCoord) return null;
+        if (!landingCoord || !aidCoord) return null;
 
-        const runwayVector = getNmVector(landingCoord, oppositeCoord);
         const aidVector = getNmVector(landingCoord, aidCoord);
-        const runwayLength = Math.hypot(runwayVector.x, runwayVector.y);
-        if (!Number.isFinite(runwayLength) || runwayLength <= 0) return null;
+        const directDistance = Math.hypot(aidVector.x, aidVector.y);
+        if (!Number.isFinite(directDistance)) return null;
 
-        return ((aidVector.x * runwayVector.x) + (aidVector.y * runwayVector.y)) / runwayLength;
+        return directDistance;
     }
 
     function getRadioAidDisplayName(aid, index) {
@@ -5512,23 +5510,23 @@
                 alert("Runway threshold pair not found. Use manual shift entry.");
                 return;
             }
-            const projectedShift = getRadioAidProjectedShiftNm(runwayInfo, runwayInfo.oppositeCoord);
-            if (!Number.isFinite(projectedShift)) {
+            const directDistance = getRadioAidDirectDistanceNm(runwayInfo, runwayInfo.oppositeCoord);
+            if (!Number.isFinite(directDistance)) {
                 alert("Opposite ILS distance cannot be calculated. Use manual shift entry.");
                 return;
             }
-            shift = projectedShift.toFixed(1);
+            shift = directDistance.toFixed(1);
         } else {
             if (!runwayInfo) {
                 alert("Runway threshold pair not found. Use manual shift entry.");
                 return;
             }
-            const projectedShift = getRadioAidProjectedShiftNm(runwayInfo, aid?.coord);
-            if (!Number.isFinite(projectedShift)) {
+            const directDistance = getRadioAidDirectDistanceNm(runwayInfo, aid?.coord);
+            if (!Number.isFinite(directDistance)) {
                 alert("Coordinates are missing or invalid. Use manual shift entry.");
                 return;
             }
-            shift = projectedShift.toFixed(1);
+            shift = directDistance.toFixed(1);
         }
 
         if (activeRadioAidShiftTarget === 'profileRadio') {
