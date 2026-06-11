@@ -3822,7 +3822,9 @@
         let sDownwindManualMode = false;
         let downwindRadioFixShiftStoredValue = "";
         let downwindRadioFixShiftLabel = "";
+        let downwindRadioFixDirectSource = null;
         let profileRadioSourceLabel = "";
+        let profileRadioDirectSource = null;
 
         function getNpaCurrentPageState() {
             const fields = {};
@@ -3839,7 +3841,9 @@
                 radioShift: document.getElementById('radioDistValDisplay')?.innerText || "0.0",
                 tarShift: document.getElementById('tarDistValDisplay')?.innerText || "0.0",
                 downwindRadioFixShiftLabel,
+                downwindRadioFixDirectSource,
                 profileRadioSourceLabel,
+                profileRadioDirectSource,
                 profileUnits: { ...npaProfileUnits },
                 rwLengthDisplayUnit: document.getElementById('rwLength')?.dataset.displayUnit || "m",
                 downwindCalcSource,
@@ -3878,7 +3882,9 @@
                     ? ""
                     : String(getCleanDisplayNumber(state.downwindRadioFixShiftStoredValue));
                 downwindRadioFixShiftLabel = typeof state.downwindRadioFixShiftLabel === 'string' ? state.downwindRadioFixShiftLabel : "";
+                downwindRadioFixDirectSource = normalizeRadioDirectSource(state.downwindRadioFixDirectSource);
                 profileRadioSourceLabel = typeof state.profileRadioSourceLabel === 'string' ? state.profileRadioSourceLabel : "";
+                profileRadioDirectSource = normalizeRadioDirectSource(state.profileRadioDirectSource);
 
                 setSelectedNpaType(state.selectedType && state.selectedType !== "—" ? state.selectedType : "");
 
@@ -3891,6 +3897,12 @@
                     }
                 });
                 getNpaAirportCode();
+                if (!downwindRadioFixDirectSource) {
+                    downwindRadioFixDirectSource = resolveRadioDirectSourceFromLabel(downwindRadioFixShiftLabel, 'downwind');
+                }
+                if (!profileRadioDirectSource) {
+                    profileRadioDirectSource = resolveRadioDirectSourceFromLabel(profileRadioSourceLabel, 'profile');
+                }
 
                 const rwLengthEl = document.getElementById('rwLength');
                 if (rwLengthEl) {
@@ -4679,13 +4691,121 @@
         return `<span class="npa-profile-dist-with-icon"><img src="${iconName}" alt="" class="npa-profile-dist-icon"><span class="npa-profile-dist-value">${distValue}</span></span>`;
     }
 
-    function getNpaProfileDistancesFromThr(thrDistanceNm, radioShiftNm, tarShiftNm) {
+    function normalizeRadioDirectSource(source) {
+        if (!source || typeof source !== 'object') return null;
+        const coord = String(source.coord || '').trim();
+        if (!coord) return null;
+        return {
+            type: String(source.type || '').trim().toUpperCase(),
+            coord,
+            airportCode: sanitizeNpaAirportCode(source.airportCode || ''),
+            threshold: String(source.threshold || '').trim().toUpperCase(),
+            label: String(source.label || '').trim().toUpperCase()
+        };
+    }
+
+    function normalizeBearing360(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return null;
+        let bearing = numeric % 360;
+        if (bearing < 0) bearing += 360;
+        return bearing;
+    }
+
+    function reciprocalBearing(value) {
+        const bearing = normalizeBearing360(value);
+        return bearing === null ? null : normalizeBearing360(bearing + 180);
+    }
+
+    function getBearingFromNmVector(vector) {
+        if (!vector || !Number.isFinite(vector.x) || !Number.isFinite(vector.y)) return null;
+        if (Math.abs(vector.x) < 1e-9 && Math.abs(vector.y) < 1e-9) return null;
+        return normalizeBearing360(Math.atan2(vector.x, vector.y) * 180 / Math.PI);
+    }
+
+    function getProfileOutboundBearingDeg(runwayInfo) {
+        const inboundCourse = normalizeCourse(getNumberOrBlank('inboundCrs'));
+        if (inboundCourse !== "") return reciprocalBearing(inboundCourse);
+
+        const landingCoord = parseNpaCoordinatePair(runwayInfo?.landingCoord);
+        const oppositeCoord = parseNpaCoordinatePair(runwayInfo?.oppositeCoord);
+        if (!landingCoord || !oppositeCoord) return null;
+
+        const runwayVector = getNmVector(landingCoord, oppositeCoord);
+        return reciprocalBearing(getBearingFromNmVector(runwayVector));
+    }
+
+    function getRadioDirectGeometry(source) {
+        const normalizedSource = normalizeRadioDirectSource(source);
+        if (!normalizedSource) return null;
+
+        const airportCode = getNpaAirportCode();
+        const threshold = getCurrentLandingThreshold();
+        if (normalizedSource.airportCode && normalizedSource.airportCode !== airportCode) return null;
+        if (normalizedSource.threshold && normalizedSource.threshold !== threshold) return null;
+
+        const airport = getAirportDocument(airportCode);
+        const runwayInfo = findRunwayForThreshold(airport, threshold);
+        const landingCoord = parseNpaCoordinatePair(runwayInfo?.landingCoord);
+        const aidCoord = parseNpaCoordinatePair(normalizedSource.coord);
+        const outboundBearing = getProfileOutboundBearingDeg(runwayInfo);
+        if (!landingCoord || !aidCoord || outboundBearing === null) return null;
+
+        const bearingRad = outboundBearing * Math.PI / 180;
+        return {
+            aidVector: getNmVector(landingCoord, aidCoord),
+            ux: Math.sin(bearingRad),
+            uy: Math.cos(bearingRad)
+        };
+    }
+
+    function getDirectRadioDistanceFromThr(thrDistanceNm, source) {
         const thrNm = Number(thrDistanceNm);
+        const geometry = getRadioDirectGeometry(source);
+        if (!Number.isFinite(thrNm) || !geometry) return null;
+
+        const pointX = geometry.ux * thrNm;
+        const pointY = geometry.uy * thrNm;
+        const distance = Math.hypot(pointX - geometry.aidVector.x, pointY - geometry.aidVector.y);
+        return Number.isFinite(distance) ? distance : null;
+    }
+
+    function getThrDistanceFromDirectRadioDistance(radioDistanceNm, source) {
+        const radioNm = Number(radioDistanceNm);
+        const geometry = getRadioDirectGeometry(source);
+        if (!Number.isFinite(radioNm) || radioNm < 0 || !geometry) return null;
+
+        const proj = geometry.ux * geometry.aidVector.x + geometry.uy * geometry.aidVector.y;
+        const aidDistanceSq = (geometry.aidVector.x * geometry.aidVector.x) + (geometry.aidVector.y * geometry.aidVector.y);
+        const discriminant = (radioNm * radioNm) - aidDistanceSq + (proj * proj);
+        if (discriminant < -1e-7) return null;
+
+        const root = Math.sqrt(Math.max(0, discriminant));
+        const candidates = [proj + root, proj - root]
+            .filter(value => Number.isFinite(value) && value >= -1e-7)
+            .map(value => Math.max(0, value))
+            .sort((a, b) => b - a);
+        return candidates.length ? candidates[0] : null;
+    }
+
+    function getNpaProfileRadioDistanceFromThr(thrDistanceNm, radioShiftNm, fallbackThrDistanceNm = thrDistanceNm) {
+        const directDistance = getDirectRadioDistanceFromThr(thrDistanceNm, profileRadioDirectSource);
+        if (Number.isFinite(directDistance)) return directDistance;
+        return Number(fallbackThrDistanceNm) + Number(radioShiftNm || 0);
+    }
+
+    function getNpaProfileDistancesFromThr(thrDistanceNm, radioShiftNm, tarShiftNm, geometryThrDistanceNm = thrDistanceNm) {
+        const thrNm = Number(thrDistanceNm);
+        const geometryThrNm = Number(geometryThrDistanceNm);
         if (!Number.isFinite(thrNm)) return null;
 
         return {
             thrNm,
-            radioNm: thrNm + Number(radioShiftNm || 0),
+            radioNm: getNpaProfileRadioDistanceFromThr(
+                Number.isFinite(geometryThrNm) ? geometryThrNm : thrNm,
+                radioShiftNm,
+                thrNm
+            ),
             tarNm: thrNm + Number(tarShiftNm || 0)
         };
     }
@@ -4718,9 +4838,9 @@
         );
     }
 
-    function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '') {
+    function makeNpaProfileDistanceRow(distanceNm, altitudeText, radioShiftNm, tarShiftNm, className = '', iconName = '', geometryDistanceNm = distanceNm) {
         return makeNpaProfileDistanceRowFromDistances(
-            getNpaProfileDistancesFromThr(distanceNm, radioShiftNm, tarShiftNm),
+            getNpaProfileDistancesFromThr(distanceNm, radioShiftNm, tarShiftNm, geometryDistanceNm),
             altitudeText,
             className,
             iconName
@@ -4782,9 +4902,9 @@
 
     function getNpaProfileAnchorRows(metrics, radioShiftNm, tarShiftNm, activeColumn = '') {
         const anchors = [];
-        const addAnchor = (isValid, thrNm, height, className, iconName, order) => {
+        const addAnchor = (isValid, thrNm, rawThrNm, height, className, iconName, order) => {
             if (!isValid || !Number.isFinite(thrNm)) return;
-            const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm);
+            const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm, rawThrNm);
             if (!distances) return;
             const activeNm = activeColumn === 'radio'
                 ? distances.radioNm
@@ -4803,22 +4923,31 @@
             });
         };
 
-        addAnchor(metrics.fdpValid, metrics.dFdp, metrics.hFdp, 'highlight-fdp', 'fdp.png', 1);
-        addAnchor(metrics.fapValid, metrics.dFap, metrics.hFap, 'highlight-fap', 'fap.png', 2);
+        addAnchor(metrics.fdpValid, metrics.dFdp, metrics.dFdpRaw, metrics.hFdp, 'highlight-fdp', 'fdp.png', 1);
+        addAnchor(metrics.fapValid, metrics.dFap, metrics.dFapRaw, metrics.hFap, 'highlight-fap', 'fap.png', 2);
         return anchors;
     }
 
-    function getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors) {
+    function getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors, activeColumn = '') {
         const step = normalizeNpaProfileUnit(activeUnit) === 'km' ? 2 : 1;
-        const oldTopActive = convertNpaProfileNmToActiveUnit(10 + activeShiftNm, activeUnit);
-        const oldBottomActive = convertNpaProfileNmToActiveUnit(2, activeUnit);
+        const directRadioActive = activeColumn === 'radio' && getRadioDirectGeometry(profileRadioDirectSource);
+        const baselineNm = directRadioActive
+            ? [
+                getNpaProfileRadioDistanceFromThr(10, 0),
+                getNpaProfileRadioDistanceFromThr(2, 0)
+            ].filter(Number.isFinite)
+            : [10 + activeShiftNm, 2];
+        const oldTopActive = convertNpaProfileNmToActiveUnit(Math.max(...baselineNm), activeUnit);
+        const oldBottomActive = convertNpaProfileNmToActiveUnit(Math.min(...baselineNm), activeUnit);
         const anchorValues = anchors
             .map(anchor => convertNpaProfileNmToActiveUnit(anchor.activeNm, activeUnit))
             .filter(Number.isFinite);
         const anchorTop = anchorValues.length ? Math.max(...anchorValues) + (step * 4) : -Infinity;
         const topSeed = Math.max(oldTopActive, anchorTop, oldBottomActive);
         const top = ceilNpaProfileStep(topSeed, step);
-        const bottom = ceilNpaProfileStep(oldBottomActive, step);
+        const bottom = directRadioActive
+            ? floorNpaProfileStep(oldBottomActive, step)
+            : ceilNpaProfileStep(oldBottomActive, step);
 
         return {
             step,
@@ -4837,12 +4966,12 @@
 
         for (let d = topMile; d >= bottomMile; d -= 1) {
             if (metrics.fdpValid && isNpaProfileDistanceInRange(metrics.dFdp, topMile) && !fdpInserted && d <= metrics.dFdp) {
-                tableHTML += makeNpaProfileDistanceRow(metrics.dFdp, `${Math.round(metrics.hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png');
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFdp, `${Math.round(metrics.hFdp)} ft`, radioShiftNm, tarShiftNm, 'highlight-fdp', 'fdp.png', metrics.dFdpRaw);
                 fdpInserted = true;
             }
 
             if (metrics.fapValid && isNpaProfileDistanceInRange(metrics.dFap, topMile) && !fapInserted && d <= metrics.dFap) {
-                tableHTML += makeNpaProfileDistanceRow(metrics.dFap, `${Math.round(metrics.hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png');
+                tableHTML += makeNpaProfileDistanceRow(metrics.dFap, `${Math.round(metrics.hFap)} ft`, radioShiftNm, tarShiftNm, 'highlight-fap', 'fap.png', metrics.dFapRaw);
                 fapInserted = true;
             }
 
@@ -4859,7 +4988,7 @@
         const activeUnit = normalizeNpaProfileUnit(npaProfileUnits[activeColumn]);
         const activeShiftNm = getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm);
         const anchors = getNpaProfileAnchorRows(metrics, radioShiftNm, tarShiftNm, activeColumn);
-        const bounds = getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors);
+        const bounds = getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors, activeColumn);
         const items = [];
 
         for (let activeValue = bounds.top; activeValue >= bounds.bottom - 1e-7; activeValue -= bounds.step) {
@@ -4903,8 +5032,12 @@
             }
 
             const activeNm = convertNpaProfileActiveUnitToNm(item.activeValue, activeUnit);
-            const thrNm = activeNm - activeShiftNm;
+            const directThrNm = activeColumn === 'radio'
+                ? getThrDistanceFromDirectRadioDistance(activeNm, profileRadioDirectSource)
+                : null;
+            const thrNm = Number.isFinite(directThrNm) ? directThrNm : activeNm - activeShiftNm;
             const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm);
+            if (!distances || !Number.isFinite(thrNm)) return "";
             const displayOverrides = {
                 [activeColumn]: formatNpaProfileScaleValue(item.activeValue, activeUnit)
             };
@@ -4989,7 +5122,10 @@
 
         const kTable = (288.15 - (0.00198 * hElev)) / denominator;
         const ftPerNm = 6076.1155;
-        const getDistFromInd = (height) => Math.max(0, Math.round(((height - hElev) / kTable - 50) / (tanAngle * ftPerNm) * 10) / 10);
+        const getRawDistFromInd = (height) => Math.max(0, ((height - hElev) / kTable - 50) / (tanAngle * ftPerNm));
+        const roundProfileDistance = (distance) => Math.round(distance * 10) / 10;
+        const dFdpRaw = fdpValid ? getRawDistFromInd(hFdp) : null;
+        const dFapRaw = fapValid ? getRawDistFromInd(hFap) : null;
         const getIndFromDist = (distance) => Math.round(((distance * tanAngle * ftPerNm + 50) * kTable + hElev) / 10) * 10;
 
         return {
@@ -4998,8 +5134,10 @@
             fapValid,
             hFdp,
             hFap,
-            dFdp: fdpValid ? getDistFromInd(hFdp) : null,
-            dFap: fapValid ? getDistFromInd(hFap) : null,
+            dFdpRaw,
+            dFapRaw,
+            dFdp: fdpValid ? roundProfileDistance(dFdpRaw) : null,
+            dFap: fapValid ? roundProfileDistance(dFapRaw) : null,
             getIndFromDist
         };
     }
@@ -5484,6 +5622,82 @@
         openNpaKeypad(keypadTarget);
     }
 
+    function makeRadioDirectSourceForSelection(aid, type, runwayInfo, index = 0) {
+        const coord = type === 'ILS_OPPOSITE' ? runwayInfo?.oppositeCoord : aid?.coord;
+        const normalizedCoord = String(coord || '').trim();
+        if (!normalizedCoord || type === 'TAR') return null;
+
+        return normalizeRadioDirectSource({
+            type,
+            coord: normalizedCoord,
+            airportCode: getNpaAirportCode(),
+            threshold: getCurrentLandingThreshold(),
+            label: type === 'ILS_OPPOSITE'
+                ? String(aid?.name || '').trim().toUpperCase()
+                : getProfileRadioAidHeaderLabel(aid, index)
+        });
+    }
+
+    function normalizeRadioAidLabelForMatch(value) {
+        return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    function getRadioAidMatchLabels(aid, index = 0) {
+        const name = normalizeRadioAidLabelForMatch(aid?.name || aid?.id || '');
+        const labels = [
+            getProfileRadioAidHeaderLabel(aid, index),
+            getRadioAidDisplayName(aid, index),
+            getDownwindRadioAidChoiceLabel(aid)
+        ];
+
+        if (name) {
+            labels.push(name, `${name} VOR`, `${name} VORDME`, `${name} NDB`);
+        }
+
+        return labels.map(normalizeRadioAidLabelForMatch).filter(Boolean);
+    }
+
+    function resolveRadioDirectSourceFromLabel(label, target = 'profile') {
+        const matchLabel = normalizeRadioAidLabelForMatch(label);
+        if (!matchLabel) return null;
+
+        const airportCode = getNpaAirportCode();
+        const airport = getAirportDocument(airportCode);
+        const threshold = getCurrentLandingThreshold();
+        const runwayInfo = findRunwayForThreshold(airport, threshold);
+
+        if (target === 'profile' && matchLabel.startsWith('ILS')) {
+            const nameThreshold = matchLabel.replace(/^ILS\s*/, '');
+            if (!nameThreshold || nameThreshold === String(runwayInfo?.oppositeThreshold || '').toUpperCase()) {
+                return makeRadioDirectSourceForSelection(
+                    { type: 'ILS_OPPOSITE', name: `ILS${runwayInfo?.oppositeThreshold || ''}` },
+                    'ILS_OPPOSITE',
+                    runwayInfo,
+                    0
+                );
+            }
+        }
+
+        const radioAids = Array.isArray(airport?.radioAids) ? airport.radioAids : [];
+        const allowed = target === 'downwind'
+            ? aid => aid?.type === 'VOR' || aid?.type === 'NDB'
+            : aid => aid?.type === 'VOR';
+
+        for (let index = 0; index < radioAids.length; index += 1) {
+            const aid = radioAids[index];
+            if (!allowed(aid)) continue;
+
+            const labels = getRadioAidMatchLabels(aid, index);
+            const name = normalizeRadioAidLabelForMatch(aid?.name || aid?.id || '');
+            if (labels.includes(matchLabel) || (name && matchLabel.startsWith(`${name} `))) {
+                const type = aid?.type === 'NDB' ? 'NDB' : 'VOR';
+                return makeRadioDirectSourceForSelection(aid, type, runwayInfo, index);
+            }
+        }
+
+        return null;
+    }
+
     function selectRadioAidShift(aid, airport, threshold, runwayInfo, index = 0) {
         const type = aid?.type === 'NDB'
             ? 'NDB'
@@ -5533,8 +5747,10 @@
             profileRadioSourceLabel = type === 'ILS_OPPOSITE'
                 ? String(aid?.name || '').trim().toUpperCase()
                 : getProfileRadioAidHeaderLabel(aid, index);
+            profileRadioDirectSource = makeRadioDirectSourceForSelection(aid, type, runwayInfo, index);
         } else {
             downwindRadioFixShiftLabel = type === 'TAR' ? "" : getDownwindRadioAidChoiceLabel(aid);
+            downwindRadioFixDirectSource = makeRadioDirectSourceForSelection(aid, type, runwayInfo, index);
         }
         applyRadioAidShiftValue(Number(shift).toFixed(1));
         closeRadioAidShiftModal('button');
@@ -5594,14 +5810,20 @@
     function getDownwindDistanceFromFinalDescent(metrics) {
         if (!metrics || !metrics.valid) return "";
         const shiftNm = getDownwindRadioFixShiftNumber();
+        const getDirectDistance = (thrDistance) => {
+            const directDistance = getDirectRadioDistanceFromThr(thrDistance, downwindRadioFixDirectSource);
+            return Number.isFinite(directDistance) ? Math.max(0, directDistance) : null;
+        };
 
         if (finalDescentFromSource === 'fdp') {
             if (!metrics.fdpValid || !Number.isFinite(metrics.dFdp)) return "";
-            return Math.max(0, Number(metrics.dFdp) + shiftNm);
+            const geometryDistance = Number.isFinite(metrics.dFdpRaw) ? metrics.dFdpRaw : metrics.dFdp;
+            return getDirectDistance(geometryDistance) ?? Math.max(0, Number(metrics.dFdp) + shiftNm);
         }
 
         if (!metrics.fapValid || !Number.isFinite(metrics.dFap)) return "";
-        return Math.max(0, Number(metrics.dFap) + shiftNm);
+        const geometryDistance = Number.isFinite(metrics.dFapRaw) ? metrics.dFapRaw : metrics.dFap;
+        return getDirectDistance(geometryDistance) ?? Math.max(0, Number(metrics.dFap) + shiftNm);
     }
 
     function updateDownwindFinalDescent() {
@@ -6204,7 +6426,9 @@
             radioShift: "0.0",
             tarShift: "0.0",
             profileRadioSourceLabel: "",
+            profileRadioDirectSource: null,
             downwindRadioFixShiftLabel: "",
+            downwindRadioFixDirectSource: null,
             profileRows: []
         };
     }
@@ -6232,7 +6456,9 @@
             radioShift: document.getElementById('radioDistValDisplay').innerText,
             tarShift: document.getElementById('tarDistValDisplay').innerText,
             profileRadioSourceLabel,
+            profileRadioDirectSource,
             downwindRadioFixShiftLabel,
+            downwindRadioFixDirectSource,
             profileRows: [1, 2, 3].map(index => ({
                 hFeet: getNumberOrBlank(`hFeet${index}`),
                 thrDist: getNumberOrBlank(`thrDist${index}`),
@@ -6875,7 +7101,11 @@
             sDownwindManualMode = false;
             downwindRadioFixShiftStoredValue = "";
             downwindRadioFixShiftLabel = data.downwindRadioFixShiftLabel || "";
+            downwindRadioFixDirectSource = normalizeRadioDirectSource(data.downwindRadioFixDirectSource)
+                || resolveRadioDirectSourceFromLabel(downwindRadioFixShiftLabel, 'downwind');
             profileRadioSourceLabel = data.profileRadioSourceLabel || "";
+            profileRadioDirectSource = normalizeRadioDirectSource(data.profileRadioDirectSource)
+                || resolveRadioDirectSourceFromLabel(profileRadioSourceLabel, 'profile');
 
             applyCurrentRunwayReferenceFields(data);
             setFieldValue('gpa', data.gpa);
@@ -6926,7 +7156,9 @@
         sDownwindManualMode = false;
         downwindRadioFixShiftStoredValue = "";
         downwindRadioFixShiftLabel = "";
+        downwindRadioFixDirectSource = null;
         profileRadioSourceLabel = "";
+        profileRadioDirectSource = null;
         renderDownwindRadioFixShiftDisplay();
         finalDescentFromSource = "fap";
         document.getElementById('racetrackVal').innerText = "Right";
@@ -7462,12 +7694,14 @@
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
             if (activeNpaField === 'radio') {
                 profileRadioSourceLabel = "";
+                profileRadioDirectSource = null;
                 npaCurrentApproachDirty = true;
             }
             updateNpaProfileUnitHeaders();
             renderNpaProfileTable();
         } else if (activeNpaField === 'downwindRadioFixShift') {
             downwindRadioFixShiftLabel = "";
+            downwindRadioFixDirectSource = null;
             setSDownwindManualMode(false);
             setFieldValue('downwindRadioFixShift', finalVal);
         } else if (activeNpaField === 'airportTarDistance') {
