@@ -1234,6 +1234,18 @@ html.light-theme .shift-alert-plate {
         }
     })();
 
+    let myPathInitialTablePositionPending = true;
+
+    function positionActivePointAfterRender(isInitial = false) {
+        if (isInitial) {
+            scrollToActivePoint(true);
+            requestAnimationFrame(() => scrollToActivePoint(true));
+            return;
+        }
+
+        setTimeout(scrollToActivePoint, 50);
+    }
+
     let isNeg = false; 
 
 // --- ПЕРЕМЕННЫЕ КЛАВИАТУРЫ ---
@@ -1560,11 +1572,16 @@ function openModal(id) {
     const rowHeight = targetRow.offsetHeight || 45; 
     const containerHeight = container.clientHeight;
     const targetScroll = targetRow.offsetTop - (containerHeight - (4 * rowHeight));
+    const roundedTargetScroll = Math.max(0, Math.round(targetScroll));
+
+    if (isInstant === true) {
+        container.scrollTop = roundedTargetScroll;
+        return;
+    }
 
     container.scrollTo({
-        top: Math.round(targetScroll),
-        // Если передан флаг isInstant, скроллим жестко и моментально
-        behavior: isInstant === true ? 'auto' : 'smooth'
+        top: roundedTargetScroll,
+        behavior: 'smooth'
     });
 }
 
@@ -1763,7 +1780,9 @@ for (let d = topMile; d >= 2; d--) {
     
     // Рендерим таблицу и скроллим
     tableBody.innerHTML = tableHTML;
-    setTimeout(scrollToActivePoint, 50);
+    const isInitialTablePosition = myPathInitialTablePositionPending;
+    positionActivePointAfterRender(isInitialTablePosition);
+    myPathInitialTablePositionPending = false;
 
     // СОХРАНЯЕМ СТЕЙТ ПРИ ЛЮБОМ ПЕРЕСЧЕТЕ (EFB State Persistence)
     if (typeof saveAppState === 'function') saveAppState();
@@ -1918,8 +1937,9 @@ for (let d = topMile; d >= 2; d--) {
                 // Принудительно гасим стартовую анимацию строк для слепка
                 const rows = document.getElementById('tableBody').querySelectorAll('.t-row');
                 rows.forEach(r => r.style.animation = 'none');
-                // Вызываем мгновенный скролл без задержек
-                setTimeout(() => scrollToActivePoint(true), 0);
+                // Вызываем мгновенный скролл без видимого "доезда" таблицы
+                positionActivePointAfterRender(true);
+                myPathInitialTablePositionPending = false;
                 hasSnapshot = true;
             }
             
