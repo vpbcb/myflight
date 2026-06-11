@@ -4,7 +4,7 @@
     const CACHE_KEY = 'hubActiveCacheVersion';
     const LABEL_KEY = 'hubVersion';
     const CACHE_NAME_RE = /CACHE_NAME\s*=\s*['"]([^'"]+)['"]/;
-    const UPDATE_TIMEOUT_MS = 45000;
+    const WORKER_MESSAGE_TIMEOUT_MS = 2000;
 
     function fetchWithTimeout(url, options, timeoutMs) {
         const controller = new AbortController();
@@ -27,20 +27,38 @@
         }
     }
 
-    async function getInstalledCacheName(remoteCacheName) {
-        if (!('caches' in window)) {
-            return localStorage.getItem(CACHE_KEY) || localStorage.getItem(LABEL_KEY);
-        }
+    function messageWorker(worker, type, timeoutMs = WORKER_MESSAGE_TIMEOUT_MS) {
+        return new Promise((resolve) => {
+            if (!worker) {
+                resolve(null);
+                return;
+            }
 
-        try {
-            const keys = await caches.keys();
-            if (remoteCacheName && keys.includes(remoteCacheName)) return remoteCacheName;
-            return keys.find((key) => /^myflight_/i.test(key)) ||
-                localStorage.getItem(CACHE_KEY) ||
-                localStorage.getItem(LABEL_KEY);
-        } catch (error) {
-            return localStorage.getItem(CACHE_KEY) || localStorage.getItem(LABEL_KEY);
-        }
+            const channel = new MessageChannel();
+            const timeoutId = setTimeout(() => resolve(null), timeoutMs);
+            channel.port1.onmessage = event => {
+                clearTimeout(timeoutId);
+                resolve(event.data || null);
+            };
+
+            try {
+                worker.postMessage({ type }, [channel.port2]);
+            } catch (error) {
+                clearTimeout(timeoutId);
+                resolve(null);
+            }
+        });
+    }
+
+    async function getActiveCacheName(registration) {
+        const worker = navigator.serviceWorker.controller || registration?.active;
+        const response = await messageWorker(worker, 'GET_CACHE_NAME');
+        return response?.cacheName || null;
+    }
+
+    function warmOptionalCache(registration) {
+        const worker = navigator.serviceWorker.controller || registration?.active;
+        if (worker) worker.postMessage({ type: 'WARM_OPTIONAL_CACHE' });
     }
 
     function showUpdateOverlay() {
@@ -116,7 +134,7 @@
         if (overlay) overlay.style.display = 'none';
     }
 
-    function waitForWorkerState(worker, targetStates, timeoutMs) {
+    function waitForWorkerState(worker, targetStates) {
         return new Promise((resolve) => {
             if (!worker) {
                 resolve(null);
@@ -127,14 +145,8 @@
                 return;
             }
 
-            const timeoutId = setTimeout(() => {
-                worker.removeEventListener('statechange', onStateChange);
-                resolve('timeout');
-            }, timeoutMs);
-
             function onStateChange() {
                 if (targetStates.includes(worker.state)) {
-                    clearTimeout(timeoutId);
                     worker.removeEventListener('statechange', onStateChange);
                     resolve(worker.state);
                 }
@@ -150,23 +162,27 @@
         const remoteCacheName = await getRemoteCacheName();
         if (!remoteCacheName) return;
 
-        const installedCacheName = await getInstalledCacheName(remoteCacheName);
-        if (!installedCacheName || installedCacheName === remoteCacheName) {
+        const activeCacheName = await getActiveCacheName(registration);
+        if (activeCacheName === remoteCacheName) {
             localStorage.setItem(CACHE_KEY, remoteCacheName);
             localStorage.setItem(LABEL_KEY, remoteCacheName);
+            warmOptionalCache(registration);
             return;
         }
 
         const hadController = Boolean(navigator.serviceWorker.controller);
         let didReload = false;
-        showUpdateOverlay();
+        if (hadController) showUpdateOverlay();
 
-        const onControllerChange = () => {
-            if (didReload || !hadController) return;
+        const reloadForNewWorker = () => {
+            if (didReload) return;
             didReload = true;
             localStorage.setItem(CACHE_KEY, remoteCacheName);
             localStorage.setItem(LABEL_KEY, remoteCacheName);
             window.location.reload();
+        };
+        const onControllerChange = () => {
+            if (hadController) reloadForNewWorker();
         };
 
         navigator.serviceWorker.addEventListener('controllerchange', onControllerChange, { once: true });
@@ -179,10 +195,19 @@
                 updatedRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
             }
 
-            const state = await waitForWorkerState(worker, ['activated', 'redundant'], UPDATE_TIMEOUT_MS);
-            if (!hadController && state === 'activated') {
+            const state = worker
+                ? await waitForWorkerState(worker, ['activated', 'redundant'])
+                : null;
+            const installedCacheName = await getActiveCacheName(updatedRegistration);
+
+            if (state === 'redundant') {
+                throw new Error('New service worker installation failed');
+            }
+            if (installedCacheName === remoteCacheName) {
                 localStorage.setItem(CACHE_KEY, remoteCacheName);
                 localStorage.setItem(LABEL_KEY, remoteCacheName);
+                if (hadController) reloadForNewWorker();
+                else warmOptionalCache(updatedRegistration);
             }
             if (!didReload) {
                 navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
@@ -196,17 +221,15 @@
     }
 
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register(SW_URL, { updateViaCache: 'none' })
-                .then((registration) => {
-                    console.log('SW registered. Scope:', registration.scope);
-                    runUpdateCheck(registration);
-                })
-                .catch((error) => {
-                    console.error('SW registration error:', error);
-                    hideUpdateOverlay();
-                });
-        });
+        navigator.serviceWorker.register(SW_URL, { updateViaCache: 'none' })
+            .then((registration) => {
+                console.log('SW registered. Scope:', registration.scope);
+                runUpdateCheck(registration);
+            })
+            .catch((error) => {
+                console.error('SW registration error:', error);
+                hideUpdateOverlay();
+            });
     }
 })();
 
