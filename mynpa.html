@@ -224,7 +224,7 @@
             justify-content: flex-start;
             gap: 4px;
             z-index: 20;
-            pointer-events: none;
+            pointer-events: auto;
         }
 
         body.npa-header-actions-unlocked .header-actions {
@@ -238,9 +238,9 @@
         }
 
         body:not(.npa-header-actions-unlocked) .header-action-btn {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
         }
 
         .header-action-btn {
@@ -2614,18 +2614,42 @@
             -webkit-touch-callout: none;
         }
 
-        .npa-native-editable,
-        input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([readonly]):not([disabled]),
-        textarea:not([readonly]):not([disabled]),
-        select:not([disabled]),
-        [contenteditable="true"] {
-            touch-action: auto !important;
-            -webkit-user-select: text !important;
-            user-select: text !important;
-            -webkit-touch-callout: default !important;
-        }
+        /* --- Стили для правой вкладки Profile с FCU FPA --- */
+.profile-tab-btn {
+    flex-direction: row !important;
+    gap: 8px;
+}
 
-        /* Стили для Контейнера 2 */
+.profile-title {
+    line-height: 1;
+}
+
+.fcu-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+}
+
+.fcu-main {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    line-height: 1.1;
+    white-space: nowrap;
+    color: inherit;
+}
+
+.fcu-sub {
+    font-size: 6px;
+    font-weight: 700;
+    opacity: 0.75;
+    text-transform: lowercase;
+    white-space: nowrap;
+    line-height: 1.1;
+    margin-top: 1px;
+}
     </style>
 
     <script>
@@ -2656,8 +2680,8 @@
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
         </div>
         <div class="header-actions">
-            <button type="button" class="header-action-btn" onclick="startNewAirportEntry()">Add<br>Airport</button>
-            <button type="button" class="header-action-btn save" onclick="saveToFirebase()">Save</button>
+            <button type="button" class="header-action-btn" id="npaAddAirportButton" onclick="startNewAirportEntry()">Add<br>Airport</button>
+            <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()">Save to<br>device</button>
         </div>
         <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2741,7 +2765,13 @@
                 <div class="npa-tab-line">
                     <div class="npa-tab-row">
                         <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock2" onclick="toggleNpaBlock('npaBlock2')">Racetrack</div>
-                        <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock4" onclick="toggleNpaBlock('npaBlock4')">Profile</div>
+                        <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock4" onclick="toggleNpaBlock('npaBlock4')">
+                            <span class="tab-line">Profile</span>
+                            <div class="fcu-info-stacked">
+                                <div class="fcu-main">FCU FPA: xx&deg;</div>
+                                <div class="fcu-sub">&#127777;&#xFE0F; corrected</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2835,7 +2865,7 @@
                                 </div>
                                 <div class="npa-profile-body" id="npaProfileTableBody"></div>
                             </div>
-                            <div class="npa-profile-unit-hint">long tap on either column to switch nm/km</div>
+                            <div class="npa-profile-unit-hint">*short tap on either column will highlite it*long tap on either column to switch nm/km*</div>
                         </div>
                     </div>
                 </div>
@@ -2956,37 +2986,14 @@
     window.handleNpaAdminAuthState = user => {
         document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
         const label = document.getElementById('npaAdminModeLabel');
+        const saveButton = document.getElementById('npaSaveButton');
         if (label) {
             label.textContent = 'admin mode ON';
             label.classList.toggle('active', Boolean(user));
         }
+        if (saveButton) saveButton.innerHTML = user ? 'Save to<br>cloud' : 'Save to<br>device';
         if (user && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
-
-    function isNpaNativeKeyboardEditable(target) {
-        if (!target || target.readOnly || target.disabled) return false;
-
-        const tagName = String(target.tagName || '').toUpperCase();
-        if (tagName === 'TEXTAREA' || tagName === 'SELECT') return true;
-        if (tagName === 'INPUT') {
-            const type = String(target.getAttribute?.('type') || 'text').toLowerCase();
-            return !['hidden', 'button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'file', 'color'].includes(type);
-        }
-
-        return target.isContentEditable || target.getAttribute?.('contenteditable') === 'true';
-    }
-
-    function focusNpaNativeEditableFromGesture(event) {
-        const target = event?.target?.closest?.('input, textarea, select, [contenteditable="true"]');
-        if (!isNpaNativeKeyboardEditable(target)) return;
-
-        target.classList?.add('npa-native-editable');
-        try {
-            target.focus({ preventScroll: true });
-        } catch (error) {
-            target.focus();
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', () => {
         let lockedNpaAppHeight = 0;
@@ -2995,7 +3002,9 @@
             const active = document.activeElement;
             return Boolean(
                 active &&
-                isNpaNativeKeyboardEditable(active)
+                /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) &&
+                !active.readOnly &&
+                !active.disabled
             );
         };
 
@@ -3084,8 +3093,6 @@
             keepNpaViewportPinned();
         });
         document.addEventListener('focusout', () => setTimeout(lockAppHeight, 250));
-        document.addEventListener('touchend', focusNpaNativeEditableFromGesture, { capture: true, passive: false });
-        document.addEventListener('pointerdown', focusNpaNativeEditableFromGesture, true);
 
         if ('virtualKeyboard' in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
@@ -3381,9 +3388,9 @@
         closeNpaClearDataModal('button');
     }
 
-    const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_v2';
+    const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_rtdb_v1';
         const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
-        const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_airport_saves_v2';
+        const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_cloud_writes_v1';
         const NPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
         const NPA_MANUAL_SYNC_DELAY_MS = 15000;
         const NPA_PAGE_STATE_FIELD_IDS = [
@@ -3428,10 +3435,29 @@
 
     function normalizeNpaAirportDocument(airportCode, airportData) {
         const icao = sanitizeNpaAirportCode(airportCode || airportData?.icao);
+        const runways = Array.isArray(airportData?.runways)
+            ? airportData.runways
+            : airportData?.runways && typeof airportData.runways === 'object'
+                ? Object.values(airportData.runways)
+                : [];
+        const sourceRadioAids = Array.isArray(airportData?.radioAids)
+            ? airportData.radioAids
+            : Array.isArray(airportData?.navaids)
+                ? airportData.navaids
+                : [];
+        const radioAids = sourceRadioAids.filter(Boolean).map(aid => {
+            const sourceType = String(aid.sourceType || aid.type || 'VOR').toUpperCase();
+            return {
+                ...aid,
+                type: sourceType === 'NDB' || sourceType === 'TAR' ? sourceType : 'VOR',
+                sourceType,
+                name: String(aid.name || aid.id || sourceType).trim().toUpperCase()
+            };
+        });
         return {
             icao,
-            runways: Array.isArray(airportData?.runways) ? airportData.runways : [],
-            radioAids: Array.isArray(airportData?.radioAids) ? airportData.radioAids : [],
+            runways,
+            radioAids,
             approaches: airportData?.approaches && typeof airportData.approaches === 'object' ? airportData.approaches : {},
             updatedAt: Number.isFinite(Number(airportData?.updatedAt)) ? Number(airportData.updatedAt) : Date.now()
         };
@@ -3707,109 +3733,56 @@
         if (event.key === NPA_PENDING_AIRPORT_SAVES_KEY) renderNpaPendingSyncIndicator();
     });
 
-    function queueAirportSave(airportCode, airportData) {
-        const normalizedCode = sanitizeNpaAirportCode(airportCode);
-        const updatedAt = getNpaAirportUpdatedAt(airportData) || Date.now();
-        const queuedAirportData = {
-            ...airportData,
-            updatedAt
-        };
-        const nextQueue = getPendingAirportSaves()
-            .filter(item => item && item.airportCode !== normalizedCode);
+    function isNpaAdminMode() {
+        return Boolean(window.npaAuth?.currentUser);
+    }
 
-        nextQueue.push({
-            airportCode: normalizedCode,
-            airportData: queuedAirportData,
-            updatedAt
+    function queueAirportSave(airportCode, airportData) {
+        if (!isNpaAdminMode()) return;
+        window.queueNpaCloudWrite?.({
+            kind: 'reference',
+            airportCode: sanitizeNpaAirportCode(airportCode),
+            data: airportData,
+            updatedAt: Date.now()
         });
-        setPendingAirportSaves(nextQueue);
+    }
+
+    function queueApproachSave(airportCode, approachName, approachData) {
+        if (!isNpaAdminMode()) return;
+        window.queueNpaCloudWrite?.({
+            kind: 'approach',
+            airportCode: sanitizeNpaAirportCode(airportCode),
+            approachName,
+            data: approachData,
+            updatedAt: Date.now()
+        });
     }
 
     function isFirebaseReady() {
-        return window.npaDb && typeof window.npaDb.collection === 'function';
-    }
-
-    async function writeAirportToCloud(airportCode, airportData) {
-        if (!isFirebaseReady()) throw new Error('Firebase is not ready');
-        await window.npaDb.collection('airports').doc(airportCode).set(airportData, { merge: true });
-    }
-
-    async function discardPendingAirportDeletedFromCloud(airportCode) {
-        const normalizedCode = sanitizeNpaAirportCode(airportCode);
-        if (!normalizedCode || !getConfirmedCloudAirportCodes().has(normalizedCode)) return false;
-
-        const snapshot = await window.npaDb.collection('airports').doc(normalizedCode).get({ source: 'server' });
-        if (snapshot.exists) return false;
-
-        mergeNpaAirportsDb({}, {
-            removedAirportCodes: [normalizedCode],
-            source: 'pending-delete-check'
-        });
-        return true;
+        return Boolean(window.MyFlightNpaSync?.isReady?.());
     }
 
     async function syncPendingAirportSaves() {
-        if (npaSyncInProgress || !navigator.onLine) return;
-
+        if (!isNpaAdminMode()) return false;
         if (!isFirebaseReady() && typeof window.initNpaFirebase === 'function') {
             await window.initNpaFirebase();
         }
-
-        if (!isFirebaseReady()) return;
-
-        const queue = getPendingAirportSaves();
-        if (!queue.length) return;
-
-        npaSyncInProgress = true;
-        const failedAirportCodes = new Set();
-        const successfullySynced = new Map();
-
-        try {
-            for (let i = 0; i < queue.length; i += 1) {
-                const item = queue[i];
-                if (!item || !item.airportCode || !item.airportData) continue;
-
-                try {
-                    if (await discardPendingAirportDeletedFromCloud(item.airportCode)) continue;
-                    await writeAirportToCloud(item.airportCode, item.airportData);
-                    successfullySynced.set(
-                        sanitizeNpaAirportCode(item.airportCode),
-                        Math.max(getNpaAirportUpdatedAt(item), getNpaAirportUpdatedAt(item.airportData))
-                    );
-                } catch (error) {
-                    console.error('Pending sync error:', error);
-                    queue.slice(i).forEach(remainingItem => {
-                        const code = sanitizeNpaAirportCode(remainingItem?.airportCode);
-                        if (code) failedAirportCodes.add(code);
-                    });
-                    break;
-                }
-            }
-        } finally {
-            if (successfullySynced.size) {
-                confirmCloudAirportCodes(successfullySynced.keys());
-            }
-            const remaining = getPendingAirportSaves().filter(item => {
-                const code = sanitizeNpaAirportCode(item?.airportCode);
-                if (!code || failedAirportCodes.has(code)) return true;
-
-                const syncedUpdatedAt = successfullySynced.get(code);
-                if (syncedUpdatedAt === undefined) return true;
-
-                const currentUpdatedAt = Math.max(
-                    getNpaAirportUpdatedAt(item),
-                    getNpaAirportUpdatedAt(item?.airportData)
-                );
-                return currentUpdatedAt > syncedUpdatedAt;
-            });
-            setPendingAirportSaves(remaining);
-            npaSyncInProgress = false;
-        }
+        return window.MyFlightNpaSync?.syncPending?.() || false;
     }
 
         window.airportsDb = loadNpaAirportsDb();
         window.mergeNpaAirportsDb = mergeNpaAirportsDb;
         window.syncPendingAirportSaves = syncPendingAirportSaves;
+        window.addEventListener('npa-cloud-data-updated', event => {
+            if (event.detail?.airportsDb) window.airportsDb = event.detail.airportsDb;
+            renderNpaAirportDropdown(false);
+            renderNpaApproachDropdown(false);
+            const airportCode = getNpaAirportCode();
+            const approachType = getSelectedNpaType();
+            if (!npaCurrentApproachDirty && airportCode && approachType && window.airportsDb?.[airportCode]?.approaches?.[approachType]) {
+                checkAndFillFromDB();
+            }
+        });
         renderNpaPendingSyncIndicator();
 
         let airportInputTimeout; // Переменная для хранения таймера
@@ -5209,6 +5182,40 @@
         return elevation === "" ? "" : elevation;
     }
 
+    function getCurrentRunwayReferenceValues() {
+        const airport = getAirportDocument(getNpaAirportCode());
+        const threshold = getCurrentLandingThreshold();
+        const target = String(threshold || "").trim().toUpperCase();
+        if (!airport || !target) return null;
+
+        const runway = (airport.runways || []).find(item => {
+            const thr1 = String(item.thr1 || "").trim().toUpperCase();
+            const thr2 = String(item.thr2 || "").trim().toUpperCase();
+            return thr1 === target || thr2 === target;
+        });
+        if (!runway) return null;
+
+        const thr1 = String(runway.thr1 || "").trim().toUpperCase();
+        const elevation = getCleanDisplayNumber(thr1 === target ? runway.thr1Elev : runway.thr2Elev);
+        const rwLength = getCleanDisplayNumber(runway.rwLength);
+        return {
+            rwLength: rwLength === "" ? "" : rwLength,
+            elevation: elevation === "" ? "" : elevation,
+            rwLengthDisplayUnit: runway.rwLengthDisplayUnit === 'ft' ? 'ft' : 'm'
+        };
+    }
+
+    function applyCurrentRunwayReferenceFields(fallback = {}) {
+        const reference = getCurrentRunwayReferenceValues();
+        setFieldValue('rwLength', reference?.rwLength !== "" && reference?.rwLength !== undefined ? reference.rwLength : fallback.rwLength);
+        setFieldValue('elevation', reference?.elevation !== "" && reference?.elevation !== undefined ? reference.elevation : fallback.elevation);
+        const rwLengthEl = document.getElementById('rwLength');
+        if (rwLengthEl && reference?.rwLength !== "" && reference?.rwLength !== undefined) {
+            rwLengthEl.dataset.displayUnit = reference.rwLengthDisplayUnit;
+            renderRwLengthDisplay();
+        }
+    }
+
     function parseNpaCoordPart(value, hemisphere) {
         const part = String(value || "").replace(/,/g, '.').trim();
         const nums = part.match(/\d+(?:\.\d+)?/g) || [];
@@ -5316,7 +5323,13 @@
 
     function getRadioAidDisplayName(aid, index) {
         if (aid?.type === 'ILS_OPPOSITE') return String(aid?.name || 'ILS').trim().toUpperCase();
-        const type = aid?.type === 'NDB' ? 'NDB' : aid?.type === 'TAR' ? 'TAR' : 'VOR';
+        const type = aid?.type === 'NDB'
+            ? 'NDB'
+            : aid?.type === 'TAR'
+                ? 'TAR'
+                : aid?.sourceType === 'VORDME'
+                    ? 'VORDME'
+                    : 'VOR';
         const name = String(aid?.name || "").trim().toUpperCase();
         return name && name !== type ? `${type} ${name}` : `${type} ${index + 1}`;
     }
@@ -5324,6 +5337,7 @@
     function getProfileRadioAidHeaderLabel(aid, index) {
         const name = String(aid?.name || '').trim().toUpperCase();
         if (aid?.type === 'ILS_OPPOSITE') return String(aid?.name || 'ILS').trim().toUpperCase();
+        if (aid?.sourceType === 'VORDME') return name ? `${name} VORDME` : `VORDME ${index + 1}`;
         if (aid?.type === 'VOR') return name ? `${name} VOR` : `VOR ${index + 1}`;
         return getRadioAidDisplayName(aid, index);
     }
@@ -5337,7 +5351,13 @@
     }
 
     function getDownwindRadioAidChoiceLabel(aid) {
-        const type = aid?.type === 'NDB' ? 'ndb' : aid?.type === 'VOR' ? 'vor' : '';
+        const type = aid?.type === 'NDB'
+            ? 'ndb'
+            : aid?.sourceType === 'VORDME'
+                ? 'vordme'
+                : aid?.type === 'VOR'
+                    ? 'vor'
+                    : '';
         const name = String(aid?.name || '').trim().toUpperCase();
         if (!name) return type ? type.toUpperCase() : '';
         return type ? `${name} ${type}` : name;
@@ -6541,21 +6561,31 @@
         };
 
         upsertLocalAirport(icao, airportData);
-        queueAirportSave(icao, airportData);
+        const adminMode = isNpaAdminMode();
+        if (adminMode) queueAirportSave(icao, airportData);
         const airportInput = document.getElementById('apprName');
         if (airportInput) airportInput.value = icao;
         setSelectedNpaType("");
         closeNpaAirportDropdown();
         renderNpaApproachDropdown(false);
 
-        try {
-            await syncPendingAirportSaves();
-        } catch (error) {
-            console.error("Airport save sync error:", error);
+        if (adminMode) {
+            try {
+                await syncPendingAirportSaves();
+            } catch (error) {
+                console.error("Airport save sync error:", error);
+            }
         }
 
         closeAddAirportModal('button');
         scheduleNpaCurrentPageStateSave();
+        const pending = adminMode && getPendingAirportSaves()
+            .some(item => item?.kind === 'reference' && item.airportCode === icao);
+        alert(adminMode
+            ? pending
+                ? `Airport ${icao} saved locally. Cloud sync will retry automatically.`
+                : `Airport ${icao} saved to cloud.`
+            : `Airport ${icao} saved to device.`);
     }
 
     function openAddApproachModal() {
@@ -6677,35 +6707,6 @@
         container.appendChild(manualHost);
     }
 
-    function focusManualApproachSuffixInput(event) {
-        const manualSuffixInput = event?.currentTarget?.id === 'manualApproachSuffixInput'
-            ? event.currentTarget
-            : document.getElementById('manualApproachSuffixInput');
-        if (!manualSuffixInput || manualSuffixInput.disabled || manualSuffixInput.readOnly) return;
-
-        if (event) {
-            event.stopPropagation();
-            if (event.type === 'touchend') event.preventDefault();
-        }
-
-        const suffix = String(manualSuffixInput.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
-        manualSuffixInput.value = suffix;
-        newApproachState.suffixMode = 'MAN';
-        newApproachState.suffix = suffix;
-        manualSuffixInput.classList.add('active');
-
-        try {
-            manualSuffixInput.focus({ preventScroll: true });
-        } catch (error) {
-            manualSuffixInput.focus();
-        }
-
-        if (typeof manualSuffixInput.setSelectionRange === 'function') {
-            const caretPosition = manualSuffixInput.value.length;
-            manualSuffixInput.setSelectionRange(caretPosition, caretPosition);
-        }
-    }
-
     function handleManualApproachSuffixInput(event) {
         const input = event.currentTarget;
         const suffix = String(input.value || '').replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
@@ -6795,6 +6796,7 @@
         closeAddApproachModal('button');
         setSelectedNpaType(approachName);
         clearNpaFields();
+        applyCurrentRunwayReferenceFields();
         npaCurrentApproachDirty = true;
         setNpaEditModeUnlocked(true, true);
         scheduleNpaCurrentPageStateSave();
@@ -6863,8 +6865,7 @@
             downwindRadioFixShiftLabel = data.downwindRadioFixShiftLabel || "";
             profileRadioSourceLabel = data.profileRadioSourceLabel || "";
 
-            setFieldValue('rwLength', data.rwLength);
-            setFieldValue('elevation', data.elevation);
+            applyCurrentRunwayReferenceFields(data);
             setFieldValue('gpa', data.gpa);
             setFieldValue('fdp', data.fdp);
             setFieldValue('fap', data.fap);
@@ -6954,27 +6955,33 @@
         airport.approaches = airport.approaches && typeof airport.approaches === 'object' ? airport.approaches : {};
         const approachData = collectCurrentApproachData(airport.approaches[type] || { name: type });
         approachData.name = type;
+        approachData.updatedAt = Date.now();
         airport.approaches[type] = approachData;
         airport.updatedAt = Date.now();
 
         upsertLocalAirport(airportCode, airport);
-        queueAirportSave(airportCode, airport);
+        const adminMode = isNpaAdminMode();
+        if (adminMode) queueApproachSave(airportCode, type, approachData);
         npaCurrentApproachDirty = false;
         renderNpaApproachDropdown(false);
 
-        try {
-            await syncPendingAirportSaves();
-        } catch (error) {
-            console.error("Save sync error:", error);
+        if (adminMode) {
+            try {
+                await syncPendingAirportSaves();
+            } catch (error) {
+                console.error("Save sync error:", error);
+            }
         }
 
         const isStillPending = getPendingAirportSaves()
-            .some(item => item && item.airportCode === airportCode);
+            .some(item => item?.kind === 'approach' && item.airportCode === airportCode && item.approachName === type);
 
-        if (isStillPending) {
+        if (!adminMode) {
+            alert(`Saved to device: ${airportCode} ${type}`);
+        } else if (isStillPending) {
             alert(`Saved locally: ${airportCode} ${type}. Sync will run automatically when Firebase is available.`);
         } else {
-            alert(`Saved successfully: ${airportCode} ${type}`);
+            alert(`Saved to cloud: ${airportCode} ${type}`);
         }
     }
 
@@ -7767,11 +7774,7 @@
                 autocapitalize="characters"
                 autocomplete="off"
                 spellcheck="false"
-                enterkeyhint="done"
                 aria-label="Manual approach suffix"
-                onpointerdown="focusManualApproachSuffixInput(event)"
-                ontouchend="focusManualApproachSuffixInput(event)"
-                onclick="focusManualApproachSuffixInput(event)"
                 oninput="handleManualApproachSuffixInput(event)"
                 class="npa-manual-suffix-input"
             >

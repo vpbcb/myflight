@@ -1182,8 +1182,13 @@
             const preservedMyNpaStorage = {};
             [
                 'mynpa_airports_v2',
+                'mynpa_airports_rtdb_v1',
+                'mynpa_airports_reference_v1',
+                'mynpa_cloud_approaches_v1',
                 'mynpa_pending_airport_saves_v2',
-                'mynpa_confirmed_cloud_airports_v1'
+                'mynpa_pending_cloud_writes_v1',
+                'mynpa_confirmed_cloud_airports_v1',
+                'mynpa_sync_status_v1'
             ].forEach(key => {
                 const value = localStorage.getItem(key);
                 if (value !== null) preservedMyNpaStorage[key] = value;

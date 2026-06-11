@@ -210,46 +210,38 @@
     }
 })();
 
-// Shared MyNPA Firebase bootstrap and pending airport sync.
-// Runs from app.js so queued MyNPA saves can sync from any app page, not only mynpa.html.
+// Shared MyNPA Realtime Database bootstrap and pending cloud sync.
+// Runs on every main page so cloud data and queued admin writes stay current.
 (function () {
-    const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_v2';
-    const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_airport_saves_v2';
-    const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
+    const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_rtdb_v1';
+    const NPA_REFERENCE_CACHE_KEY = 'mynpa_airports_reference_v1';
+    const NPA_CLOUD_APPROACHES_KEY = 'mynpa_cloud_approaches_v1';
+    const NPA_PENDING_CLOUD_WRITES_KEY = 'mynpa_pending_cloud_writes_v1';
     const NPA_SYNC_STATUS_KEY = 'mynpa_sync_status_v1';
     const FIREBASE_APP_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
-    const FIREBASE_FIRESTORE_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
+    const FIREBASE_DATABASE_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';
     const FIREBASE_AUTH_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
     const NPA_FIREBASE_CONFIG = {
         apiKey: 'AIzaSyBrx_6HkG7-zOEZMKzLB2NpMqpae_qKlGo',
         authDomain: 'mynpa-db.firebaseapp.com',
+        databaseURL: 'https://mynpa-db-default-rtdb.europe-west1.firebasedatabase.app',
         projectId: 'mynpa-db',
         storageBucket: 'mynpa-db.firebasestorage.app',
         messagingSenderId: '556017315454',
         appId: '1:556017315454:web:6ec41a310c54315d4ab22f'
     };
 
-    let npaFirebaseInitPromise = null;
-    let sharedNpaSyncInProgress = false;
-    let npaForceSyncInProgress = false;
-    let npaCloudRefreshInProgress = false;
-    let npaCloudDeleteAuditInProgress = false;
-    let npaRestPullInProgress = false;
-    let npaCloudRefreshTimer = null;
-    let npaPendingSyncRetryTimer = null;
-    let npaPendingSyncRetryDelayMs = 2000;
-    let npaSyncStatus = {};
-    const NPA_CLOUD_REFRESH_INTERVAL_MS = 15000;
-    const NPA_PENDING_SYNC_RETRY_MAX_MS = 30000;
-    const NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS = 12000;
-    const NPA_BOOT_RETRY_DELAYS_MS = [0, 1000, 3000, 7000, 15000];
+    let initPromise = null;
+    let listenersAttached = false;
+    let syncInProgress = false;
+    let syncStatus = {};
 
     function readJsonStorage(key, fallbackValue) {
         try {
             const raw = localStorage.getItem(key);
             return raw ? JSON.parse(raw) : fallbackValue;
         } catch (error) {
-            console.error('NPA localStorage read error:', error);
+            console.error('MyNPA localStorage read error:', error);
             return fallbackValue;
         }
     }
@@ -259,998 +251,360 @@
             localStorage.setItem(key, JSON.stringify(value));
             return true;
         } catch (error) {
-            console.error('NPA localStorage write error:', error);
+            console.error('MyNPA localStorage write error:', error);
             return false;
         }
     }
 
-    function getPendingAirportSaves() {
-        return readJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, []);
+    function sanitizeAirportCode(value) {
+        return String(value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
     }
 
-    function setPendingAirportSaves(queue) {
-        const normalizedQueue = Array.isArray(queue) ? queue : [];
-        writeJsonStorage(NPA_PENDING_AIRPORT_SAVES_KEY, normalizedQueue);
+    function normalizeRunways(source) {
+        if (Array.isArray(source)) return source.filter(Boolean);
+        if (!source || typeof source !== 'object') return [];
+        return Object.keys(source).map(key => source[key]).filter(Boolean);
+    }
+
+    function normalizeRadioAids(airportData) {
+        const source = Array.isArray(airportData?.radioAids)
+            ? airportData.radioAids
+            : Array.isArray(airportData?.navaids)
+                ? airportData.navaids
+                : [];
+        return source.filter(Boolean).map(aid => {
+            const sourceType = String(aid.sourceType || aid.type || 'VOR').toUpperCase();
+            return {
+                ...aid,
+                type: sourceType === 'NDB' || sourceType === 'TAR' ? sourceType : 'VOR',
+                sourceType,
+                name: String(aid.name || aid.id || sourceType).trim().toUpperCase()
+            };
+        });
+    }
+
+    function normalizeReferenceAirport(airportCode, airportData) {
+        const icao = sanitizeAirportCode(airportCode || airportData?.icao);
+        return {
+            icao,
+            runways: normalizeRunways(airportData?.runways),
+            radioAids: normalizeRadioAids(airportData),
+            updatedAt: Number(airportData?.updatedAt) || Date.now()
+        };
+    }
+
+    function runwayObjectFromArray(runways) {
+        const result = {};
+        normalizeRunways(runways).forEach((runway, index) => {
+            const thr1 = String(runway?.thr1 || '').trim().toUpperCase();
+            const thr2 = String(runway?.thr2 || '').trim().toUpperCase();
+            let key = [thr1, thr2].filter(Boolean).join('_') || `runway_${index + 1}`;
+            key = key.replace(/[.#$[\]/]/g, '_');
+            result[key] = {
+                rwLength: runway?.rwLength ?? '',
+                rwLengthDisplayUnit: runway?.rwLengthDisplayUnit === 'ft' ? 'ft' : 'm',
+                thr1,
+                thr1Coord: runway?.thr1Coord || '',
+                thr1Elev: runway?.thr1Elev ?? '',
+                thr2,
+                thr2Coord: runway?.thr2Coord || '',
+                thr2Elev: runway?.thr2Elev ?? ''
+            };
+        });
+        return result;
+    }
+
+    function navaidsFromRadioAids(radioAids) {
+        return normalizeRadioAids({ radioAids })
+            .filter(aid => aid.type !== 'TAR')
+            .map(aid => ({
+                type: aid.sourceType === 'VORDME' ? 'VORDME' : aid.type,
+                id: aid.name || aid.id || '',
+                coord: aid.coord || ''
+            }));
+    }
+
+    function serializeReferenceAirport(airportCode, airportData) {
+        const normalized = normalizeReferenceAirport(airportCode, airportData);
+        return {
+            icao: normalized.icao,
+            runways: runwayObjectFromArray(normalized.runways),
+            navaids: navaidsFromRadioAids(normalized.radioAids)
+        };
+    }
+
+    function getCloudApproachesForAirport(cloudData, airportCode) {
+        const entry = cloudData?.[airportCode];
+        if (!entry || typeof entry !== 'object') return {};
+        return entry.approaches && typeof entry.approaches === 'object' ? entry.approaches : {};
+    }
+
+    function rebuildCombinedLocalDb() {
+        const references = readJsonStorage(NPA_REFERENCE_CACHE_KEY, {});
+        const cloudApproaches = readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {});
+        const merged = readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+
+        Object.keys(references || {}).forEach(rawCode => {
+            const code = sanitizeAirportCode(rawCode);
+            const reference = references[rawCode];
+            if (!code || !reference || typeof reference !== 'object') return;
+            const localApproaches = merged[code]?.approaches && typeof merged[code].approaches === 'object'
+                ? merged[code].approaches
+                : {};
+            merged[code] = {
+                ...normalizeReferenceAirport(code, reference),
+                approaches: localApproaches
+            };
+        });
+
+        Object.keys(cloudApproaches || {}).forEach(rawCode => {
+            const code = sanitizeAirportCode(rawCode);
+            if (!code) return;
+            const existing = merged[code] || normalizeReferenceAirport(code, { icao: code });
+            const localApproaches = existing.approaches && typeof existing.approaches === 'object'
+                ? existing.approaches
+                : {};
+            merged[code] = {
+                ...existing,
+                approaches: {
+                    ...localApproaches,
+                    ...getCloudApproachesForAirport(cloudApproaches, rawCode)
+                }
+            };
+        });
+
+        writeJsonStorage(NPA_AIRPORTS_DB_KEY, merged);
+        window.airportsDb = merged;
+        window.dispatchEvent(new CustomEvent('npa-cloud-data-updated', {
+            detail: { airportsDb: merged }
+        }));
+        return merged;
+    }
+
+    function getPendingCloudWrites() {
+        const queue = readJsonStorage(NPA_PENDING_CLOUD_WRITES_KEY, []);
+        return Array.isArray(queue) ? queue : [];
+    }
+
+    function setPendingCloudWrites(queue) {
+        const normalized = Array.isArray(queue) ? queue : [];
+        writeJsonStorage(NPA_PENDING_CLOUD_WRITES_KEY, normalized);
         window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
-            detail: { pendingCount: normalizedQueue.length }
+            detail: { pendingCount: normalized.length }
         }));
     }
 
-    function loadNpaAirportsDb() {
-        return readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+    function pendingWriteId(item) {
+        return `${item?.kind || ''}:${sanitizeAirportCode(item?.airportCode)}:${item?.approachName || ''}`;
     }
 
-    function persistNpaAirportsDb(cache) {
-        writeJsonStorage(NPA_AIRPORTS_DB_KEY, cache || {});
-    }
-
-    function normalizeAirportCode(code) {
-        return String(code || '').trim().toUpperCase();
-    }
-
-    function getConfirmedCloudAirportCodes() {
-        const storedCodes = readJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, null);
-        if (Array.isArray(storedCodes)) {
-            return new Set(storedCodes.map(normalizeAirportCode).filter(Boolean));
-        }
-
-        const pendingCodes = new Set(
-            getPendingAirportSaves()
-                .map(item => normalizeAirportCode(item && item.airportCode))
-                .filter(Boolean)
-        );
-        const legacyConfirmedCodes = new Set(
-            Object.keys(loadNpaAirportsDb() || {})
-                .map(normalizeAirportCode)
-                .filter(code => code && !pendingCodes.has(code))
-        );
-        setConfirmedCloudAirportCodes(legacyConfirmedCodes);
-        return legacyConfirmedCodes;
-    }
-
-    function setConfirmedCloudAirportCodes(codes) {
-        const normalizedCodes = Array.from(codes || [])
-            .map(normalizeAirportCode)
-            .filter(Boolean)
-            .sort();
-        writeJsonStorage(NPA_CONFIRMED_CLOUD_AIRPORTS_KEY, [...new Set(normalizedCodes)]);
-    }
-
-    function confirmCloudAirportCodes(codes) {
-        const confirmedCodes = getConfirmedCloudAirportCodes();
-        Array.from(codes || []).forEach(code => {
-            const normalizedCode = normalizeAirportCode(code);
-            if (normalizedCode) confirmedCodes.add(normalizedCode);
-        });
-        setConfirmedCloudAirportCodes(confirmedCodes);
-    }
-
-    function getAirportUpdatedAt(value) {
-        const updatedAt = Number(value && value.updatedAt);
-        return Number.isFinite(updatedAt) ? updatedAt : 0;
-    }
-
-    function getPendingAirportSaveMap(queue = getPendingAirportSaves()) {
-        const pendingByAirport = new Map();
-
-        queue.forEach(item => {
-            const airportCode = normalizeAirportCode(item && item.airportCode);
-            if (!airportCode || !item || !item.airportData) return;
-
-            const updatedAt = Math.max(
-                getAirportUpdatedAt(item),
-                getAirportUpdatedAt(item.airportData)
-            );
-            const existing = pendingByAirport.get(airportCode);
-            if (!existing || updatedAt >= existing.updatedAt) {
-                pendingByAirport.set(airportCode, { item, updatedAt });
-            }
-        });
-
-        return pendingByAirport;
-    }
-
-    function isNpaStandaloneApp() {
-        try {
-            return Boolean(
-                (window.navigator && window.navigator.standalone === true) ||
-                (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-            );
-        } catch (error) {
-            return false;
-        }
-    }
-
-    function getNpaAirportCacheCount() {
-        return Object.keys(loadNpaAirportsDb() || {}).length;
-    }
-
-    function getNpaSyncStatus() {
-        npaSyncStatus = npaSyncStatus && Object.keys(npaSyncStatus).length
-            ? npaSyncStatus
-            : readJsonStorage(NPA_SYNC_STATUS_KEY, {});
-
-        return {
-            ...npaSyncStatus,
-            firebaseReady: isFirebaseReady(),
-            standalone: isNpaStandaloneApp(),
-            airportCount: getNpaAirportCacheCount(),
-            pendingCount: getPendingAirportSaves().length
+    function queueCloudWrite(item) {
+        if (!item || !item.kind || !sanitizeAirportCode(item.airportCode)) return;
+        const queued = {
+            ...item,
+            airportCode: sanitizeAirportCode(item.airportCode),
+            updatedAt: Number(item.updatedAt) || Date.now()
         };
-    }
-
-    function updateNpaSyncStatus(patch = {}) {
-        npaSyncStatus = {
-            ...getNpaSyncStatus(),
-            ...patch,
-            updatedAt: Date.now(),
-            firebaseReady: isFirebaseReady(),
-            standalone: isNpaStandaloneApp(),
-            airportCount: getNpaAirportCacheCount(),
-            pendingCount: getPendingAirportSaves().length
-        };
-        writeJsonStorage(NPA_SYNC_STATUS_KEY, npaSyncStatus);
-        return { ...npaSyncStatus };
-    }
-
-    function getNpaErrorMessage(error) {
-        return error && error.message ? error.message : String(error || 'Unknown error');
-    }
-
-    function withNpaTimeout(promise, timeoutMs, label) {
-        return new Promise((resolve, reject) => {
-            const timeoutId = window.setTimeout(() => {
-                reject(new Error(`${label} timed out after ${timeoutMs} ms`));
-            }, timeoutMs);
-
-            Promise.resolve(promise).then(
-                value => {
-                    window.clearTimeout(timeoutId);
-                    resolve(value);
-                },
-                error => {
-                    window.clearTimeout(timeoutId);
-                    reject(error);
-                }
-            );
-        });
-    }
-
-    function mergeCloudNpaAirportsDb(source, options = {}) {
-        if (!source || typeof source !== 'object') return;
-
-        if (typeof window.mergeNpaAirportsDb === 'function') {
-            window.mergeNpaAirportsDb(source, options);
-            return;
-        }
-
-        const merged = window.airportsDb && typeof window.airportsDb === 'object'
-            ? window.airportsDb
-            : loadNpaAirportsDb();
-        const pendingQueue = getPendingAirportSaves();
-        const pendingByAirport = getPendingAirportSaveMap(pendingQueue);
-        const confirmedPendingAirports = new Set();
-        const actuallyRemovedAirports = new Set();
-        const canConfirmPending = options.fromCache !== true && options.hasPendingWrites !== true;
-        const confirmedCloudAirports = getConfirmedCloudAirportCodes();
-        const cloudAirportCodes = new Set(
-            Array.isArray(options.cloudAirportCodes)
-                ? options.cloudAirportCodes.map(normalizeAirportCode).filter(Boolean)
-                : Object.keys(source).map(normalizeAirportCode).filter(Boolean)
-        );
-        const removedAirports = new Set(
-            Array.isArray(options.removedAirportCodes)
-                ? options.removedAirportCodes.map(normalizeAirportCode).filter(Boolean)
-                : []
-        );
-
-        Object.keys(source).forEach(airportCode => {
-            const airportData = source[airportCode];
-            if (!airportData || typeof airportData !== 'object') return;
-            const normalizedCode = normalizeAirportCode(airportCode);
-            if (!normalizedCode) return;
-
-            const pending = pendingByAirport.get(normalizedCode);
-            const localUpdatedAt = getAirportUpdatedAt(merged[normalizedCode]);
-            const pendingUpdatedAt = pending ? pending.updatedAt : 0;
-            const cloudUpdatedAt = getAirportUpdatedAt(airportData);
-
-            if (Math.max(localUpdatedAt, pendingUpdatedAt) > cloudUpdatedAt) return;
-
-            merged[normalizedCode] = airportData;
-            if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
-                confirmedPendingAirports.add(normalizedCode);
-            }
-            if (canConfirmPending) confirmedCloudAirports.add(normalizedCode);
-        });
-
-        removedAirports.forEach(airportCode => {
-            delete merged[airportCode];
-            confirmedCloudAirports.delete(airportCode);
-            actuallyRemovedAirports.add(airportCode);
-        });
-
-        const pendingAirportsToRemove = new Set([
-            ...confirmedPendingAirports,
-            ...actuallyRemovedAirports
-        ]);
-        if (pendingAirportsToRemove.size) {
-            setPendingAirportSaves(
-                pendingQueue.filter(item =>
-                    item && !pendingAirportsToRemove.has(normalizeAirportCode(item.airportCode))
-                )
-            );
-        }
-
-        setConfirmedCloudAirportCodes(confirmedCloudAirports);
-        window.airportsDb = merged;
-        persistNpaAirportsDb(merged);
-        updateNpaSyncStatus({
-            lastMergeAt: Date.now(),
-            lastMergeSource: options.source || 'unknown',
-            lastRemovedCount: actuallyRemovedAirports.size
-        });
+        const id = pendingWriteId(queued);
+        const next = getPendingCloudWrites().filter(existing => pendingWriteId(existing) !== id);
+        next.push(queued);
+        setPendingCloudWrites(next);
     }
 
     function isFirebaseReady() {
-        return window.npaDb && typeof window.npaDb.collection === 'function';
+        return Boolean(window.npaDb && typeof window.npaDb.ref === 'function');
     }
 
-    async function writeAirportToCloud(airportCode, airportData) {
-        if (!isFirebaseReady()) throw new Error('Firebase is not ready');
-        await window.npaDb.collection('airports').doc(airportCode).set(airportData, { merge: true });
+    function isAdminMode() {
+        return Boolean(window.npaAuth?.currentUser);
     }
 
-    async function discardPendingAirportDeletedFromCloud(airportCode) {
-        const normalizedCode = normalizeAirportCode(airportCode);
-        if (!normalizedCode || !getConfirmedCloudAirportCodes().has(normalizedCode)) return false;
+    function safeApproachKey(value) {
+        return String(value || '').trim().replace(/[.#$[\]/]/g, '_');
+    }
 
-        const snapshot = await window.npaDb.collection('airports').doc(normalizedCode).get({ source: 'server' });
-        if (snapshot.exists) return false;
+    async function writeAirportReferenceToCloud(airportCode, airportData) {
+        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        const code = sanitizeAirportCode(airportCode);
+        await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
+    }
 
-        mergeCloudNpaAirportsDb({}, {
-            removedAirportCodes: [normalizedCode],
-            source: 'pending-delete-check'
+    async function writeApproachToCloud(airportCode, approachName, approachData) {
+        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        const code = sanitizeAirportCode(airportCode);
+        const key = safeApproachKey(approachName);
+        if (!code || !key) throw new Error('Airport and approach are required');
+        await window.npaDb.ref(`airportsNpa/${code}/approaches/${key}`).set({
+            ...approachData,
+            name: approachName,
+            updatedAt: Number(approachData?.updatedAt) || Date.now()
         });
-        return true;
     }
 
-    async function discardPendingAirportDeletedFromCloudWithTimeout(airportCode) {
-        return withNpaTimeout(
-            discardPendingAirportDeletedFromCloud(airportCode),
-            NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
-            `Cloud delete check for ${normalizeAirportCode(airportCode)}`
-        );
-    }
-
-    async function restartNpaFirestoreNetwork() {
-        if (!isFirebaseReady()) return false;
-
-        try {
-            if (typeof window.npaDb.disableNetwork === 'function') {
-                await withNpaTimeout(
-                    window.npaDb.disableNetwork(),
-                    NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
-                    'Firestore disableNetwork'
-                );
-            }
-        } catch (error) {
-            console.warn('NPA force sync network disable skipped:', error);
-        }
-
-        if (typeof window.npaDb.enableNetwork === 'function') {
-            await withNpaTimeout(
-                window.npaDb.enableNetwork(),
-                NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
-                'Firestore enableNetwork'
-            );
-        }
-        return true;
-    }
-
-    async function auditConfirmedCloudAirportDeletes(presentCloudAirportCodes = []) {
-        if (npaCloudDeleteAuditInProgress || !navigator.onLine || !isFirebaseReady()) return false;
-
-        const presentCodes = new Set(
-            Array.from(presentCloudAirportCodes || [])
-                .map(normalizeAirportCode)
-                .filter(Boolean)
-        );
-        const missingConfirmedCodes = [...getConfirmedCloudAirportCodes()]
-            .filter(airportCode => !presentCodes.has(airportCode));
-        if (!missingConfirmedCodes.length) return true;
-
-        npaCloudDeleteAuditInProgress = true;
-        try {
-            const removedAirportCodes = [];
-            for (const airportCode of missingConfirmedCodes) {
-                try {
-                    const snapshot = await window.npaDb.collection('airports').doc(airportCode).get({ source: 'server' });
-                    if (!snapshot.exists) removedAirportCodes.push(airportCode);
-                } catch (error) {
-                    console.warn(`NPA cloud delete audit skipped for ${airportCode}:`, error);
-                }
-            }
-
-            if (removedAirportCodes.length) {
-                mergeCloudNpaAirportsDb({}, {
-                    removedAirportCodes,
-                    source: 'cloud-delete-audit'
-                });
-            }
-            return true;
-        } finally {
-            npaCloudDeleteAuditInProgress = false;
-        }
-    }
-
-    function collectCloudSnapshotData(snapshot) {
-        const cloudData = {};
-        snapshot.forEach(doc => {
-            cloudData[normalizeAirportCode(doc.id)] = doc.data();
-        });
-        return cloudData;
-    }
-
-    function getRemovedAirportCodes(snapshot) {
-        if (!snapshot || typeof snapshot.docChanges !== 'function') return [];
-
-        try {
-            return snapshot.docChanges()
-                .filter(change => change && change.type === 'removed' && change.doc)
-                .map(change => normalizeAirportCode(change.doc.id))
-                .filter(Boolean);
-        } catch (error) {
-            console.error('NPA snapshot change read error:', error);
-            return [];
-        }
-    }
-
-    function decodeFirestoreValue(value) {
-        if (!value || typeof value !== 'object') return null;
-        if (Object.prototype.hasOwnProperty.call(value, 'stringValue')) return value.stringValue;
-        if (Object.prototype.hasOwnProperty.call(value, 'integerValue')) return Number(value.integerValue);
-        if (Object.prototype.hasOwnProperty.call(value, 'doubleValue')) return Number(value.doubleValue);
-        if (Object.prototype.hasOwnProperty.call(value, 'booleanValue')) return Boolean(value.booleanValue);
-        if (Object.prototype.hasOwnProperty.call(value, 'nullValue')) return null;
-        if (Object.prototype.hasOwnProperty.call(value, 'timestampValue')) return value.timestampValue;
-        if (Object.prototype.hasOwnProperty.call(value, 'arrayValue')) {
-            const values = value.arrayValue && Array.isArray(value.arrayValue.values)
-                ? value.arrayValue.values
-                : [];
-            return values.map(decodeFirestoreValue);
-        }
-        if (Object.prototype.hasOwnProperty.call(value, 'mapValue')) {
-            const decoded = {};
-            const fields = value.mapValue && value.mapValue.fields && typeof value.mapValue.fields === 'object'
-                ? value.mapValue.fields
-                : {};
-            Object.keys(fields).forEach(key => {
-                decoded[key] = decodeFirestoreValue(fields[key]);
-            });
-            return decoded;
-        }
-        return null;
-    }
-
-    function decodeFirestoreDocument(doc) {
-        if (!doc || typeof doc !== 'object') return null;
-        const id = normalizeAirportCode(String(doc.name || '').split('/').pop());
-        if (!id) return null;
-
-        const data = {};
-        const fields = doc.fields && typeof doc.fields === 'object' ? doc.fields : {};
-        Object.keys(fields).forEach(key => {
-            data[key] = decodeFirestoreValue(fields[key]);
-        });
-        if (!data.icao) data.icao = id;
-        return { id, data };
-    }
-
-    function getNpaFirestoreRestUrl(pageToken = '') {
-        const url = new URL(`https://firestore.googleapis.com/v1/projects/${NPA_FIREBASE_CONFIG.projectId}/databases/(default)/documents/airports`);
-        url.searchParams.set('key', NPA_FIREBASE_CONFIG.apiKey);
-        url.searchParams.set('pageSize', '1000');
-        if (pageToken) url.searchParams.set('pageToken', pageToken);
-        return url.toString();
-    }
-
-    async function fetchNpaAirportsViaRest(reason = 'rest-pull') {
-        if (!navigator.onLine || npaRestPullInProgress) return false;
-
-        npaRestPullInProgress = true;
-        const startedAt = Date.now();
-        const cloudData = {};
-
-        try {
-            let pageToken = '';
-            do {
-                const response = await fetch(getNpaFirestoreRestUrl(pageToken), {
-                    cache: 'no-store',
-                    credentials: 'omit'
-                });
-                if (!response.ok) {
-                    throw new Error(`REST pull failed: ${response.status} ${response.statusText}`);
-                }
-
-                const payload = await response.json();
-                if (!payload || typeof payload !== 'object') {
-                    throw new Error('REST pull returned malformed payload');
-                }
-                if (payload.documents !== undefined && !Array.isArray(payload.documents)) {
-                    throw new Error('REST pull returned malformed documents list');
-                }
-
-                const documents = Array.isArray(payload.documents) ? payload.documents : [];
-                documents.forEach(doc => {
-                    const decoded = decodeFirestoreDocument(doc);
-                    if (decoded) cloudData[decoded.id] = decoded.data;
-                });
-
-                pageToken = payload.nextPageToken || '';
-            } while (pageToken);
-
-            mergeCloudNpaAirportsDb(cloudData, {
-                source: 'rest-pull',
-                authoritativeCloudSnapshot: false,
-                cloudAirportCodes: Object.keys(cloudData),
-                reason
-            });
-            updateNpaSyncStatus({
-                lastRestPullAt: startedAt,
-                lastRestPullCompletedAt: Date.now(),
-                lastRestPullReason: reason,
-                lastRestPullCount: Object.keys(cloudData).length,
-                lastError: ''
-            });
-            return true;
-        } catch (error) {
-            console.error('NPA REST cloud pull error:', error);
-            updateNpaSyncStatus({
-                lastRestPullErrorAt: Date.now(),
-                lastRestPullReason: reason,
-                lastError: getNpaErrorMessage(error)
-            });
-            return false;
-        } finally {
-            npaRestPullInProgress = false;
-        }
-    }
-
-    function shouldRunNpaRestFallback() {
-        return Boolean(navigator.onLine && (isNpaStandaloneApp() || !isFirebaseReady() || getNpaAirportCacheCount() === 0));
-    }
-
-    function applyCloudSnapshot(snapshot, source) {
-        const cloudData = collectCloudSnapshotData(snapshot);
-        const cloudAirportCodes = Object.keys(cloudData);
-        const removedAirportCodes = source === 'snapshot'
-            ? getRemovedAirportCodes(snapshot)
-            : [];
-        const fromCache = Boolean(snapshot.metadata && snapshot.metadata.fromCache);
-        const hasPendingWrites = Boolean(snapshot.metadata && snapshot.metadata.hasPendingWrites);
-
-        updateNpaSyncStatus({
-            lastSdkPullAt: Date.now(),
-            lastSnapshotAt: source === 'snapshot' ? Date.now() : npaSyncStatus.lastSnapshotAt,
-            lastServerPullAt: source === 'server-pull' ? Date.now() : npaSyncStatus.lastServerPullAt,
-            lastSnapshotSource: source,
-            lastSnapshotFromCache: fromCache,
-            lastSnapshotHasPendingWrites: hasPendingWrites,
-            lastSnapshotDocCount: cloudAirportCodes.length,
-            lastSnapshotRemovedCount: removedAirportCodes.length
-        });
-
-        if (cloudAirportCodes.length > 0 || removedAirportCodes.length > 0) {
-            mergeCloudNpaAirportsDb(cloudData, {
-                fromCache,
-                hasPendingWrites,
-                completeCloudSnapshot: false,
-                authoritativeCloudSnapshot: false,
-                cloudAirportCodes,
-                removedAirportCodes,
-                source
-            });
-        }
-        return cloudData;
-    }
-
-    async function refreshCloudNpaAirportsDbFromServer() {
-        if (npaCloudRefreshInProgress || !navigator.onLine || !isFirebaseReady()) {
-            if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest('server-pull-not-ready');
-            return false;
-        }
-
-        npaCloudRefreshInProgress = true;
-        try {
-            if (getPendingAirportSaves().length && !sharedNpaSyncInProgress) {
-                await requestPendingNpaSync();
-            }
-
-            const snapshot = await window.npaDb.collection('airports').get({ source: 'server' });
-            const cloudData = applyCloudSnapshot(snapshot, 'server-pull');
-            await auditConfirmedCloudAirportDeletes(Object.keys(cloudData));
-            if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest('after-server-pull');
-            return true;
-        } catch (error) {
-            console.error('NPA cloud refresh error:', error);
-            updateNpaSyncStatus({
-                lastServerPullErrorAt: Date.now(),
-                lastError: getNpaErrorMessage(error)
-            });
-            fetchNpaAirportsViaRest('server-pull-error');
-            return false;
-        } finally {
-            npaCloudRefreshInProgress = false;
-        }
-    }
-
-    function startCloudRefreshFallback() {
-        if (npaCloudRefreshTimer) return;
-
-        npaCloudRefreshTimer = window.setInterval(() => {
-            if (document.visibilityState === 'visible' && navigator.onLine) {
-                if (isFirebaseReady()) refreshCloudNpaAirportsDbFromServer();
-                if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest('visible-poll');
-            }
-        }, NPA_CLOUD_REFRESH_INTERVAL_MS);
-    }
-
-    function stopCloudRefreshFallback() {
-        if (!npaCloudRefreshTimer) return;
-        window.clearInterval(npaCloudRefreshTimer);
-        npaCloudRefreshTimer = null;
-    }
-
-    function resetPendingSyncRetry() {
-        npaPendingSyncRetryDelayMs = 2000;
-        if (npaPendingSyncRetryTimer) {
-            window.clearTimeout(npaPendingSyncRetryTimer);
-            npaPendingSyncRetryTimer = null;
-        }
-    }
-
-    function schedulePendingSyncRetry() {
-        if (!navigator.onLine || !getPendingAirportSaves().length || npaPendingSyncRetryTimer) return;
-
-        const delayMs = npaPendingSyncRetryDelayMs;
-        npaPendingSyncRetryDelayMs = Math.min(npaPendingSyncRetryDelayMs * 2, NPA_PENDING_SYNC_RETRY_MAX_MS);
-        npaPendingSyncRetryTimer = window.setTimeout(() => {
-            npaPendingSyncRetryTimer = null;
-            requestPendingNpaSync();
-        }, delayMs);
-    }
-
-    async function sharedSyncPendingAirportSaves() {
-        if (sharedNpaSyncInProgress) return;
-        if (!navigator.onLine) return;
-
-        if (!isFirebaseReady()) {
-            const ready = await initNpaFirebase();
-            if (!ready || !isFirebaseReady()) {
-                schedulePendingSyncRetry();
-                return;
-            }
-        }
-
-        const queue = getPendingAirportSaves();
-        if (!queue.length) {
-            resetPendingSyncRetry();
+    async function writePendingItem(item) {
+        if (item.kind === 'reference') {
+            await writeAirportReferenceToCloud(item.airportCode, item.data);
             return;
         }
+        if (item.kind === 'approach') {
+            await writeApproachToCloud(item.airportCode, item.approachName, item.data);
+            return;
+        }
+        throw new Error(`Unknown MyNPA pending write kind: ${item.kind}`);
+    }
 
-        sharedNpaSyncInProgress = true;
-        const failedAirportCodes = new Set();
-        const successfullySynced = new Map();
+    async function syncPendingCloudWrites() {
+        if (syncInProgress || !navigator.onLine || !isFirebaseReady() || !isAdminMode()) return false;
+        const queue = getPendingCloudWrites();
+        if (!queue.length) return true;
 
+        syncInProgress = true;
+        const remaining = [];
         try {
-            for (let i = 0; i < queue.length; i += 1) {
-                const item = queue[i];
-                if (!item || !item.airportCode || !item.airportData) continue;
-
+            for (let index = 0; index < queue.length; index += 1) {
                 try {
-                    if (await discardPendingAirportDeletedFromCloud(item.airportCode)) continue;
-                    await writeAirportToCloud(item.airportCode, item.airportData);
-                    successfullySynced.set(
-                        normalizeAirportCode(item.airportCode),
-                        Math.max(getAirportUpdatedAt(item), getAirportUpdatedAt(item.airportData))
-                    );
+                    await writePendingItem(queue[index]);
                 } catch (error) {
-                    console.error('NPA pending sync error:', error);
-                    queue.slice(i).forEach(remainingItem => {
-                        const code = normalizeAirportCode(remainingItem && remainingItem.airportCode);
-                        if (code) failedAirportCodes.add(code);
-                    });
+                    console.error('MyNPA RTDB pending sync error:', error);
+                    remaining.push(...queue.slice(index));
                     break;
                 }
             }
         } finally {
-            if (successfullySynced.size) {
-                confirmCloudAirportCodes(successfullySynced.keys());
-            }
-            const remaining = getPendingAirportSaves().filter(item => {
-                const code = normalizeAirportCode(item && item.airportCode);
-                if (!code || failedAirportCodes.has(code)) return true;
-
-                const syncedUpdatedAt = successfullySynced.get(code);
-                if (syncedUpdatedAt === undefined) return true;
-
-                const currentUpdatedAt = Math.max(
-                    getAirportUpdatedAt(item),
-                    getAirportUpdatedAt(item && item.airportData)
-                );
-                return currentUpdatedAt > syncedUpdatedAt;
-            });
-            setPendingAirportSaves(remaining);
-            sharedNpaSyncInProgress = false;
-            if (remaining.length) {
-                schedulePendingSyncRetry();
-            } else {
-                resetPendingSyncRetry();
-            }
+            setPendingCloudWrites(remaining);
+            syncInProgress = false;
         }
+        return remaining.length === 0;
     }
 
-    async function forceSyncPendingAirportSaves() {
-        if (npaForceSyncInProgress || navigator.onLine === false) return false;
-
-        const queueBeforeSync = getPendingAirportSaves();
-        if (!queueBeforeSync.length) return true;
-
-        npaForceSyncInProgress = true;
-        updateNpaSyncStatus({
-            lastForceSyncAt: Date.now(),
-            lastForceSyncError: ''
-        });
-
-        const successfullySynced = new Map();
-        try {
-            if (!isFirebaseReady()) {
-                const ready = await withNpaTimeout(
-                    initNpaFirebase(),
-                    NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
-                    'Firebase initialization'
-                );
-                if (!ready || !isFirebaseReady()) throw new Error('Firebase is not ready');
-            }
-
-            await restartNpaFirestoreNetwork();
-
-            for (const item of getPendingAirportSaves()) {
-                if (!item || !item.airportCode || !item.airportData) continue;
-
-                try {
-                    if (await discardPendingAirportDeletedFromCloudWithTimeout(item.airportCode)) continue;
-                    await withNpaTimeout(
-                        writeAirportToCloud(item.airportCode, item.airportData),
-                        NPA_FORCE_SYNC_OPERATION_TIMEOUT_MS,
-                        `Firebase write for ${normalizeAirportCode(item.airportCode)}`
-                    );
-                    successfullySynced.set(
-                        normalizeAirportCode(item.airportCode),
-                        Math.max(getAirportUpdatedAt(item), getAirportUpdatedAt(item.airportData))
-                    );
-                } catch (error) {
-                    console.error('NPA force pending sync error:', error);
-                    updateNpaSyncStatus({
-                        lastForceSyncErrorAt: Date.now(),
-                        lastForceSyncError: getNpaErrorMessage(error)
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('NPA force sync error:', error);
-            updateNpaSyncStatus({
-                lastForceSyncErrorAt: Date.now(),
-                lastForceSyncError: getNpaErrorMessage(error)
-            });
-        } finally {
-            if (successfullySynced.size) {
-                confirmCloudAirportCodes(successfullySynced.keys());
-            }
-
-            const remaining = getPendingAirportSaves().filter(item => {
-                const code = normalizeAirportCode(item && item.airportCode);
-                const syncedUpdatedAt = successfullySynced.get(code);
-                if (!code || syncedUpdatedAt === undefined) return true;
-
-                const currentUpdatedAt = Math.max(
-                    getAirportUpdatedAt(item),
-                    getAirportUpdatedAt(item && item.airportData)
-                );
-                return currentUpdatedAt > syncedUpdatedAt;
-            });
-            setPendingAirportSaves(remaining);
-            npaForceSyncInProgress = false;
-            updateNpaSyncStatus({
-                lastForceSyncCompletedAt: Date.now(),
-                lastForceSyncSuccessCount: successfullySynced.size,
-                lastForceSyncRemainingCount: remaining.length
-            });
-
-            if (remaining.length) {
-                schedulePendingSyncRetry();
-            } else {
-                resetPendingSyncRetry();
-            }
-            return remaining.length === 0;
-        }
+    function updateSyncStatus(patch) {
+        syncStatus = {
+            ...readJsonStorage(NPA_SYNC_STATUS_KEY, {}),
+            ...syncStatus,
+            ...patch
+        };
+        writeJsonStorage(NPA_SYNC_STATUS_KEY, syncStatus);
     }
 
-    async function requestPendingNpaSync() {
-        const queueBeforeSync = getPendingAirportSaves();
-        if (!queueBeforeSync.length) {
-            resetPendingSyncRetry();
-            return;
-        }
-
-        if (!navigator.onLine) return;
-
-        if (!isFirebaseReady()) {
-            const ready = await initNpaFirebase();
-            if (!ready || !isFirebaseReady()) {
-                schedulePendingSyncRetry();
-                return;
-            }
-        }
-
-        if (typeof window.syncPendingAirportSaves === 'function' && window.syncPendingAirportSaves !== sharedSyncPendingAirportSaves) {
-            try {
-                await window.syncPendingAirportSaves();
-            } catch (error) {
-                console.error('NPA page pending sync error:', error);
-            }
-        }
-
-        if (getPendingAirportSaves().length) {
-            await sharedSyncPendingAirportSaves();
-        }
-    }
-
-    function findScriptBySrc(src) {
-        const absoluteSrc = new URL(src, window.location.href).href;
-        return Array.from(document.scripts).find(script => script.src === absoluteSrc);
-    }
-
-    function removeScriptBySrc(src) {
-        const existing = findScriptBySrc(src);
-        if (existing) existing.remove();
-    }
-
-    function loadScriptOnce(src) {
-        const absoluteSrc = new URL(src, window.location.href).href;
-        let existing = findScriptBySrc(src);
-
-        if (existing && existing.dataset.myflightFailed === 'true') {
-            existing.remove();
-            existing = null;
-        }
-
-        if (existing) {
-            if (existing.dataset.myflightLoaded === 'true') return Promise.resolve();
-            return new Promise((resolve, reject) => {
-                existing.addEventListener('load', resolve, { once: true });
-                existing.addEventListener('error', () => {
-                    existing.dataset.myflightFailed = 'true';
-                    reject(new Error(`Failed to load ${src}`));
-                }, { once: true });
-            });
-        }
-
+    function loadFirebaseSdkPart(src, validator, label) {
+        if (validator()) return Promise.resolve(true);
         return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = false;
-            script.onload = () => {
-                script.dataset.myflightLoaded = 'true';
-                resolve();
-            };
-            script.onerror = () => {
-                script.dataset.myflightFailed = 'true';
-                script.remove();
-                reject(new Error(`Failed to load ${src}`));
-            };
-            document.head.appendChild(script);
+            const existing = document.querySelector(`script[src="${src}"]`);
+            const script = existing || document.createElement('script');
+            const onLoad = () => validator() ? resolve(true) : reject(new Error(`Firebase ${label} SDK did not initialize`));
+            script.addEventListener('load', onLoad, { once: true });
+            script.addEventListener('error', () => reject(new Error(`Firebase ${label} SDK failed to load`)), { once: true });
+            if (!existing) {
+                script.src = src;
+                script.async = true;
+                document.head.appendChild(script);
+            }
         });
-    }
-
-    async function loadFirebaseSdkPart(src, validator, label) {
-        if (validator()) return true;
-
-        await loadScriptOnce(src);
-        if (validator()) return true;
-
-        removeScriptBySrc(src);
-        throw new Error(`Firebase ${label} SDK did not initialize`);
     }
 
     async function ensureFirebaseSdk() {
         await loadFirebaseSdkPart(FIREBASE_APP_SDK, () => Boolean(window.firebase), 'app');
-        await loadFirebaseSdkPart(FIREBASE_FIRESTORE_SDK, () => Boolean(window.firebase && firebase.firestore), 'firestore');
-        await loadFirebaseSdkPart(FIREBASE_AUTH_SDK, () => Boolean(window.firebase && firebase.auth), 'auth');
-        return true;
+        await loadFirebaseSdkPart(FIREBASE_DATABASE_SDK, () => Boolean(window.firebase?.database), 'database');
+        await loadFirebaseSdkPart(FIREBASE_AUTH_SDK, () => Boolean(window.firebase?.auth), 'auth');
     }
 
-    function configureNpaFirestore(db) {
-        if (!db || typeof db.settings !== 'function') return;
+    function attachRealtimeListeners() {
+        if (listenersAttached || !isFirebaseReady()) return;
+        listenersAttached = true;
 
-        try {
-            db.settings({
-                experimentalAutoDetectLongPolling: true,
-                ignoreUndefinedProperties: true
-            });
-        } catch (error) {
-            console.warn('NPA Firestore settings skipped:', error);
-        }
-    }
+        window.npaDb.ref('airportsReference').on('value', snapshot => {
+            writeJsonStorage(NPA_REFERENCE_CACHE_KEY, snapshot.val() || {});
+            rebuildCombinedLocalDb();
+            updateSyncStatus({ lastReferenceSyncAt: Date.now(), lastError: '' });
+        }, error => {
+            console.error('MyNPA RTDB reference load error:', error);
+            updateSyncStatus({ lastError: error.message || String(error) });
+        });
 
-    function waitForNpaAuthInitialState(auth, timeoutMs = 5000) {
-        return new Promise(resolve => {
-            let settled = false;
-            let unsubscribe = null;
-            const finish = user => {
-                if (settled) return;
-                settled = true;
-                window.clearTimeout(timeoutId);
-                if (typeof unsubscribe === 'function') unsubscribe();
-                resolve(user || null);
-            };
-            const timeoutId = window.setTimeout(() => finish(auth.currentUser), timeoutMs);
-
-            unsubscribe = auth.onAuthStateChanged(
-                user => finish(user),
-                error => {
-                    console.warn('NPA Firebase initial auth state error:', error);
-                    finish(auth.currentUser);
-                }
-            );
+        window.npaDb.ref('airportsNpa').on('value', snapshot => {
+            writeJsonStorage(NPA_CLOUD_APPROACHES_KEY, snapshot.val() || {});
+            rebuildCombinedLocalDb();
+            updateSyncStatus({ lastApproachSyncAt: Date.now(), lastError: '' });
+        }, error => {
+            console.error('MyNPA RTDB approach load error:', error);
+            updateSyncStatus({ lastError: error.message || String(error) });
         });
     }
 
     async function initNpaFirebase() {
-        if (window.npaFirebaseInitialized && isFirebaseReady()) return true;
-        if (window.npaFirebaseInitialized && !isFirebaseReady()) window.npaFirebaseInitialized = false;
-        if (npaFirebaseInitPromise) return npaFirebaseInitPromise;
+        if (isFirebaseReady()) return true;
+        if (initPromise) return initPromise;
         if (navigator.onLine === false) {
-            updateNpaSyncStatus({
-                lastInitAt: Date.now(),
-                lastError: 'Offline'
-            });
+            rebuildCombinedLocalDb();
             return false;
         }
 
-        npaFirebaseInitPromise = (async () => {
+        initPromise = (async () => {
             try {
-                updateNpaSyncStatus({
-                    lastInitAt: Date.now(),
-                    lastError: ''
-                });
-                const sdkReady = await ensureFirebaseSdk();
-                if (!sdkReady) {
-                    npaFirebaseInitPromise = null;
-                    return false;
-                }
-
+                await ensureFirebaseSdk();
                 if (!firebase.apps.length) firebase.initializeApp(NPA_FIREBASE_CONFIG);
-
-                window.npaDb = firebase.firestore();
+                window.npaDb = firebase.database();
                 window.npaAuth = firebase.auth();
-                configureNpaFirestore(window.npaDb);
-
                 try {
                     await window.npaAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
                 } catch (error) {
-                    console.warn('NPA Firebase auth persistence init error:', error);
+                    console.warn('MyNPA Firebase auth persistence init error:', error);
                 }
-                const initialAuthUser = await waitForNpaAuthInitialState(window.npaAuth);
-                if (typeof window.handleNpaAdminAuthState === 'function') {
-                    window.handleNpaAdminAuthState(initialAuthUser);
-                }
-
-                window.npaDb.enablePersistence({ synchronizeTabs: true })
-                    .catch(error => console.error('NPA Firestore persistence init error:', error));
-
-                window.npaDb.collection('airports').onSnapshot({
-                    includeMetadataChanges: true
-                }, (snapshot) => {
-                    applyCloudSnapshot(snapshot, 'snapshot');
-                    console.log('NPA database ready:', snapshot.metadata.fromCache ? 'cache' : 'server');
-                    requestPendingNpaSync();
-                    if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest('after-snapshot');
-                }, (error) => {
-                    console.error('NPA database load error:', error);
-                    updateNpaSyncStatus({
-                        lastSnapshotErrorAt: Date.now(),
-                        lastError: getNpaErrorMessage(error)
-                    });
-                    fetchNpaAirportsViaRest('snapshot-error');
-                });
-
+                attachRealtimeListeners();
                 window.npaAuth.onAuthStateChanged(user => {
                     if (typeof window.handleNpaAdminAuthState === 'function') {
                         window.handleNpaAdminAuthState(user);
                     }
-                    requestPendingNpaSync();
+                    if (user) syncPendingCloudWrites();
                 });
-
                 window.npaFirebaseInitialized = true;
-                npaFirebaseInitPromise = null;
-                updateNpaSyncStatus({
-                    lastInitCompletedAt: Date.now(),
-                    lastError: ''
-                });
-                startCloudRefreshFallback();
-                refreshCloudNpaAirportsDbFromServer();
-                requestPendingNpaSync();
+                updateSyncStatus({ lastInitCompletedAt: Date.now(), lastError: '' });
                 return true;
             } catch (error) {
-                console.warn('Firebase SDK is not available. MyNPA sync will retry later.', error);
-                npaFirebaseInitPromise = null;
+                console.warn('MyNPA RTDB initialization failed:', error);
                 window.npaFirebaseInitialized = false;
-                updateNpaSyncStatus({
-                    lastInitErrorAt: Date.now(),
-                    lastError: getNpaErrorMessage(error)
-                });
-                fetchNpaAirportsViaRest('init-error');
-                schedulePendingSyncRetry();
+                updateSyncStatus({ lastError: error.message || String(error) });
                 return false;
+            } finally {
+                initPromise = null;
             }
         })();
-
-        return npaFirebaseInitPromise;
+        return initPromise;
     }
 
-    function scheduleNpaFirebaseSync(delayMs, reason = 'scheduled') {
-        window.setTimeout(() => {
-            initNpaFirebase().then((ready) => {
-                if (ready) {
-                    refreshCloudNpaAirportsDbFromServer();
-                    requestPendingNpaSync();
-                }
-                if (shouldRunNpaRestFallback()) fetchNpaAirportsViaRest(reason);
-                if (!ready && getPendingAirportSaves().length) schedulePendingSyncRetry();
-            });
-        }, delayMs);
-    }
-
-    function runNpaBootSyncSequence(reason) {
-        NPA_BOOT_RETRY_DELAYS_MS.forEach(delayMs => {
-            scheduleNpaFirebaseSync(delayMs, `${reason}:${delayMs}`);
-        });
-    }
+    rebuildCombinedLocalDb();
 
     window.MyFlightNpaSync = {
         init: initNpaFirebase,
-        syncPending: requestPendingNpaSync,
-        forceSyncPending: forceSyncPendingAirportSaves,
-        refreshCloud: refreshCloudNpaAirportsDbFromServer,
-        restPull: fetchNpaAirportsViaRest,
-        getPending: getPendingAirportSaves,
-        getCache: loadNpaAirportsDb,
-        status: getNpaSyncStatus,
-        isReady: isFirebaseReady
+        syncPending: syncPendingCloudWrites,
+        forceSyncPending: syncPendingCloudWrites,
+        refreshCloud: initNpaFirebase,
+        getPending: getPendingCloudWrites,
+        getCache: () => readJsonStorage(NPA_AIRPORTS_DB_KEY, {}),
+        status: () => readJsonStorage(NPA_SYNC_STATUS_KEY, {}),
+        isReady: isFirebaseReady,
+        isAdmin: isAdminMode,
+        queueCloudWrite,
+        writeAirportReference: writeAirportReferenceToCloud,
+        writeApproach: writeApproachToCloud
     };
     window.initNpaFirebase = initNpaFirebase;
-    if (typeof window.syncPendingAirportSaves !== 'function') window.syncPendingAirportSaves = sharedSyncPendingAirportSaves;
-    if (typeof window.isFirebaseReady !== 'function') window.isFirebaseReady = isFirebaseReady;
-    if (typeof window.writeAirportToCloud !== 'function') window.writeAirportToCloud = writeAirportToCloud;
+    window.syncPendingAirportSaves = syncPendingCloudWrites;
+    window.isFirebaseReady = isFirebaseReady;
+    window.writeAirportReferenceToCloud = writeAirportReferenceToCloud;
+    window.writeApproachToCloud = writeApproachToCloud;
+    window.queueNpaCloudWrite = queueCloudWrite;
 
+    const boot = () => initNpaFirebase().then(() => syncPendingCloudWrites());
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => runNpaBootSyncSequence('domcontentloaded'), { once: true });
+        document.addEventListener('DOMContentLoaded', boot, { once: true });
     } else {
-        runNpaBootSyncSequence('already-ready');
+        boot();
     }
-
-    window.addEventListener('load', () => runNpaBootSyncSequence('load'));
-    window.addEventListener('pageshow', () => runNpaBootSyncSequence('pageshow'));
-    window.addEventListener('focus', () => scheduleNpaFirebaseSync(0, 'focus'));
-    window.addEventListener('online', () => runNpaBootSyncSequence('online'));
+    window.addEventListener('online', boot);
+    window.addEventListener('focus', boot);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            runNpaBootSyncSequence('visibility');
-            startCloudRefreshFallback();
-        } else {
-            stopCloudRefreshFallback();
-        }
+        if (document.visibilityState === 'visible') boot();
     });
 })();
+
