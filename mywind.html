@@ -985,6 +985,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     let currentRwycc5State = '5'; 
     let selectedManValue = rwyMapping[0]['MAN_DEFAULT']; // Инициализируем из базы
     const PATH_SWITCH_STORAGE_KEY = 'rwyWind_path_target';
+    const TABLE_SCROLL_STORAGE_KEY = 'rwyWind_tableScrollTop';
     const PATH_SWITCH_HOLD_MS = 300;
     const pathSwitchTargets = {
         mypath: {
@@ -1003,9 +1004,11 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     let currentPathSwitchTarget = localStorage.getItem(PATH_SWITCH_STORAGE_KEY) === 'mynpa' ? 'mynpa' : 'mypath';
     let pathSwitchPressTimer;
     let isPathSwitchLongPress = false;
+    let isTableScrollPersistenceAttached = false;
 
     window.onload = () => {
         renderPathSwitchButton();
+        attachTableScrollPersistence();
         const isLoaded = loadAppState(); // Пытаемся загрузить сохраненную сессию
 
         if (!isLoaded) {
@@ -1018,12 +1021,12 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             });
         }
         
-        updateLowerTabs();
-        toggleOpMode(currentOpMode); 
+        updateLowerTabs({ center: false });
+        toggleOpMode(currentOpMode, { center: false }); 
         // Принудительно проявляем плашку сразу после загрузки
         document.getElementById('landStatusRow').style.opacity = '1';
-        if (typeof updateLandModalUI === 'function') updateLandModalUI(); // Применяем блокировки CAT2
-        centerTable(); 
+        if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
+        restoreTableScrollPosition(); 
     };
 
     function renderPathSwitchButton() {
@@ -1078,7 +1081,63 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             isPathSwitchLongPress = false;
             return false;
         }
+        saveTableScrollPosition();
         return true;
+    }
+
+    function getTableScrollMax(tableBody) {
+        return Math.max(0, tableBody.scrollHeight - tableBody.clientHeight);
+    }
+
+    function clampTableScrollTop(tableBody, scrollTop) {
+        const numericScrollTop = Number(scrollTop);
+        if (!Number.isFinite(numericScrollTop)) return null;
+        return Math.min(Math.max(0, numericScrollTop), getTableScrollMax(tableBody));
+    }
+
+    function getSavedTableScrollTop() {
+        try {
+            const savedScrollTop = sessionStorage.getItem(TABLE_SCROLL_STORAGE_KEY);
+            if (savedScrollTop === null) return null;
+            const parsedScrollTop = parseFloat(savedScrollTop);
+            return Number.isFinite(parsedScrollTop) ? parsedScrollTop : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveTableScrollPosition() {
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody) return;
+        try {
+            sessionStorage.setItem(TABLE_SCROLL_STORAGE_KEY, String(Math.round(tableBody.scrollTop)));
+        } catch (e) {}
+    }
+
+    function restoreTableScrollPosition() {
+        setTimeout(() => {
+            const tableBody = document.getElementById('tableBody');
+            if (!tableBody || tableBody.children.length === 0) return;
+            const savedScrollTop = getSavedTableScrollTop();
+
+            if (savedScrollTop === null) {
+                centerTable();
+                return;
+            }
+
+            const restoredScrollTop = clampTableScrollTop(tableBody, savedScrollTop);
+            if (restoredScrollTop === null) return;
+            tableBody.scrollTop = restoredScrollTop;
+            saveTableScrollPosition();
+        }, 0);
+    }
+
+    function attachTableScrollPersistence() {
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody || isTableScrollPersistenceAttached) return;
+        isTableScrollPersistenceAttached = true;
+        tableBody.addEventListener('scroll', saveTableScrollPosition, { passive: true });
+        window.addEventListener('pagehide', saveTableScrollPosition);
     }
 
     function selectTab(el) {
@@ -1087,7 +1146,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (el.parentElement.classList.contains('upper')) {
             currentCategory = val;
             el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === el));
-            updateLowerTabs();
+            updateLowerTabs({ center: true });
         } else {
             // Если в нижнем табе ATIS нажали на кнопку выбора — открываем модалку
             if (currentCategory === 'ATIS') {
@@ -1098,13 +1157,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                     currentMappingIndex = idx; 
                     // Обновляем значение MAN, чтобы оно соответствовало новому индексу RWYCC/ESF
                     selectedManValue = rwyMapping[idx]['MAN_DEFAULT'];
-                    updateLowerTabs(); 
+                    updateLowerTabs({ center: true }); 
                 }
             }
         }
     }
 
-    function updateLowerTabs() {
+    function updateLowerTabs(options = {}) {
         const container = document.getElementById('lowerTabsContainer');
         const isAtis = currentCategory === 'ATIS';
         
@@ -1196,7 +1255,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 }
             }).join('');
         }
-        updateTable();
+        updateTable(options);
     }
     
 
@@ -1225,7 +1284,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             document.querySelectorAll('.tabs-row.upper .tab-btn').forEach(b => {
                 b.classList.toggle('active', b.innerText.trim() === 'RWYCC');
             });
-            updateLowerTabs();
+            updateLowerTabs({ center: true });
         }
     }
 
@@ -1261,8 +1320,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         });
         
         closeRwycc5Modal();
-        updateLowerTabs();
-        updateTable();
+        updateLowerTabs({ center: true });
     }
 
     // === ЛОГИКА СИНХРОНИЗАЦИИ КНОПОК В ОКНЕ MAN ===
@@ -1311,8 +1369,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         selectedManValue = element.textContent.replace(/\s+/g, ' ').trim();
         currentMappingIndex = rowIndex;
         closeManModal();
-        updateLowerTabs();
-        updateTable();
+        updateLowerTabs({ center: true });
     }
 
     // МОДАЛКИ (ТЕХПАСПОРТ)
@@ -1332,7 +1389,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         }
         
         // Вызываем updateLandModalUI (он обновит блокировку кнопок, строку статуса и вызовет updateTable)
-        updateLandModalUI(); 
+        updateLandModalUI({ center: true }); 
     }
 
     let activeKp = null, kpVal = "", isKpError = false;
@@ -1364,8 +1421,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
             // Форматируем число (3 цифры) и приклеиваем знак градуса
             activeKp.textContent = num.toString().padStart(3, '0') + '°';
-            updateTable();
-            centerTable(); // Скроллим таблицу к центру только после изменения курса
+            updateTable({ center: true });
             kpVal = "";
             isKpError = false; // Сбрасываем флаг при успешном вводе
         }
@@ -1436,8 +1492,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             let newCourseStr = reciprocal.toString().padStart(3, '0') + '°';
             input.textContent = newCourseStr;
             
-            updateTable();
-            centerTable();
+            updateTable({ center: true });
 
             // === НОВОЕ ОКНО: Показ курса с микро-задержкой CSS ===
             const cToast = document.getElementById('courseToast');
@@ -1496,7 +1551,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         unitPressTimer = setTimeout(() => {
             isUnitLongPress = true;
             isMps = !isMps; // Переключаем флаг (узлы <-> м/с)
-            updateTable(); // Перерисовываем таблицу с новыми значениями
+            updateTable({ center: false }); // Перерисовываем таблицу с новыми значениями
         }, 300); // 300 мс удержания
     }
 
@@ -1516,7 +1571,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (!isUnitLongPress) {
             // Если кликнули по уже активной стороне — сбрасываем фокус, иначе выделяем её
             dimSide = (dimSide === side) ? null : side;
-            updateTable();
+            updateTable({ center: false });
         }
     }
 
@@ -1563,7 +1618,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
             }
             updateStatusRow(); // Обновляем плашку
-            if (typeof updateTable === 'function') updateTable();
+            if (typeof updateTable === 'function') updateTable({ center: true });
         }
     }
 
@@ -1579,13 +1634,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         document.getElementById('crewBtn').innerHTML = `<span style="font-size:1.1rem;font-weight:800">${lastC}</span>`;
         closeCrewModal();
         updateStatusRow(); // Обновляем плашку
-        if (typeof updateTable === 'function') updateTable(); // Триггер обновления таблицы
+        if (typeof updateTable === 'function') updateTable({ center: true }); // Триггер обновления таблицы
     }
 
 // Логика переключения режимов t/o и land (взаимоисключающие)
     let currentOpMode = 'courseMinusBtn'; // По умолчанию выбран t/o
 
-    function toggleOpMode(selectedId) {
+    function toggleOpMode(selectedId, options = { center: true }) {
         currentOpMode = selectedId;
         // Сбрасываем выделение с обеих кнопок
         document.getElementById('courseMinusBtn').classList.remove('active-op');
@@ -1597,7 +1652,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         // === ПЛАШКА ТЕПЕРЬ АКТИВНА ВСЕГДА ===
         updateStatusRow();
 
-        updateTable();
+        updateTable(options);
     }
     // === ЛОГИКА ДОЛГОГО НАЖАТИЯ ДЛЯ "LAND" ===
     let landPressTimer;
@@ -1689,7 +1744,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     }
 
     function openLandModal() { 
-        updateLandModalUI();
+        updateLandModalUI({ center: false });
         document.getElementById('landModal').classList.add('active'); 
     }
     
@@ -1704,7 +1759,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         landMods['MANUAL_CAT2'] = false;
         landMods['AUTO_ROLL'] = false;
         
-        updateLandModalUI();
+        updateLandModalUI({ center: true });
     }
 
     function toggleLandMod(mod) {
@@ -1713,10 +1768,10 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (mod.startsWith('AUTO') && currentLandBase !== 'AUTO') return;
         
         landMods[mod] = !landMods[mod]; // Переключаем состояние (вкл/выкл)
-        updateLandModalUI();
+        updateLandModalUI({ center: true });
     }
 
-    function updateLandModalUI() {
+    function updateLandModalUI(options = {}) {
         // Считываем текущий тип самолета для логики блокировки CAT2
         const acTypeStr = document.getElementById('acTypeBtn').innerText.toUpperCase();
         const isA321Allowed = acTypeStr.includes('321') && !acTypeStr.includes('NEO');
@@ -1745,7 +1800,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         
         // === ОБНОВЛЕНИЕ ТЕКСТА СТРОКИ СТАТУСА ===
         updateStatusRow();
-        updateTable();    
+        updateTable(options);    
     }
 
     // === ЛОГИКА ЗАДЕРЖКИ ДЛЯ NARROW/CONTAMINATED ===
@@ -1761,7 +1816,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             isNarrowLongPress = true;
             const btn = document.getElementById('narrowContBtn');
             btn.classList.toggle('active'); // Переключаем визуальное состояние
-            updateTable(); // Обновляем математику
+            updateTable({ center: true }); // Обновляем математику
         }, 300); // 300 мс удержания
     }
 
@@ -1845,8 +1900,11 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     }
 
     // === 3. РЕНДЕР ТАБЛИЦЫ (Сохраняет твою верстку) ===
-    function updateTable() {
+    function updateTable(options = {}) {
     const tableBody = document.getElementById('tableBody');
+    if (!tableBody) return;
+    const shouldCenter = options.center === true;
+    const previousScrollTop = tableBody.scrollTop;
     
     // ВАЖНО: Читаем textContent, так как поле курса теперь <div>, а не <input>
     let rwCourseStr = document.getElementById('windDirInput').textContent.replace('°', '');
@@ -1997,6 +2055,15 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
               </div>`;
     }
     tableBody.innerHTML = h;
+    if (shouldCenter) {
+        centerTable();
+    } else {
+        setTimeout(() => {
+            const restoredScrollTop = clampTableScrollTop(tableBody, previousScrollTop);
+            if (restoredScrollTop === null) return;
+            tableBody.scrollTop = restoredScrollTop;
+        }, 0);
+    }
 } // <--- ЗАКРЫВАЕМ updateTable() ЗДЕСЬ!
 
 // === НОВАЯ ОТДЕЛЬНАЯ ФУНКЦИЯ ЦЕНТРОВКИ ===
@@ -2023,7 +2090,10 @@ function centerTable() {
         }
 
         const containerCenter = tableBody.clientHeight / 2;
-        tableBody.scrollTop = targetTop - containerCenter;
+        const centeredScrollTop = clampTableScrollTop(tableBody, targetTop - containerCenter);
+        if (centeredScrollTop === null) return;
+        tableBody.scrollTop = centeredScrollTop;
+        saveTableScrollPosition();
     }, 0);
 }
     
@@ -2055,11 +2125,10 @@ function centerTable() {
         // Режим LAND/TO
         currentLandBase = 'MANUAL';
         landMods = { 'MANUAL_CAT2': false, 'AUTO_ROLL': false };
-        toggleOpMode('courseMinusBtn'); // Включает Take off и пересчитывает таблицу
+        toggleOpMode('courseMinusBtn', { center: false }); // Включает Take off и пересчитывает таблицу
         
-        if (typeof updateLandModalUI === 'function') updateLandModalUI(); // Сбрасываем блокировки CAT2
-        updateLowerTabs(); // Обновляет нижние кнопки и таблицу
-        centerTable();
+        if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Сбрасываем блокировки CAT2
+        updateLowerTabs({ center: true }); // Обновляет нижние кнопки и таблицу
         
         // Мгновенно сохраняем это чистое состояние в память
         saveAppState();
