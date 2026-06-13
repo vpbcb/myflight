@@ -1808,8 +1808,15 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .npa-modal-grid.tar-distance-grid {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+        .tar-distance-runway-row {
+            display: grid;
             grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 8px;
             align-items: center;
+            min-width: 0;
         }
         .npa-modal-field {
             display: flex;
@@ -6272,19 +6279,21 @@
         setFieldValue('downwindRadioFixShift', shiftValue);
     }
 
-    function getSavedTarAidForCurrentAirport() {
+    function getSavedTarAidsForCurrentAirport() {
         const airport = getAirportDocument(getNpaAirportCode());
         const radioAids = Array.isArray(airport?.radioAids) ? airport.radioAids : [];
-        return radioAids.find(aid => aid?.type === 'TAR') || null;
+        return radioAids.filter(aid => aid?.type === 'TAR');
     }
 
     function getSavedTarDistanceForCurrentThreshold() {
         const threshold = getCurrentLandingThreshold();
         if (!threshold) return "";
-        const tarAid = getSavedTarAidForCurrentAirport();
-        if (!tarAid) return "";
-        const tarDistance = getTarDistanceForThreshold(tarAid, threshold);
-        return tarDistance === "" ? "" : tarDistance;
+        const tarAids = getSavedTarAidsForCurrentAirport();
+        for (let index = 0; index < tarAids.length; index += 1) {
+            const tarDistance = getTarDistanceForThreshold(tarAids[index], threshold);
+            if (tarDistance !== "") return tarDistance;
+        }
+        return "";
     }
 
     function refreshProfileRadioReferenceFromAirport() {
@@ -6369,13 +6378,13 @@
             return false;
         }
 
-        const tarAid = getSavedTarAidForCurrentAirport();
-        if (!tarAid) {
+        const tarAids = getSavedTarAidsForCurrentAirport();
+        if (!tarAids.length) {
             alert("TAR distance is not saved for this airport.");
             return false;
         }
 
-        const tarDistance = getTarDistanceForThreshold(tarAid, threshold);
+        const tarDistance = getSavedTarDistanceForCurrentThreshold();
         if (tarDistance === "") {
             alert(`TAR distance to ${threshold} is not saved.`);
             return false;
@@ -7147,7 +7156,7 @@
         } else {
             addAirportRunwayBlock();
         }
-        radioAidData.forEach(aid => addAirportRadioAidBlock(aid.type, aid));
+        addAirportRadioAidBlocksFromData(radioAidData);
         document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
         updateAirportTarAddButtonVisibility();
         if (navigator.vibrate) navigator.vibrate(20);
@@ -7214,7 +7223,7 @@
         }
         if (target?.block) {
             target.block.remove();
-            if (target.kind === 'runway') updateAirportTarThresholdLabels();
+            if (target.kind === 'runway') syncAirportTarRows();
             if (target.kind === 'radio') updateAirportTarAddButtonVisibility();
         }
         closeAirportDeleteConfirm('button');
@@ -7328,17 +7337,35 @@
         renderAirportRunwayLengthDisplay(block.querySelector('[data-rwy-length-display]'));
         updateAirportRunwayThresholdLabels(block);
         updateAirportTarThresholdLabels();
+        syncAirportTarRows();
         if (startCarousel) {
             setTimeout(() => openNpaAirportRunwayLengthKeypad(block.querySelector('[data-rwy-length-display]'), true), 0);
         }
+    }
+
+    function addAirportRadioAidBlocksFromData(radioAidData = []) {
+        const tarAids = [];
+        radioAidData.forEach(aid => {
+            const type = String(aid?.type || aid?.sourceType || '').toUpperCase();
+            if (type === 'TAR') {
+                tarAids.push(aid);
+                return;
+            }
+            addAirportRadioAidBlock(type, aid);
+        });
+        if (tarAids.length) addAirportRadioAidBlock('TAR', tarAids);
     }
 
     function addAirportRadioAidStart() {
         document.getElementById('airportRadioAidTypeChoices')?.classList.toggle('npa-hidden');
     }
 
+    function getAirportTarBlock() {
+        return document.querySelector('#airportRadioAidsContainer .airport-radio-aid-block[data-radio-aid-type="TAR"]');
+    }
+
     function hasAirportTarBlock() {
-        return Boolean(document.querySelector('#airportRadioAidsContainer .airport-radio-aid-block[data-radio-aid-type="TAR"]'));
+        return Boolean(getAirportTarBlock());
     }
 
     function updateAirportTarAddButtonVisibility() {
@@ -7350,23 +7377,128 @@
         updateAirportTarAddButtonVisibility();
     }
 
+    function normalizeAirportThresholdText(value, fallback = '') {
+        const normalized = String(value || '').trim().toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 4);
+        return normalized || fallback;
+    }
+
+    function getAirportRunwayFormValues() {
+        const blocks = Array.from(document.querySelectorAll('#airportRunwaysContainer .airport-runway-block'));
+        if (!blocks.length) {
+            return [{ index: 0, thr1: 'THR1', thr2: 'THR2' }];
+        }
+        return blocks.map((block, index) => {
+            const get = field => normalizeAirportThresholdText(block.querySelector(`[data-rwy-field="${field}"]`)?.value);
+            return {
+                index,
+                block,
+                thr1: get('thr1') || `THR${(index * 2) + 1}`,
+                thr2: get('thr2') || `THR${(index * 2) + 2}`
+            };
+        });
+    }
+
     function getFirstAirportRunwayFormValues() {
-        const firstRunway = document.querySelector('#airportRunwaysContainer .airport-runway-block');
-        if (!firstRunway) return { thr1: 'THR1', thr2: 'THR2' };
-        const get = field => firstRunway.querySelector(`[data-rwy-field="${field}"]`)?.value?.trim().toUpperCase() || "";
+        const firstRunway = getAirportRunwayFormValues()[0] || { thr1: 'THR1', thr2: 'THR2' };
         return {
-            thr1: get('thr1') || 'THR1',
-            thr2: get('thr2') || 'THR2'
+            thr1: firstRunway.thr1,
+            thr2: firstRunway.thr2
         };
     }
 
-    function updateAirportTarThresholdLabels() {
-        const firstRunway = getFirstAirportRunwayFormValues();
-        document.querySelectorAll('[data-tar-thr-label="thr1"]').forEach(label => {
-            label.innerText = firstRunway.thr1;
+    function getAirportTarDistanceMapFromData(data = []) {
+        const map = new Map();
+        const items = Array.isArray(data) ? data : data ? [data] : [];
+        items.forEach(item => {
+            const thr1 = normalizeAirportThresholdText(item?.thr1);
+            const thr2 = normalizeAirportThresholdText(item?.thr2);
+            if (thr1) map.set(thr1, item.thr1Distance !== undefined && item.thr1Distance !== null ? item.thr1Distance : "");
+            if (thr2) map.set(thr2, item.thr2Distance !== undefined && item.thr2Distance !== null ? item.thr2Distance : "");
         });
-        document.querySelectorAll('[data-tar-thr-label="thr2"]').forEach(label => {
-            label.innerText = firstRunway.thr2;
+        return map;
+    }
+
+    function getAirportTarValueSnapshot(block) {
+        const snapshot = { byThreshold: new Map(), bySlot: new Map() };
+        block?.querySelectorAll('input[data-tar-side]').forEach(input => {
+            const side = input.dataset.tarSide;
+            const threshold = normalizeAirportThresholdText(input.dataset.tarThr);
+            const rowIndex = input.dataset.tarRunwayIndex;
+            const value = input.value || "";
+            if (threshold) snapshot.byThreshold.set(threshold, value);
+            if (rowIndex !== undefined && side) snapshot.bySlot.set(`${rowIndex}:${side}`, value);
+        });
+        return snapshot;
+    }
+
+    function getAirportTarInputValue(dataMap, snapshot, threshold, rowIndex, side) {
+        if (dataMap?.has(threshold)) return dataMap.get(threshold);
+        if (snapshot.byThreshold.has(threshold)) return snapshot.byThreshold.get(threshold);
+        const slotKey = `${rowIndex}:${side}`;
+        return snapshot.bySlot.has(slotKey) ? snapshot.bySlot.get(slotKey) : "";
+    }
+
+    function getAirportTarAttributeValue(value) {
+        return String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+
+    function makeAirportTarDistanceRow(runway, dataMap, snapshot) {
+        const thr1Value = getAirportTarAttributeValue(getAirportTarInputValue(dataMap, snapshot, runway.thr1, runway.index, 'thr1'));
+        const thr2Value = getAirportTarAttributeValue(getAirportTarInputValue(dataMap, snapshot, runway.thr2, runway.index, 'thr2'));
+        return `
+            <div class="tar-distance-runway-row" data-tar-runway-index="${runway.index}">
+                <div class="tar-distance-row">
+                    <input class="npa-modal-input" data-radio-field="thr1Distance" data-tar-side="thr1" data-tar-runway-index="${runway.index}" data-tar-thr="${runway.thr1}" type="text" readonly inputmode="decimal" autocomplete="off" value="${thr1Value}" onclick="openNpaAirportTarKeypad(this)">
+                    <span class="tar-distance-label">nm to RW<span data-tar-thr-label data-tar-side="thr1" data-tar-runway-index="${runway.index}">${runway.thr1}</span></span>
+                </div>
+                <div class="tar-distance-title">TAR</div>
+                <div class="tar-distance-row">
+                    <input class="npa-modal-input" data-radio-field="thr2Distance" data-tar-side="thr2" data-tar-runway-index="${runway.index}" data-tar-thr="${runway.thr2}" type="text" readonly inputmode="decimal" autocomplete="off" value="${thr2Value}" onclick="openNpaAirportTarKeypad(this)">
+                    <span class="tar-distance-label">nm to RW<span data-tar-thr-label data-tar-side="thr2" data-tar-runway-index="${runway.index}">${runway.thr2}</span></span>
+                </div>
+            </div>`;
+    }
+
+    function renderAirportTarRows(block, data = null) {
+        const grid = block?.querySelector('[data-tar-distance-grid]');
+        if (!grid) return;
+        const snapshot = getAirportTarValueSnapshot(block);
+        const dataMap = data ? getAirportTarDistanceMapFromData(data) : null;
+        grid.innerHTML = getAirportRunwayFormValues()
+            .map(runway => makeAirportTarDistanceRow(runway, dataMap, snapshot))
+            .join('');
+    }
+
+    function syncAirportTarRows(data = null) {
+        const block = getAirportTarBlock();
+        if (!block) return;
+        renderAirportTarRows(block, data);
+        updateAirportTarAddButtonVisibility();
+    }
+
+    function updateAirportTarThresholdLabels() {
+        const block = getAirportTarBlock();
+        if (!block) return;
+        const rows = Array.from(block.querySelectorAll('.tar-distance-runway-row'));
+        const runways = getAirportRunwayFormValues();
+        if (rows.length !== runways.length) {
+            syncAirportTarRows();
+            return;
+        }
+
+        rows.forEach((row, index) => {
+            const runway = runways[index] || { index, thr1: `THR${(index * 2) + 1}`, thr2: `THR${(index * 2) + 2}` };
+            row.dataset.tarRunwayIndex = String(index);
+            ['thr1', 'thr2'].forEach(side => {
+                const threshold = runway[side];
+                row.querySelectorAll(`[data-tar-side="${side}"]`).forEach(element => {
+                    element.dataset.tarRunwayIndex = String(index);
+                    if (element.matches('input')) element.dataset.tarThr = threshold;
+                });
+                row.querySelectorAll(`[data-tar-thr-label][data-tar-side="${side}"]`).forEach(label => {
+                    label.innerText = threshold;
+                });
+            });
         });
     }
 
@@ -7423,26 +7555,10 @@
         block.className = 'npa-modal-block airport-radio-aid-block';
         block.dataset.radioAidType = normalizedType;
         if (normalizedType === 'TAR') {
-            const firstRunway = getFirstAirportRunwayFormValues();
-            const tarThr1 = data.thr1 || firstRunway.thr1 || 'THR1';
-            const tarThr2 = data.thr2 || firstRunway.thr2 || 'THR2';
             block.innerHTML = `
                 <button type="button" class="npa-modal-delete-btn" onclick="openAirportDeleteConfirm('radio', this)" aria-label="Delete radio aid">×</button>
-                <div class="npa-modal-grid tar-distance-grid">
-                    <div class="tar-distance-row">
-                        <input class="npa-modal-input" data-radio-field="thr1Distance" type="text" readonly inputmode="decimal" autocomplete="off" onclick="openNpaAirportTarKeypad(this)">
-                        <span class="tar-distance-label">nm to RW<span data-tar-thr-label="thr1">${tarThr1}</span></span>
-                    </div>
-                    <div class="tar-distance-title">TAR</div>
-                    <div class="tar-distance-row">
-                        <input class="npa-modal-input" data-radio-field="thr2Distance" type="text" readonly inputmode="decimal" autocomplete="off" onclick="openNpaAirportTarKeypad(this)">
-                        <span class="tar-distance-label">nm to RW<span data-tar-thr-label="thr2">${tarThr2}</span></span>
-                    </div>
-                </div>`;
-            const thr1Input = block.querySelector('[data-radio-field="thr1Distance"]');
-            const thr2Input = block.querySelector('[data-radio-field="thr2Distance"]');
-            if (thr1Input) thr1Input.value = data.thr1Distance !== undefined && data.thr1Distance !== null ? data.thr1Distance : "";
-            if (thr2Input) thr2Input.value = data.thr2Distance !== undefined && data.thr2Distance !== null ? data.thr2Distance : "";
+                <div class="npa-modal-grid tar-distance-grid" data-tar-distance-grid></div>`;
+            renderAirportTarRows(block, data);
         } else {
             const displayType = String(data.sourceType || '').toUpperCase() === 'VORDME' ? 'VORDME' : normalizedType;
             block.innerHTML = `
@@ -7476,6 +7592,33 @@
         }
     }
 
+    function collectAirportTarEntries(block) {
+        const entries = Array.from(block.querySelectorAll('.tar-distance-runway-row')).map(row => {
+            const thr1Input = row.querySelector('input[data-tar-side="thr1"]');
+            const thr2Input = row.querySelector('input[data-tar-side="thr2"]');
+            return {
+                type: 'TAR',
+                name: 'TAR',
+                thr1: normalizeAirportThresholdText(thr1Input?.dataset.tarThr),
+                thr1Distance: parseNpaModalNumber(thr1Input?.value),
+                thr2: normalizeAirportThresholdText(thr2Input?.dataset.tarThr),
+                thr2Distance: parseNpaModalNumber(thr2Input?.value)
+            };
+        }).filter(entry => entry.thr1 || entry.thr2);
+
+        if (entries.length) return entries;
+
+        const firstRunway = getFirstAirportRunwayFormValues();
+        return [{
+            type: 'TAR',
+            name: 'TAR',
+            thr1: firstRunway.thr1,
+            thr1Distance: "",
+            thr2: firstRunway.thr2,
+            thr2Distance: ""
+        }];
+    }
+
     async function saveAirportFromModal() {
         const icao = sanitizeNpaAirportCode(document.getElementById('addAirportIcao')?.value);
         if (!icao || icao.length !== 4) {
@@ -7503,8 +7646,8 @@
             };
         });
 
-        const firstRunway = getFirstAirportRunwayFormValues();
-        const radioAids = Array.from(document.querySelectorAll('#airportRadioAidsContainer .airport-radio-aid-block')).map(block => {
+        const radioAids = [];
+        Array.from(document.querySelectorAll('#airportRadioAidsContainer .airport-radio-aid-block')).forEach(block => {
             const type = block.dataset.radioAidType === 'NDB'
                 ? 'NDB'
                 : block.dataset.radioAidType === 'TAR'
@@ -7512,21 +7655,15 @@
                     : 'VOR';
 
             if (type === 'TAR') {
-                return {
-                    type,
-                    name: 'TAR',
-                    thr1: firstRunway.thr1,
-                    thr1Distance: parseNpaModalNumber(block.querySelector('[data-radio-field="thr1Distance"]')?.value),
-                    thr2: firstRunway.thr2,
-                    thr2Distance: parseNpaModalNumber(block.querySelector('[data-radio-field="thr2Distance"]')?.value)
-                };
+                radioAids.push(...collectAirportTarEntries(block));
+                return;
             }
 
-            return {
+            radioAids.push({
                 type,
                 name: block.querySelector('[data-radio-field="name"]')?.value?.trim().toUpperCase() || "",
                 coord: block.querySelector('[data-radio-field="coord"]')?.value?.trim() || ""
-            };
+            });
         });
 
         const existingAirport = getAirportDocument(icao);
