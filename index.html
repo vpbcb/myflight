@@ -23,7 +23,131 @@
             --app-width: 100vw;
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --header-padding-top: 20px;
+            --header-padding-bottom: 20px;
+            --logo-height: 60px;
+            --cache-margin-top: -10px;
+            --cache-margin-bottom: 20px;
+            --side-padding: 20px;
+            --search-card-margin-bottom: 15px;
+            --search-wrapper-padding: 15px;
+            --search-wrapper-gap: 12px;
+            --search-row-gap: 15px;
+            --search-row-min-height: 48px;
+            --input-group-height: 48px;
+            --input-group-width: 115px;
+            --prefix-width: 55px;
+            --input-font-size: 1.1rem;
+            --notes-block-gap: 10px;
+            --notes-field-min-height: 104px;
+            --notes-field-padding: 8px;
+            --notes-field-gap: 8px;
+            --notes-text-min-height: 56px;
+            --notes-text-font-size: 0.95rem;
+            --quick-notes-picker-gap: 8px;
+            --quick-note-card-min-height: 42px;
+            --note-chip-min-height: 32px;
+            --container-gap: 12px;
+            --project-card-padding: 16px 8px;
+            --project-card-aspect: 1 / 1;
+            --icon-box-size: 42px;
+            --icon-box-font-size: 32px;
+            --icon-box-margin-bottom: 8px;
+            --bottom-margin-top: 12px;
+            --bottom-padding-x: 16px;
+            --bottom-padding-bottom: 12px;
+            --bottom-safe-extra: 8px;
 
+        }
+
+        html.index-compact-1 {
+            --header-padding-top: 14px;
+            --header-padding-bottom: 12px;
+            --logo-height: 52px;
+            --cache-margin-bottom: 14px;
+            --search-card-margin-bottom: 12px;
+            --search-wrapper-padding: 12px;
+            --search-wrapper-gap: 10px;
+            --notes-field-min-height: 86px;
+            --notes-text-min-height: 38px;
+            --notes-text-font-size: 0.9rem;
+            --quick-note-card-min-height: 38px;
+            --container-gap: 10px;
+            --project-card-padding: 10px 6px;
+            --project-card-aspect: 1.18 / 1;
+            --icon-box-size: 36px;
+            --icon-box-font-size: 28px;
+            --icon-box-margin-bottom: 6px;
+            --bottom-margin-top: 8px;
+        }
+
+        html.index-compact-2 {
+            --header-padding-top: 10px;
+            --header-padding-bottom: 8px;
+            --logo-height: 44px;
+            --cache-margin-bottom: 10px;
+            --search-card-margin-bottom: 8px;
+            --search-wrapper-padding: 9px;
+            --search-wrapper-gap: 8px;
+            --search-row-gap: 10px;
+            --search-row-min-height: 42px;
+            --input-group-height: 42px;
+            --input-font-size: 1rem;
+            --notes-block-gap: 8px;
+            --notes-field-min-height: 72px;
+            --notes-field-padding: 6px;
+            --notes-field-gap: 6px;
+            --notes-text-min-height: 30px;
+            --notes-text-font-size: 0.86rem;
+            --quick-notes-picker-gap: 6px;
+            --quick-note-card-min-height: 32px;
+            --note-chip-min-height: 28px;
+            --container-gap: 8px;
+            --project-card-padding: 8px 5px;
+            --project-card-aspect: 1.28 / 1;
+            --icon-box-size: 30px;
+            --icon-box-font-size: 24px;
+            --icon-box-margin-bottom: 4px;
+            --bottom-margin-top: 5px;
+            --bottom-padding-bottom: 8px;
+            --bottom-safe-extra: 6px;
+        }
+
+        html.index-compact-3 {
+            --header-padding-top: 6px;
+            --header-padding-bottom: 4px;
+            --logo-height: 36px;
+            --cache-margin-top: -6px;
+            --cache-margin-bottom: 6px;
+            --side-padding: 14px;
+            --search-card-margin-bottom: 6px;
+            --search-wrapper-padding: 7px;
+            --search-wrapper-gap: 6px;
+            --search-row-gap: 8px;
+            --search-row-min-height: 36px;
+            --input-group-height: 36px;
+            --input-group-width: 110px;
+            --prefix-width: 50px;
+            --input-font-size: 0.95rem;
+            --notes-block-gap: 6px;
+            --notes-field-min-height: 58px;
+            --notes-field-padding: 5px;
+            --notes-field-gap: 5px;
+            --notes-text-min-height: 24px;
+            --notes-text-font-size: 0.82rem;
+            --quick-notes-picker-gap: 5px;
+            --quick-note-card-min-height: 28px;
+            --note-chip-min-height: 26px;
+            --container-gap: 6px;
+            --project-card-padding: 5px 4px;
+            --project-card-aspect: 1.45 / 1;
+            --icon-box-size: 24px;
+            --icon-box-font-size: 20px;
+            --icon-box-margin-bottom: 3px;
+            --bottom-margin-top: 3px;
+            --bottom-padding-x: 12px;
+            --bottom-padding-bottom: 6px;
+            --bottom-safe-extra: 4px;
         }
 
         /* Темная тема (включается ОС автоматически, если нет класса .light-theme) */
@@ -87,8 +211,8 @@
         .bottom-controls {
             position: static;
             width: 100%;
-            padding: 0 16px max(12px, calc(var(--safe-bottom) + 8px));
-            margin-top: 12px;
+            padding: 0 var(--bottom-padding-x) max(var(--bottom-padding-bottom), calc(var(--safe-bottom) + var(--bottom-safe-extra)));
+            margin-top: var(--bottom-margin-top);
             box-sizing: border-box;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -237,10 +361,8 @@
             height: var(--app-height);
             min-height: var(--app-height);
             max-height: var(--app-height);
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
+            overflow: hidden;
+            overscroll-behavior: none;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -253,15 +375,15 @@
 
         .header {
             width: 100%;
-            padding: 20px 20px 20px;
-            padding-top: max(20px, calc(var(--safe-top) + 6px));
+            padding: var(--header-padding-top) 20px var(--header-padding-bottom);
+            padding-top: max(var(--header-padding-top), calc(var(--safe-top) + 6px));
             display: flex;
             justify-content: center; /* Строго по центру */
             box-sizing: border-box;
         }
 
         .header .main-logo {
-            height: 60px; /* Настрой высоту логотипа под себя, если он будет слишком мелким или крупным */
+            height: var(--logo-height); /* Настрой высоту логотипа под себя, если он будет слишком мелким или крупным */
             width: auto;
             max-width: 100%; /* Защита, чтобы логотип не вылез за края на узких экранах */
             display: block;
@@ -282,11 +404,11 @@
 
         .container {
             width: 100%;
-            padding: 0 20px;
+            padding: 0 var(--side-padding);
             box-sizing: border-box;
             display: grid;
             grid-template-columns: repeat(3, 1fr); /* 3 колонки */
-            gap: 12px;
+            gap: var(--container-gap);
             margin-top: auto;
             margin-bottom: 0;
         }
@@ -294,7 +416,7 @@
         .project-card {
             background: var(--input-bg);
             border-radius: 16px;
-            padding: 16px 8px;
+            padding: var(--project-card-padding);
             text-decoration: none;
             color: var(--text-main);
             display: flex;
@@ -303,7 +425,7 @@
             justify-content: center;
             transition: transform 0.1s ease;
             border: 1px solid var(--border-color);
-            aspect-ratio: 1 / 1;
+            aspect-ratio: var(--project-card-aspect);
         }
 
         .project-card:active {
@@ -312,14 +434,14 @@
         }
         
         .icon-box {
-            width: 42px;
-            height: 42px;
+            width: var(--icon-box-size);
+            height: var(--icon-box-size);
             background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 8px;
-            font-size: 32px;
+            margin-bottom: var(--icon-box-margin-bottom);
+            font-size: var(--icon-box-font-size);
         }
 
         .info {
@@ -345,32 +467,32 @@
             text-transform: uppercase;
             font-weight: 700;
             white-space: nowrap;
-            margin-top: -10px; /* Прижимаем ближе к логотипу */
-            margin-bottom: 20px; /* Отступ до карточки поиска */
+            margin-top: var(--cache-margin-top); /* Прижимаем ближе к логотипу */
+            margin-bottom: var(--cache-margin-bottom); /* Отступ до карточки поиска */
             z-index: 50;
             pointer-events: none;
         }
 /* --- СТИЛИ БЛОКА ПОИСКА РЕЙСА И БОРТА --- */
         .flight-search-card {
             width: 100%;
-            padding: 0 20px;
+            padding: 0 var(--side-padding);
             box-sizing: border-box;
-            margin-bottom: 15px;
+            margin-bottom: var(--search-card-margin-bottom);
         }
         .search-wrapper {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 15px;
+            padding: var(--search-wrapper-padding);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: var(--search-wrapper-gap);
         }
         .search-row {
             display: flex;
             align-items: center;
-            gap: 15px;
-            min-height: 48px;
+            gap: var(--search-row-gap);
+            min-height: var(--search-row-min-height);
         }
         .input-group {
             display: flex;
@@ -379,16 +501,16 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
-            height: 48px;
-            width: 115px; /* Еще более узкое поле */
+            height: var(--input-group-height);
+            width: var(--input-group-width); /* Еще более узкое поле */
             flex-shrink: 0; 
         }
         .prefix {
             color: #fff;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: var(--input-font-size);
             padding: 0;
-            width: 55px; 
+            width: var(--prefix-width); 
             height: 100%;
             display: flex;
             align-items: center;
@@ -404,7 +526,7 @@
             border: none;
             background: transparent;
             color: var(--text-main);
-            font-size: 1.1rem;
+            font-size: var(--input-font-size);
             font-weight: 700;
             padding: 0 5px; /* Уменьшили внутренний отступ для узкого поля */
             outline: none;
@@ -451,11 +573,11 @@
         .quick-notes-block {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: var(--notes-block-gap);
         }
 
         .notes-field {
-            min-height: 104px;
+            min-height: var(--notes-field-min-height);
             width: 100%;
             box-sizing: border-box;
             border: 1px solid var(--border-color);
@@ -464,8 +586,8 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: 8px;
-            padding: 8px;
+            gap: var(--notes-field-gap);
+            padding: var(--notes-field-padding);
             overflow: hidden;
             scrollbar-width: none;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -499,19 +621,19 @@
         .quick-notes-picker {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
+            gap: var(--quick-notes-picker-gap);
         }
 
         .notes-free-text {
             width: 100%;
-            min-height: 56px;
+            min-height: var(--notes-text-min-height);
             border: none;
             outline: none;
             resize: none;
             background: transparent;
             color: var(--text-main);
             font: inherit;
-            font-size: 0.95rem;
+            font-size: var(--notes-text-font-size);
             line-height: 1.35;
             font-weight: 600;
             padding: 2px 4px;
@@ -548,7 +670,7 @@
         }
         .quick-note-card {
             position: relative;
-            min-height: 42px;
+            min-height: var(--quick-note-card-min-height);
             overflow: hidden;
         }
         .quick-note-card::after {
@@ -578,7 +700,7 @@
             flex: var(--note-chip-flex, 1 1 0);
             min-width: 0;
             max-width: 100%;
-            min-height: 32px;
+            min-height: var(--note-chip-min-height);
             padding-left: 7px;
             padding-right: 7px;
             font-size: 0.76rem;
@@ -751,41 +873,21 @@
         }
 
         @media (hover: hover) and (pointer: fine) and (max-height: 900px) {
-            .header {
-                padding-bottom: 10px;
-            }
-            .header .main-logo {
-                height: 54px;
-            }
-            .flight-search-card {
-                margin-bottom: 12px;
-            }
-            .search-wrapper {
-                padding: 12px;
-                gap: 10px;
-            }
-            .notes-field {
-                min-height: 86px;
-            }
-            .notes-free-text {
-                min-height: 38px;
-                font-size: 0.9rem;
-            }
-            .quick-note-card {
-                min-height: 38px;
-            }
-            .container {
-                gap: 10px;
-                margin-bottom: 0;
-            }
-            .project-card {
-                aspect-ratio: 1.18 / 1;
-                padding: 10px 6px;
-            }
-            .icon-box {
-                width: 36px;
-                height: 36px;
-                margin-bottom: 6px;
+            :root {
+                --header-padding-bottom: 10px;
+                --logo-height: 54px;
+                --search-card-margin-bottom: 12px;
+                --search-wrapper-padding: 12px;
+                --search-wrapper-gap: 10px;
+                --notes-field-min-height: 86px;
+                --notes-text-min-height: 38px;
+                --notes-text-font-size: 0.9rem;
+                --quick-note-card-min-height: 38px;
+                --container-gap: 10px;
+                --project-card-aspect: 1.18 / 1;
+                --project-card-padding: 10px 6px;
+                --icon-box-size: 36px;
+                --icon-box-margin-bottom: 6px;
             }
         }
 
@@ -1023,6 +1125,7 @@
     <script>
         (function () {
             let lockedAppHeight = 0;
+            const indexCompactClasses = ['index-compact-1', 'index-compact-2', 'index-compact-3'];
 
             function isEditableFocused() {
                 const active = document.activeElement;
@@ -1034,6 +1137,33 @@
                 document.body.scrollTop = 0;
                 window.scrollTo(0, 0);
             }
+
+            function fitIndexLayoutToViewport() {
+                const root = document.documentElement;
+                const shell = document.querySelector('.app-shell');
+                if (!shell) return;
+
+                root.classList.remove(...indexCompactClasses);
+                shell.scrollTop = 0;
+
+                for (let i = 0; i < indexCompactClasses.length; i += 1) {
+                    if (shell.scrollHeight <= shell.clientHeight + 1) break;
+                    root.classList.add(indexCompactClasses[i]);
+                    void shell.offsetHeight;
+                }
+
+                shell.scrollTop = 0;
+                keepViewportPinned();
+            }
+
+            function scheduleIndexLayoutFit() {
+                requestAnimationFrame(fitIndexLayoutToViewport);
+                setTimeout(fitIndexLayoutToViewport, 150);
+                setTimeout(fitIndexLayoutToViewport, 500);
+            }
+
+            window.fitIndexLayoutToViewport = fitIndexLayoutToViewport;
+            window.scheduleIndexLayoutFit = scheduleIndexLayoutFit;
 
             function lockAppViewport(options) {
                 const forceHeight = options && options.forceHeight;
@@ -1075,6 +1205,8 @@
                     shell.style.width = appWidth;
                 }
 
+                fitIndexLayoutToViewport();
+
                 if (keyboardLikelyOpen || isEditableFocused()) {
                     keepViewportPinned();
                     setTimeout(keepViewportPinned, 50);
@@ -1093,6 +1225,10 @@
 
             window.addEventListener('orientationchange', function () {
                 relockAfterOrientation();
+            });
+            window.addEventListener('load', function () {
+                lockAppViewport();
+                scheduleIndexLayoutFit();
             });
             window.addEventListener('resize', lockAppViewport);
 
@@ -1190,9 +1326,13 @@
 
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Двойная жесткая вибрация
             
-            // Чистим память полностью
-            const preservedMyNpaStorage = {};
+            // Чистим память полностью, но сохраняем пользовательские данные, не относящиеся к кешу.
+            const preservedLocalStorage = {};
             [
+                'last_flight_num',
+                'last_ac_query',
+                'hub_quick_notes',
+                'hub_quick_notes_text',
                 'mynpa_airports_v2',
                 'mynpa_airports_rtdb_v1',
                 'mynpa_airports_reference_v1',
@@ -1203,11 +1343,11 @@
                 'mynpa_sync_status_v1'
             ].forEach(key => {
                 const value = localStorage.getItem(key);
-                if (value !== null) preservedMyNpaStorage[key] = value;
+                if (value !== null) preservedLocalStorage[key] = value;
             });
 
             localStorage.clear();
-            Object.entries(preservedMyNpaStorage).forEach(([key, value]) => {
+            Object.entries(preservedLocalStorage).forEach(([key, value]) => {
                 localStorage.setItem(key, value);
             });
             sessionStorage.clear();
@@ -1817,6 +1957,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
             chipRow.style.display = hasSelected ? 'flex' : 'none';
             picker.style.display = hasAvailable ? 'grid' : 'none';
+
+            if (typeof window.scheduleIndexLayoutFit === 'function') {
+                window.scheduleIndexLayoutFit();
+            } else if (typeof window.fitIndexLayoutToViewport === 'function') {
+                requestAnimationFrame(window.fitIndexLayoutToViewport);
+            }
         }
 
         function openNotesKeypad(key) {
