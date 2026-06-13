@@ -2868,7 +2868,7 @@
 
         <div class="section-card npa-info-card npa-info-open">
             <div class="card-title">
-                <span>Airport and approach info</span>
+                <span>Final descent info</span>
             </div>
             <div id="npaBlock5" class="foldBlock open">
                 <input type="hidden" id="rwLength">
@@ -5137,10 +5137,10 @@
             const airport = getAirportDocument(getNpaAirportCode());
             const threshold = getCurrentLandingThreshold();
             const runwayInfo = findRunwayForThreshold(airport, threshold);
-            const directDistance = getRadioAidDirectDistanceNm(runwayInfo, source.coord);
-            if (Number.isFinite(directDistance)) {
-                profileRadioShiftExactNm = directDistance;
-                return directDistance;
+            const signedShift = getRadioAidSignedShiftNm(runwayInfo, source.coord);
+            if (Number.isFinite(signedShift)) {
+                profileRadioShiftExactNm = signedShift;
+                return signedShift;
             }
         }
 
@@ -5892,6 +5892,23 @@
         return directDistance;
     }
 
+    function getRadioAidSignedShiftNm(runwayInfo, aidCoordText) {
+        const directDistance = getRadioAidDirectDistanceNm(runwayInfo, aidCoordText);
+        if (!Number.isFinite(directDistance)) return null;
+
+        const landingCoord = parseNpaCoordinatePair(runwayInfo?.landingCoord);
+        const aidCoord = parseNpaCoordinatePair(aidCoordText);
+        const outboundBearing = getProfileOutboundBearingDeg(runwayInfo);
+        if (!landingCoord || !aidCoord || outboundBearing === null) return directDistance;
+
+        const aidVector = getNmVector(landingCoord, aidCoord);
+        const bearingRad = outboundBearing * Math.PI / 180;
+        const projection = (Math.sin(bearingRad) * aidVector.x) + (Math.cos(bearingRad) * aidVector.y);
+        if (!Number.isFinite(projection)) return directDistance;
+
+        return projection > 1e-7 ? -directDistance : directDistance;
+    }
+
     function getRadioAidDisplayName(aid, index) {
         if (aid?.type === 'ILS_OPPOSITE') return String(aid?.name || 'ILS').trim().toUpperCase();
         const type = aid?.type === 'NDB'
@@ -6201,25 +6218,29 @@
                 alert("Runway threshold pair not found. Use manual shift entry.");
                 return;
             }
-            const directDistance = getRadioAidDirectDistanceNm(runwayInfo, runwayInfo.oppositeCoord);
-            if (!Number.isFinite(directDistance)) {
+            const distance = activeRadioAidShiftTarget === 'profileRadio'
+                ? getRadioAidSignedShiftNm(runwayInfo, runwayInfo.oppositeCoord)
+                : getRadioAidDirectDistanceNm(runwayInfo, runwayInfo.oppositeCoord);
+            if (!Number.isFinite(distance)) {
                 alert("Opposite ILS distance cannot be calculated. Use manual shift entry.");
                 return;
             }
-            exactShiftNm = directDistance;
-            shift = directDistance.toFixed(1);
+            exactShiftNm = distance;
+            shift = distance.toFixed(1);
         } else {
             if (!runwayInfo) {
                 alert("Runway threshold pair not found. Use manual shift entry.");
                 return;
             }
-            const directDistance = getRadioAidDirectDistanceNm(runwayInfo, aid?.coord);
-            if (!Number.isFinite(directDistance)) {
+            const distance = activeRadioAidShiftTarget === 'profileRadio'
+                ? getRadioAidSignedShiftNm(runwayInfo, aid?.coord)
+                : getRadioAidDirectDistanceNm(runwayInfo, aid?.coord);
+            if (!Number.isFinite(distance)) {
                 alert("Coordinates are missing or invalid. Use manual shift entry.");
                 return;
             }
-            exactShiftNm = directDistance;
-            shift = directDistance.toFixed(1);
+            exactShiftNm = distance;
+            shift = distance.toFixed(1);
         }
 
         if (activeRadioAidShiftTarget === 'profileRadio') {
