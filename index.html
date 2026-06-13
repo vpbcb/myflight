@@ -23,131 +23,7 @@
             --app-width: 100vw;
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --header-padding-top: 20px;
-            --header-padding-bottom: 20px;
-            --logo-height: 60px;
-            --cache-margin-top: -10px;
-            --cache-margin-bottom: 20px;
-            --side-padding: 20px;
-            --search-card-margin-bottom: 15px;
-            --search-wrapper-padding: 15px;
-            --search-wrapper-gap: 12px;
-            --search-row-gap: 15px;
-            --search-row-min-height: 48px;
-            --input-group-height: 48px;
-            --input-group-width: 115px;
-            --prefix-width: 55px;
-            --input-font-size: 1.1rem;
-            --notes-block-gap: 10px;
-            --notes-field-min-height: 104px;
-            --notes-field-padding: 8px;
-            --notes-field-gap: 8px;
-            --notes-text-min-height: 56px;
-            --notes-text-font-size: 0.95rem;
-            --quick-notes-picker-gap: 8px;
-            --quick-note-card-min-height: 42px;
-            --note-chip-min-height: 32px;
-            --container-gap: 12px;
-            --project-card-padding: 16px 8px;
-            --project-card-aspect: 1 / 1;
-            --icon-box-size: 42px;
-            --icon-box-font-size: 32px;
-            --icon-box-margin-bottom: 8px;
-            --bottom-margin-top: 12px;
-            --bottom-padding-x: 16px;
-            --bottom-padding-bottom: 12px;
-            --bottom-safe-extra: 8px;
 
-        }
-
-        html.index-compact-1 {
-            --header-padding-top: 14px;
-            --header-padding-bottom: 12px;
-            --logo-height: 52px;
-            --cache-margin-bottom: 14px;
-            --search-card-margin-bottom: 12px;
-            --search-wrapper-padding: 12px;
-            --search-wrapper-gap: 10px;
-            --notes-field-min-height: 86px;
-            --notes-text-min-height: 38px;
-            --notes-text-font-size: 0.9rem;
-            --quick-note-card-min-height: 38px;
-            --container-gap: 10px;
-            --project-card-padding: 10px 6px;
-            --project-card-aspect: 1.18 / 1;
-            --icon-box-size: 36px;
-            --icon-box-font-size: 28px;
-            --icon-box-margin-bottom: 6px;
-            --bottom-margin-top: 8px;
-        }
-
-        html.index-compact-2 {
-            --header-padding-top: 10px;
-            --header-padding-bottom: 8px;
-            --logo-height: 44px;
-            --cache-margin-bottom: 10px;
-            --search-card-margin-bottom: 8px;
-            --search-wrapper-padding: 9px;
-            --search-wrapper-gap: 8px;
-            --search-row-gap: 10px;
-            --search-row-min-height: 42px;
-            --input-group-height: 42px;
-            --input-font-size: 1rem;
-            --notes-block-gap: 8px;
-            --notes-field-min-height: 72px;
-            --notes-field-padding: 6px;
-            --notes-field-gap: 6px;
-            --notes-text-min-height: 30px;
-            --notes-text-font-size: 0.86rem;
-            --quick-notes-picker-gap: 6px;
-            --quick-note-card-min-height: 32px;
-            --note-chip-min-height: 28px;
-            --container-gap: 8px;
-            --project-card-padding: 8px 5px;
-            --project-card-aspect: 1.28 / 1;
-            --icon-box-size: 30px;
-            --icon-box-font-size: 24px;
-            --icon-box-margin-bottom: 4px;
-            --bottom-margin-top: 5px;
-            --bottom-padding-bottom: 8px;
-            --bottom-safe-extra: 6px;
-        }
-
-        html.index-compact-3 {
-            --header-padding-top: 6px;
-            --header-padding-bottom: 4px;
-            --logo-height: 36px;
-            --cache-margin-top: -6px;
-            --cache-margin-bottom: 6px;
-            --side-padding: 14px;
-            --search-card-margin-bottom: 6px;
-            --search-wrapper-padding: 7px;
-            --search-wrapper-gap: 6px;
-            --search-row-gap: 8px;
-            --search-row-min-height: 36px;
-            --input-group-height: 36px;
-            --input-group-width: 110px;
-            --prefix-width: 50px;
-            --input-font-size: 0.95rem;
-            --notes-block-gap: 6px;
-            --notes-field-min-height: 58px;
-            --notes-field-padding: 5px;
-            --notes-field-gap: 5px;
-            --notes-text-min-height: 24px;
-            --notes-text-font-size: 0.82rem;
-            --quick-notes-picker-gap: 5px;
-            --quick-note-card-min-height: 28px;
-            --note-chip-min-height: 26px;
-            --container-gap: 6px;
-            --project-card-padding: 5px 4px;
-            --project-card-aspect: 1.45 / 1;
-            --icon-box-size: 24px;
-            --icon-box-font-size: 20px;
-            --icon-box-margin-bottom: 3px;
-            --bottom-margin-top: 3px;
-            --bottom-padding-x: 12px;
-            --bottom-padding-bottom: 6px;
-            --bottom-safe-extra: 4px;
         }
 
         /* Темная тема (включается ОС автоматически, если нет класса .light-theme) */
@@ -211,8 +87,8 @@
         .bottom-controls {
             position: static;
             width: 100%;
-            padding: 0 var(--bottom-padding-x) max(var(--bottom-padding-bottom), calc(var(--safe-bottom) + var(--bottom-safe-extra)));
-            margin-top: var(--bottom-margin-top);
+            padding: 0 16px max(12px, calc(var(--safe-bottom) + 8px));
+            margin-top: 12px;
             box-sizing: border-box;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -220,6 +96,14 @@
             align-items: center;
             justify-items: center;
             z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .home-actions {
+            width: 100%;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
             flex-shrink: 0;
         }
 
@@ -375,15 +259,15 @@
 
         .header {
             width: 100%;
-            padding: var(--header-padding-top) 20px var(--header-padding-bottom);
-            padding-top: max(var(--header-padding-top), calc(var(--safe-top) + 6px));
+            padding: 20px 20px 20px;
+            padding-top: max(20px, calc(var(--safe-top) + 6px));
             display: flex;
             justify-content: center; /* Строго по центру */
             box-sizing: border-box;
         }
 
         .header .main-logo {
-            height: var(--logo-height); /* Настрой высоту логотипа под себя, если он будет слишком мелким или крупным */
+            height: 60px; /* Настрой высоту логотипа под себя, если он будет слишком мелким или крупным */
             width: auto;
             max-width: 100%; /* Защита, чтобы логотип не вылез за края на узких экранах */
             display: block;
@@ -404,19 +288,19 @@
 
         .container {
             width: 100%;
-            padding: 0 var(--side-padding);
+            padding: 0 20px;
             box-sizing: border-box;
             display: grid;
             grid-template-columns: repeat(3, 1fr); /* 3 колонки */
-            gap: var(--container-gap);
-            margin-top: auto;
+            gap: 12px;
+            margin-top: 0;
             margin-bottom: 0;
         }
 
         .project-card {
             background: var(--input-bg);
             border-radius: 16px;
-            padding: var(--project-card-padding);
+            padding: 16px 8px;
             text-decoration: none;
             color: var(--text-main);
             display: flex;
@@ -425,7 +309,7 @@
             justify-content: center;
             transition: transform 0.1s ease;
             border: 1px solid var(--border-color);
-            aspect-ratio: var(--project-card-aspect);
+            aspect-ratio: 1 / 1;
         }
 
         .project-card:active {
@@ -434,14 +318,14 @@
         }
         
         .icon-box {
-            width: var(--icon-box-size);
-            height: var(--icon-box-size);
+            width: 42px;
+            height: 42px;
             background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: var(--icon-box-margin-bottom);
-            font-size: var(--icon-box-font-size);
+            margin-bottom: 8px;
+            font-size: 32px;
         }
 
         .info {
@@ -467,32 +351,32 @@
             text-transform: uppercase;
             font-weight: 700;
             white-space: nowrap;
-            margin-top: var(--cache-margin-top); /* Прижимаем ближе к логотипу */
-            margin-bottom: var(--cache-margin-bottom); /* Отступ до карточки поиска */
+            margin-top: -10px; /* Прижимаем ближе к логотипу */
+            margin-bottom: 20px; /* Отступ до карточки поиска */
             z-index: 50;
             pointer-events: none;
         }
 /* --- СТИЛИ БЛОКА ПОИСКА РЕЙСА И БОРТА --- */
         .flight-search-card {
             width: 100%;
-            padding: 0 var(--side-padding);
+            padding: 0 20px;
             box-sizing: border-box;
-            margin-bottom: var(--search-card-margin-bottom);
+            margin-bottom: 15px;
         }
         .search-wrapper {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: var(--search-wrapper-padding);
+            padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: var(--search-wrapper-gap);
+            gap: 12px;
         }
         .search-row {
             display: flex;
             align-items: center;
-            gap: var(--search-row-gap);
-            min-height: var(--search-row-min-height);
+            gap: 15px;
+            min-height: 48px;
         }
         .input-group {
             display: flex;
@@ -501,16 +385,16 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
-            height: var(--input-group-height);
-            width: var(--input-group-width); /* Еще более узкое поле */
+            height: 48px;
+            width: 115px; /* Еще более узкое поле */
             flex-shrink: 0; 
         }
         .prefix {
             color: #fff;
             font-weight: 800;
-            font-size: var(--input-font-size);
+            font-size: 1.1rem;
             padding: 0;
-            width: var(--prefix-width); 
+            width: 55px; 
             height: 100%;
             display: flex;
             align-items: center;
@@ -526,7 +410,7 @@
             border: none;
             background: transparent;
             color: var(--text-main);
-            font-size: var(--input-font-size);
+            font-size: 1.1rem;
             font-weight: 700;
             padding: 0 5px; /* Уменьшили внутренний отступ для узкого поля */
             outline: none;
@@ -573,11 +457,11 @@
         .quick-notes-block {
             display: flex;
             flex-direction: column;
-            gap: var(--notes-block-gap);
+            gap: 10px;
         }
 
         .notes-field {
-            min-height: var(--notes-field-min-height);
+            min-height: 104px;
             width: 100%;
             box-sizing: border-box;
             border: 1px solid var(--border-color);
@@ -586,8 +470,8 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: var(--notes-field-gap);
-            padding: var(--notes-field-padding);
+            gap: 8px;
+            padding: 8px;
             overflow: hidden;
             scrollbar-width: none;
             transition: border-color 0.2s, box-shadow 0.2s;
@@ -621,19 +505,19 @@
         .quick-notes-picker {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: var(--quick-notes-picker-gap);
+            gap: 8px;
         }
 
         .notes-free-text {
             width: 100%;
-            min-height: var(--notes-text-min-height);
+            min-height: 56px;
             border: none;
             outline: none;
             resize: none;
             background: transparent;
             color: var(--text-main);
             font: inherit;
-            font-size: var(--notes-text-font-size);
+            font-size: 0.95rem;
             line-height: 1.35;
             font-weight: 600;
             padding: 2px 4px;
@@ -670,7 +554,7 @@
         }
         .quick-note-card {
             position: relative;
-            min-height: var(--quick-note-card-min-height);
+            min-height: 42px;
             overflow: hidden;
         }
         .quick-note-card::after {
@@ -700,7 +584,7 @@
             flex: var(--note-chip-flex, 1 1 0);
             min-width: 0;
             max-width: 100%;
-            min-height: var(--note-chip-min-height);
+            min-height: 32px;
             padding-left: 7px;
             padding-right: 7px;
             font-size: 0.76rem;
@@ -873,21 +757,41 @@
         }
 
         @media (hover: hover) and (pointer: fine) and (max-height: 900px) {
-            :root {
-                --header-padding-bottom: 10px;
-                --logo-height: 54px;
-                --search-card-margin-bottom: 12px;
-                --search-wrapper-padding: 12px;
-                --search-wrapper-gap: 10px;
-                --notes-field-min-height: 86px;
-                --notes-text-min-height: 38px;
-                --notes-text-font-size: 0.9rem;
-                --quick-note-card-min-height: 38px;
-                --container-gap: 10px;
-                --project-card-aspect: 1.18 / 1;
-                --project-card-padding: 10px 6px;
-                --icon-box-size: 36px;
-                --icon-box-margin-bottom: 6px;
+            .header {
+                padding-bottom: 10px;
+            }
+            .header .main-logo {
+                height: 54px;
+            }
+            .flight-search-card {
+                margin-bottom: 12px;
+            }
+            .search-wrapper {
+                padding: 12px;
+                gap: 10px;
+            }
+            .notes-field {
+                min-height: 86px;
+            }
+            .notes-free-text {
+                min-height: 38px;
+                font-size: 0.9rem;
+            }
+            .quick-note-card {
+                min-height: 38px;
+            }
+            .container {
+                gap: 10px;
+                margin-bottom: 0;
+            }
+            .project-card {
+                aspect-ratio: 1.18 / 1;
+                padding: 10px 6px;
+            }
+            .icon-box {
+                width: 36px;
+                height: 36px;
+                margin-bottom: 6px;
             }
         }
 
@@ -969,6 +873,7 @@
             </div>
         </div>
 
+        <div class="home-actions">
         <div class="container">
             <a href="./myfuel.html" class="project-card">
                 <div class="icon-box">⛽</div>
@@ -1021,6 +926,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; flex-shrink: 0; display: block;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.39-2.77 7.64-3.3 3.64-1.51 4.4-1.77 4.9-.18.1.33.01 1.15-.04 1.9z"/></svg>
                 <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Mail me</span>
             </button>
+        </div>
         </div>
 
         <!-- Модальное окно уточнения борта -->
@@ -1125,7 +1031,6 @@
     <script>
         (function () {
             let lockedAppHeight = 0;
-            const indexCompactClasses = ['index-compact-1', 'index-compact-2', 'index-compact-3'];
 
             function isEditableFocused() {
                 const active = document.activeElement;
@@ -1137,33 +1042,6 @@
                 document.body.scrollTop = 0;
                 window.scrollTo(0, 0);
             }
-
-            function fitIndexLayoutToViewport() {
-                const root = document.documentElement;
-                const shell = document.querySelector('.app-shell');
-                if (!shell) return;
-
-                root.classList.remove(...indexCompactClasses);
-                shell.scrollTop = 0;
-
-                for (let i = 0; i < indexCompactClasses.length; i += 1) {
-                    if (shell.scrollHeight <= shell.clientHeight + 1) break;
-                    root.classList.add(indexCompactClasses[i]);
-                    void shell.offsetHeight;
-                }
-
-                shell.scrollTop = 0;
-                keepViewportPinned();
-            }
-
-            function scheduleIndexLayoutFit() {
-                requestAnimationFrame(fitIndexLayoutToViewport);
-                setTimeout(fitIndexLayoutToViewport, 150);
-                setTimeout(fitIndexLayoutToViewport, 500);
-            }
-
-            window.fitIndexLayoutToViewport = fitIndexLayoutToViewport;
-            window.scheduleIndexLayoutFit = scheduleIndexLayoutFit;
 
             function lockAppViewport(options) {
                 const forceHeight = options && options.forceHeight;
@@ -1205,8 +1083,6 @@
                     shell.style.width = appWidth;
                 }
 
-                fitIndexLayoutToViewport();
-
                 if (keyboardLikelyOpen || isEditableFocused()) {
                     keepViewportPinned();
                     setTimeout(keepViewportPinned, 50);
@@ -1226,10 +1102,7 @@
             window.addEventListener('orientationchange', function () {
                 relockAfterOrientation();
             });
-            window.addEventListener('load', function () {
-                lockAppViewport();
-                scheduleIndexLayoutFit();
-            });
+            window.addEventListener('load', lockAppViewport);
             window.addEventListener('resize', lockAppViewport);
 
             if (window.visualViewport) {
@@ -1957,12 +1830,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
             chipRow.style.display = hasSelected ? 'flex' : 'none';
             picker.style.display = hasAvailable ? 'grid' : 'none';
-
-            if (typeof window.scheduleIndexLayoutFit === 'function') {
-                window.scheduleIndexLayoutFit();
-            } else if (typeof window.fitIndexLayoutToViewport === 'function') {
-                requestAnimationFrame(window.fitIndexLayoutToViewport);
-            }
         }
 
         function openNotesKeypad(key) {
