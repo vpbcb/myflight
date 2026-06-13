@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260613-6';
+const CACHE_NAME = 'myflight_v.260613-7';
 const ASSET_FETCH_TIMEOUT_MS = 20000;
 
 // New worker activates only after every critical asset is cached.
