@@ -1234,9 +1234,66 @@ html.light-theme .shift-alert-plate {
         }
     })();
 
+    const MY_PATH_TABLE_SCROLL_KEY = 'myPath_tableScrollTop';
+    const MY_PATH_ACTIVE_POINT_ROWS_FROM_BOTTOM = 5;
     let myPathInitialTablePositionPending = true;
+    let myPathRestoringTableScroll = false;
 
-    function positionActivePointAfterRender(isInitial = false) {
+    function getSavedMyPathTableScrollTop() {
+        try {
+            const raw = sessionStorage.getItem(MY_PATH_TABLE_SCROLL_KEY);
+            const value = raw === null ? NaN : Number(raw);
+            return Number.isFinite(value) ? value : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function saveMyPathTableScrollPosition() {
+        if (myPathRestoringTableScroll) return;
+        const container = document.getElementById('tableBody');
+        if (!container) return;
+        try {
+            sessionStorage.setItem(MY_PATH_TABLE_SCROLL_KEY, String(Math.max(0, container.scrollTop || 0)));
+        } catch (error) {
+            // Table scroll is view-state; ignore storage failures.
+        }
+    }
+
+    function restoreMyPathTableScrollPosition() {
+        const container = document.getElementById('tableBody');
+        if (!container) return false;
+        const savedScrollTop = getSavedMyPathTableScrollTop();
+        if (savedScrollTop === null) return false;
+        const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+        myPathRestoringTableScroll = true;
+        container.scrollTop = Math.min(Math.max(0, savedScrollTop), maxScroll);
+        requestAnimationFrame(() => {
+            myPathRestoringTableScroll = false;
+        });
+        return true;
+    }
+
+    function scheduleMyPathTableScrollRestore() {
+        restoreMyPathTableScrollPosition();
+        requestAnimationFrame(() => {
+            restoreMyPathTableScrollPosition();
+            requestAnimationFrame(restoreMyPathTableScrollPosition);
+        });
+    }
+
+    function initMyPathTableScrollMemory() {
+        const container = document.getElementById('tableBody');
+        if (!container) return;
+        container.addEventListener('scroll', saveMyPathTableScrollPosition, { passive: true });
+    }
+
+    function positionActivePointAfterRender(isInitial = false, preserveScroll = false) {
+        if (preserveScroll || (isInitial && getSavedMyPathTableScrollTop() !== null)) {
+            scheduleMyPathTableScrollRestore();
+            return;
+        }
+
         if (isInitial) {
             scrollToActivePoint(true);
             requestAnimationFrame(() => scrollToActivePoint(true));
@@ -1568,14 +1625,16 @@ function openModal(id) {
     const highlights = container.querySelectorAll('.highlight-fdp,.highlight-fap');
     if (highlights.length === 0) return;
 
-    const targetRow = highlights[highlights.length - 1]; 
+    const targetRow = container.querySelector('.highlight-fap') || highlights[highlights.length - 1];
     const rowHeight = targetRow.offsetHeight || 45; 
     const containerHeight = container.clientHeight;
-    const targetScroll = targetRow.offsetTop - (containerHeight - (4 * rowHeight));
-    const roundedTargetScroll = Math.max(0, Math.round(targetScroll));
+    const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+    const targetScroll = targetRow.offsetTop - (containerHeight - (MY_PATH_ACTIVE_POINT_ROWS_FROM_BOTTOM * rowHeight));
+    const roundedTargetScroll = Math.min(Math.max(0, Math.round(targetScroll)), maxScroll);
 
     if (isInstant === true) {
         container.scrollTop = roundedTargetScroll;
+        saveMyPathTableScrollPosition();
         return;
     }
 
@@ -1583,6 +1642,7 @@ function openModal(id) {
         top: roundedTargetScroll,
         behavior: 'smooth'
     });
+    setTimeout(saveMyPathTableScrollPosition, 120);
 }
 
     function showLimitWarning() {
@@ -1778,9 +1838,10 @@ for (let d = topMile; d >= 2; d--) {
         </div>`;
 }
     
-    // Рендерим таблицу и скроллим
-    tableBody.innerHTML = tableHTML;
+    // Рендерим таблицу и сохраняем текущую позицию после обычных пересчетов
     const isInitialTablePosition = myPathInitialTablePositionPending;
+    if (!isInitialTablePosition) saveMyPathTableScrollPosition();
+    tableBody.innerHTML = tableHTML;
     positionActivePointAfterRender(isInitialTablePosition);
     myPathInitialTablePositionPending = false;
 
@@ -1937,8 +1998,8 @@ for (let d = topMile; d >= 2; d--) {
                 // Принудительно гасим стартовую анимацию строк для слепка
                 const rows = document.getElementById('tableBody').querySelectorAll('.t-row');
                 rows.forEach(r => r.style.animation = 'none');
-                // Вызываем мгновенный скролл без видимого "доезда" таблицы
-                positionActivePointAfterRender(true);
+                // Восстанавливаем пользовательскую позицию таблицы без видимого "доезда"
+                scheduleMyPathTableScrollRestore();
                 myPathInitialTablePositionPending = false;
                 hasSnapshot = true;
             }
@@ -1953,6 +2014,7 @@ for (let d = topMile; d >= 2; d--) {
     
     // --- СТАРТ ПРИ ЗАГРУЗКЕ ---
     window.onload = () => {
+        initMyPathTableScrollMemory();
         // Читаем, удалось ли загрузить слепок
         const hasSavedState = loadAppState(); 
         

@@ -1146,7 +1146,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (el.parentElement.classList.contains('upper')) {
             currentCategory = val;
             el.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === el));
-            updateLowerTabs({ center: true });
+            updateLowerTabs({ center: false });
         } else {
             // Если в нижнем табе ATIS нажали на кнопку выбора — открываем модалку
             if (currentCategory === 'ATIS') {
@@ -1157,7 +1157,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                     currentMappingIndex = idx; 
                     // Обновляем значение MAN, чтобы оно соответствовало новому индексу RWYCC/ESF
                     selectedManValue = rwyMapping[idx]['MAN_DEFAULT'];
-                    updateLowerTabs({ center: true }); 
+                    updateLowerTabs({ center: false }); 
                 }
             }
         }
@@ -1284,7 +1284,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             document.querySelectorAll('.tabs-row.upper .tab-btn').forEach(b => {
                 b.classList.toggle('active', b.innerText.trim() === 'RWYCC');
             });
-            updateLowerTabs({ center: true });
+            updateLowerTabs({ center: false });
         }
     }
 
@@ -1320,7 +1320,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         });
         
         closeRwycc5Modal();
-        updateLowerTabs({ center: true });
+        updateLowerTabs({ center: false });
     }
 
     // === ЛОГИКА СИНХРОНИЗАЦИИ КНОПОК В ОКНЕ MAN ===
@@ -1369,7 +1369,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         selectedManValue = element.textContent.replace(/\s+/g, ' ').trim();
         currentMappingIndex = rowIndex;
         closeManModal();
-        updateLowerTabs({ center: true });
+        updateLowerTabs({ center: false });
     }
 
     // МОДАЛКИ (ТЕХПАСПОРТ)
@@ -1618,7 +1618,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
             }
             updateStatusRow(); // Обновляем плашку
-            if (typeof updateTable === 'function') updateTable({ center: true });
+            if (typeof updateTable === 'function') updateTable({ center: false });
         }
     }
 
@@ -1634,13 +1634,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         document.getElementById('crewBtn').innerHTML = `<span style="font-size:1.1rem;font-weight:800">${lastC}</span>`;
         closeCrewModal();
         updateStatusRow(); // Обновляем плашку
-        if (typeof updateTable === 'function') updateTable({ center: true }); // Триггер обновления таблицы
+        if (typeof updateTable === 'function') updateTable({ center: false }); // Триггер обновления таблицы
     }
 
 // Логика переключения режимов t/o и land (взаимоисключающие)
     let currentOpMode = 'courseMinusBtn'; // По умолчанию выбран t/o
 
-    function toggleOpMode(selectedId, options = { center: true }) {
+    function toggleOpMode(selectedId, options = { center: false }) {
         currentOpMode = selectedId;
         // Сбрасываем выделение с обеих кнопок
         document.getElementById('courseMinusBtn').classList.remove('active-op');
@@ -1759,7 +1759,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         landMods['MANUAL_CAT2'] = false;
         landMods['AUTO_ROLL'] = false;
         
-        updateLandModalUI({ center: true });
+        updateLandModalUI({ center: false });
     }
 
     function toggleLandMod(mod) {
@@ -1768,7 +1768,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (mod.startsWith('AUTO') && currentLandBase !== 'AUTO') return;
         
         landMods[mod] = !landMods[mod]; // Переключаем состояние (вкл/выкл)
-        updateLandModalUI({ center: true });
+        updateLandModalUI({ center: false });
     }
 
     function updateLandModalUI(options = {}) {

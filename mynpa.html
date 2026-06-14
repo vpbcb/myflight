@@ -3300,6 +3300,62 @@
         const body = document.getElementById('npaProfileTableBody');
         if (!body) return;
         npaProfileSavedScrollTop = body.scrollTop || 0;
+        writeNpaProfileScrollPosition(npaProfileSavedScrollTop);
+    }
+
+    function getNpaProfileScrollStorageKey(typeOverride = null) {
+        const airportCode = getNpaAirportCode();
+        const approachType = String(typeOverride ?? getSelectedNpaType() ?? "").trim();
+        if (!airportCode || !approachType) return "";
+        return `${NPA_PROFILE_SCROLL_STORAGE_PREFIX}${encodeURIComponent(airportCode)}:${encodeURIComponent(approachType)}`;
+    }
+
+    function readNpaProfileScrollPosition() {
+        const key = getNpaProfileScrollStorageKey();
+        if (!key) return null;
+        try {
+            const raw = sessionStorage.getItem(key);
+            const value = raw === null ? NaN : Number(raw);
+            return Number.isFinite(value) ? value : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function writeNpaProfileScrollPosition(value) {
+        const key = getNpaProfileScrollStorageKey();
+        const numericValue = Number(value);
+        if (!key || !Number.isFinite(numericValue)) return;
+        try {
+            sessionStorage.setItem(key, String(Math.max(0, numericValue)));
+        } catch (error) {
+            // Scroll position is view-state; ignore storage quota/privacy failures.
+        }
+    }
+
+    function clearNpaProfileScrollPosition(typeOverride = null) {
+        const key = getNpaProfileScrollStorageKey(typeOverride);
+        if (!key) return;
+        try {
+            sessionStorage.removeItem(key);
+        } catch (error) {
+            // Ignore view-state cleanup failures.
+        }
+    }
+
+    function clearAllNpaProfileScrollPositions() {
+        try {
+            Object.keys(sessionStorage)
+                .filter(key => key.startsWith(NPA_PROFILE_SCROLL_STORAGE_PREFIX))
+                .forEach(key => sessionStorage.removeItem(key));
+        } catch (error) {
+            // Ignore view-state cleanup failures.
+        }
+    }
+
+    function loadNpaProfileSavedScrollPosition() {
+        const storedScrollTop = readNpaProfileScrollPosition();
+        npaProfileSavedScrollTop = storedScrollTop === null ? 0 : storedScrollTop;
     }
 
     function restoreNpaProfileSavedScrollPosition() {
@@ -3307,6 +3363,7 @@
         const profileBlock = document.getElementById('npaBlock4');
         if (!body || !profileBlock || !profileBlock.classList.contains('open')) return;
 
+        loadNpaProfileSavedScrollPosition();
         const maxScroll = Math.max(0, body.scrollHeight - body.clientHeight);
         npaProfileRestoringScroll = true;
         body.scrollTop = Math.min(Math.max(0, npaProfileSavedScrollTop), maxScroll);
@@ -3487,7 +3544,13 @@
             syncNpaTabState();
             if (navigator.vibrate) navigator.vibrate(15);
             scheduleNpaProfileLayoutUpdate();
-            if (id === 'npaBlock4') scheduleNpaProfileScrollRestore();
+            if (id === 'npaBlock4') {
+                if (npaProfilePendingInitialFapScroll) {
+                    scheduleNpaProfileInitialFapScroll();
+                } else {
+                    scheduleNpaProfileScrollRestore();
+                }
+            }
             scheduleNpaCurrentPageStateSave();
         }
     }
@@ -3535,6 +3598,7 @@
         const mainScroll = document.getElementById('mainScroll');
         if (mainScroll) mainScroll.scrollTop = 0;
         npaProfileSavedScrollTop = 0;
+        clearAllNpaProfileScrollPositions();
         const profileBody = document.getElementById('npaProfileTableBody');
         if (profileBody) profileBody.scrollTop = 0;
 
@@ -3980,6 +4044,8 @@
         let npaProfileActiveColumns = [];
         let npaProfileSavedScrollTop = 0;
         let npaProfileRestoringScroll = false;
+        let npaProfilePendingInitialFapScroll = false;
+        const NPA_PROFILE_SCROLL_STORAGE_PREFIX = 'mynpa_profile_scroll:';
         let npaProfileLongPressTimer = null;
         let npaProfileLongPressFired = false;
         let npaProfileLongPressColumn = "";
@@ -4154,8 +4220,10 @@
                 syncNpaTabState();
                 updateRacetrackSectors();
                 updateDownwindCalculation('load');
+                loadNpaProfileSavedScrollPosition();
                 renderNpaProfileTable();
                 scheduleNpaProfileLayoutUpdate();
+                scheduleNpaProfileScrollRestore();
                 return true;
             } finally {
                 npaPageStateRestoring = false;
@@ -4511,11 +4579,15 @@
         if (navigator.vibrate) navigator.vibrate(30);
         npaCurrentApproachDirty = false;
         setSelectedNpaType(type);
+        npaProfileSavedScrollTop = 0;
+        clearNpaProfileScrollPosition(type);
         const modal = document.getElementById('npaModal');
         if (modal) modal.style.display = 'none';
         closeNpaApproachDropdown();
         
         checkAndFillFromDB();
+        npaProfilePendingInitialFapScroll = true;
+        renderNpaProfileTable();
         setNpaEditModeUnlocked(isRunwayOnlyApproachName(getNpaAirportCode(), type), true);
         scheduleNpaCurrentPageStateSave();
     }
@@ -5000,19 +5072,42 @@
 
     function scrollToNpaProfilePoint(isInstant = false) {
         const container = document.getElementById('npaProfileTableBody');
-        if (!container) return;
+        if (!container) return false;
+        const profileBlock = document.getElementById('npaBlock4');
+        if (!profileBlock || !profileBlock.classList.contains('open')) return false;
 
-        const highlights = container.querySelectorAll('.highlight-fdp,.highlight-fap');
-        if (!highlights.length) return;
+        const targetRow = container.querySelector('.highlight-fap');
+        if (!targetRow) return false;
 
-        const targetRow = highlights[highlights.length - 1];
         const rowHeight = targetRow.offsetHeight || 45;
         const containerHeight = container.clientHeight;
-        const targetScroll = targetRow.offsetTop - (containerHeight - (4 * rowHeight));
+        if (!containerHeight) return false;
+        const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+        const targetScroll = Math.min(
+            Math.max(0, targetRow.offsetTop - (containerHeight - (4 * rowHeight))),
+            maxScroll
+        );
 
+        npaProfileRestoringScroll = true;
         container.scrollTo({
             top: Math.round(targetScroll),
             behavior: isInstant === true ? 'auto' : 'smooth'
+        });
+        npaProfileSavedScrollTop = Math.round(targetScroll);
+        writeNpaProfileScrollPosition(npaProfileSavedScrollTop);
+        requestAnimationFrame(() => {
+            npaProfileRestoringScroll = false;
+        });
+        return true;
+    }
+
+    function scheduleNpaProfileInitialFapScroll() {
+        requestAnimationFrame(() => {
+            const didScroll = scrollToNpaProfilePoint(true);
+            requestAnimationFrame(() => {
+                const didSecondScroll = scrollToNpaProfilePoint(true);
+                if (didScroll || didSecondScroll) npaProfilePendingInitialFapScroll = false;
+            });
         });
     }
 
@@ -5573,7 +5668,8 @@
         const tableBody = document.getElementById('npaProfileTableBody');
         updateNpaFcuFpaDisplay();
         if (!tableBody) return;
-        const scrollAnchor = captureNpaProfileScrollAnchor(tableBody);
+        const shouldInitialFapScroll = npaProfilePendingInitialFapScroll;
+        const scrollAnchor = shouldInitialFapScroll ? null : captureNpaProfileScrollAnchor(tableBody);
         updateNpaProfileUnitHeaders();
         applyNpaProfileFocusClasses();
 
@@ -5598,10 +5694,14 @@
             : renderNpaProfileDefaultScaleRows(metrics, radioShiftNm, tarShiftNm);
 
         tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
-        restoreNpaProfileScrollAnchor(tableBody, scrollAnchor);
         updateDownwindFinalDescent();
         scheduleNpaProfileLayoutUpdate();
-        requestAnimationFrame(() => restoreNpaProfileScrollAnchor(tableBody, scrollAnchor));
+        if (shouldInitialFapScroll) {
+            scheduleNpaProfileInitialFapScroll();
+        } else {
+            restoreNpaProfileScrollAnchor(tableBody, scrollAnchor);
+            requestAnimationFrame(() => restoreNpaProfileScrollAnchor(tableBody, scrollAnchor));
+        }
     }
 
     function formatDecimal(value, digits) {
