@@ -997,14 +997,30 @@
 
         @media (max-width: 410px) {
             .bottom-edit-lock-btn {
-                right: 46px;
-                width: 32px;
+                right: 44px;
+                top: max(3px, calc(var(--safe-top) - 3px));
+                width: 46px;
+                height: 45px;
+                padding: 0;
+                flex-direction: column;
                 justify-content: center;
+                align-items: center;
                 gap: 0;
             }
 
+            .bottom-edit-lock-btn svg {
+                width: 23px;
+                height: 23px;
+                flex-basis: 23px;
+            }
+
             .bottom-edit-lock-hint {
-                display: none;
+                display: block;
+                font-size: 6px;
+                line-height: 1.02;
+                text-align: center;
+                letter-spacing: 0;
+                opacity: 0.72;
             }
 
             .bottom-edit-lock-btn::after {
