@@ -995,6 +995,24 @@
         .bottom-edit-lock-btn:active { transform: scale(0.9); }
         .bottom-settings-btn:active { transform: scale(0.9); }
 
+        @media (max-width: 410px) {
+            .bottom-edit-lock-btn {
+                right: 46px;
+                width: 32px;
+                justify-content: center;
+                gap: 0;
+            }
+
+            .bottom-edit-lock-hint {
+                display: none;
+            }
+
+            .bottom-edit-lock-btn::after {
+                left: -10px;
+                right: -6px;
+            }
+        }
+
         .btn-label-style {
             font-size: 0.65rem; 
             font-weight: 800; 
