@@ -3231,17 +3231,24 @@
         title.addEventListener('contextmenu', event => event.preventDefault());
     }
 
+    function getNpaAdminUser() {
+        return window.MyFlightNpaSync?.getAdminUser?.()
+            || window.npaAuth?.currentUser
+            || null;
+    }
+
     window.handleNpaAdminAuthState = user => {
-        document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
+        const adminUser = user || getNpaAdminUser();
+        document.body.classList.toggle('npa-header-actions-unlocked', Boolean(adminUser));
         const label = document.getElementById('npaAdminModeLabel');
         const saveButton = document.getElementById('npaSaveButton');
         if (label) {
             label.textContent = 'admin mode ON';
-            label.classList.toggle('active', Boolean(user));
+            label.classList.toggle('active', Boolean(adminUser));
         }
-        if (saveButton) saveButton.innerHTML = user ? 'Save to<br>cloud' : 'Save to<br>device';
+        if (saveButton) saveButton.innerHTML = adminUser ? 'Save to<br>cloud' : 'Save to<br>device';
         if (typeof updateNpaSaveButtonState === 'function') updateNpaSaveButtonState();
-        if (user && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
+        if (adminUser && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -4213,7 +4220,7 @@
     });
 
     function isNpaAdminMode() {
-        return Boolean(window.npaAuth?.currentUser);
+        return Boolean(getNpaAdminUser());
     }
 
     function queueAirportSave(airportCode, airportData) {
@@ -9415,8 +9422,11 @@
     }
 
     function adminLogin() {
-        if (window.npaAuth?.currentUser) {
-            alert("Admin mode already ON: " + window.npaAuth.currentUser.email);
+        const adminUser = typeof getNpaAdminUser === 'function'
+            ? getNpaAdminUser()
+            : window.npaAuth?.currentUser;
+        if (adminUser) {
+            alert("Admin mode already ON: " + (adminUser.email || 'this device'));
             if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
             return;
         }

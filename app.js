@@ -273,6 +273,7 @@
     const NPA_CLOUD_APPROACHES_KEY = 'mynpa_cloud_approaches_v1';
     const NPA_PENDING_CLOUD_WRITES_KEY = 'mynpa_pending_cloud_writes_v1';
     const NPA_SYNC_STATUS_KEY = 'mynpa_sync_status_v1';
+    const NPA_ADMIN_SESSION_KEY = 'mynpa_admin_session_v1';
     const FIREBASE_APP_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
     const FIREBASE_DATABASE_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';
     const FIREBASE_AUTH_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
@@ -309,6 +310,41 @@
             console.error('MyNPA localStorage write error:', error);
             return false;
         }
+    }
+
+    function removeStorage(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error('MyNPA localStorage remove error:', error);
+            return false;
+        }
+    }
+
+    function getCachedAdminSession() {
+        const session = readJsonStorage(NPA_ADMIN_SESSION_KEY, null);
+        if (!session || typeof session !== 'object') return null;
+        if (!session.uid && !session.email) return null;
+        return session;
+    }
+
+    function rememberAdminSession(user) {
+        if (!user) return;
+        writeJsonStorage(NPA_ADMIN_SESSION_KEY, {
+            uid: user.uid || '',
+            email: user.email || '',
+            refreshedAt: Date.now()
+        });
+    }
+
+    function clearAdminSession() {
+        removeStorage(NPA_ADMIN_SESSION_KEY);
+    }
+
+    function getAdminUser() {
+        if (window.npaAuth?.currentUser) return window.npaAuth.currentUser;
+        return navigator.onLine === false ? getCachedAdminSession() : null;
     }
 
     function sanitizeAirportCode(value) {
@@ -502,7 +538,7 @@
     }
 
     function isAdminMode() {
-        return Boolean(window.npaAuth?.currentUser);
+        return Boolean(getAdminUser());
     }
 
     function safeApproachKey(value) {
@@ -602,11 +638,23 @@
         if (validator()) return Promise.resolve(true);
         return new Promise((resolve, reject) => {
             const existing = document.querySelector(`script[src="${src}"]`);
-            const script = existing || document.createElement('script');
-            const onLoad = () => validator() ? resolve(true) : reject(new Error(`Firebase ${label} SDK did not initialize`));
+            const shouldReuseExisting = existing
+                && existing.dataset.firebaseSdkFailed !== 'true'
+                && existing.dataset.firebaseSdkLoaded !== 'true';
+            const script = shouldReuseExisting ? existing : document.createElement('script');
+            const onLoad = () => {
+                script.dataset.firebaseSdkLoaded = 'true';
+                validator() ? resolve(true) : reject(new Error(`Firebase ${label} SDK did not initialize`));
+            };
+            const onError = () => {
+                script.dataset.firebaseSdkFailed = 'true';
+                reject(new Error(`Firebase ${label} SDK failed to load`));
+            };
+
+            if (existing && !shouldReuseExisting) existing.remove();
             script.addEventListener('load', onLoad, { once: true });
-            script.addEventListener('error', () => reject(new Error(`Firebase ${label} SDK failed to load`)), { once: true });
-            if (!existing) {
+            script.addEventListener('error', onError, { once: true });
+            if (!shouldReuseExisting) {
                 script.src = src;
                 script.async = true;
                 document.head.appendChild(script);
@@ -648,7 +696,6 @@
         if (initPromise) return initPromise;
         if (navigator.onLine === false) {
             rebuildCombinedLocalDb();
-            return false;
         }
 
         initPromise = (async () => {
@@ -664,6 +711,11 @@
                 }
                 attachRealtimeListeners();
                 window.npaAuth.onAuthStateChanged(user => {
+                    if (user) {
+                        rememberAdminSession(user);
+                    } else if (navigator.onLine !== false) {
+                        clearAdminSession();
+                    }
                     if (typeof window.handleNpaAdminAuthState === 'function') {
                         window.handleNpaAdminAuthState(user);
                     }
@@ -696,6 +748,8 @@
         status: () => readJsonStorage(NPA_SYNC_STATUS_KEY, {}),
         isReady: isFirebaseReady,
         isAdmin: isAdminMode,
+        isOfflineAdmin: () => navigator.onLine === false && !window.npaAuth?.currentUser && Boolean(getCachedAdminSession()),
+        getAdminUser,
         queueCloudWrite,
         writeAirportReference: writeAirportReferenceToCloud,
         writeApproach: writeApproachToCloud
@@ -706,6 +760,11 @@
     window.writeAirportReferenceToCloud = writeAirportReferenceToCloud;
     window.writeApproachToCloud = writeApproachToCloud;
     window.queueNpaCloudWrite = queueCloudWrite;
+
+    if (typeof window.handleNpaAdminAuthState === 'function') {
+        const adminUser = getAdminUser();
+        if (adminUser) window.handleNpaAdminAuthState(adminUser);
+    }
 
     const boot = () => initNpaFirebase().then(() => syncPendingCloudWrites());
     if (document.readyState === 'loading') {
