@@ -342,9 +342,13 @@
         removeStorage(NPA_ADMIN_SESSION_KEY);
     }
 
-    function getAdminUser() {
+    function getLiveAdminUser() {
         if (window.npaAuth?.currentUser) return window.npaAuth.currentUser;
-        return navigator.onLine === false ? getCachedAdminSession() : null;
+        return null;
+    }
+
+    function getTrustedAdminUser() {
+        return getLiveAdminUser() || getCachedAdminSession();
     }
 
     function sanitizeAirportCode(value) {
@@ -538,7 +542,7 @@
     }
 
     function isAdminMode() {
-        return Boolean(getAdminUser());
+        return Boolean(getTrustedAdminUser());
     }
 
     function safeApproachKey(value) {
@@ -546,21 +550,21 @@
     }
 
     async function writeAirportReferenceToCloud(airportCode, airportData) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
     }
 
     async function deleteAirportReferenceFromCloud(airportCode) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await window.npaDb.ref(`airportsReference/${code}`).remove();
     }
 
     async function deleteAirportFromCloud(airportCode) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await Promise.all([
@@ -570,7 +574,7 @@
     }
 
     async function writeApproachToCloud(airportCode, approachName, approachData) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         const key = safeApproachKey(approachName);
         if (!isValidAirportReferenceKey(code) || !key) throw new Error('Airport and approach are required');
@@ -602,7 +606,7 @@
     }
 
     async function syncPendingCloudWrites() {
-        if (syncInProgress || !navigator.onLine || !isFirebaseReady() || !isAdminMode()) return false;
+        if (syncInProgress || !navigator.onLine || !isFirebaseReady() || !getLiveAdminUser()) return false;
         const queue = getPendingCloudWrites();
         if (!queue.length) return true;
 
@@ -713,8 +717,6 @@
                 window.npaAuth.onAuthStateChanged(user => {
                     if (user) {
                         rememberAdminSession(user);
-                    } else if (navigator.onLine !== false) {
-                        clearAdminSession();
                     }
                     if (typeof window.handleNpaAdminAuthState === 'function') {
                         window.handleNpaAdminAuthState(user);
@@ -748,8 +750,9 @@
         status: () => readJsonStorage(NPA_SYNC_STATUS_KEY, {}),
         isReady: isFirebaseReady,
         isAdmin: isAdminMode,
-        isOfflineAdmin: () => navigator.onLine === false && !window.npaAuth?.currentUser && Boolean(getCachedAdminSession()),
-        getAdminUser,
+        isOfflineAdmin: () => !getLiveAdminUser() && Boolean(getCachedAdminSession()),
+        getAdminUser: getTrustedAdminUser,
+        getLiveAdminUser,
         queueCloudWrite,
         writeAirportReference: writeAirportReferenceToCloud,
         writeApproach: writeApproachToCloud
@@ -762,11 +765,15 @@
     window.queueNpaCloudWrite = queueCloudWrite;
 
     if (typeof window.handleNpaAdminAuthState === 'function') {
-        const adminUser = getAdminUser();
+        const adminUser = getTrustedAdminUser();
         if (adminUser) window.handleNpaAdminAuthState(adminUser);
     }
 
-    const boot = () => initNpaFirebase().then(() => syncPendingCloudWrites());
+    const boot = () => initNpaFirebase()
+        .then(() => syncPendingCloudWrites())
+        .catch(error => {
+            console.warn('MyNPA Firebase boot skipped:', error);
+        });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot, { once: true });
     } else {
