@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0b0f19" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f1f5f9">
     
     <title>MyNPA</title>
     
@@ -2925,16 +2925,34 @@
             if (iosPwaKeyboardSafe) document.documentElement.classList.add('ios-pwa-keyboard-safe');
             window.isIosPwaKeyboardSafe = () => document.documentElement.classList.contains('ios-pwa-keyboard-safe');
 
+            const STATUS_BAR_LIGHT = '#f1f5f9';
+            const STATUS_BAR_DARK = '#0b0f19';
+            const ensureMeta = (name, content) => {
+                let meta = document.querySelector(`meta[name="${name}"]`);
+                if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.setAttribute('name', name);
+                    document.head.appendChild(meta);
+                }
+                meta.setAttribute('content', content);
+                if (name === 'theme-color') meta.removeAttribute('media');
+                return meta;
+            };
+            const setStatusBarTheme = isDark => {
+                ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');
+            };
             const applyTheme = (theme) => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
                 if (document.body) document.body.classList.toggle('dark-theme', isDark);
+                setStatusBarTheme(isDark);
             };
             const savedTheme = localStorage.getItem('hub_theme');
-            if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme');
+            applyTheme(savedTheme);
             document.addEventListener('DOMContentLoaded', () => {
                 const currentTheme = localStorage.getItem('hub_theme');
-                if (currentTheme) applyTheme(currentTheme);
+                applyTheme(currentTheme);
             });
             window.addEventListener('storage', (event) => {
                 if (event.key === 'hub_theme') applyTheme(event.newValue);

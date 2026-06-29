@@ -8,7 +8,7 @@
 <title>Расчет смены</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1976d2">
+<meta name="theme-color" content="#f6f7f9">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
 <style>
@@ -785,13 +785,31 @@ button:focus {
 <!-- Микро-скрипт синхронизации темы с Хабом (Без вспышек) -->
 <script>
     (function() {
-        const savedTheme = localStorage.getItem('hub_theme');
-        if (savedTheme === 'dark') {
-            document.documentElement.classList.add('dark-theme');
-        }
+        const STATUS_BAR_LIGHT = '#f6f7f9';
+        const STATUS_BAR_DARK = '#0b0f19';
+        const ensureMeta = (name, content) => {
+            let meta = document.querySelector(`meta[name="${name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.setAttribute('name', name);
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+            if (name === 'theme-color') meta.removeAttribute('media');
+            return meta;
+        };
+        const applyTheme = theme => {
+            const isDark = theme === 'dark';
+            document.documentElement.classList.toggle('dark-theme', isDark);
+            if (document.body) document.body.classList.toggle('dark-theme', isDark);
+            ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+            ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');
+        };
+        applyTheme(localStorage.getItem('hub_theme'));
+        document.addEventListener('DOMContentLoaded', () => applyTheme(localStorage.getItem('hub_theme')));
         window.addEventListener('storage', (event) => {
             if (event.key === 'hub_theme') {
-                document.documentElement.classList.toggle('dark-theme', event.newValue === 'dark');
+                applyTheme(event.newValue);
             }
         });
     })();
