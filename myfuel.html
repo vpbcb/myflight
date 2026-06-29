@@ -588,7 +588,7 @@ html.dark-theme input[readonly] {
             <h2 class="section-title">Fuel (kg)</h2>
         </div>
 
-        <div class="input-row-gray">
+        <div class="input-row-gray" hidden>
             <span class="label-left">Trip Fuel</span>
             <input type="number" id="trip" placeholder="12500" class="nav-input"
                    onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
@@ -596,7 +596,7 @@ html.dark-theme input[readonly] {
                    oninput="calculateAll()">
         </div>
 
-        <div class="input-row-gray">
+        <div class="input-row-gray" hidden>
             <span class="label-left">Cont.fuel</span>
             <div class="cont-inputs">
                 <select id="contPerc" class="nav-input" style="width: 70px;" onchange="calcContFromPerc()">
@@ -608,7 +608,7 @@ html.dark-theme input[readonly] {
             </div>
         </div>
 
-        <div class="input-row-gray">
+        <div class="input-row-gray" hidden>
             <span class="label-left">Alternate</span>
             <input type="number" id="alt" placeholder="12500" class="nav-input"
                    onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
@@ -616,7 +616,7 @@ html.dark-theme input[readonly] {
                    oninput="calculateAll()">
         </div>
 
-        <div class="input-row-gray">
+        <div class="input-row-gray" hidden>
             <span class="label-left">Final reserve</span>
             <input type="number" id="final" placeholder="12500" class="nav-input"
                    onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
@@ -624,14 +624,14 @@ html.dark-theme input[readonly] {
                    oninput="calculateAll()">
         </div>
 
-        <div class="input-row-gray" style="position: relative;">
+        <div class="input-row-gray" style="position: relative;" hidden>
             <span class="label-left">Extra</span>
             <input type="number" id="extra" class="nav-input" onfocus="..." onblur="...">
             
             <div onclick="openExtraModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
         </div>
 
-        <div class="input-row-gray">
+        <div class="input-row-gray" hidden>
             <span class="label-left">APU/Taxi</span>
             <input type="text" inputmode="decimal" enterkeyhint="done" id="taxi" placeholder="12500" class="nav-input"
                    onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
@@ -640,7 +640,7 @@ html.dark-theme input[readonly] {
                    onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
         </div>
 
-        <div class="input-row-orange" style="margin-bottom: 5px;">
+        <div class="input-row-orange" style="margin-bottom: 5px;" hidden>
             <span class="label-left">Total Fuel</span>
             <input type="number" id="totalFuel" readonly style="font-weight: bold;">
         </div>
@@ -652,7 +652,7 @@ html.dark-theme input[readonly] {
             <div onclick="openMaxFuelModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
         </div>
 
-        <div class="footer-gray-bar" style="margin-top: 2px !important;">
+        <div class="footer-gray-bar" style="margin-top: 2px !important;" hidden>
             <div class="footer-item">
                 <span class="label-footer">Remain.<br>fuel</span>
                 <input type="number" id="remFuel" readonly>
@@ -665,7 +665,7 @@ html.dark-theme input[readonly] {
     </div>
 
 
-    <div class="section-card">
+    <div class="section-card" hidden>
         <div class="section-header-bar">
             <h2 class="section-title">Weights (kg)</h2>
         </div>
@@ -1008,12 +1008,41 @@ html.dark-theme input[readonly] {
     // --- ИНИЦИАЛИЗАЦИЯ И СЛУШАТЕЛИ ---
    document.addEventListener('DOMContentLoaded', () => {
         // 1. ЖЕЛЕЗОБЕТОННАЯ ФИКСАЦИЯ ВЫСОТЫ (чтобы нижние кнопки не прыгали от клавиатуры)
-        const lockAppViewport = () => {
+        let lockedAppViewportHeight = 0;
+        let nativeKeyboardFocusUntil = 0;
+        const NATIVE_KEYBOARD_FOCUS_GRACE_MS = 700;
+
+        const isNativeEditable = element => Boolean(
+            element &&
+            /^(INPUT|TEXTAREA|SELECT)$/.test(element.tagName) &&
+            !element.readOnly &&
+            !element.disabled
+        );
+
+        const isNativeEditableFocused = () => isNativeEditable(document.activeElement);
+
+        const lockAppViewport = options => {
+            const forceHeight = Boolean(options && options.forceHeight);
             const visualViewport = window.visualViewport;
             const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
             const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
             const appWidth = Math.min(viewportWidth, 440) + 'px';
-            const staticHeight = window.innerHeight + 'px';
+            const nextHeight = Math.floor(window.innerHeight || 0);
+            const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : nextHeight;
+            const nativeInputFocused = isNativeEditableFocused();
+            const withinKeyboardFocusGrace = Date.now() < nativeKeyboardFocusUntil;
+            const keyboardLikelyOpen = (nativeInputFocused || withinKeyboardFocusGrace) && lockedAppViewportHeight && (
+                (visualHeight && visualHeight < lockedAppViewportHeight - 80) ||
+                (nextHeight && nextHeight < lockedAppViewportHeight - 80)
+            );
+
+            if (!lockedAppViewportHeight || forceHeight) {
+                lockedAppViewportHeight = nextHeight || visualHeight || lockedAppViewportHeight;
+            } else if (!nativeInputFocused && !withinKeyboardFocusGrace && !keyboardLikelyOpen && nextHeight > lockedAppViewportHeight) {
+                lockedAppViewportHeight = nextHeight;
+            }
+
+            const staticHeight = (lockedAppViewportHeight || nextHeight || visualHeight) + 'px';
             const root = document.documentElement;
             const body = document.body;
 
@@ -1038,12 +1067,13 @@ html.dark-theme input[readonly] {
         };
 
         const relockAfterOrientation = () => {
-            lockAppViewport();
-            setTimeout(lockAppViewport, 150);
-            setTimeout(lockAppViewport, 350);
-            setTimeout(lockAppViewport, 700);
+            lockedAppViewportHeight = 0;
+            lockAppViewport({ forceHeight: true });
+            setTimeout(() => lockAppViewport({ forceHeight: true }), 150);
+            setTimeout(() => lockAppViewport({ forceHeight: true }), 350);
+            setTimeout(() => lockAppViewport({ forceHeight: true }), 700);
         };
-        lockAppViewport(); // Фиксируем viewport в пикселях при старте
+        lockAppViewport({ forceHeight: true }); // Фиксируем viewport в пикселях при старте
 
         // Запрос постоянного хранилища для защиты от агрессивной очистки кэша iOS/Android
         if (navigator.storage && navigator.storage.persist) {
@@ -1063,6 +1093,20 @@ html.dark-theme input[readonly] {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', lockAppViewport);
         }
+
+        document.addEventListener('focusin', event => {
+            if (!isNativeEditable(event.target)) return;
+            nativeKeyboardFocusUntil = Date.now() + NATIVE_KEYBOARD_FOCUS_GRACE_MS;
+            lockAppViewport();
+        });
+
+        document.addEventListener('focusout', event => {
+            if (!isNativeEditable(event.target)) return;
+            setTimeout(() => {
+                nativeKeyboardFocusUntil = 0;
+                lockAppViewport();
+            }, 250);
+        });
 
         // 2. Жестко указываем браузеру (Android Chrome), что клавиатура ложится поверх
         if ('virtualKeyboard' in navigator) {

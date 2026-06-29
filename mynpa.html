@@ -2824,6 +2824,15 @@
             -webkit-touch-callout: none;
         }
 
+        input:not([readonly]):not([disabled]),
+        textarea:not([readonly]):not([disabled]),
+        select:not([disabled]) {
+            touch-action: auto;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default;
+        }
+
         /* --- Стили для правой вкладки Profile с FCU FPA --- */
 .profile-tab-btn {
     flex-direction: row !important;
@@ -3253,22 +3262,17 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         let lockedNpaAppHeight = 0;
+        let npaNativeKeyboardFocusUntil = 0;
+        const NPA_NATIVE_KEYBOARD_FOCUS_GRACE_MS = 700;
 
-        const isNpaNativeEditableFocused = () => {
-            const active = document.activeElement;
-            return Boolean(
-                active &&
-                /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) &&
-                !active.readOnly &&
-                !active.disabled
-            );
-        };
+        const isNpaNativeEditable = element => Boolean(
+            element &&
+            /^(INPUT|TEXTAREA|SELECT)$/.test(element.tagName) &&
+            !element.readOnly &&
+            !element.disabled
+        );
 
-        const keepNpaViewportPinned = () => {
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-            window.scrollTo(0, 0);
-        };
+        const isNpaNativeEditableFocused = () => isNpaNativeEditable(document.activeElement);
 
         const lockAppHeight = options => {
             const forceHeight = Boolean(options?.forceHeight);
@@ -3284,14 +3288,15 @@
             const nextHeight = Math.floor(window.innerHeight || 0);
             const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : nextHeight;
             const nativeInputFocused = isNpaNativeEditableFocused();
-            const keyboardLikelyOpen = nativeInputFocused && lockedNpaAppHeight && (
+            const withinKeyboardFocusGrace = Date.now() < npaNativeKeyboardFocusUntil;
+            const keyboardLikelyOpen = (nativeInputFocused || withinKeyboardFocusGrace) && lockedNpaAppHeight && (
                 (visualHeight && visualHeight < lockedNpaAppHeight - 80) ||
                 (nextHeight && nextHeight < lockedNpaAppHeight - 80)
             );
 
             if (!lockedNpaAppHeight || forceHeight) {
                 lockedNpaAppHeight = nextHeight || lockedNpaAppHeight;
-            } else if (!keyboardLikelyOpen && !nativeInputFocused && nextHeight > lockedNpaAppHeight) {
+            } else if (!keyboardLikelyOpen && !nativeInputFocused && !withinKeyboardFocusGrace && nextHeight > lockedNpaAppHeight) {
                 lockedNpaAppHeight = nextHeight;
             }
 
@@ -3315,10 +3320,6 @@
                 wrapper.style.width = appWidth;
             }
 
-            if (keyboardLikelyOpen || nativeInputFocused) {
-                keepNpaViewportPinned();
-                setTimeout(keepNpaViewportPinned, 50);
-            }
         };
         const relockNpaViewport = () => {
             lockedNpaAppHeight = 0;
@@ -3344,11 +3345,17 @@
         }
 
         document.addEventListener('focusin', event => {
-            if (!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.readOnly || event.target.disabled) return;
+            if (!isNpaNativeEditable(event.target)) return;
+            npaNativeKeyboardFocusUntil = Date.now() + NPA_NATIVE_KEYBOARD_FOCUS_GRACE_MS;
             lockAppHeight();
-            keepNpaViewportPinned();
         });
-        document.addEventListener('focusout', () => setTimeout(lockAppHeight, 250));
+        document.addEventListener('focusout', event => {
+            if (!isNpaNativeEditable(event.target)) return;
+            setTimeout(() => {
+                npaNativeKeyboardFocusUntil = 0;
+                lockAppHeight();
+            }, 250);
+        });
 
         if ('virtualKeyboard' in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
@@ -4297,6 +4304,7 @@
         let npaProfileLongPressColumn = "";
         let npaAirportGhostValue = "";
         let npaAirportFocusActive = false;
+        let npaAirportFocusRenderTimer = null;
         let npaCurrentApproachDirty = false;
         let finalDescentFromSource = "fap";
         const DOWNWIND_MANUAL_SHIFT_MESSAGE = "S downwind was manually changed";
@@ -4629,12 +4637,21 @@
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
         closeNpaApproachDropdown();
-        renderNpaAirportDropdown(true, "");
+        if (npaAirportFocusRenderTimer) window.clearTimeout(npaAirportFocusRenderTimer);
+        npaAirportFocusRenderTimer = window.setTimeout(() => {
+            npaAirportFocusRenderTimer = null;
+            if (document.activeElement !== inputEl || !npaAirportFocusActive) return;
+            renderNpaAirportDropdown(true, "");
+        }, 80);
     }
 
     function handleAirportBlur() {
         const inputEl = document.getElementById('apprName');
         if (!inputEl) return;
+        if (npaAirportFocusRenderTimer) {
+            window.clearTimeout(npaAirportFocusRenderTimer);
+            npaAirportFocusRenderTimer = null;
+        }
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
         const airportCode = getNpaAirportCode();
