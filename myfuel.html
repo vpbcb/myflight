@@ -170,6 +170,32 @@ body {
             box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.04);
         }
 
+        html.ios-pwa-keyboard-safe,
+        html.ios-pwa-keyboard-safe body {
+            height: 100%;
+            min-height: 100%;
+            max-height: none;
+        }
+
+        html.ios-pwa-keyboard-safe body {
+            position: relative;
+            overflow: hidden;
+        }
+
+        html.ios-pwa-keyboard-safe .app-wrapper {
+            height: 100vh;
+            min-height: 100vh;
+            max-height: none;
+        }
+
+        html.ios-pwa-keyboard-safe input:not([readonly]):not([disabled]),
+        html.ios-pwa-keyboard-safe textarea:not([readonly]):not([disabled]),
+        html.ios-pwa-keyboard-safe select:not([disabled]) {
+            touch-action: auto;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         /* --- ЗАГОЛОВОК В СТИЛЕ RWY --- */
         .app-title { 
             font-size: 0.6rem; 
@@ -482,6 +508,14 @@ html.dark-theme input[readonly] {
     <!-- Микро-скрипт синхронизации темы с Хабом -->
     <script>
         (function() {
+            const isIosDevice = /iP(ad|hone|od)/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isStandalone = window.navigator.standalone === true ||
+                window.matchMedia?.('(display-mode: standalone)')?.matches;
+            const iosPwaKeyboardSafe = Boolean(isIosDevice && isStandalone);
+            if (iosPwaKeyboardSafe) document.documentElement.classList.add('ios-pwa-keyboard-safe');
+            window.isIosPwaKeyboardSafe = () => document.documentElement.classList.contains('ios-pwa-keyboard-safe');
+
             const applyTheme = (theme) => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
@@ -849,6 +883,17 @@ html.dark-theme input[readonly] {
 
     const val = (id) => parseFloat(document.getElementById(id).value) || 0;
     const setVal = (id, v) => document.getElementById(id).value = (v === "" || isNaN(v)) ? "" : v;
+    const isIosPwaSafeMode = () => Boolean(window.isIosPwaKeyboardSafe?.());
+    const focusUnlessIosPwaSafe = (element, options) => {
+        if (!element || isIosPwaSafeMode()) return false;
+        element.focus(options);
+        return true;
+    };
+    const selectUnlessIosPwaSafe = element => {
+        if (!element || isIosPwaSafeMode()) return false;
+        element.select();
+        return true;
+    };
     
     // --- NAVIGATION & SCROLL LOGIC ---
     const navOrder = [
@@ -882,8 +927,10 @@ html.dark-theme input[readonly] {
                     if (index < navOrder.length - 1) {
                         const nextEl = document.getElementById(navOrder[index + 1]);
                         if (nextEl) {
-                            nextEl.focus({ preventScroll: true });
-                            if (nextEl.tagName === 'INPUT') nextEl.select();
+                            if (!isIosPwaSafeMode()) {
+                                nextEl.focus({ preventScroll: true });
+                                if (nextEl.tagName === 'INPUT') nextEl.select();
+                            }
                         }
                     } else {
                         el.blur(); // Прячем клавиатуру после последнего поля
@@ -1020,6 +1067,7 @@ html.dark-theme input[readonly] {
         );
 
         const isNativeEditableFocused = () => isNativeEditable(document.activeElement);
+        const isIosPwaSafeMode = () => Boolean(window.isIosPwaKeyboardSafe?.());
 
         const lockAppViewport = options => {
             const forceHeight = Boolean(options && options.forceHeight);
@@ -1045,6 +1093,26 @@ html.dark-theme input[readonly] {
             const staticHeight = (lockedAppViewportHeight || nextHeight || visualHeight) + 'px';
             const root = document.documentElement;
             const body = document.body;
+
+            if (isIosPwaSafeMode()) {
+                root.style.setProperty('--app-height', '100vh');
+                root.style.setProperty('--app-width', appWidth);
+                root.style.height = '';
+                body.style.height = '';
+                if (viewportWidth && viewportWidth < 440) {
+                    root.style.width = viewportWidth + 'px';
+                    body.style.width = viewportWidth + 'px';
+                } else {
+                    root.style.width = '100%';
+                    body.style.width = '100%';
+                }
+                const safeWrapper = document.querySelector('.app-wrapper');
+                if (safeWrapper) {
+                    safeWrapper.style.height = '';
+                    safeWrapper.style.width = appWidth;
+                }
+                return;
+            }
 
             root.style.setProperty('--app-height', staticHeight);
             root.style.setProperty('--app-width', appWidth);
@@ -1514,7 +1582,7 @@ html.dark-theme input[readonly] {
         
         // МГНОВЕННЫЙ фокус без setTimeout для вызова клавиатуры
         const dispInput = document.getElementById('modalDispExtra');
-        dispInput.focus();
+        focusUnlessIosPwaSafe(dispInput);
         
         setTimeout(() => { modal.classList.add('show'); }, 10);
     }
@@ -1553,17 +1621,17 @@ html.dark-theme input[readonly] {
         modal.style.display = 'flex';
         
         const densityInput = document.getElementById('modalFuelDensity');
-        densityInput.focus();
+        const didFocusDensity = focusUnlessIosPwaSafe(densityInput);
         
         // Находим, где стоит точка (или запятая)
         let dotPos = densityInput.value.indexOf('.');
         if (dotPos === -1) dotPos = densityInput.value.indexOf(',');
         
         // Выделяем всё, что после точки
-        if (dotPos !== -1) {
+        if (didFocusDensity && dotPos !== -1) {
             densityInput.setSelectionRange(dotPos + 1, densityInput.value.length);
-        } else {
-            densityInput.select(); // Если точки нет, выделяем всё
+        } else if (didFocusDensity) {
+            selectUnlessIosPwaSafe(densityInput); // Если точки нет, выделяем всё
         }
         
         setTimeout(() => { modal.classList.add('show'); }, 10);
@@ -1604,9 +1672,9 @@ html.dark-theme input[readonly] {
         const densityInput = document.getElementById('modalFuelDensity');
         if (densityInput) {
             densityInput.value = '0.785';
-            densityInput.focus();
+            const didFocusDensity = focusUnlessIosPwaSafe(densityInput);
             // Выделяем символы с 2 по 5 (то есть ровно "785")
-            densityInput.setSelectionRange(2, 5); 
+            if (didFocusDensity) densityInput.setSelectionRange(2, 5); 
         }
     }
 

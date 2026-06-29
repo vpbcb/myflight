@@ -97,6 +97,19 @@
             overflow: hidden; 
         }
 
+        html.ios-pwa-keyboard-safe,
+        html.ios-pwa-keyboard-safe body {
+            height: 100%;
+            min-height: 100%;
+            max-height: none;
+        }
+
+        html.ios-pwa-keyboard-safe .app-wrapper {
+            height: 100vh;
+            min-height: 100vh;
+            max-height: none;
+        }
+
         .precision-scroll-container {
             flex: 1;
             min-width: 0;
@@ -2904,6 +2917,14 @@
 
     <script>
         (function() {
+            const isIosDevice = /iP(ad|hone|od)/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isStandalone = window.navigator.standalone === true ||
+                window.matchMedia?.('(display-mode: standalone)')?.matches;
+            const iosPwaKeyboardSafe = Boolean(isIosDevice && isStandalone);
+            if (iosPwaKeyboardSafe) document.documentElement.classList.add('ios-pwa-keyboard-safe');
+            window.isIosPwaKeyboardSafe = () => document.documentElement.classList.contains('ios-pwa-keyboard-safe');
+
             const applyTheme = (theme) => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
@@ -3273,6 +3294,7 @@
         );
 
         const isNpaNativeEditableFocused = () => isNpaNativeEditable(document.activeElement);
+        const isIosPwaSafeMode = () => Boolean(window.isIosPwaKeyboardSafe?.());
 
         const lockAppHeight = options => {
             const forceHeight = Boolean(options?.forceHeight);
@@ -3303,6 +3325,27 @@
             const staticHeight = `${lockedNpaAppHeight || nextHeight}px`;
             const root = document.documentElement;
             const body = document.body;
+
+            if (isIosPwaSafeMode()) {
+                root.style.setProperty('--app-height', '100vh');
+                root.style.setProperty('--app-width', appWidth);
+                root.style.height = '';
+                body.style.height = '';
+                if (viewportWidth && viewportWidth < 440) {
+                    root.style.width = viewportWidth + 'px';
+                    body.style.width = viewportWidth + 'px';
+                } else {
+                    root.style.width = '100%';
+                    body.style.width = '100%';
+                }
+                const safeWrapper = document.querySelector('.app-wrapper');
+                if (safeWrapper) {
+                    safeWrapper.style.height = '';
+                    safeWrapper.style.width = appWidth;
+                }
+                return;
+            }
+
             root.style.setProperty('--app-height', staticHeight);
             root.style.setProperty('--app-width', appWidth);
             root.style.height = staticHeight;
@@ -4317,6 +4360,23 @@
         let profileRadioShiftExactNm = null;
         let profileTarFromAirport = false;
         let profileTarManualOverride = false;
+
+        function isNpaIosPwaSafeMode() {
+            return Boolean(window.isIosPwaKeyboardSafe?.());
+        }
+
+        function focusNpaUnlessIosPwaSafe(element, options) {
+            if (!element || isNpaIosPwaSafeMode()) return false;
+            element.focus(options);
+            return true;
+        }
+
+        function selectNpaUnlessIosPwaSafe(element) {
+            if (!element || isNpaIosPwaSafeMode()) return false;
+            element.select();
+            return true;
+        }
+
         const NPA_APPROACH_USER_EDIT_FIELDS = new Set([
             'rwLength',
             'elevation',
@@ -7321,7 +7381,7 @@
 
     function startAirportIcaoCarousel() {
         const input = document.getElementById('addAirportIcao');
-        input?.focus();
+        focusNpaUnlessIosPwaSafe(input);
     }
 
     function maybeAdvanceAirportIcaoCarousel() {
@@ -7347,7 +7407,9 @@
     function syncAddAirportModalViewport() {
         const modal = document.getElementById('addAirportModal');
         if (!modal) return;
-        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const viewportHeight = isNpaIosPwaSafeMode()
+            ? window.innerHeight
+            : (window.visualViewport?.height || window.innerHeight);
         modal.style.setProperty('--airport-modal-vh', `${viewportHeight}px`);
         modal.classList.toggle('keyboard-open', viewportHeight < window.innerHeight * 0.82);
     }
@@ -7396,7 +7458,16 @@
     }
 
     function initAddAirportModalKeyboardGuard() {
-        const viewport = window.visualViewport;
+        if (isNpaIosPwaSafeMode()) {
+            window.addEventListener('orientationchange', () => setTimeout(syncAddAirportModalViewport, 250));
+            document.addEventListener('focusin', event => {
+                if (event.target?.closest?.('#addAirportModal')) {
+                    setTimeout(() => keepAddAirportFieldVisible(event.target), 320);
+                }
+            });
+            return;
+        }
+        const viewport = isNpaIosPwaSafeMode() ? null : window.visualViewport;
         viewport?.addEventListener('resize', () => {
             syncAddAirportModalViewport();
             keepActiveAddAirportFieldVisible();
@@ -7540,8 +7611,7 @@
         modal.classList.add('active');
         syncAddAirportModalViewport();
         if (!isEdit) {
-            input?.focus({ preventScroll: true });
-            input?.select();
+            if (focusNpaUnlessIosPwaSafe(input, { preventScroll: true })) selectNpaUnlessIosPwaSafe(input);
         }
         setTimeout(() => {
             keepAddAirportFieldVisible(input);
@@ -7961,8 +8031,7 @@
         updateAirportTarAddButtonVisibility();
         if (startCarousel && normalizedType !== 'TAR') {
             const nameInput = block.querySelector('[data-radio-field="name"]');
-            nameInput?.focus({ preventScroll: true });
-            nameInput?.select();
+            if (focusNpaUnlessIosPwaSafe(nameInput, { preventScroll: true })) selectNpaUnlessIosPwaSafe(nameInput);
             setTimeout(() => keepAddAirportFieldVisible(nameInput), 50);
         } else if (startCarousel) {
             setTimeout(() => keepAddAirportFieldVisible(block), 50);
