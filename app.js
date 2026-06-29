@@ -265,6 +265,544 @@
     }
 })();
 
+// Shared screen wake lock controller.
+// Keeps all fallbacks local so offline app loading does not depend on the network.
+(function () {
+    const STORAGE_KEY = 'myflight_keep_screen_awake_v1';
+    const CHANGE_EVENT = 'myflight:wake-lock-change';
+    const FLOAT_ID = 'myflightWakeLockFloat';
+    const FLOAT_STYLE_ID = 'myflightWakeLockStyle';
+
+    let enabled = readEnabled();
+    let status = {
+        active: false,
+        mode: enabled ? 'pending' : 'off',
+        needsGesture: false,
+        error: ''
+    };
+    let wakeLockSentinel = null;
+    let releasingNative = false;
+    let fallbackVideo = null;
+    let fallbackCanvas = null;
+    let fallbackStream = null;
+    let fallbackTimer = null;
+    let acquireTimer = null;
+
+    function readEnabled() {
+        try {
+            const value = localStorage.getItem(STORAGE_KEY);
+            return value === '1' || value === 'true';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function writeEnabled(value) {
+        try {
+            localStorage.setItem(STORAGE_KEY, value ? '1' : '0');
+        } catch (error) {
+            console.warn('Wake lock setting write skipped:', error);
+        }
+    }
+
+    function hasNativeWakeLock() {
+        return Boolean(navigator.wakeLock && typeof navigator.wakeLock.request === 'function');
+    }
+
+    function isIosDevice() {
+        return /iP(ad|hone|od)/.test(navigator.userAgent || '')
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalonePwa() {
+        return window.navigator.standalone === true
+            || window.matchMedia?.('(display-mode: standalone)').matches === true;
+    }
+
+    function getIosVersion() {
+        const ua = navigator.userAgent || '';
+        const osMatch = ua.match(/OS (\d+)[._](\d+)?/);
+        if (osMatch) {
+            return {
+                major: Number(osMatch[1]) || 0,
+                minor: Number(osMatch[2]) || 0
+            };
+        }
+        const versionMatch = ua.match(/Version\/(\d+)(?:\.(\d+))?/);
+        if (isIosDevice() && versionMatch) {
+            return {
+                major: Number(versionMatch[1]) || 0,
+                minor: Number(versionMatch[2]) || 0
+            };
+        }
+        return null;
+    }
+
+    function isLegacyIosPwa() {
+        if (!isIosDevice() || !isStandalonePwa()) return false;
+        const version = getIosVersion();
+        if (!version) return true;
+        return version.major < 18 || (version.major === 18 && version.minor < 4);
+    }
+
+    function hasMediaFallbackSupport() {
+        return typeof document !== 'undefined'
+            && typeof document.createElement === 'function'
+            && typeof HTMLCanvasElement !== 'undefined'
+            && typeof HTMLCanvasElement.prototype.captureStream === 'function';
+    }
+
+    function canTryFallback() {
+        return isLegacyIosPwa() && hasMediaFallbackSupport();
+    }
+
+    function isSupported() {
+        return hasNativeWakeLock() || canTryFallback();
+    }
+
+    function formatError(error) {
+        if (!error) return '';
+        return error.message || error.name || String(error);
+    }
+
+    function isGestureError(error) {
+        const text = `${error?.name || ''} ${error?.message || ''}`;
+        return /NotAllowed|user activation|gesture|permission/i.test(text);
+    }
+
+    function getStatus() {
+        return {
+            enabled,
+            active: status.active,
+            mode: status.mode,
+            supported: isSupported(),
+            nativeSupported: hasNativeWakeLock(),
+            fallbackSupported: canTryFallback(),
+            needsGesture: status.needsGesture,
+            error: status.error,
+            iosStandalone: isIosDevice() && isStandalonePwa()
+        };
+    }
+
+    function setStatus(patch) {
+        status = Object.assign({}, status, patch);
+        updateWakeLockUi();
+        try {
+            window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: getStatus() }));
+        } catch (error) {
+            // CustomEvent is only for optional UI observers.
+        }
+    }
+
+    function clearAcquireTimer() {
+        if (!acquireTimer) return;
+        clearTimeout(acquireTimer);
+        acquireTimer = null;
+    }
+
+    function scheduleAcquire(delayMs = 250) {
+        clearAcquireTimer();
+        if (!enabled) return;
+        acquireTimer = setTimeout(() => {
+            acquireTimer = null;
+            requestWakeLock({ fromUserGesture: false }).catch(error => {
+                console.warn('Wake lock reacquire skipped:', error);
+            });
+        }, delayMs);
+    }
+
+    async function releaseNativeWakeLock() {
+        const sentinel = wakeLockSentinel;
+        wakeLockSentinel = null;
+        if (!sentinel || sentinel.released) return;
+        releasingNative = true;
+        try {
+            await sentinel.release();
+        } catch (error) {
+            console.warn('Wake lock release skipped:', error);
+        } finally {
+            releasingNative = false;
+        }
+    }
+
+    function drawFallbackFrame() {
+        if (!fallbackCanvas) return;
+        const ctx = fallbackCanvas.getContext('2d');
+        if (!ctx) return;
+        const hue = Math.floor((Date.now() / 120) % 360);
+        ctx.fillStyle = `hsl(${hue}, 80%, 55%)`;
+        ctx.fillRect(0, 0, fallbackCanvas.width, fallbackCanvas.height);
+    }
+
+    function stopFallbackWakeLock() {
+        if (fallbackTimer) {
+            clearInterval(fallbackTimer);
+            fallbackTimer = null;
+        }
+        if (fallbackVideo) {
+            try {
+                fallbackVideo.pause();
+                fallbackVideo.srcObject = null;
+                fallbackVideo.removeAttribute('src');
+                fallbackVideo.load();
+            } catch (error) {
+                console.warn('Wake lock fallback video stop skipped:', error);
+            }
+            fallbackVideo.remove();
+            fallbackVideo = null;
+        }
+        if (fallbackStream) {
+            fallbackStream.getTracks().forEach(track => track.stop());
+            fallbackStream = null;
+        }
+        fallbackCanvas = null;
+    }
+
+    async function releaseAllWakeLocks() {
+        clearAcquireTimer();
+        await releaseNativeWakeLock();
+        stopFallbackWakeLock();
+    }
+
+    async function requestNativeWakeLock() {
+        if (!hasNativeWakeLock()) throw new Error('Screen Wake Lock API is unavailable');
+        if (wakeLockSentinel && !wakeLockSentinel.released) {
+            setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });
+            return true;
+        }
+
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+            if (releasingNative) return;
+            setStatus({
+                active: false,
+                mode: enabled ? 'pending' : 'off',
+                needsGesture: false,
+                error: ''
+            });
+            if (enabled && document.visibilityState === 'visible') scheduleAcquire(300);
+        }, { once: true });
+
+        setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });
+        return true;
+    }
+
+    function createFallbackVideo() {
+        if (fallbackVideo) return fallbackVideo;
+
+        const video = document.createElement('video');
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.setAttribute('aria-hidden', 'true');
+        video.tabIndex = -1;
+        Object.assign(video.style, {
+            position: 'fixed',
+            width: '1px',
+            height: '1px',
+            left: '-2px',
+            top: '-2px',
+            opacity: '0',
+            pointerEvents: 'none'
+        });
+        document.body.appendChild(video);
+        fallbackVideo = video;
+        return video;
+    }
+
+    async function requestFallbackWakeLock(options) {
+        if (!canTryFallback()) throw new Error('iOS media wake fallback is unavailable');
+        if (!document.body) throw new Error('Document body is not ready');
+
+        stopFallbackWakeLock();
+        fallbackCanvas = document.createElement('canvas');
+        fallbackCanvas.width = 2;
+        fallbackCanvas.height = 2;
+        drawFallbackFrame();
+        fallbackStream = fallbackCanvas.captureStream(1);
+
+        const video = createFallbackVideo();
+        video.srcObject = fallbackStream;
+        drawFallbackFrame();
+        fallbackTimer = setInterval(drawFallbackFrame, 15000);
+
+        try {
+            const playResult = video.play();
+            if (playResult && typeof playResult.then === 'function') await playResult;
+        } catch (error) {
+            stopFallbackWakeLock();
+            error.needsGesture = isGestureError(error) && !options.fromUserGesture;
+            throw error;
+        }
+
+        setStatus({ active: true, mode: 'fallback', needsGesture: false, error: '' });
+        return true;
+    }
+
+    async function requestWakeLock(options = {}) {
+        if (!enabled) return false;
+        if (document.visibilityState === 'hidden') {
+            setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            return false;
+        }
+
+        setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+
+        let nativeError = null;
+        if (hasNativeWakeLock()) {
+            try {
+                stopFallbackWakeLock();
+                return await requestNativeWakeLock();
+            } catch (error) {
+                nativeError = error;
+                console.warn('Native wake lock request failed:', error);
+            }
+        }
+
+        if (canTryFallback()) {
+            try {
+                await releaseNativeWakeLock();
+                return await requestFallbackWakeLock(options);
+            } catch (error) {
+                const needsGesture = error?.needsGesture === true;
+                setStatus({
+                    active: false,
+                    mode: 'error',
+                    needsGesture,
+                    error: formatError(error)
+                });
+                return false;
+            }
+        }
+
+        setStatus({
+            active: false,
+            mode: 'unavailable',
+            needsGesture: false,
+            error: formatError(nativeError) || 'Screen wake lock is unavailable'
+        });
+        return false;
+    }
+
+    async function enable(options = {}) {
+        enabled = true;
+        writeEnabled(true);
+        setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+        return requestWakeLock({ fromUserGesture: options.fromUserGesture !== false });
+    }
+
+    async function disable(options = {}) {
+        enabled = false;
+        if (options.persist !== false) writeEnabled(false);
+        await releaseAllWakeLocks();
+        setStatus({ active: false, mode: 'off', needsGesture: false, error: '' });
+        return true;
+    }
+
+    async function toggle(options = {}) {
+        const current = getStatus();
+        if (!current.enabled) return enable({ fromUserGesture: true });
+        if (current.active) return disable();
+        if (current.needsGesture || current.mode === 'pending') {
+            return requestWakeLock({ fromUserGesture: true });
+        }
+        return disable();
+    }
+
+    function getUiState(current = getStatus()) {
+        if (!current.enabled) return 'off';
+        if (current.active && current.mode === 'native') return 'active';
+        if (current.active && current.mode === 'fallback') return 'fallback-active';
+        if (!current.supported || current.mode === 'unavailable') return 'unavailable';
+        if (current.needsGesture) return 'needs-gesture';
+        if (current.mode === 'error') return 'error';
+        return 'pending';
+    }
+
+    function getUiTitle(current, state) {
+        if (state === 'active') return 'Awake active';
+        if (state === 'fallback-active') return 'Awake active via iOS media fallback';
+        if (state === 'needs-gesture') return 'Tap to re-enable Awake';
+        if (state === 'pending') return 'Awake is starting';
+        if (state === 'unavailable') return 'Awake is unavailable on this device';
+        if (state === 'error') return current.error || 'Awake failed';
+        return 'Keep screen awake';
+    }
+
+    function getFloatText(state) {
+        if (state === 'needs-gesture') return 'Tap Awake';
+        if (state === 'pending') return 'Awake...';
+        if (state === 'unavailable') return 'No Awake';
+        if (state === 'error') return 'Awake Err';
+        return 'Awake';
+    }
+
+    function injectFloatingStyle() {
+        if (document.getElementById(FLOAT_STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = FLOAT_STYLE_ID;
+        style.textContent = `
+            #${FLOAT_ID} {
+                position: fixed;
+                right: max(10px, env(safe-area-inset-right));
+                bottom: max(10px, calc(env(safe-area-inset-bottom) + 10px));
+                z-index: 9998;
+                min-height: 34px;
+                padding: 7px 10px;
+                border-radius: 999px;
+                border: 1px solid rgba(148, 163, 184, 0.45);
+                background: rgba(15, 23, 42, 0.86);
+                color: #f8fafc;
+                font: 800 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                letter-spacing: 0;
+                box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                cursor: pointer;
+            }
+            #${FLOAT_ID}[data-state="active"],
+            #${FLOAT_ID}[data-state="fallback-active"] {
+                border-color: rgba(245, 158, 11, 0.76);
+                color: #fbbf24;
+            }
+            #${FLOAT_ID}[data-state="needs-gesture"],
+            #${FLOAT_ID}[data-state="pending"] {
+                border-color: rgba(56, 189, 248, 0.7);
+                color: #7dd3fc;
+            }
+            #${FLOAT_ID}[data-state="error"],
+            #${FLOAT_ID}[data-state="unavailable"] {
+                border-color: rgba(239, 68, 68, 0.7);
+                color: #fca5a5;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function shouldShowFloating(current) {
+        return !document.getElementById('wakeLockBtn') && current.enabled && current.mode !== 'off';
+    }
+
+    function updateButton(button, current, state) {
+        button.dataset.state = state;
+        button.classList.toggle('is-active', state === 'active' || state === 'fallback-active');
+        button.classList.toggle('is-pending', state === 'pending' || state === 'needs-gesture');
+        button.classList.toggle('is-error', state === 'error');
+        button.classList.toggle('is-unavailable', state === 'unavailable');
+        button.setAttribute('aria-pressed', current.enabled ? 'true' : 'false');
+        button.title = getUiTitle(current, state);
+
+        const text = button.querySelector('[data-wake-lock-text]');
+        if (text && button.id === FLOAT_ID) text.textContent = getFloatText(state);
+    }
+
+    function ensureFloatingButton(current, state) {
+        let button = document.getElementById(FLOAT_ID);
+        if (!shouldShowFloating(current)) {
+            if (button) button.remove();
+            return;
+        }
+        injectFloatingStyle();
+        if (!button) {
+            button = document.createElement('button');
+            button.type = 'button';
+            button.id = FLOAT_ID;
+            button.setAttribute('data-myflight-wake-lock-button', '');
+            button.innerHTML = '<span data-wake-lock-text>Awake</span>';
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                toggle({ fromUserGesture: true }).catch(error => {
+                    console.warn('Wake lock toggle skipped:', error);
+                });
+            });
+            document.body.appendChild(button);
+        }
+        updateButton(button, current, state);
+    }
+
+    function updateWakeLockUi() {
+        if (!document.body) return;
+        const current = getStatus();
+        const state = getUiState(current);
+        const homeButton = document.getElementById('wakeLockBtn');
+        if (homeButton) updateButton(homeButton, current, state);
+        ensureFloatingButton(current, state);
+    }
+
+    function initWakeLockUi() {
+        const homeButton = document.getElementById('wakeLockBtn');
+        if (homeButton && !homeButton.dataset.wakeLockBound) {
+            homeButton.dataset.wakeLockBound = 'true';
+            homeButton.addEventListener('click', event => {
+                event.preventDefault();
+                toggle({ fromUserGesture: true }).catch(error => {
+                    console.warn('Wake lock toggle skipped:', error);
+                });
+            });
+        }
+        updateWakeLockUi();
+    }
+
+    function handleVisibleAgain() {
+        initWakeLockUi();
+        if (enabled) scheduleAcquire(120);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            handleVisibleAgain();
+        } else if (enabled) {
+            releaseAllWakeLocks().finally(() => {
+                setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            });
+        }
+    });
+    window.addEventListener('pageshow', handleVisibleAgain);
+    window.addEventListener('focus', handleVisibleAgain);
+    window.addEventListener('pagehide', () => {
+        releaseAllWakeLocks().catch(error => {
+            console.warn('Wake lock pagehide release skipped:', error);
+        });
+    });
+    window.addEventListener('storage', event => {
+        if (event.key !== STORAGE_KEY) return;
+        enabled = readEnabled();
+        if (enabled) {
+            setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            scheduleAcquire(120);
+        } else {
+            disable({ persist: false }).catch(error => {
+                console.warn('Wake lock storage disable skipped:', error);
+            });
+        }
+    });
+
+    window.MyFlightWakeLock = {
+        enable,
+        disable,
+        toggle,
+        isEnabled: () => enabled,
+        isActive: () => getStatus().active,
+        isSupported,
+        getStatus,
+        request: requestWakeLock
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initWakeLockUi();
+            if (enabled) scheduleAcquire(150);
+        }, { once: true });
+    } else {
+        initWakeLockUi();
+        if (enabled) scheduleAcquire(150);
+    }
+})();
+
 // Shared MyNPA Realtime Database bootstrap and pending cloud sync.
 // Runs on every main page so cloud data and queued admin writes stay current.
 (function () {
