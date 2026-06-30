@@ -266,7 +266,7 @@
 })();
 
 // Shared screen wake lock controller.
-// Uses only native Screen Wake Lock so unsupported iOS PWAs never show false active state.
+// Uses native Screen Wake Lock only where it is reliable; no video fallback.
 (function () {
     const STORAGE_KEY = 'myflight_keep_screen_awake_v1';
     const CHANGE_EVENT = 'myflight:wake-lock-change';
@@ -340,7 +340,7 @@
     }
 
     function canUseNativeWakeLock() {
-        return hasNativeWakeLock();
+        return hasNativeWakeLock() && !isLegacyIosPwa();
     }
 
     function isSupported() {
@@ -414,6 +414,7 @@
     }
 
     async function requestNativeWakeLock() {
+        if (isLegacyIosPwa()) throw new Error('Screen Wake Lock API is unavailable');
         if (!canUseNativeWakeLock()) throw new Error('Screen Wake Lock API is unavailable');
         if (wakeLockSentinel && !wakeLockSentinel.released) {
             setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });

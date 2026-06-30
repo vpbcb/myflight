@@ -1155,7 +1155,8 @@
         const themeIconDark = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
         const AWAKE_THEME_COLOR = '#f59e0b';
         const AWAKE_UNAVAILABLE_COLOR = '#ef4444';
-        const AWAKE_UNAVAILABLE_FEEDBACK_MS = 850;
+        const AWAKE_UNAVAILABLE_BLINKS = 3;
+        const AWAKE_UNAVAILABLE_BLINK_MS = 160;
         const AWAKE_LONG_PRESS_MS = 700;
 
         let themeLongPressTimer = null;
@@ -1164,6 +1165,7 @@
         let themeLastTouchAt = 0;
         let themeAwakeFeedbackTimer = null;
         let themeAwakeUnavailableFeedbackActive = false;
+        let themeAwakePendingFeedbackActive = false;
 
         // Функция смены темы
         function toggleTheme() {
@@ -1222,6 +1224,10 @@
                 themeText.style.color = AWAKE_UNAVAILABLE_COLOR;
                 return;
             }
+            if (themeAwakePendingFeedbackActive) {
+                themeText.style.color = AWAKE_THEME_COLOR;
+                return;
+            }
             themeText.style.color = '';
         }
 
@@ -1229,17 +1235,29 @@
             const themeText = document.getElementById('themeText');
             if (!themeText) return;
             if (themeAwakeFeedbackTimer) clearTimeout(themeAwakeFeedbackTimer);
-            themeAwakeUnavailableFeedbackActive = true;
-            updateThemeAwakeUI();
-            themeAwakeFeedbackTimer = setTimeout(() => {
-                themeAwakeUnavailableFeedbackActive = false;
-                themeAwakeFeedbackTimer = null;
+            let remainingToggles = AWAKE_UNAVAILABLE_BLINKS * 2;
+
+            const tick = () => {
+                themeAwakeUnavailableFeedbackActive = remainingToggles % 2 === 0;
                 updateThemeAwakeUI();
-            }, AWAKE_UNAVAILABLE_FEEDBACK_MS);
+                remainingToggles -= 1;
+
+                if (remainingToggles <= 0) {
+                    themeAwakeUnavailableFeedbackActive = false;
+                    themeAwakeFeedbackTimer = null;
+                    updateThemeAwakeUI();
+                    return;
+                }
+
+                themeAwakeFeedbackTimer = setTimeout(tick, AWAKE_UNAVAILABLE_BLINK_MS);
+            };
+
+            tick();
         }
 
         async function toggleAwakeFromThemeButton() {
             if (!window.MyFlightWakeLock?.toggle) {
+                themeAwakePendingFeedbackActive = false;
                 updateThemeAwakeUI();
                 return;
             }
@@ -1249,9 +1267,11 @@
                 console.warn('Awake toggle skipped:', error);
             } finally {
                 const awakeStatus = getAwakeStatus();
-                updateThemeAwakeUI();
+                themeAwakePendingFeedbackActive = false;
                 if (!awakeStatus?.active && (awakeStatus?.mode === 'unavailable' || awakeStatus?.error)) {
                     showAwakeUnavailableFeedback();
+                } else {
+                    updateThemeAwakeUI();
                 }
             }
         }
@@ -1278,6 +1298,8 @@
                 themeLongPressTriggered = true;
                 themePressStartedAt = 0;
                 if (navigator.vibrate) navigator.vibrate(20);
+                themeAwakePendingFeedbackActive = true;
+                updateThemeAwakeUI();
                 isWakeLockPendingAction = true;
             };
 
@@ -1291,6 +1313,7 @@
                 clearThemeLongPress();
                 themeLongPressTriggered = false;
                 isWakeLockPendingAction = false;
+                themeAwakePendingFeedbackActive = false;
                 themePressStartedAt = Date.now();
                 themeLongPressTimer = setTimeout(triggerThemeLongPress, AWAKE_LONG_PRESS_MS);
             };
@@ -1328,6 +1351,8 @@
                 clearThemeLongPress();
                 themePressStartedAt = 0;
                 isWakeLockPendingAction = false;
+                themeAwakePendingFeedbackActive = false;
+                updateThemeAwakeUI();
                 if (isTouch) {
                     themeLastTouchAt = Date.now();
                     event.preventDefault();
