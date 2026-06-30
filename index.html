@@ -1159,6 +1159,7 @@
         let themeLongPressTimer = null;
         let themeLongPressTriggered = false;
         let themePressStartedAt = 0;
+        let themeLastTouchAt = 0;
 
         // Функция смены темы
         function toggleTheme() {
@@ -1230,6 +1231,7 @@
             const themeButton = document.getElementById('themeToggleBtn');
             if (!themeButton || themeButton.dataset.themeControlsBound === 'true') return;
             themeButton.dataset.themeControlsBound = 'true';
+            const TOUCH_MOUSE_GUARD_MS = 900;
 
             const clearThemeLongPress = () => {
                 if (themeLongPressTimer) {
@@ -1238,39 +1240,65 @@
                 }
             };
 
-            themeButton.addEventListener('pointerdown', event => {
-                if (event.button !== undefined && event.button !== 0) return;
+            const isSyntheticMouseAfterTouch = () => Date.now() - themeLastTouchAt < TOUCH_MOUSE_GUARD_MS;
+
+            const triggerThemeLongPress = () => {
+                clearThemeLongPress();
+                if (themeLongPressTriggered) return;
+                themeLongPressTriggered = true;
+                themePressStartedAt = 0;
+                if (navigator.vibrate) navigator.vibrate(20);
+                toggleAwakeFromThemeButton();
+            };
+
+            const startThemePress = (event, isTouch) => {
+                if (!isTouch && isSyntheticMouseAfterTouch()) return;
+                if (!isTouch && event.button !== undefined && event.button !== 0) return;
+                if (isTouch) {
+                    themeLastTouchAt = Date.now();
+                    event.preventDefault();
+                }
                 clearThemeLongPress();
                 themeLongPressTriggered = false;
                 themePressStartedAt = Date.now();
-                themeLongPressTimer = setTimeout(() => {
-                    themeLongPressTimer = null;
-                    themeLongPressTriggered = true;
-                    themePressStartedAt = 0;
-                    if (navigator.vibrate) navigator.vibrate(20);
-                    toggleAwakeFromThemeButton();
-                }, AWAKE_LONG_PRESS_MS);
-            });
+                themeLongPressTimer = setTimeout(triggerThemeLongPress, AWAKE_LONG_PRESS_MS);
+            };
 
-            themeButton.addEventListener('pointerup', event => {
-                const shouldSuppressClick = themeLongPressTriggered;
+            const endThemePress = (event, isTouch) => {
+                const wasLongPress = themeLongPressTriggered;
                 clearThemeLongPress();
                 themePressStartedAt = 0;
-                if (!shouldSuppressClick) return;
+                if (isTouch) {
+                    themeLastTouchAt = Date.now();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!wasLongPress) toggleTheme();
+                    return;
+                }
+                if (!wasLongPress) return;
 
                 event.preventDefault();
                 event.stopPropagation();
-            });
+            };
 
-            ['pointerleave', 'pointercancel'].forEach(eventName => {
-                themeButton.addEventListener(eventName, () => {
-                    clearThemeLongPress();
-                    themePressStartedAt = 0;
-                });
-            });
+            const cancelThemePress = (event, isTouch) => {
+                clearThemeLongPress();
+                themePressStartedAt = 0;
+                if (isTouch) {
+                    themeLastTouchAt = Date.now();
+                    event.preventDefault();
+                }
+            };
+
+            themeButton.addEventListener('touchstart', event => startThemePress(event, true), { passive: false });
+            themeButton.addEventListener('touchend', event => endThemePress(event, true), { passive: false });
+            themeButton.addEventListener('touchcancel', event => cancelThemePress(event, true), { passive: false });
+            themeButton.addEventListener('mousedown', event => startThemePress(event, false));
+            themeButton.addEventListener('mouseup', event => endThemePress(event, false));
+            themeButton.addEventListener('mouseleave', event => cancelThemePress(event, false));
 
             themeButton.addEventListener('click', event => {
-                if (themeLongPressTriggered) {
+                if (themeLongPressTriggered || isSyntheticMouseAfterTouch()) {
                     event.preventDefault();
                     event.stopPropagation();
                     if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
@@ -1281,7 +1309,7 @@
             });
 
             themeButton.addEventListener('contextmenu', event => {
-                if (themeLongPressTriggered) event.preventDefault();
+                if (themeLongPressTriggered || isSyntheticMouseAfterTouch()) event.preventDefault();
             });
 
             window.addEventListener('myflight:wake-lock-change', updateThemeAwakeUI);
