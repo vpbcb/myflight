@@ -80,10 +80,27 @@
 
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
 
         }
 
         /* === КОНТЕЙНЕР НИЖНИХ КНОПОК === */
+        body * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        input,
+        textarea,
+        [contenteditable="true"] {
+            -webkit-touch-callout: default;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         .bottom-controls {
             position: static;
             width: 100%;
@@ -1140,7 +1157,6 @@
         const AWAKE_LONG_PRESS_MS = 700;
 
         let themeLongPressTimer = null;
-        let themeLongPressReady = false;
         let themeLongPressTriggered = false;
         let themePressStartedAt = 0;
 
@@ -1225,34 +1241,30 @@
             themeButton.addEventListener('pointerdown', event => {
                 if (event.button !== undefined && event.button !== 0) return;
                 clearThemeLongPress();
-                themeLongPressReady = false;
                 themeLongPressTriggered = false;
                 themePressStartedAt = Date.now();
                 themeLongPressTimer = setTimeout(() => {
                     themeLongPressTimer = null;
-                    themeLongPressReady = true;
+                    themeLongPressTriggered = true;
+                    themePressStartedAt = 0;
                     if (navigator.vibrate) navigator.vibrate(20);
+                    toggleAwakeFromThemeButton();
                 }, AWAKE_LONG_PRESS_MS);
             });
 
             themeButton.addEventListener('pointerup', event => {
-                const elapsedMs = Date.now() - themePressStartedAt;
-                const shouldToggleAwake = themeLongPressReady || elapsedMs >= AWAKE_LONG_PRESS_MS;
+                const shouldSuppressClick = themeLongPressTriggered;
                 clearThemeLongPress();
-                themeLongPressReady = false;
                 themePressStartedAt = 0;
-                if (!shouldToggleAwake) return;
+                if (!shouldSuppressClick) return;
 
-                themeLongPressTriggered = true;
                 event.preventDefault();
                 event.stopPropagation();
-                toggleAwakeFromThemeButton();
             });
 
             ['pointerleave', 'pointercancel'].forEach(eventName => {
                 themeButton.addEventListener(eventName, () => {
                     clearThemeLongPress();
-                    themeLongPressReady = false;
                     themePressStartedAt = 0;
                 });
             });
@@ -1269,7 +1281,7 @@
             });
 
             themeButton.addEventListener('contextmenu', event => {
-                if (themeLongPressTriggered || themeLongPressReady) event.preventDefault();
+                if (themeLongPressTriggered) event.preventDefault();
             });
 
             window.addEventListener('myflight:wake-lock-change', updateThemeAwakeUI);
