@@ -265,6 +265,292 @@
     }
 })();
 
+// Shared screen wake lock controller.
+// Uses only native Screen Wake Lock so unsupported iOS PWAs never show false active state.
+(function () {
+    const STORAGE_KEY = 'myflight_keep_screen_awake_v1';
+    const CHANGE_EVENT = 'myflight:wake-lock-change';
+
+    let enabled = readEnabled();
+    let status = {
+        active: false,
+        mode: enabled ? 'pending' : 'off',
+        needsGesture: false,
+        error: ''
+    };
+    let wakeLockSentinel = null;
+    let releasingNative = false;
+    let acquireTimer = null;
+
+    function readEnabled() {
+        try {
+            const value = localStorage.getItem(STORAGE_KEY);
+            return value === '1' || value === 'true';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function writeEnabled(value) {
+        try {
+            localStorage.setItem(STORAGE_KEY, value ? '1' : '0');
+        } catch (error) {
+            console.warn('Wake lock setting write skipped:', error);
+        }
+    }
+
+    function hasNativeWakeLock() {
+        return Boolean(navigator.wakeLock && typeof navigator.wakeLock.request === 'function');
+    }
+
+    function isIosDevice() {
+        return /iP(ad|hone|od)/.test(navigator.userAgent || '')
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalonePwa() {
+        return window.navigator.standalone === true
+            || window.matchMedia?.('(display-mode: standalone)').matches === true;
+    }
+
+    function getIosVersion() {
+        const ua = navigator.userAgent || '';
+        const osMatch = ua.match(/OS (\d+)[._](\d+)?/);
+        if (osMatch) {
+            return {
+                major: Number(osMatch[1]) || 0,
+                minor: Number(osMatch[2]) || 0
+            };
+        }
+        const versionMatch = ua.match(/Version\/(\d+)(?:\.(\d+))?/);
+        if (isIosDevice() && versionMatch) {
+            return {
+                major: Number(versionMatch[1]) || 0,
+                minor: Number(versionMatch[2]) || 0
+            };
+        }
+        return null;
+    }
+
+    function isLegacyIosPwa() {
+        if (!isIosDevice() || !isStandalonePwa()) return false;
+        const version = getIosVersion();
+        if (!version) return true;
+        return version.major < 18 || (version.major === 18 && version.minor < 4);
+    }
+
+    function canUseNativeWakeLock() {
+        return hasNativeWakeLock() && !isLegacyIosPwa();
+    }
+
+    function isSupported() {
+        return canUseNativeWakeLock();
+    }
+
+    function formatError(error) {
+        if (!error) return '';
+        return error.message || error.name || String(error);
+    }
+
+    function getStatus() {
+        return {
+            enabled,
+            active: status.active,
+            mode: status.mode,
+            supported: isSupported(),
+            nativeSupported: canUseNativeWakeLock(),
+            rawNativeSupported: hasNativeWakeLock(),
+            fallbackSupported: false,
+            legacyIosPwa: isLegacyIosPwa(),
+            needsGesture: status.needsGesture,
+            error: status.error,
+            iosStandalone: isIosDevice() && isStandalonePwa()
+        };
+    }
+
+    function setStatus(patch) {
+        status = Object.assign({}, status, patch);
+        try {
+            window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: getStatus() }));
+        } catch (error) {
+            // CustomEvent is only for optional UI observers.
+        }
+    }
+
+    function clearAcquireTimer() {
+        if (!acquireTimer) return;
+        clearTimeout(acquireTimer);
+        acquireTimer = null;
+    }
+
+    function scheduleAcquire(delayMs = 250) {
+        clearAcquireTimer();
+        if (!enabled) return;
+        acquireTimer = setTimeout(() => {
+            acquireTimer = null;
+            requestWakeLock({ fromUserGesture: false }).catch(error => {
+                console.warn('Wake lock reacquire skipped:', error);
+            });
+        }, delayMs);
+    }
+
+    async function releaseNativeWakeLock() {
+        const sentinel = wakeLockSentinel;
+        wakeLockSentinel = null;
+        if (!sentinel || sentinel.released) return;
+        releasingNative = true;
+        try {
+            await sentinel.release();
+        } catch (error) {
+            console.warn('Wake lock release skipped:', error);
+        } finally {
+            releasingNative = false;
+        }
+    }
+
+    async function releaseAllWakeLocks() {
+        clearAcquireTimer();
+        await releaseNativeWakeLock();
+    }
+
+    async function requestNativeWakeLock() {
+        if (isLegacyIosPwa()) throw new Error('Awake is unavailable in iOS PWA before iOS 18.4');
+        if (!canUseNativeWakeLock()) throw new Error('Screen Wake Lock API is unavailable');
+        if (wakeLockSentinel && !wakeLockSentinel.released) {
+            setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });
+            return true;
+        }
+
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+            if (releasingNative) return;
+            setStatus({
+                active: false,
+                mode: enabled ? 'pending' : 'off',
+                needsGesture: false,
+                error: ''
+            });
+            if (enabled && document.visibilityState === 'visible') scheduleAcquire(300);
+        }, { once: true });
+
+        setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });
+        return true;
+    }
+
+    async function requestWakeLock() {
+        if (!enabled) return false;
+        if (document.visibilityState === 'hidden') {
+            setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            return false;
+        }
+
+        setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+
+        if (canUseNativeWakeLock()) {
+            try {
+                return await requestNativeWakeLock();
+            } catch (error) {
+                console.warn('Native wake lock request failed:', error);
+                setStatus({
+                    active: false,
+                    mode: 'error',
+                    needsGesture: false,
+                    error: formatError(error)
+                });
+                return false;
+            }
+        }
+
+        setStatus({
+            active: false,
+            mode: 'unavailable',
+            needsGesture: false,
+            error: isLegacyIosPwa()
+                ? 'Awake is unavailable in iOS PWA before iOS 18.4'
+                : 'Screen wake lock is unavailable'
+        });
+        return false;
+    }
+
+    async function enable(options = {}) {
+        enabled = true;
+        writeEnabled(true);
+        setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+        return requestWakeLock({ fromUserGesture: options.fromUserGesture !== false });
+    }
+
+    async function disable(options = {}) {
+        enabled = false;
+        if (options.persist !== false) writeEnabled(false);
+        await releaseAllWakeLocks();
+        setStatus({ active: false, mode: 'off', needsGesture: false, error: '' });
+        return true;
+    }
+
+    async function toggle(options = {}) {
+        const current = getStatus();
+        if (!current.enabled) return enable({ fromUserGesture: true });
+        if (current.active) return disable();
+        if (current.needsGesture || current.mode === 'pending') {
+            return requestWakeLock({ fromUserGesture: true });
+        }
+        return disable();
+    }
+
+    function handleVisibleAgain() {
+        if (enabled) scheduleAcquire(120);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            handleVisibleAgain();
+        } else if (enabled) {
+            releaseAllWakeLocks().finally(() => {
+                setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            });
+        }
+    });
+    window.addEventListener('pageshow', handleVisibleAgain);
+    window.addEventListener('focus', handleVisibleAgain);
+    window.addEventListener('pagehide', () => {
+        releaseAllWakeLocks().catch(error => {
+            console.warn('Wake lock pagehide release skipped:', error);
+        });
+    });
+    window.addEventListener('storage', event => {
+        if (event.key !== STORAGE_KEY) return;
+        enabled = readEnabled();
+        if (enabled) {
+            setStatus({ active: false, mode: 'pending', needsGesture: false, error: '' });
+            scheduleAcquire(120);
+        } else {
+            disable({ persist: false }).catch(error => {
+                console.warn('Wake lock storage disable skipped:', error);
+            });
+        }
+    });
+
+    window.MyFlightWakeLock = {
+        enable,
+        disable,
+        toggle,
+        isEnabled: () => enabled,
+        isActive: () => getStatus().active,
+        isSupported,
+        getStatus,
+        request: requestWakeLock
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (enabled) scheduleAcquire(150);
+        }, { once: true });
+    } else {
+        if (enabled) scheduleAcquire(150);
+    }
+})();
+
 // Shared MyNPA Realtime Database bootstrap and pending cloud sync.
 // Runs on every main page so cloud data and queued admin writes stay current.
 (function () {
@@ -273,6 +559,7 @@
     const NPA_CLOUD_APPROACHES_KEY = 'mynpa_cloud_approaches_v1';
     const NPA_PENDING_CLOUD_WRITES_KEY = 'mynpa_pending_cloud_writes_v1';
     const NPA_SYNC_STATUS_KEY = 'mynpa_sync_status_v1';
+    const NPA_ADMIN_SESSION_KEY = 'mynpa_admin_session_v1';
     const FIREBASE_APP_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
     const FIREBASE_DATABASE_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';
     const FIREBASE_AUTH_SDK = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
@@ -309,6 +596,45 @@
             console.error('MyNPA localStorage write error:', error);
             return false;
         }
+    }
+
+    function removeStorage(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error('MyNPA localStorage remove error:', error);
+            return false;
+        }
+    }
+
+    function getCachedAdminSession() {
+        const session = readJsonStorage(NPA_ADMIN_SESSION_KEY, null);
+        if (!session || typeof session !== 'object') return null;
+        if (!session.uid && !session.email) return null;
+        return session;
+    }
+
+    function rememberAdminSession(user) {
+        if (!user) return;
+        writeJsonStorage(NPA_ADMIN_SESSION_KEY, {
+            uid: user.uid || '',
+            email: user.email || '',
+            refreshedAt: Date.now()
+        });
+    }
+
+    function clearAdminSession() {
+        removeStorage(NPA_ADMIN_SESSION_KEY);
+    }
+
+    function getLiveAdminUser() {
+        if (window.npaAuth?.currentUser) return window.npaAuth.currentUser;
+        return null;
+    }
+
+    function getTrustedAdminUser() {
+        return getLiveAdminUser() || getCachedAdminSession();
     }
 
     function sanitizeAirportCode(value) {
@@ -502,7 +828,7 @@
     }
 
     function isAdminMode() {
-        return Boolean(window.npaAuth?.currentUser);
+        return Boolean(getTrustedAdminUser());
     }
 
     function safeApproachKey(value) {
@@ -510,21 +836,21 @@
     }
 
     async function writeAirportReferenceToCloud(airportCode, airportData) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
     }
 
     async function deleteAirportReferenceFromCloud(airportCode) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await window.npaDb.ref(`airportsReference/${code}`).remove();
     }
 
     async function deleteAirportFromCloud(airportCode) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
         await Promise.all([
@@ -534,7 +860,7 @@
     }
 
     async function writeApproachToCloud(airportCode, approachName, approachData) {
-        if (!isFirebaseReady() || !isAdminMode()) throw new Error('Admin Firebase mode is required');
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         const key = safeApproachKey(approachName);
         if (!isValidAirportReferenceKey(code) || !key) throw new Error('Airport and approach are required');
@@ -566,7 +892,7 @@
     }
 
     async function syncPendingCloudWrites() {
-        if (syncInProgress || !navigator.onLine || !isFirebaseReady() || !isAdminMode()) return false;
+        if (syncInProgress || !navigator.onLine || !isFirebaseReady() || !getLiveAdminUser()) return false;
         const queue = getPendingCloudWrites();
         if (!queue.length) return true;
 
@@ -602,11 +928,23 @@
         if (validator()) return Promise.resolve(true);
         return new Promise((resolve, reject) => {
             const existing = document.querySelector(`script[src="${src}"]`);
-            const script = existing || document.createElement('script');
-            const onLoad = () => validator() ? resolve(true) : reject(new Error(`Firebase ${label} SDK did not initialize`));
+            const shouldReuseExisting = existing
+                && existing.dataset.firebaseSdkFailed !== 'true'
+                && existing.dataset.firebaseSdkLoaded !== 'true';
+            const script = shouldReuseExisting ? existing : document.createElement('script');
+            const onLoad = () => {
+                script.dataset.firebaseSdkLoaded = 'true';
+                validator() ? resolve(true) : reject(new Error(`Firebase ${label} SDK did not initialize`));
+            };
+            const onError = () => {
+                script.dataset.firebaseSdkFailed = 'true';
+                reject(new Error(`Firebase ${label} SDK failed to load`));
+            };
+
+            if (existing && !shouldReuseExisting) existing.remove();
             script.addEventListener('load', onLoad, { once: true });
-            script.addEventListener('error', () => reject(new Error(`Firebase ${label} SDK failed to load`)), { once: true });
-            if (!existing) {
+            script.addEventListener('error', onError, { once: true });
+            if (!shouldReuseExisting) {
                 script.src = src;
                 script.async = true;
                 document.head.appendChild(script);
@@ -648,7 +986,6 @@
         if (initPromise) return initPromise;
         if (navigator.onLine === false) {
             rebuildCombinedLocalDb();
-            return false;
         }
 
         initPromise = (async () => {
@@ -664,6 +1001,9 @@
                 }
                 attachRealtimeListeners();
                 window.npaAuth.onAuthStateChanged(user => {
+                    if (user) {
+                        rememberAdminSession(user);
+                    }
                     if (typeof window.handleNpaAdminAuthState === 'function') {
                         window.handleNpaAdminAuthState(user);
                     }
@@ -696,6 +1036,9 @@
         status: () => readJsonStorage(NPA_SYNC_STATUS_KEY, {}),
         isReady: isFirebaseReady,
         isAdmin: isAdminMode,
+        isOfflineAdmin: () => !getLiveAdminUser() && Boolean(getCachedAdminSession()),
+        getAdminUser: getTrustedAdminUser,
+        getLiveAdminUser,
         queueCloudWrite,
         writeAirportReference: writeAirportReferenceToCloud,
         writeApproach: writeApproachToCloud
@@ -707,7 +1050,16 @@
     window.writeApproachToCloud = writeApproachToCloud;
     window.queueNpaCloudWrite = queueCloudWrite;
 
-    const boot = () => initNpaFirebase().then(() => syncPendingCloudWrites());
+    if (typeof window.handleNpaAdminAuthState === 'function') {
+        const adminUser = getTrustedAdminUser();
+        if (adminUser) window.handleNpaAdminAuthState(adminUser);
+    }
+
+    const boot = () => initNpaFirebase()
+        .then(() => syncPendingCloudWrites())
+        .catch(error => {
+            console.warn('MyNPA Firebase boot skipped:', error);
+        });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', boot, { once: true });
     } else {

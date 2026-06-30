@@ -7,9 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="color-scheme" content="light dark">
 
-<!-- Раздельный theme-color для светлой и тёмной темы -->
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<!-- theme-color обновляется ранним theme helper по hub_theme -->
+<meta name="theme-color" content="#f1f5f9">
     <title>Расчет топлива</title>
     
     <link rel="manifest" href="manifest.json">
@@ -377,82 +376,6 @@ body {
         .weights-col .input-row-gray { margin-bottom: 0; }
         .label-weight { width: 50px; font-size: 14px; font-weight: bold; }
 
-        .loadsheet-card { margin-bottom: 5px !important; padding-bottom: 6px !important; }
-        .loadsheet-block-title { font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0; margin: 8px 4px 5px; }
-        .loadsheet-compact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
-        .loadsheet-zone-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
-        .loadsheet-cargo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
-        .loadsheet-field,
-        .loadsheet-result {
-            min-width: 0;
-            background-color: var(--gray-pill-bg);
-            border: 1px solid rgba(0, 0, 0, 0.15);
-            border-radius: 14px;
-            padding: 6px 7px;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .loadsheet-field span,
-        .loadsheet-result span {
-            font-size: 10px;
-            line-height: 1.05;
-            font-weight: 800;
-            color: var(--text-main);
-            text-align: center;
-            white-space: normal;
-        }
-        .loadsheet-field input,
-        .loadsheet-field select,
-        .loadsheet-result input {
-            width: 100%;
-            min-width: 0;
-            height: 26px;
-            padding: 2px 3px;
-            border: none;
-            border-radius: 10px;
-            background-color: var(--input-bg);
-            color: var(--input-text);
-            font-size: 14px;
-            font-weight: 700;
-            text-align: center;
-            outline: none;
-        }
-        .loadsheet-result strong {
-            min-height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            background-color: var(--input-readonly-bg);
-            color: var(--input-text);
-            font-size: 14px;
-            line-height: 1.05;
-            text-align: center;
-            overflow-wrap: anywhere;
-        }
-        .loadsheet-results-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
-        .loadsheet-status {
-            margin-top: 6px;
-            padding: 7px 9px;
-            border-radius: 14px;
-            background-color: var(--gray-pill-bg);
-            color: var(--text-main);
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1.25;
-            text-align: center;
-        }
-        .loadsheet-status.warn { color: #a66a00; }
-        .loadsheet-status.ok { color: #168a36; }
-        html.dark-theme .loadsheet-status.warn { color: #ffbf5c; }
-
-        @media (max-width: 420px) {
-            .loadsheet-compact-grid { grid-template-columns: 1fr; }
-            .loadsheet-results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .loadsheet-zone-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-
         .alert-text { color: red !important; font-weight: 900 !important; }
         .help-icon { display: inline-flex; justify-content: center; align-items: center; width: 18px; height: 18px; border-radius: 50%; background-color: var(--primary-blue); color: white; font-size: 12px; font-weight: bold; cursor: pointer; user-select: none; }
 
@@ -558,6 +481,23 @@ html.dark-theme input[readonly] {
     <!-- Микро-скрипт синхронизации темы с Хабом -->
     <script>
         (function() {
+            const STATUS_BAR_LIGHT = '#f1f5f9';
+            const STATUS_BAR_DARK = '#0b0f19';
+            const ensureMeta = (name, content) => {
+                let meta = document.querySelector(`meta[name="${name}"]`);
+                if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.setAttribute('name', name);
+                    document.head.appendChild(meta);
+                }
+                meta.setAttribute('content', content);
+                if (name === 'theme-color') meta.removeAttribute('media');
+                return meta;
+            };
+            const setStatusBarTheme = isDark => {
+                ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');
+            };
             const applyTheme = (theme) => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
@@ -565,18 +505,17 @@ html.dark-theme input[readonly] {
                 if (document.body) {
                     document.body.classList.toggle('dark-theme', isDark);
                 }
+                setStatusBarTheme(isDark);
             };
 
             // 1. Мгновенно применяем к HTML при чтении <head> (защита от вспышки)
             const savedTheme = localStorage.getItem('hub_theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark-theme');
-            }
+            applyTheme(savedTheme);
 
             // 2. Как только загрузится <body>, применяем класс к нему (для работы CSS)
             document.addEventListener('DOMContentLoaded', () => {
                 const currentTheme = localStorage.getItem('hub_theme');
-                if (currentTheme) applyTheme(currentTheme);
+                applyTheme(currentTheme);
             });
 
             // 3. Слушаем изменения из Главного меню без перезагрузки страницы
@@ -659,122 +598,121 @@ html.dark-theme input[readonly] {
     </div>
 
 
-    <div class="section-card loadsheet-card">
+    <div class="section-card" style="margin-bottom: 5px !important; padding-bottom: 5px !important;">
         <div class="section-header-bar">
-            <h2 class="section-title">Loadsheet</h2>
+            <h2 class="section-title">Fuel (kg)</h2>
         </div>
 
-        <div class="loadsheet-block-title">Fuel data</div>
-        <div class="loadsheet-compact-grid">
-            <div class="input-row-gray">
-                <span class="label-left">Trip Fuel</span>
-                <input type="number" id="trip" placeholder="12500" class="nav-input"
-                       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                       onblur="this.placeholder=this.dataset.ph"
-                       oninput="calculateAll()">
-            </div>
+        <div class="input-row-gray" hidden>
+            <span class="label-left">Trip Fuel</span>
+            <input type="number" id="trip" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
 
-            <div class="input-row-gray">
-                <span class="label-left">Cont.fuel</span>
-                <div class="cont-inputs">
-                    <select id="contPerc" class="nav-input" style="width: 70px;" onchange="calcContFromPerc()">
-                        <option value="3" selected>3%</option>
-                        <option value="5">5%</option>
-                        <option value="10">10%</option>
-                    </select>
-                    <input type="number" id="contVal" readonly>
+        <div class="input-row-gray" hidden>
+            <span class="label-left">Cont.fuel</span>
+            <div class="cont-inputs">
+                <select id="contPerc" class="nav-input" style="width: 70px;" onchange="calcContFromPerc()">
+                    <option value="3" selected>3%</option>
+                    <option value="5">5%</option>
+                    <option value="10">10%</option>
+                </select>
+                <input type="number" id="contVal" readonly>
+            </div>
+        </div>
+
+        <div class="input-row-gray" hidden>
+            <span class="label-left">Alternate</span>
+            <input type="number" id="alt" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+        <div class="input-row-gray" hidden>
+            <span class="label-left">Final reserve</span>
+            <input type="number" id="final" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()">
+        </div>
+
+        <div class="input-row-gray" style="position: relative;" hidden>
+            <span class="label-left">Extra</span>
+            <input type="number" id="extra" class="nav-input" onfocus="..." onblur="...">
+            
+            <div onclick="openExtraModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
+        </div>
+
+        <div class="input-row-gray" hidden>
+            <span class="label-left">APU/Taxi</span>
+            <input type="text" inputmode="decimal" enterkeyhint="done" id="taxi" placeholder="12500" class="nav-input"
+                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+                   onblur="this.placeholder=this.dataset.ph"
+                   oninput="calculateAll()"
+                   onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
+        </div>
+
+        <div class="input-row-orange" style="margin-bottom: 5px;" hidden>
+            <span class="label-left">Total Fuel</span>
+            <input type="number" id="totalFuel" readonly style="font-weight: bold;">
+        </div>
+
+        <div class="input-row-gray" style="position: relative; margin-bottom: 5px;">
+            <span class="label-left">Max.Fuel</span>
+            <input type="number" id="maxFuel" class="nav-input" onfocus="..." onblur="...">
+            
+            <div onclick="openMaxFuelModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
+        </div>
+
+        <div class="footer-gray-bar" style="margin-top: 2px !important;" hidden>
+            <div class="footer-item">
+                <span class="label-footer">Remain.<br>fuel</span>
+                <input type="number" id="remFuel" readonly>
+            </div>
+            <div class="footer-item">
+                <span class="label-footer">Minimum<br>deviation</span>
+                <input type="number" id="minDev" readonly>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="section-card" hidden>
+        <div class="section-header-bar">
+            <h2 class="section-title">Weights (kg)</h2>
+        </div>
+
+        <div class="weights-grid">
+            <div class="weights-col">
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">TOW</span>
+                    <input type="number" id="tow" readonly>
+                </div>
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">MTOW</span>
+                    <input type="number" id="mtow" readonly>
                 </div>
             </div>
-
-            <div class="input-row-gray">
-                <span class="label-left">Alternate</span>
-                <input type="number" id="alt" placeholder="12500" class="nav-input"
-                       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                       onblur="this.placeholder=this.dataset.ph"
-                       oninput="calculateAll()">
-            </div>
-
-            <div class="input-row-gray">
-                <span class="label-left">Final reserve</span>
-                <input type="number" id="final" placeholder="12500" class="nav-input"
-                       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                       onblur="this.placeholder=this.dataset.ph"
-                       oninput="calculateAll()">
-            </div>
-
-            <div class="input-row-gray" style="position: relative;">
-                <span class="label-left">Extra</span>
-                <input type="number" id="extra" class="nav-input" onfocus="..." onblur="...">
-                
-                <div onclick="openExtraModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
-            </div>
-
-            <div class="input-row-gray">
-                <span class="label-left">APU/Taxi</span>
-                <input type="text" inputmode="decimal" enterkeyhint="done" id="taxi" placeholder="12500" class="nav-input"
-                       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                       onblur="this.placeholder=this.dataset.ph"
-                       oninput="calculateAll()"
-                       onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
+            <div class="weights-col">
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">LW</span>
+                    <input type="number" id="lw" readonly>
+                </div>
+                <div class="input-row-gray">
+                    <span class="label-left label-weight">MLW</span>
+                    <input type="number" id="mlw" readonly>
+                </div>
             </div>
         </div>
 
-        <div class="loadsheet-block-title">PAX zones</div>
-        <div class="loadsheet-zone-grid">
-            <label class="loadsheet-field"><span>OA</span><input type="number" id="paxOA" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>OB</span><input type="number" id="paxOB" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>OC</span><input type="number" id="paxOC" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>OD</span><input type="number" id="paxOD" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
+        <div class="input-row-gray" style="margin-bottom: 1px;">
+            <span class="label-left">RTOW</span>
+            <input type="number" id="rtow" class="nav-input" readonly>
         </div>
-
-        <div class="loadsheet-block-title">Cargo compartments</div>
-        <div class="loadsheet-cargo-grid">
-            <label class="loadsheet-field"><span>1</span><input type="number" id="cargo1" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>2</span><input type="number" id="cargo2" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>3</span><input type="number" id="cargo3" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>4</span><input type="number" id="cargo4" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-            <label class="loadsheet-field"><span>5</span><input type="number" id="cargo5" class="nav-input" inputmode="numeric" oninput="calculateAll()"></label>
-        </div>
-
-        <div class="loadsheet-block-title">Fuel density</div>
-        <label class="loadsheet-field">
-            <span>kg/l</span>
-            <select id="fuelDensity" class="nav-input" onchange="calculateAll()">
-                <option value="0.785">0.785</option>
-                <option value="0.800" selected>0.800</option>
-                <option value="0.810">0.810</option>
-                <option value="0.820">0.820</option>
-            </select>
-        </label>
-
-        <div class="loadsheet-block-title">Results</div>
-        <div class="loadsheet-results-grid">
-            <div class="loadsheet-result"><span>DOW</span><strong id="lsDow">—</strong></div>
-            <div class="loadsheet-result"><span>DOI</span><strong id="lsDoi">—</strong></div>
-            <div class="loadsheet-result"><span>Payload</span><strong id="lsPayload">—</strong></div>
-            <div class="loadsheet-result"><span>ZFW</span><strong id="lsZfw">—</strong></div>
-            <div class="loadsheet-result"><span>Takeoff fuel</span><strong id="lsTakeoffFuel">—</strong></div>
-            <div class="loadsheet-result"><span>Total fuel</span><input type="number" id="totalFuel" readonly></div>
-            <div class="loadsheet-result"><span>TOW</span><input type="number" id="tow" readonly></div>
-            <div class="loadsheet-result"><span>MTOW</span><input type="number" id="mtow" readonly></div>
-            <div class="loadsheet-result"><span>Trip</span><strong id="lsTrip">—</strong></div>
-            <div class="loadsheet-result"><span>LW</span><input type="number" id="lw" readonly></div>
-            <div class="loadsheet-result"><span>MLW</span><input type="number" id="mlw" readonly></div>
-            <div class="loadsheet-result"><span>RTOW</span><input type="number" id="rtow" readonly></div>
-            <div class="loadsheet-result"><span>Remain fuel</span><input type="number" id="remFuel" readonly></div>
-            <div class="loadsheet-result"><span>Min deviation</span><input type="number" id="minDev" readonly></div>
-            <div class="loadsheet-result" style="position: relative;"><span>Max fuel</span><input type="number" id="maxFuel" class="nav-input" onfocus="..." onblur="..."><div onclick="openMaxFuelModal()" style="position: absolute; right: 0; bottom: 0; width: 60px; height: 34px; cursor: pointer; z-index: 10;"></div></div>
-            <div class="loadsheet-result"><span>LIZFW</span><strong id="lsLizfw">—</strong></div>
-            <div class="loadsheet-result"><span>Fuel index</span><strong id="lsFuelIndex">—</strong></div>
-            <div class="loadsheet-result"><span>LITOW</span><strong id="lsLitow">—</strong></div>
-            <div class="loadsheet-result"><span>LILW</span><strong id="lsLilw">—</strong></div>
-            <div class="loadsheet-result"><span>ZFW CG</span><strong id="lsZfwCg">—</strong></div>
-            <div class="loadsheet-result"><span>TOW CG</span><strong id="lsTowCg">—</strong></div>
-            <div class="loadsheet-result"><span>LW CG</span><strong id="lsLwCg">—</strong></div>
-        </div>
-
-        <div class="loadsheet-status warn" id="loadsheetStatus">нужны данные LTS</div>
-    </div> <!-- Конец карточки Loadsheet -->
+    </div> <!-- Конец карточки Weights -->
 </div> <!-- Конец precision-scroll-container (Окно с обводкой) -->
 
 <!-- КНОПКИ УПРАВЛЕНИЯ (ЗАФИКСИРОВАНЫ ВНИЗУ) -->
@@ -926,37 +864,22 @@ html.dark-theme input[readonly] {
 
     const val = (id) => parseFloat(document.getElementById(id).value) || 0;
     const setVal = (id, v) => document.getElementById(id).value = (v === "" || isNaN(v)) ? "" : v;
-    const LTS_DENSITIES = ['0.785', '0.800', '0.810', '0.820'];
-    const emptyFuelTables = () => ({ '0.785': [], '0.800': [], '0.810': [], '0.820': [] });
-    const emptyLtsProfile = (label, cargoKeys, paxKeys) => ({
-        label,
-        indexConstant: 23848,
-        cargo: cargoKeys.reduce((acc, key) => ({ ...acc, [key]: [] }), {}),
-        pax: paxKeys.reduce((acc, key) => ({ ...acc, [key]: [] }), {}),
-        fuel: emptyFuelTables()
-    });
-
-    const LTS_PROFILES = {
-        'A320|20/120': emptyLtsProfile('A320-214 20 BC-120 YC', ['1', '3', '5'], ['OA', 'OB']),
-        'A320|8/150': emptyLtsProfile('A320-214 8 BC-150 YC', ['1', '3', '4', '5'], ['OA', 'OB', 'OC', 'OD']),
-        'A320neo|12/144': emptyLtsProfile('A320-251N 12 BC-144 YC', ['1', '3', '4', '5'], ['OA', 'OB', 'OC', 'OD']),
-        'A321|16/167': emptyLtsProfile('A321-211 16 BC-167 YC', ['1', '2', '3', '4', '5'], ['OA', 'OB', 'OC']),
-        'A321neo|12/184': emptyLtsProfile('A321-251NX 12 BC-184 YC', ['1', '2', '3', '4', '5'], ['OA', 'OB', 'OC', 'OD'])
+    const isIosPwaSafeMode = () => false;
+    const focusUnlessIosPwaSafe = (element, options) => {
+        if (!element || isIosPwaSafeMode()) return false;
+        element.focus(options);
+        return true;
+    };
+    const selectUnlessIosPwaSafe = element => {
+        if (!element || isIosPwaSafeMode()) return false;
+        element.select();
+        return true;
     };
     
     // --- NAVIGATION & SCROLL LOGIC ---
     const navOrder = [
         'acSearch', 
         'payload', 
-        'paxOA',
-        'paxOB',
-        'paxOC',
-        'paxOD',
-        'cargo1',
-        'cargo2',
-        'cargo3',
-        'cargo4',
-        'cargo5',
         'trip', 
         'alt', 
         'final', 
@@ -985,8 +908,10 @@ html.dark-theme input[readonly] {
                     if (index < navOrder.length - 1) {
                         const nextEl = document.getElementById(navOrder[index + 1]);
                         if (nextEl) {
-                            nextEl.focus({ preventScroll: true });
-                            if (nextEl.tagName === 'INPUT') nextEl.select();
+                            if (!isIosPwaSafeMode()) {
+                                nextEl.focus({ preventScroll: true });
+                                if (nextEl.tagName === 'INPUT') nextEl.select();
+                            }
                         }
                     } else {
                         el.blur(); // Прячем клавиатуру после последнего поля
@@ -1146,7 +1071,7 @@ html.dark-theme input[readonly] {
             setTimeout(lockAppViewport, 350);
             setTimeout(lockAppViewport, 700);
         };
-        lockAppViewport(); // Фиксируем viewport в пикселях при старте
+        lockAppViewport({ forceHeight: true }); // Фиксируем viewport в пикселях при старте
 
         // Запрос постоянного хранилища для защиты от агрессивной очистки кэша iOS/Android
         if (navigator.storage && navigator.storage.persist) {
@@ -1166,7 +1091,6 @@ html.dark-theme input[readonly] {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', lockAppViewport);
         }
-
         // 2. Жестко указываем браузеру (Android Chrome), что клавиатура ложится поверх
         if ('virtualKeyboard' in navigator) {
             navigator.virtualKeyboard.overlaysContent = true;
@@ -1210,8 +1134,6 @@ html.dark-theme input[readonly] {
         // 3. Жестко очищаем ВСЕ оставшиеся поля
         const idsToClear = [
             'payload', 'zfw', 
-            'paxOA', 'paxOB', 'paxOC', 'paxOD',
-            'cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5',
             'trip', 'contVal', 'alt', 'final', 'extra', 'taxi', 'totalFuel',
             'remFuel', 'minDev', 
             'tow', 'lw', 'rtow'
@@ -1228,10 +1150,7 @@ html.dark-theme input[readonly] {
         // 4. Возвращаем дефолтные 3%
         const contPerc = document.getElementById('contPerc');
         if (contPerc) contPerc.value = '3'; 
-        const fuelDensity = document.getElementById('fuelDensity');
-        if (fuelDensity) fuelDensity.value = '0.800';
         
-        calculateAll();
         saveFormData(); // Сохраняем пустой стейт
     }
 
@@ -1245,6 +1164,27 @@ html.dark-theme input[readonly] {
             if (navigator.vibrate) navigator.vibrate(30); // Легкая тактильная отдача
         });
     }
+
+        const endHold = () => {
+            clearTimeout(refreshHoldTimer);
+        };
+
+        // Подключаем события мыши
+        btn.addEventListener('mousedown', startHold);
+        btn.addEventListener('mouseup', endHold);
+        btn.addEventListener('mouseleave', endHold);
+        
+        // Подключаем тач-события
+        btn.addEventListener('touchstart', startHold, { passive: true });
+        btn.addEventListener('touchend', endHold);
+        btn.addEventListener('touchcancel', endHold);
+        
+        // Обычный клик
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearFields();
+        });
+    
 
     function toggleHelp() {
         const modal = document.getElementById('helpModal');
@@ -1470,167 +1410,6 @@ html.dark-theme input[readonly] {
         }
     }
 
-    function getLtsProfile(aircraft) {
-        if (!aircraft) return null;
-        return LTS_PROFILES[`${aircraft.type}|${aircraft.config || ''}`] || null;
-    }
-
-    function collectLoadsheetInput(base = {}) {
-        const densityEl = document.getElementById('fuelDensity');
-        const density = densityEl && LTS_DENSITIES.includes(densityEl.value) ? densityEl.value : '0.800';
-
-        return {
-            ...base,
-            aircraft: currentAircraft,
-            density,
-            pax: {
-                OA: val('paxOA'),
-                OB: val('paxOB'),
-                OC: val('paxOC'),
-                OD: val('paxOD')
-            },
-            cargo: {
-                '1': val('cargo1'),
-                '2': val('cargo2'),
-                '3': val('cargo3'),
-                '4': val('cargo4'),
-                '5': val('cargo5')
-            }
-        };
-    }
-
-    function lookupIndex(table, value) {
-        if (!value || value <= 0) return { index: 0, warning: '' };
-        if (!Array.isArray(table) || table.length === 0) {
-            return { index: null, warning: 'нужны данные LTS' };
-        }
-
-        const row = table.find(item => Number(item.value) >= value);
-        if (!row) {
-            return { index: null, warning: `выше максимума LTS: ${value}` };
-        }
-
-        return { index: Number(row.index) || 0, warning: '' };
-    }
-
-    function lookupFuelIndex(profile, fuelKg, density) {
-        if (!profile || !profile.fuel) return { index: null, warning: 'нужны данные LTS fuel' };
-        return lookupIndex(profile.fuel[density], fuelKg);
-    }
-
-    function addZoneIndexes(profileTables, values, prefix, warnings) {
-        let total = 0;
-        let complete = true;
-
-        Object.entries(values).forEach(([zone, value]) => {
-            if (!value || value <= 0) return;
-            const lookup = lookupIndex(profileTables ? profileTables[zone] : null, value);
-            if (lookup.warning) warnings.push(`${prefix} ${zone}: ${lookup.warning}`);
-            if (lookup.index === null) {
-                complete = false;
-            } else {
-                total += lookup.index;
-            }
-        });
-
-        return { total, complete };
-    }
-
-    function cgFromIndex(index, weight, constant) {
-        if (index === null || !weight || weight <= 0) return null;
-        return 25 + (((index - 50) * constant) / weight);
-    }
-
-    function calculateLoadsheet(input, profile) {
-        const warnings = [];
-        const result = {
-            profileLabel: profile ? profile.label : '',
-            dow: input.dow,
-            doi: input.doi,
-            payload: input.payload,
-            zfw: input.zfw,
-            takeoffFuel: input.takeoffFuel,
-            totalFuel: input.totalFuel,
-            trip: input.trip,
-            tow: input.tow,
-            lw: input.lw,
-            remFuel: input.remFuel,
-            lizfw: null,
-            fuelIndex: null,
-            litow: null,
-            lilw: null,
-            zfwCg: null,
-            towCg: null,
-            lwCg: null,
-            warnings
-        };
-
-        if (!input.aircraft) {
-            warnings.push('выберите ВС');
-            return result;
-        }
-
-        if (!profile) {
-            warnings.push(`нет LTS profile: ${input.aircraft.type} ${input.aircraft.config || ''}`);
-            return result;
-        }
-
-        const cargo = addZoneIndexes(profile.cargo, input.cargo, 'Cargo', warnings);
-        const pax = addZoneIndexes(profile.pax, input.pax, 'PAX', warnings);
-        const takeoffFuel = lookupFuelIndex(profile, input.takeoffFuel, input.density);
-        const landingFuel = lookupFuelIndex(profile, input.remFuel, input.density);
-
-        if (takeoffFuel.warning) warnings.push(`Fuel TOW: ${takeoffFuel.warning}`);
-        if (landingFuel.warning) warnings.push(`Fuel LW: ${landingFuel.warning}`);
-
-        const indexesComplete = cargo.complete && pax.complete && takeoffFuel.index !== null && landingFuel.index !== null;
-        if (!indexesComplete) return result;
-
-        result.lizfw = input.doi + cargo.total + pax.total;
-        result.fuelIndex = takeoffFuel.index;
-        result.litow = result.lizfw + takeoffFuel.index;
-        result.lilw = result.lizfw + landingFuel.index;
-        result.zfwCg = cgFromIndex(result.lizfw, input.zfw, profile.indexConstant);
-        result.towCg = cgFromIndex(result.litow, input.tow, profile.indexConstant);
-        result.lwCg = cgFromIndex(result.lilw, input.lw, profile.indexConstant);
-
-        return result;
-    }
-
-    function renderLoadsheetResult(result) {
-        const fmt = (value, digits = 0) => {
-            if (value === null || value === undefined || value === '' || Number.isNaN(value)) return '—';
-            return Number(value).toFixed(digits);
-        };
-        const text = (id, value, digits = 0) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = fmt(value, digits);
-        };
-
-        text('lsDow', result.dow);
-        text('lsDoi', result.doi, 2);
-        text('lsPayload', result.payload);
-        text('lsZfw', result.zfw);
-        text('lsTakeoffFuel', result.takeoffFuel);
-        text('lsTrip', result.trip);
-        text('lsLizfw', result.lizfw, 2);
-        text('lsFuelIndex', result.fuelIndex);
-        text('lsLitow', result.litow, 2);
-        text('lsLilw', result.lilw, 2);
-        text('lsZfwCg', result.zfwCg, 1);
-        text('lsTowCg', result.towCg, 1);
-        text('lsLwCg', result.lwCg, 1);
-
-        const status = document.getElementById('loadsheetStatus');
-        if (status) {
-            status.classList.toggle('ok', result.warnings.length === 0);
-            status.classList.toggle('warn', result.warnings.length > 0);
-            status.textContent = result.warnings.length
-                ? result.warnings.join(' · ')
-                : `${result.profileLabel}: OK`;
-        }
-    }
-
     function calculateAll() {
         const trip = val('trip');
         const perc = val('contPerc');
@@ -1643,21 +1422,7 @@ html.dark-theme input[readonly] {
             setVal('contVal', '');
         }
 
-        if (!currentAircraft) {
-            renderLoadsheetResult(calculateLoadsheet(collectLoadsheetInput({
-                dow: 0,
-                doi: 0,
-                payload: val('payload'),
-                zfw: 0,
-                trip,
-                totalFuel: 0,
-                takeoffFuel: 0,
-                tow: 0,
-                lw: 0,
-                remFuel: 0
-            }), null));
-            return;
-        }
+        if (!currentAircraft) return;
 
         const crewVal = document.getElementById('crew').value;
         let dow = 0;
@@ -1714,22 +1479,6 @@ html.dark-theme input[readonly] {
         const minDev = final + alt;
         setVal('minDev', minDev);
 
-        const loadsheetInput = collectLoadsheetInput({
-            crew: crewVal,
-            dow,
-            doi,
-            payload,
-            zfw,
-            trip,
-            totalFuel,
-            takeoffFuel,
-            tow,
-            lw,
-            remFuel
-        });
-        const loadsheetResult = calculateLoadsheet(loadsheetInput, getLtsProfile(currentAircraft));
-        renderLoadsheetResult(loadsheetResult);
-
         setStatusColor('totalFuel', totalFuel, val('maxFuel'));
         setStatusColor('tow', tow, mtow);
         setStatusColor('lw', lw, mlw);
@@ -1748,7 +1497,7 @@ html.dark-theme input[readonly] {
         
         // МГНОВЕННЫЙ фокус без setTimeout для вызова клавиатуры
         const dispInput = document.getElementById('modalDispExtra');
-        dispInput.focus();
+        focusUnlessIosPwaSafe(dispInput);
         
         setTimeout(() => { modal.classList.add('show'); }, 10);
     }
@@ -1787,17 +1536,17 @@ html.dark-theme input[readonly] {
         modal.style.display = 'flex';
         
         const densityInput = document.getElementById('modalFuelDensity');
-        densityInput.focus();
+        const didFocusDensity = focusUnlessIosPwaSafe(densityInput);
         
         // Находим, где стоит точка (или запятая)
         let dotPos = densityInput.value.indexOf('.');
         if (dotPos === -1) dotPos = densityInput.value.indexOf(',');
         
         // Выделяем всё, что после точки
-        if (dotPos !== -1) {
+        if (didFocusDensity && dotPos !== -1) {
             densityInput.setSelectionRange(dotPos + 1, densityInput.value.length);
-        } else {
-            densityInput.select(); // Если точки нет, выделяем всё
+        } else if (didFocusDensity) {
+            selectUnlessIosPwaSafe(densityInput); // Если точки нет, выделяем всё
         }
         
         setTimeout(() => { modal.classList.add('show'); }, 10);
@@ -1838,9 +1587,9 @@ html.dark-theme input[readonly] {
         const densityInput = document.getElementById('modalFuelDensity');
         if (densityInput) {
             densityInput.value = '0.785';
-            densityInput.focus();
+            const didFocusDensity = focusUnlessIosPwaSafe(densityInput);
             // Выделяем символы с 2 по 5 (то есть ровно "785")
-            densityInput.setSelectionRange(2, 5); 
+            if (didFocusDensity) densityInput.setSelectionRange(2, 5); 
         }
     }
 

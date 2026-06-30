@@ -1,6 +1,11 @@
-const CACHE_NAME = 'myflight_v.test';
+const CACHE_NAME = 'myflight_v.260628-ios-pwa-admin-offline-1';
 const ASSET_FETCH_TIMEOUT_MS = 12000;
 const SLOW_ASSET_LOG_MS = 2500;
+const FIREBASE_RUNTIME_ASSETS = [
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js'
+];
 
 // New worker activates only after every critical asset is cached.
 const CRITICAL_ASSETS = [
@@ -29,7 +34,8 @@ const OPTIONAL_ASSETS = [
     './landicon.png',
     './fdp.png',
     './fap.png',
-    './handicon.png'
+    './handicon.png',
+    ...FIREBASE_RUNTIME_ASSETS
 ];
 
 const FALLBACK_HTML = `
@@ -89,6 +95,21 @@ const put = async (request, response) => {
     return response;
 };
 
+const isFirebaseRuntimeRequest = (request) => FIREBASE_RUNTIME_ASSETS.includes(request.url);
+
+const putRuntimeAsset = async (request, response) => {
+    if (!response) return response;
+    const canCache = response.type === 'opaque'
+        || response.type === 'basic'
+        || response.type === 'cors';
+    const hasUsableStatus = response.type === 'opaque' || response.status === 200;
+    if (!canCache || !hasUsableStatus) return response;
+
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+    return response;
+};
+
 const inet = async (request, timeoutMs = 0) => {
     try {
         if (timeoutMs > 0) {
@@ -128,9 +149,11 @@ const cacheAsset = async (cache, asset, required) => {
     const startedAt = Date.now();
     const timeoutId = setTimeout(() => controller.abort(), ASSET_FETCH_TIMEOUT_MS);
     try {
-        const request = new Request(asset, { cache: 'reload' });
+        const request = new Request(asset, FIREBASE_RUNTIME_ASSETS.includes(asset)
+            ? { cache: 'reload', mode: 'no-cors' }
+            : { cache: 'reload' });
         const response = await fetch(request, { signal: controller.signal });
-        if (!response || !response.ok) {
+        if (!response || (!response.ok && response.type !== 'opaque')) {
             throw new Error(`HTTP ${response ? response.status : 'no response'}`);
         }
         await cache.put(request, response);
@@ -261,6 +284,13 @@ self.addEventListener('fetch', event => {
 
     event.respondWith((async () => {
         if (isExternalRequest(event.request)) {
+            if (isFirebaseRuntimeRequest(event.request)) {
+                const cachedResponse = await get(event.request);
+                const networkResponse = await inet(event.request);
+                if (networkResponse) return await putRuntimeAsset(event.request, networkResponse);
+                return cachedResponse || Response.error();
+            }
+
             const networkResponse = await inet(event.request);
             return networkResponse || Response.error();
         }

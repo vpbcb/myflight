@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0b0f19" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f1f5f9">
     
     <title>MyNPA</title>
     
@@ -267,9 +267,17 @@
         }
 
         .header-action-btn.save {
+            background: rgba(100, 116, 139, 0.16);
+            border-color: rgba(100, 116, 139, 0.32);
+            color: #64748b;
+            cursor: default;
+        }
+
+        .header-action-btn.save.is-active {
             background: var(--accent-blue);
             border-color: var(--accent-blue);
             color: #ffffff;
+            cursor: pointer;
         }
 
         html.dark-theme .header-action-btn {
@@ -277,9 +285,19 @@
         }
 
         html.dark-theme .header-action-btn.save {
+            background: rgba(148, 163, 184, 0.12);
+            border-color: rgba(148, 163, 184, 0.24);
+            color: #94a3b8;
+        }
+
+        html.dark-theme .header-action-btn.save.is-active {
             background: #0273ad;
             border-color: #0273ad;
             color: #cbd5e1;
+        }
+
+        .header-action-btn.save:disabled:active {
+            transform: none;
         }
 
         .header-action-btn:active {
@@ -338,13 +356,14 @@
         }
         .npa-info-inline-row {
             display: grid;
-            grid-template-columns: minmax(48px, 1fr) minmax(0, 2.5fr) minmax(0, 2.5fr);
+            grid-template-columns: minmax(48px, 0.95fr) minmax(0, 2.35fr) minmax(0, 2.35fr) minmax(46px, 0.85fr);
             gap: 8px;
             align-items: stretch;
         }
         .npa-info-card .npa-fdp-field,
         .npa-info-card .npa-fap-field,
-        .npa-info-card .npa-gpa-field {
+        .npa-info-card .npa-gpa-field,
+        .npa-info-card .npa-fdp-fap-mode-field {
             min-width: 0;
         }
         .npa-gpa-field {
@@ -447,29 +466,29 @@
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            gap: 0.375rem;
+            gap: 0.16rem;
             min-height: 2.25rem;
-            padding: 0.125rem 0.5rem;
+            padding: 0.125rem 0.36rem;
         }
 
         .npa-fdp-fap-label {
             display: flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: 0.16rem;
             min-width: 0;
-            flex: 0 1 42%;
+            flex: 0 0 auto;
         }
 
         .npa-fdp-fap-label .npa-icon {
-            height: 1rem;
+            height: 0.9rem;
         }
 
         .npa-fdp-fap-title {
             width: auto;
             margin-bottom: 0;
-            font-size: 0.8125rem;
+            font-size: 0.78rem;
             font-weight: 800;
-            letter-spacing: 0.05rem;
+            letter-spacing: 0.02rem;
             overflow: visible;
             text-overflow: clip;
             white-space: nowrap;
@@ -478,17 +497,16 @@
         .npa-fdp-fap-input {
             width: auto !important;
             height: 1.75rem !important;
-            flex: 1 1 0;
+            flex: 1 1 auto;
             min-width: 0;
-            max-width: min(58%, 6.2em);
-            padding-left: 0.2em !important;
-            padding-right: 0.2em !important;
+            max-width: none;
+            padding-left: 0.12em !important;
+            padding-right: 0.12em !important;
             border-radius: 0.625rem !important;
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-size: 0.9rem !important;
-            font-size: clamp(0.78rem, 15cqw, 1.06rem) !important;
+            font-size: clamp(0.58rem, 16cqw, 1.02rem) !important;
             line-height: 1 !important;
             font-weight: 600 !important;
             color: var(--accent-blue) !important;
@@ -508,6 +526,66 @@
         .npa-fap-field {
             background: rgba(251, 146, 60, 0.2) !important;
             border-color: var(--accent-orange) !important;
+        }
+
+        .npa-fdp-fap-mode-field {
+            position: relative;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            align-self: stretch;
+            min-height: 2.25rem;
+            height: 100%;
+            padding: 0;
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0;
+        }
+
+        .npa-fdp-fap-mode-btn {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            min-width: 0;
+            height: 100%;
+            min-height: 0;
+            align-self: stretch;
+            border-radius: 10px;
+            border: 1px solid rgba(13, 71, 161, 0.62);
+            background: rgba(13, 71, 161, 0.13);
+            color: #0d47a1;
+            font-size: clamp(0.58rem, 1.7vw, 0.72rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .npa-fdp-fap-mode-btn.is-dist {
+            border-color: rgba(11, 61, 145, 0.68);
+            background: rgba(11, 61, 145, 0.16);
+            color: #0b3d91;
+        }
+
+        html.dark-theme .npa-fdp-fap-mode-btn {
+            color: #0ea5e9;
+            border-color: rgba(14, 165, 233, 0.58);
+            background: rgba(14, 165, 233, 0.14);
+        }
+
+        html.dark-theme .npa-fdp-fap-mode-btn.is-dist {
+            color: #0284c7;
+            border-color: rgba(2, 132, 199, 0.64);
+            background: rgba(2, 132, 199, 0.18);
+        }
+
+        .npa-fdp-fap-mode-btn:disabled {
+            opacity: 0.35;
+            cursor: default;
         }
 
         .downwind-inline-wide {
@@ -862,7 +940,7 @@
         .menu-btn { right: 16px; justify-content: flex-end; }
         .bottom-edit-lock-btn {
             position: absolute;
-            right: 29px;
+            right: 50px;
             top: max(8px, calc(var(--safe-top) + 2px));
             left: auto;
             bottom: auto;
@@ -885,10 +963,36 @@
             outline: none;
             -webkit-tap-highlight-color: transparent;
         }
+        .bottom-settings-btn {
+            position: absolute;
+            right: 10px;
+            top: max(8px, calc(var(--safe-top) + 2px));
+            width: 32px;
+            height: 32px;
+            padding: 4px;
+            border: none;
+            border-radius: 999px;
+            background: transparent;
+            box-shadow: none;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 101;
+            touch-action: manipulation;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
         .bottom-edit-lock-btn svg {
             width: 24px;
             height: 24px;
             flex: 0 0 24px;
+            display: block;
+        }
+        .bottom-settings-btn svg {
+            width: 23px;
+            height: 23px;
             display: block;
         }
         .bottom-edit-lock-btn.unlocked {
@@ -938,9 +1042,52 @@
             left: -15px;
             right: 0;
         }
+        .bottom-settings-btn::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            bottom: -12px;
+            left: -12px;
+            right: -8px;
+        }
         .refresh-btn:active, .menu-btn:active { transform: scale(0.9); }
         .wind-btn:active { transform: translateX(-50%) scale(0.9); }
         .bottom-edit-lock-btn:active { transform: scale(0.9); }
+        .bottom-settings-btn:active { transform: scale(0.9); }
+
+        @media (max-width: 410px) {
+            .bottom-edit-lock-btn {
+                right: 44px;
+                top: max(3px, calc(var(--safe-top) - 3px));
+                width: 46px;
+                height: 45px;
+                padding: 0;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0;
+            }
+
+            .bottom-edit-lock-btn svg {
+                width: 23px;
+                height: 23px;
+                flex-basis: 23px;
+            }
+
+            .bottom-edit-lock-hint {
+                display: block;
+                font-size: 6px;
+                line-height: 1.02;
+                text-align: center;
+                letter-spacing: 0;
+                opacity: 0.72;
+            }
+
+            .bottom-edit-lock-btn::after {
+                left: -10px;
+                right: -6px;
+            }
+        }
 
         .btn-label-style {
             font-size: 0.65rem; 
@@ -1056,15 +1203,15 @@
             align-items: center;
             justify-content: space-between;
             min-height: 2.25rem;
-            padding: 0.125rem 0.5rem;
+            padding: 0.125rem 0.36rem;
         }
 
         .cell-wrapper .npa-fdp-fap-input {
-            flex: 1 1 0;
+            flex: 1 1 auto;
             min-width: 0;
             min-height: 1.75rem;
             max-height: 1.75rem;
-            max-width: min(58%, 6.2em);
+            max-width: none;
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
         }
@@ -1315,18 +1462,17 @@
         .cell-input.npa-fdp-fap-input {
             width: auto !important;
             height: 1.75rem !important;
-            flex: 1 1 0;
+            flex: 1 1 auto;
             min-width: 0;
-            max-width: min(58%, 6.2em);
+            max-width: none;
             max-height: 1.75rem;
-            padding-left: 0.2em !important;
-            padding-right: 0.2em !important;
+            padding-left: 0.12em !important;
+            padding-right: 0.12em !important;
             background-color: #ffffff !important;
             border: 1px solid rgba(15, 23, 42, 0.14) !important;
             border-radius: 0.625rem !important;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-size: 0.9rem !important;
-            font-size: clamp(0.78rem, 15cqw, 1.06rem) !important;
+            font-size: clamp(0.58rem, 16cqw, 1.02rem) !important;
             line-height: 1 !important;
         }
 
@@ -1553,29 +1699,32 @@
                 padding-left: 6px !important;
                 padding-right: 6px !important;
             }
+            .npa-info-inline-row {
+                grid-template-columns: minmax(42px, 0.82fr) minmax(0, 2.5fr) minmax(0, 2.5fr) minmax(42px, 0.72fr);
+                gap: 4px;
+            }
             .cell-wrapper.npa-fdp-field,
             .cell-wrapper.npa-fap-field {
-                gap: 0.3125rem;
-                padding-left: 0.375rem;
-                padding-right: 0.375rem;
+                gap: 0.12rem;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
             }
             .npa-fdp-fap-label {
-                gap: 0.25rem;
+                gap: 0.12rem;
             }
             .npa-fdp-fap-label .npa-icon {
-                height: 0.875rem;
+                height: 0.78rem;
             }
             .npa-fdp-fap-title {
-                font-size: 0.8125rem;
-                letter-spacing: 0.025rem;
+                font-size: 0.72rem;
+                letter-spacing: 0;
             }
             .cell-input.npa-fdp-fap-input,
             .cell-wrapper .npa-fdp-fap-input {
                 width: auto !important;
-                flex-basis: 0;
-                max-width: min(58%, 6.2em);
-                font-size: 0.82rem !important;
-                font-size: clamp(0.72rem, 14cqw, 0.98rem) !important;
+                flex: 1 1 auto;
+                max-width: none;
+                font-size: clamp(0.52rem, 15cqw, 0.92rem) !important;
             }
         }
 
@@ -1623,11 +1772,17 @@
             letter-spacing: 0;
             text-transform: none;
         }
+        #tempC {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+            line-height: 22px !important;
+        }
         #tempC.temp-positive {
             color: #ef4444 !important;
         }
         #tempC.temp-negative {
-            color: #38bdf8 !important;
+            color: var(--accent-blue) !important;
         }
 
         #apprName.airport-ghost-value {
@@ -2715,6 +2870,10 @@
             font-weight: 700;
             width: 100% !important;
         }
+        .keypad-action-row {
+            display: flex;
+            gap: 0.5rem;
+        }
         .kp-done {
             flex: 2;
             font-size: calc(var(--btn-height) * 0.38) !important;
@@ -2735,6 +2894,15 @@
             -webkit-user-select: none !important;
             user-select: none !important;
             -webkit-touch-callout: none;
+        }
+
+        input:not([readonly]):not([disabled]),
+        textarea:not([readonly]):not([disabled]),
+        select:not([disabled]) {
+            touch-action: auto;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default;
         }
 
         /* --- Стили для правой вкладки Profile с FCU FPA --- */
@@ -2808,16 +2976,34 @@
 
     <script>
         (function() {
+            const STATUS_BAR_LIGHT = '#f1f5f9';
+            const STATUS_BAR_DARK = '#0b0f19';
+            const ensureMeta = (name, content) => {
+                let meta = document.querySelector(`meta[name="${name}"]`);
+                if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.setAttribute('name', name);
+                    document.head.appendChild(meta);
+                }
+                meta.setAttribute('content', content);
+                if (name === 'theme-color') meta.removeAttribute('media');
+                return meta;
+            };
+            const setStatusBarTheme = isDark => {
+                ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');
+            };
             const applyTheme = (theme) => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
                 if (document.body) document.body.classList.toggle('dark-theme', isDark);
+                setStatusBarTheme(isDark);
             };
             const savedTheme = localStorage.getItem('hub_theme');
-            if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme');
+            applyTheme(savedTheme);
             document.addEventListener('DOMContentLoaded', () => {
                 const currentTheme = localStorage.getItem('hub_theme');
-                if (currentTheme) applyTheme(currentTheme);
+                applyTheme(currentTheme);
             });
             window.addEventListener('storage', (event) => {
                 if (event.key === 'hub_theme') applyTheme(event.newValue);
@@ -2835,7 +3021,7 @@
         </div>
         <div class="header-actions">
             <button type="button" class="header-action-btn" id="npaAddAirportButton" onclick="startNewAirportEntry()">Add<br>Airport</button>
-            <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()">Save to<br>device</button>
+            <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to<br>device</button>
         </div>
         <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2908,6 +3094,9 @@
                                 <span class="cell-label npa-fdp-fap-title">FAP</span>
                             </div>
                             <input type="text" class="cell-input npa-fdp-fap-input" id="fap" readonly onclick="openNpaKeypad('fap')">
+                        </div>
+                        <div class="cell-wrapper flex-1 npa-fdp-fap-mode-field">
+                            <button type="button" id="npaFdpFapModeBtn" class="npa-fdp-fap-mode-btn" onclick="toggleNpaFdpFapGlobalMode(event)" aria-disabled="false">ALT</button>
                         </div>
                     </div>
                 </div>
@@ -3040,6 +3229,13 @@
         <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
     </button>
 
+    <button type="button" class="bottom-settings-btn" id="npaSettingsBtn" title="Local data settings" aria-label="Local data settings" onclick="openNpaLocalDataModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.73v.52a2 2 0 0 1-1 1.73l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.73v-.52a2 2 0 0 1 1-1.73l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+        </svg>
+    </button>
+
     <a href="./mywind.html" class="wind-btn" title="RWY Wind Limits" style="text-decoration: none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
             <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
@@ -3137,30 +3333,37 @@
         title.addEventListener('contextmenu', event => event.preventDefault());
     }
 
+    function getNpaAdminUser() {
+        return window.MyFlightNpaSync?.getAdminUser?.()
+            || window.npaAuth?.currentUser
+            || null;
+    }
+
     window.handleNpaAdminAuthState = user => {
-        document.body.classList.toggle('npa-header-actions-unlocked', Boolean(user));
+        const adminUser = user || getNpaAdminUser();
+        document.body.classList.toggle('npa-header-actions-unlocked', Boolean(adminUser));
         const label = document.getElementById('npaAdminModeLabel');
         const saveButton = document.getElementById('npaSaveButton');
         if (label) {
             label.textContent = 'admin mode ON';
-            label.classList.toggle('active', Boolean(user));
+            label.classList.toggle('active', Boolean(adminUser));
         }
-        if (saveButton) saveButton.innerHTML = user ? 'Save to<br>cloud' : 'Save to<br>device';
-        if (user && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
+        if (saveButton) saveButton.innerHTML = adminUser ? 'Save to<br>cloud' : 'Save to<br>device';
+        if (typeof updateNpaSaveButtonState === 'function') updateNpaSaveButtonState();
+        if (adminUser && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
 
     document.addEventListener('DOMContentLoaded', () => {
         let lockedNpaAppHeight = 0;
 
-        const isNpaNativeEditableFocused = () => {
-            const active = document.activeElement;
-            return Boolean(
-                active &&
-                /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) &&
-                !active.readOnly &&
-                !active.disabled
-            );
-        };
+        const isNpaNativeEditable = element => Boolean(
+            element &&
+            /^(INPUT|TEXTAREA|SELECT)$/.test(element.tagName) &&
+            !element.readOnly &&
+            !element.disabled
+        );
+
+        const isNpaNativeEditableFocused = () => isNpaNativeEditable(document.activeElement);
 
         const keepNpaViewportPinned = () => {
             document.documentElement.scrollTop = 0;
@@ -3242,7 +3445,7 @@
         }
 
         document.addEventListener('focusin', event => {
-            if (!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || event.target.readOnly || event.target.disabled) return;
+            if (!isNpaNativeEditable(event.target)) return;
             lockAppHeight();
             keepNpaViewportPinned();
         });
@@ -3265,6 +3468,7 @@
         }
         syncNpaTabState();
         scheduleNpaProfileLayoutUpdate();
+        updateNpaSaveButtonState();
     });
 
     function getNpaTabBlockIds() {
@@ -3604,6 +3808,149 @@
 
         npaPageStateSaveSuppressed = false;
         closeNpaClearDataModal('button');
+    }
+
+    function openNpaLocalDataModal() {
+        const modal = document.getElementById('npaLocalDataModal');
+        if (!modal) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        modal.classList.add('active');
+    }
+
+    function closeNpaLocalDataModal(event) {
+        if (event && event !== 'button' && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('npaLocalDataModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function getNpaProfileScrollBackup() {
+        const result = {};
+        try {
+            Object.keys(sessionStorage)
+                .filter(key => key.startsWith(NPA_PROFILE_SCROLL_STORAGE_PREFIX))
+                .forEach(key => {
+                    result[key] = sessionStorage.getItem(key);
+                });
+        } catch (error) {
+            console.error('Profile scroll backup read error:', error);
+        }
+        return result;
+    }
+
+    function makeNpaLocalDataBackup() {
+        return {
+            app: 'MyFlight MyNPA',
+            kind: 'mynpa-local-data',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            data: {
+                airportsDb: readJsonStorage(NPA_AIRPORTS_DB_KEY, {}),
+                pageState: readJsonStorage(NPA_PAGE_STATE_KEY, null),
+                profileScroll: getNpaProfileScrollBackup()
+            }
+        };
+    }
+
+    function makeNpaLocalDataFileName() {
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        return `mynpa-local-data-${stamp}.json`;
+    }
+
+    function saveNpaLocalDataToFile() {
+        const data = JSON.stringify(makeNpaLocalDataBackup(), null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = makeNpaLocalDataFileName();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function triggerNpaLocalDataFileLoad() {
+        const input = document.getElementById('npaLocalDataFileInput');
+        if (!input) return;
+        input.value = "";
+        input.click();
+    }
+
+    function normalizeNpaLocalDataBackup(payload) {
+        if (!payload || typeof payload !== 'object') throw new Error('Invalid backup file.');
+        if (payload.app !== 'MyFlight MyNPA' || payload.kind !== 'mynpa-local-data') {
+            throw new Error('This file is not a MyNPA local data backup.');
+        }
+
+        const data = payload.data;
+        if (!data || typeof data !== 'object') throw new Error('Backup data is missing.');
+        if (!data.airportsDb || typeof data.airportsDb !== 'object' || Array.isArray(data.airportsDb)) {
+            throw new Error('Airport data is missing or invalid.');
+        }
+        if (data.pageState !== null && data.pageState !== undefined && typeof data.pageState !== 'object') {
+            throw new Error('Page state is invalid.');
+        }
+        if (data.profileScroll !== null && data.profileScroll !== undefined && (typeof data.profileScroll !== 'object' || Array.isArray(data.profileScroll))) {
+            throw new Error('Profile scroll data is invalid.');
+        }
+
+        return {
+            airportsDb: data.airportsDb,
+            pageState: data.pageState ?? null,
+            profileScroll: data.profileScroll || {}
+        };
+    }
+
+    function applyNpaLocalDataBackup(backup) {
+        npaPageStateSaveSuppressed = true;
+        try {
+            writeJsonStorage(NPA_AIRPORTS_DB_KEY, backup.airportsDb);
+            if (backup.pageState === null) {
+                localStorage.removeItem(NPA_PAGE_STATE_KEY);
+            } else {
+                writeJsonStorage(NPA_PAGE_STATE_KEY, backup.pageState);
+            }
+
+            localStorage.removeItem(NPA_PENDING_AIRPORT_SAVES_KEY);
+            clearAllNpaProfileScrollPositions();
+            Object.entries(backup.profileScroll).forEach(([key, value]) => {
+                if (!String(key).startsWith(NPA_PROFILE_SCROLL_STORAGE_PREFIX)) return;
+                try {
+                    sessionStorage.setItem(key, String(value ?? ""));
+                } catch (error) {
+                    console.error('Profile scroll backup write error:', error);
+                }
+            });
+
+            window.airportsDb = loadNpaAirportsDb();
+            window.dispatchEvent(new CustomEvent('npa-pending-sync-changed', {
+                detail: { pendingCount: 0 }
+            }));
+            renderNpaPendingSyncIndicator();
+        } finally {
+            npaPageStateSaveSuppressed = false;
+        }
+    }
+
+    async function handleNpaLocalDataFileSelected(event) {
+        const input = event?.target;
+        const file = input?.files?.[0];
+        if (!file) return;
+
+        try {
+            const payload = JSON.parse(await file.text());
+            const backup = normalizeNpaLocalDataBackup(payload);
+            const confirmed = confirm('Локальные данные MyNPA на этом устройстве будут заменены данными из файла. Firebase cloud не будет перезаписан. Продолжить?');
+            if (!confirmed) return;
+            applyNpaLocalDataBackup(backup);
+            closeNpaLocalDataModal('button');
+            alert('Local MyNPA data loaded. Page will reload now.');
+            window.location.reload();
+        } catch (error) {
+            alert(error?.message || 'Cannot load MyNPA local data file.');
+        } finally {
+            if (input) input.value = "";
+        }
     }
 
     const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_rtdb_v1';
@@ -3974,7 +4321,7 @@
     });
 
     function isNpaAdminMode() {
-        return Boolean(window.npaAuth?.currentUser);
+        return Boolean(getNpaAdminUser());
     }
 
     function queueAirportSave(airportCode, airportData) {
@@ -4051,6 +4398,7 @@
         let npaProfileLongPressColumn = "";
         let npaAirportGhostValue = "";
         let npaAirportFocusActive = false;
+        let npaAirportFocusRenderTimer = null;
         let npaCurrentApproachDirty = false;
         let finalDescentFromSource = "fap";
         const DOWNWIND_MANUAL_SHIFT_MESSAGE = "S downwind was manually changed";
@@ -4063,6 +4411,28 @@
         let profileRadioShiftExactNm = null;
         let profileTarFromAirport = false;
         let profileTarManualOverride = false;
+        const NPA_FDP_FAP_FIELDS = ['fdp', 'fap'];
+        const NPA_FDP_FAP_DEFAULT_MODE = 'alt';
+        let npaFdpFapValueModes = { fdp: NPA_FDP_FAP_DEFAULT_MODE, fap: NPA_FDP_FAP_DEFAULT_MODE };
+        let npaFdpFapMode = NPA_FDP_FAP_DEFAULT_MODE;
+        let npaFdpFapActiveInputMode = NPA_FDP_FAP_DEFAULT_MODE;
+
+        function isNpaIosPwaSafeMode() {
+            return false;
+        }
+
+        function focusNpaUnlessIosPwaSafe(element, options) {
+            if (!element || isNpaIosPwaSafeMode()) return false;
+            element.focus(options);
+            return true;
+        }
+
+        function selectNpaUnlessIosPwaSafe(element) {
+            if (!element || isNpaIosPwaSafeMode()) return false;
+            element.select();
+            return true;
+        }
+
         const NPA_APPROACH_USER_EDIT_FIELDS = new Set([
             'rwLength',
             'elevation',
@@ -4079,11 +4449,25 @@
             'tar'
         ]);
 
+        function updateNpaSaveButtonState() {
+            const saveButton = document.getElementById('npaSaveButton');
+            if (!saveButton) return;
+            const isActive = Boolean(npaCurrentApproachDirty);
+            saveButton.classList.toggle('is-active', isActive);
+            saveButton.disabled = !isActive;
+            saveButton.setAttribute('aria-disabled', isActive ? 'false' : 'true');
+        }
+
+        function setNpaCurrentApproachDirty(isDirty) {
+            npaCurrentApproachDirty = Boolean(isDirty);
+            updateNpaSaveButtonState();
+        }
+
         function markNpaCurrentApproachDirty() {
             const airportCode = getNpaAirportCode();
             const approachType = getSelectedNpaType();
             if (!airportCode || !approachType || approachType === "—") return;
-            npaCurrentApproachDirty = true;
+            setNpaCurrentApproachDirty(true);
         }
 
         function markNpaCurrentApproachDirtyForField(field) {
@@ -4118,6 +4502,8 @@
                 finalDescentFromSource,
                 sDownwindManualMode,
                 downwindRadioFixShiftStoredValue: getDownwindRadioFixShiftValueOrBlank(),
+                fdpMode: getNpaFdpFapMode('fdp'),
+                fapMode: getNpaFdpFapMode('fap'),
                 openBlocks: ['npaBlock2', 'npaBlock3', 'npaBlock4', 'npaBlock5']
                     .filter(id => document.getElementById(id)?.classList.contains('open')),
                 savedAt: Date.now()
@@ -4156,6 +4542,11 @@
                 profileRadioShiftExactNm = normalizeOptionalNmValue(state.profileRadioShiftExactNm);
                 profileTarFromAirport = state.profileTarFromAirport === true;
                 profileTarManualOverride = state.profileTarManualOverride === true;
+                setNpaFdpFapMode(
+                    state.fapMode ||
+                    state.fdpMode ||
+                    (String(fields.fap || fields.fdp || '').includes('nm') ? 'dist' : 'alt')
+                );
 
                 setSelectedNpaType(state.selectedType && state.selectedType !== "—" ? state.selectedType : "");
 
@@ -4341,11 +4732,12 @@
     }
 
     function selectNpaAirport(airportCode) {
-        npaCurrentApproachDirty = false;
+        setNpaCurrentApproachDirty(false);
         const inputEl = document.getElementById('apprName');
         const code = sanitizeNpaAirportCode(airportCode);
         npaAirportGhostValue = code;
         npaAirportFocusActive = false;
+        clearNpaAirportFocusRenderTimer();
         if (inputEl) {
             inputEl.value = code;
             inputEl.classList.remove('airport-ghost-value');
@@ -4356,6 +4748,22 @@
         clearNpaFields();
         renderNpaApproachDropdown(true);
         scheduleNpaCurrentPageStateSave();
+    }
+
+    function clearNpaAirportFocusRenderTimer() {
+        if (!npaAirportFocusRenderTimer) return;
+        window.clearTimeout(npaAirportFocusRenderTimer);
+        npaAirportFocusRenderTimer = null;
+    }
+
+    function scheduleNpaAirportFocusDropdown(inputEl, prefixOverride = "") {
+        clearNpaAirportFocusRenderTimer();
+        const delay = 80;
+        npaAirportFocusRenderTimer = window.setTimeout(() => {
+            npaAirportFocusRenderTimer = null;
+            if (document.activeElement !== inputEl || !npaAirportFocusActive) return;
+            renderNpaAirportDropdown(true, prefixOverride);
+        }, delay);
     }
 
     function handleAirportFocus() {
@@ -4369,12 +4777,13 @@
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
         closeNpaApproachDropdown();
-        renderNpaAirportDropdown(true, "");
+        scheduleNpaAirportFocusDropdown(inputEl, "");
     }
 
     function handleAirportBlur() {
         const inputEl = document.getElementById('apprName');
         if (!inputEl) return;
+        clearNpaAirportFocusRenderTimer();
         inputEl.classList.remove('airport-ghost-value');
         inputEl.placeholder = "ICAO";
         const airportCode = getNpaAirportCode();
@@ -4481,7 +4890,7 @@
 
     function handleAirportInput() {
         clearTimeout(airportInputTimeout);
-        npaCurrentApproachDirty = false;
+        setNpaCurrentApproachDirty(false);
         npaAirportFocusActive = true;
 
         const inputEl = document.getElementById('apprName');
@@ -4577,7 +4986,7 @@
 
     function selectNpaType(type) {
         if (navigator.vibrate) navigator.vibrate(30);
-        npaCurrentApproachDirty = false;
+        setNpaCurrentApproachDirty(false);
         setSelectedNpaType(type);
         npaProfileSavedScrollTop = 0;
         clearNpaProfileScrollPosition(type);
@@ -4590,6 +4999,167 @@
         renderNpaProfileTable();
         setNpaEditModeUnlocked(isRunwayOnlyApproachName(getNpaAirportCode(), type), true);
         scheduleNpaCurrentPageStateSave();
+    }
+
+    function isNpaFdpFapField(id) {
+        return NPA_FDP_FAP_FIELDS.includes(id);
+    }
+
+    function normalizeNpaFdpFapMode(mode) {
+        return String(mode || '').toLowerCase() === 'dist' ? 'dist' : NPA_FDP_FAP_DEFAULT_MODE;
+    }
+
+    function getNpaFdpFapMode(field) {
+        return npaFdpFapMode;
+    }
+
+    function setNpaFdpFapMode(field, mode) {
+        const normalizedMode = normalizeNpaFdpFapMode(mode === undefined ? field : mode);
+        npaFdpFapMode = normalizedMode;
+        npaFdpFapActiveInputMode = normalizedMode;
+        NPA_FDP_FAP_FIELDS.forEach(item => {
+            npaFdpFapValueModes[item] = normalizedMode;
+        });
+        updateNpaFdpFapModeButton();
+    }
+
+    function resetNpaFdpFapModes() {
+        setNpaFdpFapMode(NPA_FDP_FAP_DEFAULT_MODE);
+    }
+
+    function formatNpaFdpFapDisplay(field, value) {
+        const numeric = getCleanDisplayNumber(value);
+        if (numeric === "") return "";
+        return getNpaFdpFapMode(field) === 'dist'
+            ? formatNmDisplay(numeric, 1)
+            : formatFeetDisplay(numeric);
+    }
+
+    function getNpaProfileGeometryState() {
+        const elevationValue = getAirportThresholdElevationValue();
+        const angleValue = getNumberOrBlank('gpa');
+        const tempValue = getNumberOrBlank('tempC');
+
+        if (
+            !isFilledProfileNumber(elevationValue) ||
+            !isFilledProfileNumber(angleValue) ||
+            !isFilledProfileNumber(tempValue)
+        ) {
+            return null;
+        }
+
+        const hElev = Number(elevationValue);
+        const angle = Number(angleValue);
+        const temp = Number(tempValue);
+        const denominator = temp + 273.15;
+        const angleRad = angle * (Math.PI / 180);
+        const tanAngle = Math.tan(angleRad);
+        const ftPerNm = 6076.1155;
+
+        if (!Number.isFinite(denominator) || denominator <= 0 || !Number.isFinite(tanAngle) || tanAngle <= 0) {
+            return null;
+        }
+
+        const kTable = (288.15 - (0.00198 * hElev)) / denominator;
+        if (!Number.isFinite(kTable)) return null;
+
+        return { hElev, angle, temp, kTable, tanAngle, ftPerNm };
+    }
+
+    function getNpaProfileRawDistFromInd(height, geometry) {
+        if (!geometry || !Number.isFinite(Number(height))) return NaN;
+        return Math.max(0, ((Number(height) - geometry.hElev) / geometry.kTable - 50) / (geometry.tanAngle * geometry.ftPerNm));
+    }
+
+    function getNpaProfileIndFromDist(distance, geometry) {
+        if (!geometry || !Number.isFinite(Number(distance))) return NaN;
+        return ((Number(distance) * geometry.tanAngle * geometry.ftPerNm + 50) * geometry.kTable + geometry.hElev);
+    }
+
+    function roundNpaProfileDistance(distance) {
+        return Math.round(Number(distance) * 10) / 10;
+    }
+
+    function roundNpaFdpFapDistance(distance) {
+        const numeric = Number(distance);
+        return Number.isFinite(numeric) ? Number(numeric.toFixed(1)) : "";
+    }
+
+    function roundNpaFdpFapDistanceAltitude(altitude) {
+        const numeric = Number(altitude);
+        return Number.isFinite(numeric) ? Math.round(numeric / 100) * 100 : "";
+    }
+
+    function convertNpaFdpFapValue(value, fromMode, toMode) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return "";
+
+        const sourceMode = normalizeNpaFdpFapMode(fromMode);
+        const targetMode = normalizeNpaFdpFapMode(toMode);
+        if (sourceMode === targetMode) return numeric;
+
+        const geometry = getNpaProfileGeometryState();
+        if (!geometry) return "";
+
+        if (sourceMode === 'alt' && targetMode === 'dist') {
+            return roundNpaFdpFapDistance(getNpaProfileRawDistFromInd(numeric, geometry));
+        }
+
+        return roundNpaFdpFapDistanceAltitude(getNpaProfileIndFromDist(numeric, geometry));
+    }
+
+    function formatNpaFdpFapKeypadEntry(value, mode) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return "";
+        return normalizeNpaFdpFapMode(mode) === 'dist'
+            ? numeric.toFixed(1)
+            : String(Math.round(numeric));
+    }
+
+    function getNpaFdpFapValueForInputMode(field, inputMode) {
+        const rawValue = getNumberOrBlank(field);
+        if (rawValue === "") return "";
+        return convertNpaFdpFapValue(rawValue, getNpaFdpFapMode(field), inputMode);
+    }
+
+    function getNpaFdpFapKeypadPlaceholder(field) {
+        const value = getNpaFdpFapValueForInputMode(field, npaFdpFapActiveInputMode);
+        if (value === "") return "";
+        return npaFdpFapActiveInputMode === 'dist'
+            ? formatNmDisplay(value, 1)
+            : formatFeetDisplay(value);
+    }
+
+    function updateNpaFdpFapModeButton() {
+        const button = document.getElementById('npaFdpFapModeBtn');
+        if (!button) return;
+        const isDistanceMode = npaFdpFapMode === 'dist';
+        button.innerText = isDistanceMode ? 'DIST' : 'ALT';
+        button.classList.toggle('is-dist', isDistanceMode);
+        button.disabled = false;
+        button.setAttribute('aria-disabled', 'false');
+    }
+
+    function toggleNpaFdpFapGlobalMode(event) {
+        if (event) event.stopPropagation();
+        const nextMode = npaFdpFapMode === 'dist' ? 'alt' : 'dist';
+        const convertedValues = {};
+        for (const field of NPA_FDP_FAP_FIELDS) {
+            const value = getNumberOrBlank(field);
+            if (value === "") continue;
+            const convertedValue = convertNpaFdpFapValue(value, npaFdpFapMode, nextMode);
+            if (convertedValue === "") return;
+            convertedValues[field] = formatNpaFdpFapKeypadEntry(convertedValue, nextMode);
+        }
+
+        setNpaFdpFapMode(nextMode);
+        Object.entries(convertedValues).forEach(([field, value]) => setFieldValue(field, value));
+        markNpaCurrentApproachDirtyForField('fap');
+        scheduleNpaCurrentPageStateSave();
+    }
+
+    function isNpaFdpFapDistanceInput() {
+        return isNpaFdpFapField(activeNpaField) && npaFdpFapActiveInputMode === 'dist';
     }
 
     function setFieldValue(id, value) {
@@ -4605,7 +5175,8 @@
         } else if (id === 'elevation') {
             el.value = formatFeetDisplay(nextValue);
         } else if (id === 'fdp' || id === 'fap') {
-            el.value = formatFeetDisplay(nextValue);
+            el.value = formatNpaFdpFapDisplay(id, nextValue);
+            updateNpaFdpFapModeButton();
         } else if (id === 'inboundCrs') {
             renderInboundCourseDisplay();
             updateRacetrackSectors();
@@ -5611,56 +6182,63 @@
     }
 
     function getNpaProfileMetrics() {
-        const elevationValue = getAirportThresholdElevationValue();
         const fdpValue = getNumberOrBlank('fdp');
         const fapValue = getNumberOrBlank('fap');
-        const angleValue = getNumberOrBlank('gpa');
-        const tempValue = getNumberOrBlank('tempC');
 
-        const fdpValid = isFilledProfileNumber(fdpValue);
-        const fapValid = isFilledProfileNumber(fapValue);
+        const fdpInputValid = isFilledProfileNumber(fdpValue);
+        const fapInputValid = isFilledProfileNumber(fapValue);
 
-        if (
-            !isFilledProfileNumber(elevationValue) ||
-            !isFilledProfileNumber(angleValue) ||
-            !isFilledProfileNumber(tempValue) ||
-            (!fdpValid && !fapValid)
-        ) {
+        if (!fdpInputValid && !fapInputValid) {
             return { valid: false, reason: 'inputs' };
         }
 
-        const hElev = Number(elevationValue);
-        const hFdp = Number(fdpValue);
-        const hFap = Number(fapValue);
-        const angle = Number(angleValue);
-        const temp = Number(tempValue);
-        const denominator = temp + 273.15;
-        const angleRad = angle * (Math.PI / 180);
-        const tanAngle = Math.tan(angleRad);
-
-        if (!Number.isFinite(denominator) || denominator <= 0 || !Number.isFinite(tanAngle) || tanAngle <= 0) {
-            return { valid: false, reason: 'geometry' };
+        const geometry = getNpaProfileGeometryState();
+        if (!geometry) {
+            return { valid: false, reason: 'inputs' };
         }
 
-        const kTable = (288.15 - (0.00198 * hElev)) / denominator;
-        const ftPerNm = 6076.1155;
-        const getRawDistFromInd = (height) => Math.max(0, ((height - hElev) / kTable - 50) / (tanAngle * ftPerNm));
-        const roundProfileDistance = (distance) => Math.round(distance * 10) / 10;
-        const dFdpRaw = fdpValid ? getRawDistFromInd(hFdp) : null;
-        const dFapRaw = fapValid ? getRawDistFromInd(hFap) : null;
-        const getIndFromDist = (distance) => Math.round(((distance * tanAngle * ftPerNm + 50) * kTable + hElev) / 10) * 10;
+        const makeAnchorMetric = (value, mode) => {
+            if (!isFilledProfileNumber(value)) return null;
+            const numeric = Number(value);
+            if (normalizeNpaFdpFapMode(mode) === 'dist') {
+                const altitude = roundNpaFdpFapDistanceAltitude(getNpaProfileIndFromDist(numeric, geometry));
+                if (altitude === "") return null;
+                return {
+                    altitude,
+                    rawDistance: numeric,
+                    distance: roundNpaProfileDistance(numeric)
+                };
+            }
+
+            const rawDistance = getNpaProfileRawDistFromInd(numeric, geometry);
+            if (!Number.isFinite(rawDistance)) return null;
+            return {
+                altitude: numeric,
+                rawDistance,
+                distance: roundNpaProfileDistance(rawDistance)
+            };
+        };
+
+        const fdpMetric = makeAnchorMetric(fdpValue, getNpaFdpFapMode('fdp'));
+        const fapMetric = makeAnchorMetric(fapValue, getNpaFdpFapMode('fap'));
+        const fdpValid = Boolean(fdpMetric);
+        const fapValid = Boolean(fapMetric);
+
+        if (!fdpValid && !fapValid) {
+            return { valid: false, reason: 'geometry' };
+        }
 
         return {
             valid: true,
             fdpValid,
             fapValid,
-            hFdp,
-            hFap,
-            dFdpRaw,
-            dFapRaw,
-            dFdp: fdpValid ? roundProfileDistance(dFdpRaw) : null,
-            dFap: fapValid ? roundProfileDistance(dFapRaw) : null,
-            getIndFromDist
+            hFdp: fdpValid ? fdpMetric.altitude : Number(fdpValue),
+            hFap: fapValid ? fapMetric.altitude : Number(fapValue),
+            dFdpRaw: fdpValid ? fdpMetric.rawDistance : null,
+            dFapRaw: fapValid ? fapMetric.rawDistance : null,
+            dFdp: fdpValid ? fdpMetric.distance : null,
+            dFap: fapValid ? fapMetric.distance : null,
+            getIndFromDist: (distance) => Math.round(getNpaProfileIndFromDist(distance, geometry) / 10) * 10
         };
     }
 
@@ -7044,7 +7622,7 @@
 
     function startAirportIcaoCarousel() {
         const input = document.getElementById('addAirportIcao');
-        input?.focus();
+        focusNpaUnlessIosPwaSafe(input);
     }
 
     function maybeAdvanceAirportIcaoCarousel() {
@@ -7070,7 +7648,9 @@
     function syncAddAirportModalViewport() {
         const modal = document.getElementById('addAirportModal');
         if (!modal) return;
-        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const viewportHeight = isNpaIosPwaSafeMode()
+            ? window.innerHeight
+            : (window.visualViewport?.height || window.innerHeight);
         modal.style.setProperty('--airport-modal-vh', `${viewportHeight}px`);
         modal.classList.toggle('keyboard-open', viewportHeight < window.innerHeight * 0.82);
     }
@@ -7119,7 +7699,16 @@
     }
 
     function initAddAirportModalKeyboardGuard() {
-        const viewport = window.visualViewport;
+        if (isNpaIosPwaSafeMode()) {
+            window.addEventListener('orientationchange', () => setTimeout(syncAddAirportModalViewport, 250));
+            document.addEventListener('focusin', event => {
+                if (event.target?.closest?.('#addAirportModal')) {
+                    setTimeout(() => keepAddAirportFieldVisible(event.target), 320);
+                }
+            });
+            return;
+        }
+        const viewport = isNpaIosPwaSafeMode() ? null : window.visualViewport;
         viewport?.addEventListener('resize', () => {
             syncAddAirportModalViewport();
             keepActiveAddAirportFieldVisible();
@@ -7156,7 +7745,9 @@
             elevation: "",
             gpa: "",
             fdp: "",
+            fdpMode: NPA_FDP_FAP_DEFAULT_MODE,
             fap: "",
+            fapMode: NPA_FDP_FAP_DEFAULT_MODE,
             racetrack: "Right",
             inbound: "",
             sectDirect: "",
@@ -7189,7 +7780,9 @@
             elevation: getNumberOrBlank('elevation'),
             gpa: getNumberOrBlank('gpa'),
             fdp: getNumberOrBlank('fdp'),
+            fdpMode: getNpaFdpFapMode('fdp'),
             fap: getNumberOrBlank('fap'),
+            fapMode: getNpaFdpFapMode('fap'),
             racetrack: document.getElementById('racetrackVal').innerText,
             inbound: getNumberOrBlank('inboundCrs'),
             sectDirect: getTextOrBlank('sectDirect'),
@@ -7263,8 +7856,7 @@
         modal.classList.add('active');
         syncAddAirportModalViewport();
         if (!isEdit) {
-            input?.focus({ preventScroll: true });
-            input?.select();
+            if (focusNpaUnlessIosPwaSafe(input, { preventScroll: true })) selectNpaUnlessIosPwaSafe(input);
         }
         setTimeout(() => {
             keepAddAirportFieldVisible(input);
@@ -7684,8 +8276,7 @@
         updateAirportTarAddButtonVisibility();
         if (startCarousel && normalizedType !== 'TAR') {
             const nameInput = block.querySelector('[data-radio-field="name"]');
-            nameInput?.focus({ preventScroll: true });
-            nameInput?.select();
+            if (focusNpaUnlessIosPwaSafe(nameInput, { preventScroll: true })) selectNpaUnlessIosPwaSafe(nameInput);
             setTimeout(() => keepAddAirportFieldVisible(nameInput), 50);
         } else if (startCarousel) {
             setTimeout(() => keepAddAirportFieldVisible(block), 50);
@@ -8017,7 +8608,7 @@
         setSelectedNpaType(approachName);
         clearNpaFields();
         applyCurrentRunwayReferenceFields();
-        npaCurrentApproachDirty = true;
+        setNpaCurrentApproachDirty(true);
         setNpaEditModeUnlocked(true, true);
         scheduleNpaCurrentPageStateSave();
         startNewApproachCarousel();
@@ -8098,6 +8689,7 @@
 
             applyCurrentRunwayReferenceFields(data);
             setFieldValue('gpa', data.gpa);
+            setNpaFdpFapMode(data.fapMode || data.fdpMode || 'alt');
             setFieldValue('fdp', data.fdp);
             setFieldValue('fap', data.fap);
             document.getElementById('racetrackVal').innerText = data.racetrack || "Right";
@@ -8130,11 +8722,13 @@
             }
             updateNpaProfileUnitHeaders();
             setDefaultTemperature();
+            setNpaCurrentApproachDirty(false);
             scheduleNpaCurrentPageStateSave();
         }
     }
 
     function clearNpaFields() {
+        resetNpaFdpFapModes();
         const fields = [
             'rwLength', 'elevation', 'gpa', 'fdp', 'fap',
             'inboundCrs', 'sectDirect', 'sectParallel', 'sectOffset',
@@ -8173,6 +8767,11 @@
         const airportCode = getNpaAirportCode();
         const type = getSelectedNpaType();
 
+        if (!npaCurrentApproachDirty) {
+            updateNpaSaveButtonState();
+            return;
+        }
+
         if (!airportCode || airportCode.length < 4) {
             alert("Please enter a valid 4-letter ICAO code.");
             return;
@@ -8206,7 +8805,7 @@
         upsertLocalAirport(airportCode, airport);
         const adminMode = isNpaAdminMode();
         if (adminMode) queueApproachSave(airportCode, type, approachData);
-        npaCurrentApproachDirty = false;
+        setNpaCurrentApproachDirty(false);
         renderNpaApproachDropdown(false);
 
         if (adminMode) {
@@ -8344,6 +8943,7 @@
         activeNpaField = type;
         currentKpVal = "";
         keypadWasCleared = false;
+        if (isNpaFdpFapField(type)) npaFdpFapActiveInputMode = npaFdpFapMode;
         configureNpaKeypad(type);
         updateKpDisplay();
         document.getElementById('keypadModal').style.display = 'flex';
@@ -8369,6 +8969,7 @@
             signBtn.onclick = function() { kpPress('+/-'); };
         }
         if (subtitleEl) subtitleEl.innerText = '';
+        updateNpaFdpFapModeButton();
 
         if (isShiftKeypadField(type)) {
             const titles = {
@@ -8379,6 +8980,22 @@
             if (titleEl) titleEl.innerText = titles[type];
             if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
             if (signBtn) signBtn.style.visibility = 'visible';
+            return;
+        }
+
+        if (isNpaFdpFapField(type)) {
+            if (titleEl) titleEl.innerText = type.toUpperCase();
+            if (dotBtn) {
+                if (npaFdpFapActiveInputMode === 'dist') {
+                    dotBtn.innerText = ".";
+                    dotBtn.onclick = function() { kpPress('.'); };
+                } else {
+                    dotBtn.innerText = "00";
+                    dotBtn.onclick = function() { kpPress('00'); };
+                }
+            }
+            configureNpaBackspaceButton();
+            updateNpaFdpFapModeButton();
             return;
         }
 
@@ -8562,6 +9179,7 @@
 
         if (activeNpaField === 'rwLength' || activeNpaField === 'airportRunwayLength') return getRwLengthKeypadValueFromStored();
         if (activeNpaField === 'inboundCrs') return formatCourse(getNumberOrBlank('inboundCrs'));
+        if (isNpaFdpFapField(activeNpaField)) return getNpaFdpFapKeypadPlaceholder(activeNpaField);
 
         const el = document.getElementById(activeNpaField);
         if (!el) return "";
@@ -8690,6 +9308,15 @@
         } else if (activeNpaField === 'gpa') {
             const gpaValue = finalVal === "" ? "" : formatDecimal(finalVal, 1);
             setFieldValue('gpa', gpaValue);
+        } else if (isNpaFdpFapField(activeNpaField)) {
+            const numeric = getCleanDisplayNumber(finalVal);
+            const storedValue = numeric === ""
+                ? ""
+                : npaFdpFapActiveInputMode === 'dist'
+                    ? formatDecimal(numeric, 1)
+                    : String(Math.round(Number(numeric)));
+            setNpaFdpFapMode(activeNpaField, npaFdpFapActiveInputMode);
+            setFieldValue(activeNpaField, storedValue);
         } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
@@ -8697,11 +9324,11 @@
                 profileRadioSourceLabel = "";
                 profileRadioDirectSource = null;
                 profileRadioShiftExactNm = null;
-                npaCurrentApproachDirty = true;
+                setNpaCurrentApproachDirty(true);
             } else {
                 profileTarFromAirport = false;
                 profileTarManualOverride = true;
-                npaCurrentApproachDirty = true;
+                setNpaCurrentApproachDirty(true);
             }
             updateNpaProfileUnitHeaders();
             renderNpaProfileTable();
@@ -8868,8 +9495,9 @@
             return;
         }
 
-        const integerOnlyFields = ['rwLength', 'airportRunwayLength', 'inboundCrs', 'elevation', 'fdp', 'fap', 'gsAppr', 'tempC', 'downwindTime'];
-        if (integerOnlyFields.includes(activeNpaField) && key === '.') return;
+        const integerOnlyFields = ['rwLength', 'airportRunwayLength', 'inboundCrs', 'elevation', 'gsAppr', 'tempC', 'downwindTime'];
+        const isAltFdpFapField = isNpaFdpFapField(activeNpaField) && !isNpaFdpFapDistanceInput();
+        if ((integerOnlyFields.includes(activeNpaField) || isAltFdpFapField) && key === '.') return;
         if (activeNpaField === 'inboundCrs' && currentKpVal.length >= 3) return;
         if (key === '.' && currentKpVal.includes('.')) return;
         if (key === '00' && currentKpVal === "" && activeNpaField !== 'downwindTime') return;
@@ -8967,6 +9595,17 @@
             <button type="button" class="clear-data-cancel" onclick="closeNpaClearDataModal('button')">Отмена</button>
             <button type="button" class="clear-data-confirm" onclick="confirmNpaClearData()">Очистить</button>
         </div>
+    </div>
+</div>
+
+<div id="npaLocalDataModal" class="modal-overlay" onclick="closeNpaLocalDataModal(event)">
+    <div class="modal-content clear-data-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">Local data</div>
+        <div class="clear-data-actions" style="flex-direction: column;">
+            <button type="button" class="modal-opt-btn primary" onclick="saveNpaLocalDataToFile()">Save local data to file</button>
+            <button type="button" class="modal-opt-btn" onclick="triggerNpaLocalDataFileLoad()">Load data from file</button>
+        </div>
+        <input id="npaLocalDataFileInput" type="file" accept=".json,application/json" class="npa-hidden" onchange="handleNpaLocalDataFileSelected(event)">
     </div>
 </div>
 
@@ -9107,7 +9746,7 @@
             <button class="kp-btn" id="signToggleBtn" style="font-size: 1.4rem; color: var(--text-main);" onclick="kpPress('+/-')">+/-</button>
         </div>
         <div id="kpExtraRow" class="keypad-extra-grid"></div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="keypad-action-row">
             <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
             <button id="doneBtn" class="kp-btn kp-done" onclick="closeNpaKeypad('done')">DONE</button>
         </div>
@@ -9145,8 +9784,11 @@
     }
 
     function adminLogin() {
-        if (window.npaAuth?.currentUser) {
-            alert("Admin mode already ON: " + window.npaAuth.currentUser.email);
+        const adminUser = typeof getNpaAdminUser === 'function'
+            ? getNpaAdminUser()
+            : window.npaAuth?.currentUser;
+        if (adminUser) {
+            alert("Admin mode already ON: " + (adminUser.email || 'this device'));
             if (typeof syncPendingAirportSaves === 'function') syncPendingAirportSaves();
             return;
         }
