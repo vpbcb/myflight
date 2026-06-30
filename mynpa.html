@@ -150,14 +150,6 @@
             min-width: 0;
         }
 
-        .npa-title-line {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            min-width: 0;
-        }
-
         #npaCalcTitle {
             -webkit-touch-callout: none;
             touch-action: manipulation;
@@ -182,8 +174,9 @@
         }
 
         .npa-pending-sync-indicator {
-            position: static;
-            flex: 0 0 18px;
+            position: absolute;
+            right: 46px;
+            top: max(15px, calc(var(--safe-top) + 9px));
             width: 18px;
             height: 18px;
             display: none;
@@ -192,6 +185,7 @@
             color: #64748b;
             opacity: 0.62;
             pointer-events: none;
+            z-index: 120;
         }
 
         .npa-pending-sync-indicator.active {
@@ -222,10 +216,10 @@
 
         .header-actions {
             position: absolute;
-            left: 13px;
+            left: 19px;
             right: auto;
             top: max(10px, calc(var(--safe-top) + 4px));
-            width: calc(50% - 75px);
+            width: calc((100% - 50px) / 3);
             display: flex;
             justify-content: flex-start;
             gap: 4px;
@@ -277,6 +271,10 @@
             border-color: rgba(100, 116, 139, 0.32);
             color: #64748b;
             cursor: default;
+            display: inline-flex;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .header-action-btn.save.is-active {
@@ -284,6 +282,12 @@
             border-color: var(--accent-blue);
             color: #ffffff;
             cursor: pointer;
+            display: inline-flex;
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            align-items: center;
+            justify-content: center;
         }
 
         html.dark-theme .header-action-btn {
@@ -308,6 +312,46 @@
 
         .header-action-btn:active {
             transform: scale(0.95);
+        }
+
+        .npa-title-stack .header-action-btn.save {
+            flex: 0 0 auto;
+            width: auto;
+            min-width: 82px;
+            height: 18px;
+            margin-top: -2px;
+            padding: 0 8px;
+            font-size: 7px;
+            line-height: 1;
+            white-space: nowrap;
+            letter-spacing: 0.25px;
+        }
+
+        #npaAddAirportButton {
+            flex: 0 0 100%;
+            width: 100%;
+            background: rgba(14, 165, 233, 0.12);
+            border-color: rgba(14, 165, 233, 0.34);
+            color: #0369a1;
+            box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.08);
+        }
+
+        html.dark-theme #npaAddAirportButton {
+            background: rgba(14, 165, 233, 0.18);
+            border-color: rgba(56, 189, 248, 0.38);
+            color: #7dd3fc;
+        }
+
+        #npaSaveButton {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #npaSaveButton.is-active {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* БЕЛЫЕ ФОНОВЫЕ БЛОКИ (КОНТЕЙНЕРЫ) */
@@ -1090,19 +1134,9 @@
         .bottom-settings-btn:active { transform: scale(0.9); }
 
         @media (max-width: 410px) {
-            .npa-title-line {
-                gap: 3px;
-            }
-
-            .npa-pending-sync-indicator {
-                flex-basis: 16px;
-                width: 16px;
-                height: 16px;
-            }
-
-            .npa-pending-sync-indicator svg {
-                width: 14px;
-                height: 14px;
+            .header-actions {
+                left: 19px;
+                width: calc((100% - 50px) / 3);
             }
 
             .bottom-edit-lock-btn {
@@ -1741,6 +1775,10 @@
             .npa-search-card .card-content {
                 padding-left: 6px !important;
                 padding-right: 6px !important;
+            }
+            .header-actions {
+                left: 13px;
+                width: calc((100% - 38px) / 3);
             }
             .npa-info-inline-row {
                 grid-template-columns: minmax(42px, 0.82fr) minmax(0, 2.5fr) minmax(0, 2.5fr) minmax(42px, 0.72fr);
@@ -3059,22 +3097,12 @@
 <div class="app-wrapper">
     <div class="app-header">
         <div class="npa-title-stack">
-            <div class="npa-title-line">
-                <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 16l-4-4-4 4"></path>
-                        <path d="M12 12v9"></path>
-                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
-                        <path d="M16 16h4"></path>
-                    </svg>
-                </span>
-                <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
-            </div>
+            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
+            <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to device</button>
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
         </div>
         <div class="header-actions">
             <button type="button" class="header-action-btn" id="npaAddAirportButton" onclick="startNewAirportEntry()">Add<br>Airport</button>
-            <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to<br>device</button>
         </div>
     </div>
 
@@ -3274,6 +3302,15 @@
         <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
     </button>
 
+    <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 16l-4-4-4 4"></path>
+            <path d="M12 12v9"></path>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+            <path d="M16 16h4"></path>
+        </svg>
+    </span>
+
     <button type="button" class="bottom-settings-btn" id="npaSettingsBtn" title="Local data settings" aria-label="Local data settings" onclick="openNpaLocalDataModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3"></circle>
@@ -3393,7 +3430,7 @@
             label.textContent = 'admin mode ON';
             label.classList.toggle('active', Boolean(adminUser));
         }
-        if (saveButton) saveButton.innerHTML = adminUser ? 'Save to<br>cloud' : 'Save to<br>device';
+        if (saveButton) saveButton.textContent = adminUser ? 'Save to cloud' : 'Save to device';
         if (typeof updateNpaSaveButtonState === 'function') updateNpaSaveButtonState();
         if (adminUser && typeof closeNpaAdminLoginModal === 'function') closeNpaAdminLoginModal('button');
     };
