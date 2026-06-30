@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
@@ -99,6 +99,26 @@
             -webkit-touch-callout: default;
             -webkit-user-select: text;
             user-select: text;
+        }
+
+        html.ios-pwa-keyboard-safe,
+        html.ios-pwa-keyboard-safe body {
+            --app-height: 100svh;
+            --app-width: 100vw;
+            height: 100%;
+            min-height: 100%;
+            max-height: none;
+        }
+
+        html.ios-pwa-keyboard-safe body {
+            position: relative;
+            inset: auto;
+        }
+
+        html.ios-pwa-keyboard-safe .app-shell {
+            height: 100%;
+            min-height: 100%;
+            max-height: none;
         }
 
         .bottom-controls {
@@ -845,7 +865,7 @@
                 <div class="search-row">
                     <div class="input-group">
                         <div class="prefix su-color">SU</div>
-                        <input type="tel" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="search" autocomplete="off" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
                     <!-- Результат будет показан справа от поля ввода -->
@@ -859,7 +879,7 @@
                     <div class="input-group">
                         <div class="prefix ac-color">A/C</div>
                         <!-- Разрешаем буквы и цифры (type="text"). Ограничение длины снято. -->
-                        <input type="text" id="acNumInput" class="short-input" placeholder="73821" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="text" id="acNumInput" class="short-input" placeholder="73821" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
 <!-- Место под вывод информации о самолете -->
@@ -1048,19 +1068,63 @@
     <script>
         (function () {
             let lockedAppHeight = 0;
+            const IOS_PWA_KEYBOARD_SAFE_CLASS = 'ios-pwa-keyboard-safe';
+
+            function isIosDevice() {
+                const ua = navigator.userAgent || '';
+                const platform = navigator.platform || '';
+                return /iP(ad|hone|od)/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            }
+
+            function isStandalonePwa() {
+                return window.navigator.standalone === true ||
+                    Boolean(window.matchMedia?.('(display-mode: standalone)').matches);
+            }
+
+            function isIosPwaSafeMode() {
+                return document.documentElement.classList.contains(IOS_PWA_KEYBOARD_SAFE_CLASS);
+            }
+
+            if (isIosDevice() && isStandalonePwa()) {
+                document.documentElement.classList.add(IOS_PWA_KEYBOARD_SAFE_CLASS);
+            }
+            window.isMyFlightIosPwaKeyboardSafe = isIosPwaSafeMode;
 
             function isEditableFocused() {
                 const active = document.activeElement;
                 return !!active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
             }
 
+            function resetIosPwaLayout() {
+                const root = document.documentElement;
+                const body = document.body;
+                root.style.setProperty('--app-height', '100svh');
+                root.style.setProperty('--app-width', '100vw');
+                root.style.height = '';
+                root.style.width = '';
+                if (body) {
+                    body.style.height = '';
+                    body.style.width = '';
+                }
+                const shell = document.querySelector('.app-shell');
+                if (shell) {
+                    shell.style.height = '';
+                    shell.style.width = '';
+                }
+            }
+
             function keepViewportPinned() {
+                if (isIosPwaSafeMode()) return;
                 document.documentElement.scrollTop = 0;
                 document.body.scrollTop = 0;
                 window.scrollTo(0, 0);
             }
 
             function lockAppViewport(options) {
+                if (isIosPwaSafeMode()) {
+                    resetIosPwaLayout();
+                    return;
+                }
                 const forceHeight = options && options.forceHeight;
                 const visualViewport = window.visualViewport;
                 const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
@@ -1121,6 +1185,10 @@
             });
             window.addEventListener('load', lockAppViewport);
             window.addEventListener('resize', lockAppViewport);
+            window.addEventListener('pageshow', lockAppViewport);
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) lockAppViewport();
+            });
 
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', lockAppViewport);
@@ -1137,7 +1205,7 @@
                 setTimeout(lockAppViewport, 250);
             });
 
-            if ('virtualKeyboard' in navigator) {
+            if ('virtualKeyboard' in navigator && !isIosPwaSafeMode()) {
                 navigator.virtualKeyboard.overlaysContent = true;
                 navigator.virtualKeyboard.addEventListener('geometrychange', lockAppViewport);
             }
@@ -1732,7 +1800,13 @@ function handleFocus(el) {
     if (el.id === 'quickNotesText') return;
     el.dataset.prevVal = el.value;
     el.value = '';
-    el.dispatchEvent(new Event('input'));
+    if (document.documentElement.classList.contains('ios-pwa-keyboard-safe')) {
+        setTimeout(() => {
+            if (document.activeElement === el) el.dispatchEvent(new Event('input'));
+        }, 250);
+    } else {
+        el.dispatchEvent(new Event('input'));
+    }
 }
 
 function handleBlur(el) {
