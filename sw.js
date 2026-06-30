@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260611-loadsheet-stage1-2';
+const CACHE_NAME = 'myflight_v.test';
 const ASSET_FETCH_TIMEOUT_MS = 12000;
 const SLOW_ASSET_LOG_MS = 2500;
 
