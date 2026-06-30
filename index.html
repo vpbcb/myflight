@@ -91,19 +91,12 @@
             margin-top: 12px;
             box-sizing: border-box;
             display: grid;
-            grid-template-columns: repeat(4, max-content);
-            justify-content: space-between;
-            gap: 4px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
             align-items: center;
             justify-items: center;
             z-index: 100;
             flex-shrink: 0;
-        }
-
-        .bottom-controls button span {
-            font-size: 0.58rem !important;
-            letter-spacing: 0 !important;
-            margin-left: 3px !important;
         }
 
         .home-actions {
@@ -128,29 +121,6 @@
             min-width: 0;
         }
         .theme-toggle:active { opacity: 0.5; }
-
-        .wake-lock-btn {
-            background: transparent;
-            border: none;
-            padding: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            color: var(--text-main);
-            transition: opacity 0.2s, transform 0.2s, color 0.2s;
-            user-select: none;
-            position: relative;
-            min-width: 0;
-        }
-        .wake-lock-btn::after {
-            content: ''; position: absolute; top: -15px; bottom: -15px; left: -12px; right: -12px;
-        }
-        .wake-lock-btn:active { transform: scale(0.9); opacity: 0.5; }
-        .wake-lock-btn svg { width: 18px; height: 18px; flex-shrink: 0; display: block; }
-        .wake-lock-btn.is-active { color: #f59e0b; }
-        .wake-lock-btn.is-pending { color: #0ea5e9; }
-        .wake-lock-btn.is-error,
-        .wake-lock-btn.is-unavailable { color: #ef4444; }
 
         /* === СТИЛИ MAIL TO ME === */
         .mail-btn {
@@ -945,19 +915,11 @@
                 <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
             </button>
 
-            <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
+            <button class="theme-toggle" id="themeToggleBtn" type="button" title="Сменить тему">
                 <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
                 <span id="themeText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Dark mode</span>
-            </button>
-
-            <button class="wake-lock-btn" id="wakeLockBtn" type="button" title="Keep screen awake" aria-pressed="false">
-                <svg id="wakeLockIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
-                    <circle cx="12" cy="12" r="4"></circle>
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-                </svg>
-                <span data-wake-lock-text style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Awake</span>
             </button>
 
             <button class="mail-btn" id="btnMail" onclick="openMailModal()" title="Mail to me">
@@ -1174,6 +1136,13 @@
         // Константы SVG иконок
         const themeIconLight = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
         const themeIconDark = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        const AWAKE_THEME_COLOR = '#f59e0b';
+        const AWAKE_LONG_PRESS_MS = 700;
+
+        let themeLongPressTimer = null;
+        let themeLongPressReady = false;
+        let themeLongPressTriggered = false;
+        let themePressStartedAt = 0;
 
         // Функция смены темы
         function toggleTheme() {
@@ -1208,9 +1177,111 @@
         function updateThemeUI(isDark) {
             document.getElementById('themeIcon').innerHTML = isDark ? themeIconLight : themeIconDark;
             document.getElementById('themeText').innerText = isDark ? 'Light mode' : 'Dark mode';
+            updateThemeAwakeUI();
         }
 
         // 1. Анти-Captive Portal Пинг
+        function getAwakeStatus() {
+            try {
+                return window.MyFlightWakeLock?.getStatus?.() || null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function updateThemeAwakeUI() {
+            const themeText = document.getElementById('themeText');
+            if (!themeText) return;
+            const awakeStatus = getAwakeStatus();
+            themeText.style.color = awakeStatus?.active ? AWAKE_THEME_COLOR : '';
+        }
+
+        async function toggleAwakeFromThemeButton() {
+            if (!window.MyFlightWakeLock?.toggle) {
+                updateThemeAwakeUI();
+                return;
+            }
+            try {
+                await window.MyFlightWakeLock.toggle({ fromUserGesture: true });
+            } catch (error) {
+                console.warn('Awake toggle skipped:', error);
+            } finally {
+                updateThemeAwakeUI();
+            }
+        }
+
+        function bindThemeButtonControls() {
+            const themeButton = document.getElementById('themeToggleBtn');
+            if (!themeButton || themeButton.dataset.themeControlsBound === 'true') return;
+            themeButton.dataset.themeControlsBound = 'true';
+
+            const clearThemeLongPress = () => {
+                if (themeLongPressTimer) {
+                    clearTimeout(themeLongPressTimer);
+                    themeLongPressTimer = null;
+                }
+            };
+
+            themeButton.addEventListener('pointerdown', event => {
+                if (event.button !== undefined && event.button !== 0) return;
+                clearThemeLongPress();
+                themeLongPressReady = false;
+                themeLongPressTriggered = false;
+                themePressStartedAt = Date.now();
+                themeLongPressTimer = setTimeout(() => {
+                    themeLongPressTimer = null;
+                    themeLongPressReady = true;
+                    if (navigator.vibrate) navigator.vibrate(20);
+                }, AWAKE_LONG_PRESS_MS);
+            });
+
+            themeButton.addEventListener('pointerup', event => {
+                const elapsedMs = Date.now() - themePressStartedAt;
+                const shouldToggleAwake = themeLongPressReady || elapsedMs >= AWAKE_LONG_PRESS_MS;
+                clearThemeLongPress();
+                themeLongPressReady = false;
+                themePressStartedAt = 0;
+                if (!shouldToggleAwake) return;
+
+                themeLongPressTriggered = true;
+                event.preventDefault();
+                event.stopPropagation();
+                toggleAwakeFromThemeButton();
+            });
+
+            ['pointerleave', 'pointercancel'].forEach(eventName => {
+                themeButton.addEventListener(eventName, () => {
+                    clearThemeLongPress();
+                    themeLongPressReady = false;
+                    themePressStartedAt = 0;
+                });
+            });
+
+            themeButton.addEventListener('click', event => {
+                if (themeLongPressTriggered) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                    setTimeout(() => { themeLongPressTriggered = false; }, 0);
+                    return;
+                }
+                toggleTheme();
+            });
+
+            themeButton.addEventListener('contextmenu', event => {
+                if (themeLongPressTriggered || themeLongPressReady) event.preventDefault();
+            });
+
+            window.addEventListener('myflight:wake-lock-change', updateThemeAwakeUI);
+            updateThemeAwakeUI();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindThemeButtonControls, { once: true });
+        } else {
+            bindThemeButtonControls();
+        }
+
         async function checkRealInternet() {
             if (!navigator.onLine) return false;
             try {
