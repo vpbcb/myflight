@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
@@ -80,47 +80,10 @@
 
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
 
         }
 
         /* === КОНТЕЙНЕР НИЖНИХ КНОПОК === */
-        body * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        input,
-        textarea,
-        [contenteditable="true"] {
-            -webkit-touch-callout: default;
-            -webkit-user-select: text;
-            user-select: text;
-        }
-
-        html.ios-pwa-keyboard-safe,
-        html.ios-pwa-keyboard-safe body {
-            --app-height: 100svh;
-            --app-width: 100vw;
-            height: 100%;
-            min-height: 100%;
-            max-height: none;
-        }
-
-        html.ios-pwa-keyboard-safe body {
-            position: relative;
-            inset: auto;
-        }
-
-        html.ios-pwa-keyboard-safe .app-shell {
-            height: 100%;
-            min-height: 100%;
-            max-height: none;
-        }
-
         .bottom-controls {
             position: static;
             width: 100%;
@@ -865,7 +828,7 @@
                 <div class="search-row">
                     <div class="input-group">
                         <div class="prefix su-color">SU</div>
-                        <input type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="search" autocomplete="off" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="tel" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
                     <!-- Результат будет показан справа от поля ввода -->
@@ -879,7 +842,7 @@
                     <div class="input-group">
                         <div class="prefix ac-color">A/C</div>
                         <!-- Разрешаем буквы и цифры (type="text"). Ограничение длины снято. -->
-                        <input type="text" id="acNumInput" class="short-input" placeholder="73821" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
+                        <input type="text" id="acNumInput" class="short-input" placeholder="73821" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
                     
 <!-- Место под вывод информации о самолете -->
@@ -952,7 +915,7 @@
                 <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
             </button>
 
-            <button class="theme-toggle" id="themeToggleBtn" type="button" title="Сменить тему">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Сменить тему">
                 <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
@@ -1068,63 +1031,19 @@
     <script>
         (function () {
             let lockedAppHeight = 0;
-            const IOS_PWA_KEYBOARD_SAFE_CLASS = 'ios-pwa-keyboard-safe';
-
-            function isIosDevice() {
-                const ua = navigator.userAgent || '';
-                const platform = navigator.platform || '';
-                return /iP(ad|hone|od)/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            }
-
-            function isStandalonePwa() {
-                return window.navigator.standalone === true ||
-                    Boolean(window.matchMedia?.('(display-mode: standalone)').matches);
-            }
-
-            function isIosPwaSafeMode() {
-                return document.documentElement.classList.contains(IOS_PWA_KEYBOARD_SAFE_CLASS);
-            }
-
-            if (isIosDevice() && isStandalonePwa()) {
-                document.documentElement.classList.add(IOS_PWA_KEYBOARD_SAFE_CLASS);
-            }
-            window.isMyFlightIosPwaKeyboardSafe = isIosPwaSafeMode;
 
             function isEditableFocused() {
                 const active = document.activeElement;
                 return !!active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName);
             }
 
-            function resetIosPwaLayout() {
-                const root = document.documentElement;
-                const body = document.body;
-                root.style.setProperty('--app-height', '100svh');
-                root.style.setProperty('--app-width', '100vw');
-                root.style.height = '';
-                root.style.width = '';
-                if (body) {
-                    body.style.height = '';
-                    body.style.width = '';
-                }
-                const shell = document.querySelector('.app-shell');
-                if (shell) {
-                    shell.style.height = '';
-                    shell.style.width = '';
-                }
-            }
-
             function keepViewportPinned() {
-                if (isIosPwaSafeMode()) return;
                 document.documentElement.scrollTop = 0;
                 document.body.scrollTop = 0;
                 window.scrollTo(0, 0);
             }
 
             function lockAppViewport(options) {
-                if (isIosPwaSafeMode()) {
-                    resetIosPwaLayout();
-                    return;
-                }
                 const forceHeight = options && options.forceHeight;
                 const visualViewport = window.visualViewport;
                 const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
@@ -1185,10 +1104,6 @@
             });
             window.addEventListener('load', lockAppViewport);
             window.addEventListener('resize', lockAppViewport);
-            window.addEventListener('pageshow', lockAppViewport);
-            document.addEventListener('visibilitychange', function () {
-                if (!document.hidden) lockAppViewport();
-            });
 
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', lockAppViewport);
@@ -1205,7 +1120,7 @@
                 setTimeout(lockAppViewport, 250);
             });
 
-            if ('virtualKeyboard' in navigator && !isIosPwaSafeMode()) {
+            if ('virtualKeyboard' in navigator) {
                 navigator.virtualKeyboard.overlaysContent = true;
                 navigator.virtualKeyboard.addEventListener('geometrychange', lockAppViewport);
             }
@@ -1221,17 +1136,6 @@
         // Константы SVG иконок
         const themeIconLight = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
         const themeIconDark = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-        const AWAKE_THEME_COLOR = '#f59e0b';
-        const AWAKE_UNAVAILABLE_COLOR = '#ef4444';
-        const AWAKE_UNAVAILABLE_FEEDBACK_MS = 850;
-        const AWAKE_LONG_PRESS_MS = 700;
-
-        let themeLongPressTimer = null;
-        let themeLongPressTriggered = false;
-        let themePressStartedAt = 0;
-        let themeLastTouchAt = 0;
-        let themeAwakeFeedbackTimer = null;
-        let themeAwakeUnavailableFeedbackActive = false;
 
         // Функция смены темы
         function toggleTheme() {
@@ -1266,159 +1170,9 @@
         function updateThemeUI(isDark) {
             document.getElementById('themeIcon').innerHTML = isDark ? themeIconLight : themeIconDark;
             document.getElementById('themeText').innerText = isDark ? 'Light mode' : 'Dark mode';
-            updateThemeAwakeUI();
         }
 
         // 1. Анти-Captive Portal Пинг
-        function getAwakeStatus() {
-            try {
-                return window.MyFlightWakeLock?.getStatus?.() || null;
-            } catch (error) {
-                return null;
-            }
-        }
-
-        function updateThemeAwakeUI() {
-            const themeText = document.getElementById('themeText');
-            if (!themeText) return;
-            const awakeStatus = getAwakeStatus();
-            if (awakeStatus?.active) {
-                themeText.style.color = AWAKE_THEME_COLOR;
-                return;
-            }
-            if (themeAwakeUnavailableFeedbackActive) {
-                themeText.style.color = AWAKE_UNAVAILABLE_COLOR;
-                return;
-            }
-            themeText.style.color = '';
-        }
-
-        function showAwakeUnavailableFeedback() {
-            const themeText = document.getElementById('themeText');
-            if (!themeText) return;
-            if (themeAwakeFeedbackTimer) clearTimeout(themeAwakeFeedbackTimer);
-            themeAwakeUnavailableFeedbackActive = true;
-            updateThemeAwakeUI();
-            themeAwakeFeedbackTimer = setTimeout(() => {
-                themeAwakeUnavailableFeedbackActive = false;
-                themeAwakeFeedbackTimer = null;
-                updateThemeAwakeUI();
-            }, AWAKE_UNAVAILABLE_FEEDBACK_MS);
-        }
-
-        async function toggleAwakeFromThemeButton() {
-            if (!window.MyFlightWakeLock?.toggle) {
-                updateThemeAwakeUI();
-                return;
-            }
-            try {
-                await window.MyFlightWakeLock.toggle({ fromUserGesture: true });
-            } catch (error) {
-                console.warn('Awake toggle skipped:', error);
-            } finally {
-                const awakeStatus = getAwakeStatus();
-                updateThemeAwakeUI();
-                if (!awakeStatus?.active && (awakeStatus?.mode === 'unavailable' || awakeStatus?.error)) {
-                    showAwakeUnavailableFeedback();
-                }
-            }
-        }
-
-        function bindThemeButtonControls() {
-            const themeButton = document.getElementById('themeToggleBtn');
-            if (!themeButton || themeButton.dataset.themeControlsBound === 'true') return;
-            themeButton.dataset.themeControlsBound = 'true';
-            const TOUCH_MOUSE_GUARD_MS = 900;
-
-            const clearThemeLongPress = () => {
-                if (themeLongPressTimer) {
-                    clearTimeout(themeLongPressTimer);
-                    themeLongPressTimer = null;
-                }
-            };
-
-            const isSyntheticMouseAfterTouch = () => Date.now() - themeLastTouchAt < TOUCH_MOUSE_GUARD_MS;
-
-            const triggerThemeLongPress = () => {
-                clearThemeLongPress();
-                if (themeLongPressTriggered) return;
-                themeLongPressTriggered = true;
-                themePressStartedAt = 0;
-                if (navigator.vibrate) navigator.vibrate(20);
-                toggleAwakeFromThemeButton();
-            };
-
-            const startThemePress = (event, isTouch) => {
-                if (!isTouch && isSyntheticMouseAfterTouch()) return;
-                if (!isTouch && event.button !== undefined && event.button !== 0) return;
-                if (isTouch) {
-                    themeLastTouchAt = Date.now();
-                    event.preventDefault();
-                }
-                clearThemeLongPress();
-                themeLongPressTriggered = false;
-                themePressStartedAt = Date.now();
-                themeLongPressTimer = setTimeout(triggerThemeLongPress, AWAKE_LONG_PRESS_MS);
-            };
-
-            const endThemePress = (event, isTouch) => {
-                const wasLongPress = themeLongPressTriggered;
-                clearThemeLongPress();
-                themePressStartedAt = 0;
-                if (isTouch) {
-                    themeLastTouchAt = Date.now();
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!wasLongPress) toggleTheme();
-                    return;
-                }
-                if (!wasLongPress) return;
-
-                event.preventDefault();
-                event.stopPropagation();
-            };
-
-            const cancelThemePress = (event, isTouch) => {
-                clearThemeLongPress();
-                themePressStartedAt = 0;
-                if (isTouch) {
-                    themeLastTouchAt = Date.now();
-                    event.preventDefault();
-                }
-            };
-
-            themeButton.addEventListener('touchstart', event => startThemePress(event, true), { passive: false });
-            themeButton.addEventListener('touchend', event => endThemePress(event, true), { passive: false });
-            themeButton.addEventListener('touchcancel', event => cancelThemePress(event, true), { passive: false });
-            themeButton.addEventListener('mousedown', event => startThemePress(event, false));
-            themeButton.addEventListener('mouseup', event => endThemePress(event, false));
-            themeButton.addEventListener('mouseleave', event => cancelThemePress(event, false));
-
-            themeButton.addEventListener('click', event => {
-                if (themeLongPressTriggered || isSyntheticMouseAfterTouch()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-                    setTimeout(() => { themeLongPressTriggered = false; }, 0);
-                    return;
-                }
-                toggleTheme();
-            });
-
-            themeButton.addEventListener('contextmenu', event => {
-                if (themeLongPressTriggered || isSyntheticMouseAfterTouch()) event.preventDefault();
-            });
-
-            window.addEventListener('myflight:wake-lock-change', updateThemeAwakeUI);
-            updateThemeAwakeUI();
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', bindThemeButtonControls, { once: true });
-        } else {
-            bindThemeButtonControls();
-        }
-
         async function checkRealInternet() {
             if (!navigator.onLine) return false;
             try {
@@ -1800,13 +1554,7 @@ function handleFocus(el) {
     if (el.id === 'quickNotesText') return;
     el.dataset.prevVal = el.value;
     el.value = '';
-    if (document.documentElement.classList.contains('ios-pwa-keyboard-safe')) {
-        setTimeout(() => {
-            if (document.activeElement === el) el.dispatchEvent(new Event('input'));
-        }, 250);
-    } else {
-        el.dispatchEvent(new Event('input'));
-    }
+    el.dispatchEvent(new Event('input'));
 }
 
 function handleBlur(el) {

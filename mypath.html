@@ -11,7 +11,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#f1f5f9">
+    <meta name="theme-color" content="#0b0f19">
 
     <style>
         :root {
@@ -980,35 +980,19 @@ html.light-theme .shift-alert-plate {
     <!-- Микро-скрипт синхронизации темы с Хабом (Без вспышек) -->
     <script>
         (function() {
-            const STATUS_BAR_LIGHT = '#f1f5f9';
-            const STATUS_BAR_DARK = '#0b0f19';
-            const ensureMeta = (name, content) => {
-                let meta = document.querySelector(`meta[name="${name}"]`);
-                if (!meta) {
-                    meta = document.createElement('meta');
-                    meta.setAttribute('name', name);
-                    document.head.appendChild(meta);
-                }
-                meta.setAttribute('content', content);
-                if (name === 'theme-color') meta.removeAttribute('media');
-                return meta;
-            };
-            const applyTheme = theme => {
-                const isDark = theme === 'dark';
-                document.documentElement.classList.toggle('dark-theme', isDark);
-                document.documentElement.classList.toggle('light-theme', !isDark);
-                if (document.body) document.body.classList.toggle('dark-theme', isDark);
-                ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
-                ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');
-            };
-
-            applyTheme(localStorage.getItem('hub_theme'));
-            document.addEventListener('DOMContentLoaded', () => applyTheme(localStorage.getItem('hub_theme')));
+            // Мгновенно применяем тему ТОЛЬКО к html до рендера экрана
+            const savedTheme = localStorage.getItem('hub_theme');
+            const isDark = savedTheme === 'dark';
+            
+            document.documentElement.classList.toggle('dark-theme', isDark);
+            document.documentElement.classList.toggle('light-theme', !isDark);
 
             // Слушаем переключения из других вкладок
             window.addEventListener('storage', (event) => {
                 if (event.key === 'hub_theme') {
-                    applyTheme(event.newValue);
+                    const dark = event.newValue === 'dark';
+                    document.documentElement.classList.toggle('dark-theme', dark);
+                    document.documentElement.classList.toggle('light-theme', !dark);
                 }
             });
         })();
