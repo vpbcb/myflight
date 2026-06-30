@@ -340,7 +340,7 @@
     }
 
     function canUseNativeWakeLock() {
-        return hasNativeWakeLock() && !isLegacyIosPwa();
+        return hasNativeWakeLock();
     }
 
     function isSupported() {
@@ -414,7 +414,6 @@
     }
 
     async function requestNativeWakeLock() {
-        if (isLegacyIosPwa()) throw new Error('Awake is unavailable in iOS PWA before iOS 18.4');
         if (!canUseNativeWakeLock()) throw new Error('Screen Wake Lock API is unavailable');
         if (wakeLockSentinel && !wakeLockSentinel.released) {
             setStatus({ active: true, mode: 'native', needsGesture: false, error: '' });
@@ -466,9 +465,7 @@
             active: false,
             mode: 'unavailable',
             needsGesture: false,
-            error: isLegacyIosPwa()
-                ? 'Awake is unavailable in iOS PWA before iOS 18.4'
-                : 'Screen wake lock is unavailable'
+            error: 'Screen wake lock is unavailable'
         });
         return false;
     }

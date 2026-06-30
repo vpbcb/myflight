@@ -1261,6 +1261,7 @@
             if (!themeButton || themeButton.dataset.themeControlsBound === 'true') return;
             themeButton.dataset.themeControlsBound = 'true';
             const TOUCH_MOUSE_GUARD_MS = 900;
+            let isWakeLockPendingAction = false;
 
             const clearThemeLongPress = () => {
                 if (themeLongPressTimer) {
@@ -1277,7 +1278,7 @@
                 themeLongPressTriggered = true;
                 themePressStartedAt = 0;
                 if (navigator.vibrate) navigator.vibrate(20);
-                toggleAwakeFromThemeButton();
+                isWakeLockPendingAction = true;
             };
 
             const startThemePress = (event, isTouch) => {
@@ -1289,6 +1290,7 @@
                 }
                 clearThemeLongPress();
                 themeLongPressTriggered = false;
+                isWakeLockPendingAction = false;
                 themePressStartedAt = Date.now();
                 themeLongPressTimer = setTimeout(triggerThemeLongPress, AWAKE_LONG_PRESS_MS);
             };
@@ -1301,10 +1303,22 @@
                     themeLastTouchAt = Date.now();
                     event.preventDefault();
                     event.stopPropagation();
-                    if (!wasLongPress) toggleTheme();
+                }
+
+                if (isWakeLockPendingAction) {
+                    isWakeLockPendingAction = false;
+                    if (!isTouch) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    toggleAwakeFromThemeButton();
                     return;
                 }
-                if (!wasLongPress) return;
+
+                if (!wasLongPress) {
+                    if (isTouch) toggleTheme();
+                    return;
+                }
 
                 event.preventDefault();
                 event.stopPropagation();
@@ -1313,6 +1327,7 @@
             const cancelThemePress = (event, isTouch) => {
                 clearThemeLongPress();
                 themePressStartedAt = 0;
+                isWakeLockPendingAction = false;
                 if (isTouch) {
                     themeLastTouchAt = Date.now();
                     event.preventDefault();
