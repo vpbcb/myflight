@@ -150,6 +150,14 @@
             min-width: 0;
         }
 
+        .npa-title-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 0;
+        }
+
         #npaCalcTitle {
             -webkit-touch-callout: none;
             touch-action: manipulation;
@@ -174,18 +182,16 @@
         }
 
         .npa-pending-sync-indicator {
-            position: absolute;
-            right: 7px;
-            top: max(12px, calc(var(--safe-top) + 6px));
-            width: 20px;
-            height: 20px;
+            position: static;
+            flex: 0 0 18px;
+            width: 18px;
+            height: 18px;
             display: none;
             align-items: center;
             justify-content: center;
             color: #64748b;
             opacity: 0.62;
             pointer-events: none;
-            z-index: 110;
         }
 
         .npa-pending-sync-indicator.active {
@@ -200,8 +206,8 @@
         }
 
         .npa-pending-sync-indicator svg {
-            width: 17px;
-            height: 17px;
+            width: 16px;
+            height: 16px;
             display: block;
         }
 
@@ -410,6 +416,23 @@
             font-size: 0.95rem !important;
             font-size: clamp(0.86rem, 24cqw, 1rem) !important;
             line-height: 1.08 !important;
+            text-align: center !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .npa-gpa-placeholder-arrow {
+            position: absolute;
+            right: 0.18rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.55em;
+            line-height: 1;
+            color: var(--accent-blue);
+            opacity: 1;
+            pointer-events: none;
+        }
+        .npa-gpa-field .gpa-input:not(:placeholder-shown) + .npa-gpa-placeholder-arrow {
+            display: none;
         }
 
         /* АНИМАЦИЯ СВОРАЧИВАНИЯ КОНТЕНТА */
@@ -480,13 +503,13 @@
         }
 
         .npa-fdp-fap-label .npa-icon {
-            height: 0.9rem;
+            height: 0.8rem;
         }
 
         .npa-fdp-fap-title {
             width: auto;
             margin-bottom: 0;
-            font-size: 0.78rem;
+            font-size: 0.9rem;
             font-weight: 800;
             letter-spacing: 0.02rem;
             overflow: visible;
@@ -737,8 +760,8 @@
             min-width: 0;
             padding: 0 4px;
             border: 1px solid var(--npa-strong-border);
-            border-top: 3px solid transparent;
-            border-bottom: 1px solid transparent;
+            border-top: 3px solid var(--npa-strong-border);
+            border-bottom: 1px solid var(--npa-strong-border);
             border-radius: 10px 10px 0 0;
             background: rgba(15, 23, 42, 0.06);
             color: var(--text-main);
@@ -799,6 +822,16 @@
             border-bottom-color: var(--npa-tabs-active-bg);
             border-top: 3px solid var(--accent-blue);
         }
+        .npa-tab-btn.active::after {
+            content: "";
+            position: absolute;
+            left: 1px;
+            right: 1px;
+            bottom: -2px;
+            height: 2px;
+            background: var(--npa-tabs-active-bg);
+            pointer-events: none;
+        }
         html.dark-theme .npa-tab-btn.active {
             background: var(--npa-tabs-active-bg);
             border-bottom-color: var(--npa-tabs-active-bg);
@@ -808,8 +841,9 @@
         .npa-tab-content-area {
             background: var(--npa-tabs-active-bg);
             border: 1px solid var(--npa-strong-border);
-            border-top: 3px solid transparent;
+            border-top: 0;
             border-radius: 0 0 16px 16px;
+            box-shadow: inset 0 0.5px 0 var(--npa-strong-border);
             padding: 8px;
             overflow: hidden;
             min-height: 0;
@@ -1056,6 +1090,21 @@
         .bottom-settings-btn:active { transform: scale(0.9); }
 
         @media (max-width: 410px) {
+            .npa-title-line {
+                gap: 3px;
+            }
+
+            .npa-pending-sync-indicator {
+                flex-basis: 16px;
+                width: 16px;
+                height: 16px;
+            }
+
+            .npa-pending-sync-indicator svg {
+                width: 14px;
+                height: 14px;
+            }
+
             .bottom-edit-lock-btn {
                 right: 44px;
                 top: max(3px, calc(var(--safe-top) - 3px));
@@ -1488,6 +1537,11 @@
         .npa-fap-field .npa-fdp-fap-input {
             border-color: var(--npa-fap-input-border) !important;
         }
+
+        .npa-fdp-fap-label .cell-label.npa-fdp-fap-title {
+            font-size: 0.8rem !important;
+            line-height: 1 !important;
+        }
         
         /* Убираем системные стрелочки, которые сдвигают текст влево */
         .cell-input::-webkit-outer-spin-button,
@@ -1550,9 +1604,8 @@
             cursor: pointer;
             z-index: 60;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-columns: minmax(0, 1fr);
             align-items: center;
-            column-gap: 0.18em;
         }
 
         .gpa-input {
@@ -1562,16 +1615,6 @@
             padding: 0 !important;
             line-height: 1.1 !important;
             overflow: visible;
-        }
-
-        .gpa-arrow {
-            position: static;
-            justify-self: end;
-            font-size: 0.62em;
-            line-height: 1;
-            color: var(--accent-blue);
-            pointer-events: none;
-            z-index: 10;
         }
 
         .gpa-menu {
@@ -1713,10 +1756,10 @@
                 gap: 0.12rem;
             }
             .npa-fdp-fap-label .npa-icon {
-                height: 0.78rem;
+                height: 0.7rem;
             }
             .npa-fdp-fap-title {
-                font-size: 0.72rem;
+                font-size: 0.84rem;
                 letter-spacing: 0;
             }
             .cell-input.npa-fdp-fap-input,
@@ -3016,21 +3059,23 @@
 <div class="app-wrapper">
     <div class="app-header">
         <div class="npa-title-stack">
-            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
+            <div class="npa-title-line">
+                <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 16l-4-4-4 4"></path>
+                        <path d="M12 12v9"></path>
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                        <path d="M16 16h4"></path>
+                    </svg>
+                </span>
+                <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
+            </div>
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
         </div>
         <div class="header-actions">
             <button type="button" class="header-action-btn" id="npaAddAirportButton" onclick="startNewAirportEntry()">Add<br>Airport</button>
             <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to<br>device</button>
         </div>
-        <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M16 16l-4-4-4 4"></path>
-                <path d="M12 12v9"></path>
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
-                <path d="M16 16h4"></path>
-            </svg>
-        </span>
     </div>
 
     <div class="precision-scroll-container" id="mainScroll">
@@ -3071,8 +3116,8 @@
                         <div class="cell-wrapper flex-1 npa-gpa-field">
                             <span class="cell-label">GPA</span>
                             <div class="gpa-container" onclick="toggleGpaMenu(event)">
-                                <input type="text" class="cell-input gpa-input" id="gpa" readonly>
-                                <span class="gpa-arrow">▼</span>
+                                <input type="text" class="cell-input gpa-input" id="gpa" placeholder=" " readonly>
+                                <span class="npa-gpa-placeholder-arrow">▼</span>
                                 <div class="gpa-menu" id="gpaMenu">
                                     <div class="gpa-menu-item" onclick="setGpa(2.7, event)">2.7°</div>
                                     <div class="gpa-menu-item" onclick="setGpa(3.0, event)">3.0°</div>
@@ -3112,7 +3157,7 @@
                             <span class="tab-line">Profile</span>
                             <div class="fcu-info-stacked">
                                 <div class="fcu-main">FCU FPA: <span id="npaFcuFpaValue">--</span>&deg;</div>
-                                <div class="fcu-sub">t&deg;C corrected</div>
+                                <div class="fcu-sub">t&deg;C &amp; Elevation corr.</div>
                             </div>
                         </div>
                     </div>
@@ -5066,6 +5111,27 @@
         return { hElev, angle, temp, kTable, tanAngle, ftPerNm };
     }
 
+    function getNpaFdpFapInputGeometryState() {
+        const elevationValue = getAirportThresholdElevationValue();
+        const angleValue = getNumberOrBlank('gpa');
+
+        if (!isFilledProfileNumber(elevationValue) || !isFilledProfileNumber(angleValue)) {
+            return null;
+        }
+
+        const hElev = Number(elevationValue);
+        const angle = Number(angleValue);
+        const angleRad = angle * (Math.PI / 180);
+        const tanAngle = Math.tan(angleRad);
+        const ftPerNm = 6076.1155;
+
+        if (!Number.isFinite(tanAngle) || tanAngle <= 0) {
+            return null;
+        }
+
+        return { hElev, angle, temp: null, kTable: 1, tanAngle, ftPerNm };
+    }
+
     function getNpaProfileRawDistFromInd(height, geometry) {
         if (!geometry || !Number.isFinite(Number(height))) return NaN;
         return Math.max(0, ((Number(height) - geometry.hElev) / geometry.kTable - 50) / (geometry.tanAngle * geometry.ftPerNm));
@@ -5098,7 +5164,7 @@
         const targetMode = normalizeNpaFdpFapMode(toMode);
         if (sourceMode === targetMode) return numeric;
 
-        const geometry = getNpaProfileGeometryState();
+        const geometry = getNpaFdpFapInputGeometryState();
         if (!geometry) return "";
 
         if (sourceMode === 'alt' && targetMode === 'dist') {
@@ -5148,13 +5214,13 @@
             const value = getNumberOrBlank(field);
             if (value === "") continue;
             const convertedValue = convertNpaFdpFapValue(value, npaFdpFapMode, nextMode);
-            if (convertedValue === "") return;
-            convertedValues[field] = formatNpaFdpFapKeypadEntry(convertedValue, nextMode);
+            if (convertedValue !== "") {
+                convertedValues[field] = formatNpaFdpFapKeypadEntry(convertedValue, nextMode);
+            }
         }
 
         setNpaFdpFapMode(nextMode);
         Object.entries(convertedValues).forEach(([field, value]) => setFieldValue(field, value));
-        markNpaCurrentApproachDirtyForField('fap');
         scheduleNpaCurrentPageStateSave();
     }
 
@@ -8848,6 +8914,7 @@
     let rwLengthInputUnit = "m";
     let keypadWasCleared = false;
     let npaTempIsNegative = false;
+    let npaTempSignOnlyInput = false;
 
     const npaKeypadFields = {
         elevation: { title: 'LAND THR ELEV', mode: 'minus' },
@@ -8943,6 +9010,7 @@
         activeNpaField = type;
         currentKpVal = "";
         keypadWasCleared = false;
+        npaTempSignOnlyInput = false;
         if (isNpaFdpFapField(type)) npaFdpFapActiveInputMode = npaFdpFapMode;
         configureNpaKeypad(type);
         updateKpDisplay();
@@ -9241,7 +9309,8 @@
         const shouldAdvanceNewApproachCarousel = e === 'done' && completedCarouselField !== "";
         if (completedCarouselField && e !== 'done') newApproachCarouselActive = false;
 
-        const hasNewValue = currentKpVal !== "" || keypadWasCleared;
+        const hasOnlyTempSign = activeNpaField === 'tempC' && npaTempSignOnlyInput && currentKpVal === "";
+        const hasNewValue = currentKpVal !== "" || (keypadWasCleared && !hasOnlyTempSign);
         if (activeNpaField === 'airportModal') {
             const target = activeAirportKeypad;
             const shouldAdvance = e === 'done' && !!target?.autoAdvance;
@@ -9387,15 +9456,7 @@
         const modal = document.getElementById('npaLimitModal');
         if (modal) modal.classList.remove('active');
 
-        if (activeNpaField === 'tempC') {
-            currentKpVal = "";
-            keypadWasCleared = true;
-            npaTempIsNegative = false;
-            setNpaTemperatureValue("");
-            updateKpDisplay();
-            renderNpaProfileTable();
-            scheduleNpaCurrentPageStateSave();
-        }
+        if (activeNpaField === 'tempC') updateKpDisplay();
     }
 
     function isNpaTempAllowed(nextValue) {
@@ -9406,17 +9467,10 @@
     }
 
     function toggleNpaTempSign() {
-        if (currentKpVal === "" && !keypadWasCleared) {
-            const currentTemp = getNpaTemperatureNumber();
-            if (currentTemp !== "") currentKpVal = String(Math.abs(Number(currentTemp)));
-        }
-
-        if (!npaTempIsNegative && currentKpVal === "55") {
-            showNpaTempLimitWarning();
-            return;
-        }
-
         npaTempIsNegative = !npaTempIsNegative;
+        currentKpVal = "";
+        keypadWasCleared = true;
+        npaTempSignOnlyInput = true;
         updateKpDisplay();
     }
 
@@ -9426,6 +9480,7 @@
         if (key === 'clear') {
             currentKpVal = "";
             keypadWasCleared = true;
+            npaTempSignOnlyInput = false;
             updateKpDisplay();
             return;
         }
@@ -9439,6 +9494,7 @@
         if (key === '+/-') {
             if (!isShiftKeypadField(activeNpaField)) return;
             keypadWasCleared = false;
+            npaTempSignOnlyInput = false;
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = currentKpVal.substring(1);
             } else {
@@ -9451,6 +9507,7 @@
         if (key === 'minus_toggle') {
             if (activeNpaField !== 'elevation') return;
             keypadWasCleared = false;
+            npaTempSignOnlyInput = false;
             if (currentKpVal.startsWith('-')) {
                 currentKpVal = currentKpVal.substring(1);
             } else {
@@ -9470,6 +9527,7 @@
             }
             currentKpVal = currentKpVal.slice(0, -1);
             keypadWasCleared = true;
+            npaTempSignOnlyInput = false;
             updateKpDisplay();
             return;
         }
@@ -9523,6 +9581,7 @@
 
         currentKpVal = nextValue;
         keypadWasCleared = false;
+        npaTempSignOnlyInput = false;
         updateKpDisplay();
     }
 
