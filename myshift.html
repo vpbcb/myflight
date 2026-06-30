@@ -814,6 +814,148 @@ button:focus {
         });
     })();
 </script>
+  <script>
+    (function () {
+      if (window.MyFlightViewportLock) {
+        window.MyFlightViewportLock.relock();
+        return;
+      }
+
+      const root = document.documentElement;
+      const containerSelector = '.app-shell, .app-wrapper, .calculator, .app-container';
+      const relockSteps = [60, 150, 350, 700, 1200];
+      let lockedHeight = 0;
+
+      function isEditable(element) {
+        return Boolean(element && (
+          /^(INPUT|TEXTAREA|SELECT)$/.test(element.tagName) ||
+          element.isContentEditable
+        ));
+      }
+
+      function isEditableFocused() {
+        return isEditable(document.activeElement);
+      }
+
+      function keepViewportPinned() {
+        root.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+
+      function readViewportWidth(visualViewport) {
+        const widths = [
+          visualViewport ? visualViewport.width : 0,
+          window.innerWidth,
+          root.clientWidth,
+          window.outerWidth
+        ].map(Number).filter(width => Number.isFinite(width) && width > 0);
+        return Math.floor(widths.length ? Math.min(...widths) : 0);
+      }
+
+      function readViewportHeight(visualViewport, editableFocused) {
+        const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : 0;
+        const innerHeight = Math.floor(window.innerHeight || 0);
+        const rootHeight = Math.floor(root.clientHeight || 0);
+        if (!editableFocused && visualHeight) return visualHeight;
+        return innerHeight || visualHeight || rootHeight || lockedHeight || 0;
+      }
+
+      function lockViewport(options = {}) {
+        const forceHeight = Boolean(options.forceHeight || options.resetHeight);
+        const visualViewport = window.visualViewport;
+        const editableFocused = isEditableFocused();
+        const viewportWidth = readViewportWidth(visualViewport);
+        const nextHeight = readViewportHeight(visualViewport, editableFocused);
+        const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : nextHeight;
+        const innerHeight = Math.floor(window.innerHeight || 0);
+        const keyboardLikelyOpen = editableFocused && lockedHeight && (
+          (visualHeight && visualHeight < lockedHeight - 80) ||
+          (innerHeight && innerHeight < lockedHeight - 80) ||
+          (nextHeight && nextHeight < lockedHeight - 80)
+        );
+
+        if (!lockedHeight || forceHeight) {
+          lockedHeight = nextHeight || innerHeight || lockedHeight;
+        } else if (!keyboardLikelyOpen && !editableFocused && nextHeight) {
+          lockedHeight = nextHeight;
+        }
+
+        const staticHeight = `${lockedHeight || nextHeight || innerHeight}px`;
+        const appWidth = `${Math.min(viewportWidth || window.innerWidth || 440, 440)}px`;
+
+        root.style.setProperty('--app-height', staticHeight);
+        root.style.setProperty('--app-width', appWidth);
+        root.style.height = staticHeight;
+
+        if (document.body) {
+          document.body.style.height = staticHeight;
+        }
+
+        if (viewportWidth && viewportWidth < 440) {
+          const rootWidth = `${viewportWidth}px`;
+          root.style.width = rootWidth;
+          if (document.body) document.body.style.width = rootWidth;
+        } else {
+          root.style.width = '100%';
+          if (document.body) document.body.style.width = '100%';
+        }
+
+        document.querySelectorAll(containerSelector).forEach(container => {
+          container.style.height = staticHeight;
+          container.style.width = appWidth;
+        });
+
+        if (keyboardLikelyOpen || editableFocused) {
+          keepViewportPinned();
+          setTimeout(keepViewportPinned, 50);
+        }
+      }
+
+      function relockViewport() {
+        lockedHeight = 0;
+        lockViewport({ forceHeight: true });
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => lockViewport({ forceHeight: true }));
+        }
+        relockSteps.forEach(delay => {
+          setTimeout(() => lockViewport({ forceHeight: true }), delay);
+        });
+      }
+
+      window.MyFlightViewportLock = {
+        lock: lockViewport,
+        relock: relockViewport,
+        reset: relockViewport,
+        getHeight: () => lockedHeight
+      };
+
+      relockViewport();
+      document.addEventListener('DOMContentLoaded', relockViewport, { once: true });
+      window.addEventListener('pageshow', relockViewport);
+      window.addEventListener('focus', relockViewport);
+      window.addEventListener('resize', () => lockViewport());
+      window.addEventListener('orientationchange', relockViewport);
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => lockViewport());
+        window.visualViewport.addEventListener('scroll', () => lockViewport());
+      }
+
+      document.addEventListener('focusin', event => {
+        if (!isEditable(event.target)) return;
+        lockViewport();
+        keepViewportPinned();
+        setTimeout(keepViewportPinned, 100);
+      }, true);
+      document.addEventListener('focusout', () => setTimeout(() => lockViewport(), 250), true);
+
+      if ('virtualKeyboard' in navigator) {
+        navigator.virtualKeyboard.overlaysContent = true;
+        navigator.virtualKeyboard.addEventListener?.('geometrychange', () => lockViewport());
+      }
+    })();
+  </script>
 </head>
 
 <body>
@@ -1025,56 +1167,7 @@ button:focus {
 <script>
 
   (function () {
-    function lockAppViewport() {
-      const visualViewport = window.visualViewport;
-      const rawWidth = visualViewport ? visualViewport.width : window.innerWidth;
-      const viewportWidth = Math.floor(rawWidth || window.innerWidth || 0);
-      const appWidth = Math.min(viewportWidth, 440) + 'px';
-      const staticHeight = window.innerHeight + 'px';
-      const root = document.documentElement;
-      const body = document.body;
-
-      root.style.setProperty('--app-height', staticHeight);
-      root.style.setProperty('--app-width', appWidth);
-      root.style.height = staticHeight;
-      body.style.height = staticHeight;
-
-      if (viewportWidth && viewportWidth < 440) {
-        root.style.width = viewportWidth + 'px';
-        body.style.width = viewportWidth + 'px';
-      } else {
-        root.style.width = '100%';
-        body.style.width = '100%';
-      }
-
-      const shell = document.querySelector('.app-container');
-      if (shell) {
-        shell.style.height = staticHeight;
-        shell.style.width = appWidth;
-      }
-    }
-
-    function relockAfterOrientation() {
-      lockAppViewport();
-      setTimeout(lockAppViewport, 150);
-      setTimeout(lockAppViewport, 350);
-      setTimeout(lockAppViewport, 700);
-    }
-
-    lockAppViewport();
-
-    window.addEventListener('orientationchange', function () {
-      relockAfterOrientation();
-    });
-    window.addEventListener('resize', lockAppViewport);
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', lockAppViewport);
-    }
-
-    if ('virtualKeyboard' in navigator) {
-      navigator.virtualKeyboard.overlaysContent = true;
-    }
+    window.MyFlightViewportLock?.relock();
   })();
 
   // Блокировка контекстного меню (правой кнопки мыши / долгого тапа)
