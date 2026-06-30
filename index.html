@@ -1154,12 +1154,16 @@
         const themeIconLight = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
         const themeIconDark = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
         const AWAKE_THEME_COLOR = '#f59e0b';
+        const AWAKE_UNAVAILABLE_COLOR = '#ef4444';
+        const AWAKE_UNAVAILABLE_FEEDBACK_MS = 850;
         const AWAKE_LONG_PRESS_MS = 700;
 
         let themeLongPressTimer = null;
         let themeLongPressTriggered = false;
         let themePressStartedAt = 0;
         let themeLastTouchAt = 0;
+        let themeAwakeFeedbackTimer = null;
+        let themeAwakeUnavailableFeedbackActive = false;
 
         // Функция смены темы
         function toggleTheme() {
@@ -1210,7 +1214,28 @@
             const themeText = document.getElementById('themeText');
             if (!themeText) return;
             const awakeStatus = getAwakeStatus();
-            themeText.style.color = awakeStatus?.active ? AWAKE_THEME_COLOR : '';
+            if (awakeStatus?.active) {
+                themeText.style.color = AWAKE_THEME_COLOR;
+                return;
+            }
+            if (themeAwakeUnavailableFeedbackActive) {
+                themeText.style.color = AWAKE_UNAVAILABLE_COLOR;
+                return;
+            }
+            themeText.style.color = '';
+        }
+
+        function showAwakeUnavailableFeedback() {
+            const themeText = document.getElementById('themeText');
+            if (!themeText) return;
+            if (themeAwakeFeedbackTimer) clearTimeout(themeAwakeFeedbackTimer);
+            themeAwakeUnavailableFeedbackActive = true;
+            updateThemeAwakeUI();
+            themeAwakeFeedbackTimer = setTimeout(() => {
+                themeAwakeUnavailableFeedbackActive = false;
+                themeAwakeFeedbackTimer = null;
+                updateThemeAwakeUI();
+            }, AWAKE_UNAVAILABLE_FEEDBACK_MS);
         }
 
         async function toggleAwakeFromThemeButton() {
@@ -1223,7 +1248,11 @@
             } catch (error) {
                 console.warn('Awake toggle skipped:', error);
             } finally {
+                const awakeStatus = getAwakeStatus();
                 updateThemeAwakeUI();
+                if (!awakeStatus?.active && (awakeStatus?.mode === 'unavailable' || awakeStatus?.error)) {
+                    showAwakeUnavailableFeedback();
+                }
             }
         }
 
