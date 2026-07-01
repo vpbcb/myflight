@@ -327,21 +327,6 @@
             letter-spacing: 0.25px;
         }
 
-        #npaAddAirportButton {
-            flex: 0 0 100%;
-            width: 100%;
-            background: rgba(14, 165, 233, 0.12);
-            border-color: rgba(14, 165, 233, 0.34);
-            color: #0369a1;
-            box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.08);
-        }
-
-        html.dark-theme #npaAddAirportButton {
-            background: rgba(14, 165, 233, 0.18);
-            border-color: rgba(56, 189, 248, 0.38);
-            color: #7dd3fc;
-        }
-
         #npaSaveButton {
             visibility: hidden;
             opacity: 0;
@@ -1018,11 +1003,11 @@
         .menu-btn { right: 16px; justify-content: flex-end; }
         .bottom-edit-lock-btn {
             position: absolute;
-            right: 50px;
-            top: max(8px, calc(var(--safe-top) + 2px));
-            left: auto;
+            left: 8px;
+            right: auto;
+            top: 50%;
             bottom: auto;
-            transform: none;
+            transform: translateY(-50%);
             width: 104px;
             height: 32px;
             margin: 0;
@@ -1032,6 +1017,7 @@
             box-shadow: none;
             color: var(--text-main);
             display: flex;
+            flex-direction: row;
             align-items: center;
             justify-content: flex-start;
             gap: 4px;
@@ -1130,45 +1116,13 @@
         }
         .refresh-btn:active, .menu-btn:active { transform: scale(0.9); }
         .wind-btn:active { transform: translateX(-50%) scale(0.9); }
-        .bottom-edit-lock-btn:active { transform: scale(0.9); }
+        .bottom-edit-lock-btn:active { transform: translateY(-50%) scale(0.9); }
         .bottom-settings-btn:active { transform: scale(0.9); }
 
         @media (max-width: 410px) {
             .header-actions {
                 left: 19px;
                 width: calc((100% - 50px) / 3);
-            }
-
-            .bottom-edit-lock-btn {
-                right: 44px;
-                top: max(3px, calc(var(--safe-top) - 3px));
-                width: 46px;
-                height: 45px;
-                padding: 0;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 0;
-            }
-
-            .bottom-edit-lock-btn svg {
-                width: 23px;
-                height: 23px;
-                flex-basis: 23px;
-            }
-
-            .bottom-edit-lock-hint {
-                display: block;
-                font-size: 6px;
-                line-height: 1.02;
-                text-align: center;
-                letter-spacing: 0;
-                opacity: 0.72;
-            }
-
-            .bottom-edit-lock-btn::after {
-                left: -10px;
-                right: -6px;
             }
         }
 
@@ -1460,6 +1414,11 @@
             font-weight: 500;
             text-align: center;
             text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: keep-all;
+            overflow-wrap: normal;
             cursor: pointer;
         }
         .npa-airport-option {
@@ -1480,12 +1439,15 @@
         .npa-approach-label-text {
             display: inline;
             line-height: 1;
+            white-space: nowrap;
         }
+        .npa-airport-option.add-new-appr,
         .npa-approach-option.add-new-appr {
             color: var(--accent-orange);
             background: rgba(251, 146, 60, 0.1);
             white-space: nowrap;
             font-size: clamp(11px, 4.2vw, 15px);
+            font-weight: 500;
         }
         .npa-approach-empty {
             padding: 8px 4px;
@@ -1984,12 +1946,23 @@
         }
         #addAirportModal .npa-form-modal {
             max-height: min(86vh, calc(var(--airport-modal-vh, var(--app-height)) - 1.5rem));
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         #addAirportModal.keyboard-open {
             padding-top: max(0.25rem, env(safe-area-inset-top));
         }
         #addAirportModal.keyboard-open .npa-form-modal {
             max-height: calc(var(--airport-modal-vh, 100vh) - 0.75rem);
+        }
+        #addAirportModal .add-airport-scroll-area {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.65rem;
         }
         .npa-modal-section {
             display: flex;
@@ -2468,6 +2441,17 @@
             background: var(--accent-blue);
             border-color: var(--accent-blue);
             color: #ffffff;
+        }
+        #addAirportModal .add-airport-actions {
+            flex: 0 0 auto;
+            margin: 0 -0.65rem -0.65rem;
+            padding: 0.65rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--card-bg);
+            box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.06);
+        }
+        html.dark-theme #addAirportModal .add-airport-actions {
+            box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.24);
         }
         .npa-hidden {
             display: none !important;
@@ -3052,6 +3036,7 @@
     font-size: 8px;
     line-height: 1;
     margin-top: 1px;
+    text-transform: none;
 }
     </style>
 
@@ -3238,13 +3223,13 @@
 
 <div class="app-wrapper">
     <div class="app-header">
+        <button type="button" class="bottom-edit-lock-btn edit-lock-btn" id="npaEditLockBtn" aria-label="Edit locked">
+            <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
+        </button>
         <div class="npa-title-stack">
             <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
             <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to device</button>
-        </div>
-        <div class="header-actions">
-            <button type="button" class="header-action-btn" id="npaAddAirportButton" onclick="startNewAirportEntry()">Add<br>Airport</button>
         </div>
     </div>
 
@@ -3327,7 +3312,7 @@
                             <span class="tab-line">Profile</span>
                             <div class="fcu-info-stacked">
                                 <div class="fcu-main">FCU FPA: <span id="npaFcuFpaValue">--</span>&deg;</div>
-                                <div class="fcu-sub">t&deg;C &amp; Elevation corr.</div>
+                                <div class="fcu-sub">t&deg;C &amp; elevation corr.</div>
                             </div>
                         </div>
                     </div>
@@ -3438,10 +3423,6 @@
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
         </svg>
         <span class="btn-label-style" style="margin-left: 2px;">Refresh</span>
-    </button>
-
-    <button type="button" class="bottom-edit-lock-btn edit-lock-btn" id="npaEditLockBtn" aria-label="Edit locked">
-        <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
     </button>
 
     <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
@@ -4840,6 +4821,20 @@
         return btn;
     }
 
+    function createNpaAirportAddNewOption() {
+        const btn = document.createElement('button');
+        btn.className = 'npa-airport-option add-new-appr';
+        btn.type = 'button';
+        btn.innerText = 'ADD NEW';
+        btn.onmousedown = event => event.preventDefault();
+        btn.onclick = event => {
+            event.stopPropagation();
+            closeNpaAirportDropdown();
+            startNewAirportEntry();
+        };
+        return btn;
+    }
+
     function renderNpaAirportDropdown(forceOpen = false, prefixOverride = null) {
         const dropdown = document.getElementById('npaAirportDropdown');
         if (!dropdown) return;
@@ -4849,6 +4844,7 @@
             .filter(code => !prefix || code.startsWith(prefix));
 
         dropdown.innerHTML = "";
+        dropdown.appendChild(createNpaAirportAddNewOption());
         if (airportCodes.length) {
             airportCodes.forEach(code => dropdown.appendChild(createNpaAirportOption(code)));
         } else {
@@ -5068,14 +5064,15 @@
 
         if (airportCode.length < 4) {
             dropdown.appendChild(makeNpaApproachMessage('ENTER ICAO CODE'));
-        } else if (approaches.length) {
-            approaches.forEach(type => {
-                dropdown.appendChild(createNpaApproachOption(type, () => selectNpaType(type)));
-            });
-            dropdown.appendChild(createNpaApproachOption('ADD NEW', startNewApproachEntry, 'add-new-appr'));
         } else {
-            dropdown.appendChild(makeNpaApproachMessage('NO APPROACHES SAVED'));
             dropdown.appendChild(createNpaApproachOption('ADD NEW', startNewApproachEntry, 'add-new-appr'));
+            if (approaches.length) {
+                approaches.forEach(type => {
+                    dropdown.appendChild(createNpaApproachOption(type, () => selectNpaType(type)));
+                });
+            } else {
+                dropdown.appendChild(makeNpaApproachMessage('NO APPROACHES SAVED'));
+            }
         }
 
         if (forceOpen) dropdown.classList.add('open');
@@ -7805,7 +7802,7 @@
 
     function scrollAddAirportFieldIntoView(element, behavior = 'smooth') {
         const modal = document.getElementById('addAirportModal');
-        const scroller = modal?.querySelector('.npa-form-modal');
+        const scroller = modal?.querySelector('.add-airport-scroll-area');
         if (!element?.closest?.('#addAirportModal') || !scroller) return;
 
         syncAddAirportModalViewport();
@@ -9752,31 +9749,33 @@
 
 <div id="addAirportModal" class="modal-overlay" onclick="closeAddAirportModal(event)">
     <div class="modal-content npa-form-modal" onclick="event.stopPropagation()">
+        <div class="add-airport-scroll-area">
             <div class="add-airport-title-row">
-            <div class="add-airport-icao-row">
-                <label for="addAirportIcao">ICAO</label>
-                <input id="addAirportIcao" class="npa-modal-input" type="text" maxlength="4" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" oninput="sanitizeAddAirportIcaoInput()" onkeydown="handleAddAirportIcaoKeydown(event)" onclick="startAirportIcaoCarousel()">
-                <button type="button" class="npa-modal-delete-btn airport-delete-btn" onclick="openAirportDeleteConfirm('airport', this)" aria-label="Delete airport">×</button>
+                <div class="add-airport-icao-row">
+                    <label for="addAirportIcao">ICAO</label>
+                    <input id="addAirportIcao" class="npa-modal-input" type="text" maxlength="4" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" oninput="sanitizeAddAirportIcaoInput()" onkeydown="handleAddAirportIcaoKeydown(event)" onclick="startAirportIcaoCarousel()">
+                    <button type="button" class="npa-modal-delete-btn airport-delete-btn" onclick="openAirportDeleteConfirm('airport', this)" aria-label="Delete airport">×</button>
+                </div>
+            </div>
+            <div class="npa-modal-section">
+                <div class="npa-modal-section-title">Runways</div>
+                <div id="airportRunwaysContainer" class="npa-modal-section"></div>
+                <button type="button" class="modal-opt-btn" onclick="addAirportRunwayBlock({}, true)">Add RWY</button>
+            </div>
+            <div class="npa-modal-section">
+                <div class="npa-modal-section-title">Radio Aids</div>
+                <div id="airportRadioAidsContainer" class="npa-modal-section"></div>
+                <div id="airportRadioAidTypeChoices" class="npa-choice-row no-wrap npa-hidden">
+                    <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('VOR', {}, true)">VOR</button>
+                    <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('NDB', {}, true)">NDB</button>
+                </div>
+                <div class="airport-radio-add-row">
+                    <button type="button" class="modal-opt-btn" onclick="addAirportRadioAidStart()">Add Radio Aid</button>
+                    <button id="addAirportTarButton" type="button" class="modal-opt-btn" onclick="addAirportTarBlock()">Add TAR</button>
+                </div>
             </div>
         </div>
-        <div class="npa-modal-section">
-            <div class="npa-modal-section-title">Runways</div>
-            <div id="airportRunwaysContainer" class="npa-modal-section"></div>
-            <button type="button" class="modal-opt-btn" onclick="addAirportRunwayBlock({}, true)">Add RWY</button>
-        </div>
-        <div class="npa-modal-section">
-            <div class="npa-modal-section-title">Radio Aids</div>
-            <div id="airportRadioAidsContainer" class="npa-modal-section"></div>
-            <div id="airportRadioAidTypeChoices" class="npa-choice-row no-wrap npa-hidden">
-                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('VOR', {}, true)">VOR</button>
-                <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('NDB', {}, true)">NDB</button>
-            </div>
-            <div class="airport-radio-add-row">
-                <button type="button" class="modal-opt-btn" onclick="addAirportRadioAidStart()">Add Radio Aid</button>
-                <button id="addAirportTarButton" type="button" class="modal-opt-btn" onclick="addAirportTarBlock()">Add TAR</button>
-            </div>
-        </div>
-        <div class="npa-modal-actions">
+        <div class="npa-modal-actions add-airport-actions">
             <button type="button" class="modal-opt-btn" onclick="closeAddAirportModal('button')">Cancel</button>
             <button type="button" class="modal-opt-btn primary" onclick="saveAirportFromModal()">Save</button>
         </div>
