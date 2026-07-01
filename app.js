@@ -1,3 +1,36 @@
+// Prevent native long-press link menus on app navigation controls.
+(function () {
+    const STYLE_ID = 'appLinkCalloutGuardStyle';
+
+    function getElementTarget(target) {
+        if (!target) return null;
+        return target.nodeType === 1 ? target : target.parentElement;
+    }
+
+    function preventNativeLinkMenu(event) {
+        const element = getElementTarget(event.target);
+        if (element?.closest('a[href]')) {
+            event.preventDefault();
+        }
+    }
+
+    document.addEventListener('contextmenu', preventNativeLinkMenu, { capture: true });
+
+    if (!document.getElementById(STYLE_ID)) {
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = `
+            a[href] {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+                touch-action: manipulation;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+})();
+
 // Service worker registration and safe cache-version auto update.
 (function () {
     const SW_URL = './sw.js';
