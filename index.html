@@ -349,6 +349,36 @@
             aspect-ratio: 1 / 1;
         }
 
+        .push-toggle-card {
+            grid-column: 1 / -1;
+            width: 100%;
+            min-width: 0;
+            height: 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.2s, background 0.2s, color 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .push-toggle-card.is-on {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: #fff;
+        }
+
+        .push-toggle-card:active {
+            transform: scale(0.97);
+            opacity: 0.78;
+        }
+
         .project-card:active {
             transform: scale(0.97);
             opacity: 0.7;
@@ -1054,6 +1084,8 @@
 
         <div class="home-actions">
         <div class="container">
+            <button type="button" class="push-toggle-card" id="pushToggleBtn" title="Long press to show flight summary notification">Push Off</button>
+
             <a href="./myfuel.html" class="project-card">
                 <div class="icon-box">⛽</div>
                 <div class="info"><span class="title">MyFuel</span></div>
@@ -1233,6 +1265,241 @@
         let themeAwakeFeedbackTimer = null;
         let themeAwakeUnavailableFeedbackActive = false;
         let themeAwakePendingFeedbackActive = false;
+        let myFlightPushEnabled = false;
+        let myFlightPushRefreshTimer = null;
+        let myFlightPushLongPressTimer = null;
+        let myFlightPushLongPressTriggered = false;
+        let myFlightPushLastTouchAt = 0;
+
+        const MYFLIGHT_PUSH_TITLE = 'MyFlight';
+        const MYFLIGHT_PUSH_TAG = 'myflight-status';
+        const MYFLIGHT_PUSH_LONG_PRESS_MS = 700;
+
+        function normalizePushField(value) {
+            return String(value ?? '').replace(/\s+/g, ' ').trim();
+        }
+
+        function formatPushAircraft(aircraft, fallbackQuery) {
+            const type = normalizePushField(aircraft && aircraft.type);
+            const regSource = aircraft && (aircraft.regFull || aircraft.reg);
+            const reg = normalizePushField(regSource).replace(/[\s-]+/g, '');
+            const aircraftText = [type, reg].filter(Boolean).join(' ');
+            if (aircraftText) return aircraftText;
+
+            const fallback = normalizePushField(fallbackQuery);
+            return fallback ? `A/C ${fallback}` : 'A/C —';
+        }
+
+        function readMyFlightQuickNotes() {
+            try {
+                return JSON.parse(localStorage.getItem('hub_quick_notes') || '{}') || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function buildMyFlightPushBody(snapshot) {
+            const data = snapshot || {};
+            const flightNumber = normalizePushField(data.flightNumber).replace(/^SU/i, '');
+            const flightText = flightNumber ? `SU${flightNumber}` : 'SU—';
+            const aircraftText = formatPushAircraft(data.aircraft, data.aircraftQuery);
+            const quickNotes = data.quickNotes || {};
+            const fob = normalizePushField(quickNotes.fob) || '—';
+            const stand = normalizePushField(quickNotes.stand) || '—';
+            const crew = normalizePushField(quickNotes.crew) || '—';
+            const notes = normalizePushField(data.notes) || '—';
+
+            return [
+                `${flightText} ${aircraftText}`,
+                `FOB ${fob}, STAND ${stand}, CREW ID ${crew}`,
+                'Notes',
+                notes
+            ].join('\n');
+        }
+
+        function buildMyFlightPushSnapshot() {
+            const flightInput = document.getElementById('flightNumInput');
+            const acInput = document.getElementById('acNumInput');
+            const notesInput = document.getElementById('quickNotesText');
+            const aircraftQuery = acInput ? acInput.value : localStorage.getItem('last_ac_query');
+            const selectedAircraft = typeof currentAircraft !== 'undefined' ? currentAircraft : null;
+
+            return {
+                flightNumber: flightInput ? flightInput.value : localStorage.getItem('last_flight_num'),
+                aircraft: normalizePushField(aircraftQuery) ? selectedAircraft : null,
+                aircraftQuery,
+                quickNotes: readMyFlightQuickNotes(),
+                notes: notesInput ? notesInput.value : localStorage.getItem('hub_quick_notes_text')
+            };
+        }
+
+        function buildMyFlightPushOptions() {
+            return {
+                body: buildMyFlightPushBody(buildMyFlightPushSnapshot()),
+                icon: './icons/icon-192.png',
+                badge: './icons/icon-192.png',
+                tag: MYFLIGHT_PUSH_TAG,
+                renotify: true,
+                requireInteraction: true,
+                timestamp: Date.now(),
+                data: { url: './' }
+            };
+        }
+
+        function setMyFlightPushButtonState(enabled) {
+            myFlightPushEnabled = Boolean(enabled);
+            const button = document.getElementById('pushToggleBtn');
+            if (!button) return;
+            button.classList.toggle('is-on', myFlightPushEnabled);
+            button.textContent = myFlightPushEnabled ? 'Push On' : 'Push Off';
+            button.setAttribute('aria-pressed', myFlightPushEnabled ? 'true' : 'false');
+        }
+
+        async function getMyFlightPushRegistration() {
+            if (!('serviceWorker' in navigator)) return null;
+            return navigator.serviceWorker.ready;
+        }
+
+        async function closeMyFlightPushNotification() {
+            const registration = await getMyFlightPushRegistration();
+            if (registration && typeof registration.getNotifications === 'function') {
+                const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
+                notifications.forEach(notification => notification.close());
+            }
+            setMyFlightPushButtonState(false);
+        }
+
+        async function syncMyFlightPushButtonState() {
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                setMyFlightPushButtonState(false);
+                return;
+            }
+
+            const registration = await getMyFlightPushRegistration();
+            if (!registration || typeof registration.getNotifications !== 'function') return;
+            const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
+            setMyFlightPushButtonState(notifications.length > 0);
+        }
+
+        async function showMyFlightPushNotification(options = {}) {
+            const requestPermission = Boolean(options.requestPermission);
+            const reportErrors = options.reportErrors !== false;
+
+            if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                if (reportErrors) alert('Notifications are not supported on this device.');
+                setMyFlightPushButtonState(false);
+                return false;
+            }
+
+            let permission = Notification.permission;
+            if (permission === 'default' && requestPermission) {
+                permission = await Notification.requestPermission();
+            }
+
+            if (permission !== 'granted') {
+                if (reportErrors && requestPermission) alert('Notifications are not allowed.');
+                setMyFlightPushButtonState(false);
+                return false;
+            }
+
+            try {
+                const registration = await getMyFlightPushRegistration();
+                if (!registration || typeof registration.showNotification !== 'function') {
+                    throw new Error('Service worker notifications are unavailable');
+                }
+                await registration.showNotification(MYFLIGHT_PUSH_TITLE, buildMyFlightPushOptions());
+                setMyFlightPushButtonState(true);
+                return true;
+            } catch (error) {
+                console.warn('Push notification skipped:', error);
+                if (reportErrors) alert('Notification could not be shown.');
+                setMyFlightPushButtonState(false);
+                return false;
+            }
+        }
+
+        function scheduleMyFlightPushRefresh() {
+            if (!myFlightPushEnabled) return;
+            if (myFlightPushRefreshTimer) clearTimeout(myFlightPushRefreshTimer);
+            myFlightPushRefreshTimer = setTimeout(() => {
+                myFlightPushRefreshTimer = null;
+                showMyFlightPushNotification({ reportErrors: false });
+            }, 120);
+        }
+
+        async function toggleMyFlightPush() {
+            if (myFlightPushEnabled) {
+                await closeMyFlightPushNotification();
+                return;
+            }
+            await showMyFlightPushNotification({ requestPermission: true });
+        }
+
+        function clearMyFlightPushPressTimer() {
+            if (myFlightPushLongPressTimer) {
+                clearTimeout(myFlightPushLongPressTimer);
+                myFlightPushLongPressTimer = null;
+            }
+        }
+
+        function triggerMyFlightPushLongPress() {
+            myFlightPushLongPressTimer = null;
+            myFlightPushLongPressTriggered = true;
+            if (navigator.vibrate) navigator.vibrate(35);
+            toggleMyFlightPush();
+        }
+
+        function beginMyFlightPushPress(event) {
+            if (event.type === 'mousedown' && Date.now() - myFlightPushLastTouchAt < 900) return;
+            if (event.type === 'touchstart') myFlightPushLastTouchAt = Date.now();
+            if (event.cancelable) event.preventDefault();
+
+            myFlightPushLongPressTriggered = false;
+            clearMyFlightPushPressTimer();
+            myFlightPushLongPressTimer = setTimeout(triggerMyFlightPushLongPress, MYFLIGHT_PUSH_LONG_PRESS_MS);
+        }
+
+        function endMyFlightPushPress(event) {
+            if (event.type === 'mouseup' && Date.now() - myFlightPushLastTouchAt < 900) return;
+            clearMyFlightPushPressTimer();
+            if (myFlightPushLongPressTriggered && event.cancelable) event.preventDefault();
+        }
+
+        function cancelMyFlightPushPress() {
+            clearMyFlightPushPressTimer();
+            myFlightPushLongPressTriggered = false;
+        }
+
+        function bindMyFlightPushControls() {
+            const button = document.getElementById('pushToggleBtn');
+            if (!button || button.dataset.pushBound === 'true') return;
+            button.dataset.pushBound = 'true';
+            button.setAttribute('aria-pressed', 'false');
+            button.addEventListener('contextmenu', event => event.preventDefault());
+            button.addEventListener('click', event => event.preventDefault());
+            button.addEventListener('touchstart', beginMyFlightPushPress, { passive: false });
+            button.addEventListener('touchend', endMyFlightPushPress);
+            button.addEventListener('touchcancel', cancelMyFlightPushPress);
+            button.addEventListener('mousedown', beginMyFlightPushPress);
+            button.addEventListener('mouseup', endMyFlightPushPress);
+            button.addEventListener('mouseleave', cancelMyFlightPushPress);
+
+            ['flightNumInput', 'acNumInput', 'quickNotesText'].forEach(id => {
+                const field = document.getElementById(id);
+                if (field) field.addEventListener('input', scheduleMyFlightPushRefresh);
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) syncMyFlightPushButtonState();
+            });
+            syncMyFlightPushButtonState();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindMyFlightPushControls, { once: true });
+        } else {
+            bindMyFlightPushControls();
+        }
 
         // Функция смены темы
         function toggleTheme() {
@@ -1567,6 +1834,7 @@
                 window.clearQuickNotesData();
             }
 
+            if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
             closeClearDataModal();
         }
 
@@ -1904,6 +2172,7 @@ function applyAcResult(ac, query) {
 
     autoFitText(resAc, '1.05rem'); 
     fillInfoModal(ac);
+    if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
 }
 
 // --- ЛОГИКА ОКНА ИНФОРМАЦИИ (AIRCRAFT) ---
@@ -1955,6 +2224,7 @@ function searchLocalAc(inputElem) {
     const modal = document.getElementById('ambiguityModal');
 
     const resetToPlaceholder = () => {
+        currentAircraft = null;
         resAc.innerHTML = "поиск ВС по номеру или имени";
         resAc.style.color = "var(--text-secondary)";
         resAc.style.fontWeight = "600";
@@ -2000,6 +2270,7 @@ function searchLocalAc(inputElem) {
                 resetToPlaceholder();
             }
         } else {
+            currentAircraft = null;
             if (infoBtn) infoBtn.style.display = "none";
             resAc.innerHTML = "Борт не найден";
             resAc.style.color = "#ef4444";
@@ -2009,6 +2280,7 @@ function searchLocalAc(inputElem) {
             if (modal && modal.classList.contains('show')) closeAmbiguity();
         }
     } else {
+        currentAircraft = null;
         if (infoBtn) infoBtn.style.display = "none";
         resAc.innerHTML = "⚠️ БД не найдена";
         resAc.style.color = "#ef4444";
@@ -2153,6 +2425,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             saveQuickNotes();
             renderQuickNotes();
+            if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
             closeNotesKeypad();
         }
 
@@ -2188,9 +2461,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 notesText.value = localStorage.getItem(QUICK_NOTES_TEXT_STORAGE_KEY) || '';
                 notesText.addEventListener('input', () => {
                     localStorage.setItem(QUICK_NOTES_TEXT_STORAGE_KEY, notesText.value);
+                    if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
                 });
                 notesText.addEventListener('blur', () => {
                     localStorage.setItem(QUICK_NOTES_TEXT_STORAGE_KEY, notesText.value);
+                    if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
                 });
             }
 
