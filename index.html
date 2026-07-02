@@ -1271,7 +1271,7 @@
         let myFlightPushLongPressTriggered = false;
         let myFlightPushLastTouchAt = 0;
 
-        const MYFLIGHT_PUSH_TITLE = 'MyFlight | Flight Brief';
+        const MYFLIGHT_PUSH_TITLE = 'MyFlight';
         const MYFLIGHT_PUSH_TAG = 'myflight-status';
         const MYFLIGHT_PUSH_LONG_PRESS_MS = 700;
 
@@ -1280,14 +1280,12 @@
         }
 
         function formatPushAircraft(aircraft, fallbackQuery) {
-            const type = normalizePushField(aircraft && aircraft.type);
             const regSource = aircraft && (aircraft.regFull || aircraft.reg);
             const reg = normalizePushField(regSource).replace(/[\s-]+/g, '');
-            const aircraftText = [type, reg].filter(Boolean).join(' ');
-            if (aircraftText) return aircraftText;
+            if (reg) return reg;
 
-            const fallback = normalizePushField(fallbackQuery);
-            return fallback ? `A/C ${fallback}` : '-';
+            const fallback = normalizePushField(fallbackQuery).replace(/[\s-]+/g, '');
+            return fallback || '-';
         }
 
         function readMyFlightQuickNotes() {
@@ -1300,7 +1298,7 @@
 
         function buildMyFlightPushBody(snapshot) {
             const data = snapshot || {};
-            const flightNumber = normalizePushField(data.flightNumber).replace(/^SU/i, '');
+            const flightNumber = normalizePushField(data.flightNumber).replace(/^SU/i, '').replace(/\s+/g, '');
             const flightText = flightNumber ? `SU${flightNumber}` : '-';
             const aircraftText = formatPushAircraft(data.aircraft, data.aircraftQuery);
             const quickNotes = data.quickNotes || {};
@@ -1310,11 +1308,9 @@
             const notes = normalizePushField(data.notes) || '-';
 
             return [
-                `Flight: ${flightText}`,
-                `Aircraft: ${aircraftText}`,
-                `FOB: ${fob} | Stand: ${stand} | Crew: ${crew}`,
-                'Notes',
-                notes
+                `${flightText} | ${aircraftText}`,
+                `FOB${fob} | St.${stand} | Crew: ${crew}`,
+                `Notes: ${notes}`
             ].join('\n');
         }
 
