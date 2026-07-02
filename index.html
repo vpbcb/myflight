@@ -1271,7 +1271,7 @@
         let myFlightPushLongPressTriggered = false;
         let myFlightPushLastTouchAt = 0;
 
-        const MYFLIGHT_PUSH_TITLE = 'MyFlight';
+        const MYFLIGHT_PUSH_TITLE = 'MyFlight | Flight Brief';
         const MYFLIGHT_PUSH_TAG = 'myflight-status';
         const MYFLIGHT_PUSH_LONG_PRESS_MS = 700;
 
@@ -1287,7 +1287,7 @@
             if (aircraftText) return aircraftText;
 
             const fallback = normalizePushField(fallbackQuery);
-            return fallback ? `A/C ${fallback}` : 'A/C —';
+            return fallback ? `A/C ${fallback}` : '-';
         }
 
         function readMyFlightQuickNotes() {
@@ -1301,17 +1301,18 @@
         function buildMyFlightPushBody(snapshot) {
             const data = snapshot || {};
             const flightNumber = normalizePushField(data.flightNumber).replace(/^SU/i, '');
-            const flightText = flightNumber ? `SU${flightNumber}` : 'SU—';
+            const flightText = flightNumber ? `SU${flightNumber}` : '-';
             const aircraftText = formatPushAircraft(data.aircraft, data.aircraftQuery);
             const quickNotes = data.quickNotes || {};
-            const fob = normalizePushField(quickNotes.fob) || '—';
-            const stand = normalizePushField(quickNotes.stand) || '—';
-            const crew = normalizePushField(quickNotes.crew) || '—';
-            const notes = normalizePushField(data.notes) || '—';
+            const fob = normalizePushField(quickNotes.fob) || '-';
+            const stand = normalizePushField(quickNotes.stand) || '-';
+            const crew = normalizePushField(quickNotes.crew) || '-';
+            const notes = normalizePushField(data.notes) || '-';
 
             return [
-                `${flightText} ${aircraftText}`,
-                `FOB ${fob}, STAND ${stand}, CREW ID ${crew}`,
+                `Flight: ${flightText}`,
+                `Aircraft: ${aircraftText}`,
+                `FOB: ${fob} | Stand: ${stand} | Crew: ${crew}`,
                 'Notes',
                 notes
             ].join('\n');
@@ -1339,8 +1340,9 @@
                 icon: './icons/icon-192.png',
                 badge: './icons/icon-192.png',
                 tag: MYFLIGHT_PUSH_TAG,
-                renotify: true,
+                renotify: false,
                 requireInteraction: true,
+                silent: true,
                 timestamp: Date.now(),
                 data: { url: './' }
             };
