@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260702-5';
+const CACHE_NAME = 'myflight_v.260703-1';
 const ASSET_FETCH_TIMEOUT_MS = 12000;
 const SLOW_ASSET_LOG_MS = 2500;
 const FIREBASE_RUNTIME_ASSETS = [
