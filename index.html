@@ -773,8 +773,48 @@
 
         /* --- Стили содержимого окна Aircraft Info --- */
         #infoModalContent div > span:first-child { color: var(--text-secondary); }
-        #infoFormerReg, #infoSeatConf, #infoMinOAT { color: var(--text-main); }
+        #infoDow, #infoDoi, #infoFormerReg, #infoSeatConf, #infoMinOAT { color: var(--text-main); }
         #infoKzApproval { font-size: 18px !important; text-transform: uppercase; }
+        .info-weight-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 6px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .info-weight-pair {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+        .info-weight-label { color: var(--text-secondary); }
+        .info-weight-value {
+            color: var(--text-main);
+            font-weight: bold;
+        }
+        .info-crew-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex: 0 0 auto;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.05;
+        }
+        .info-crew-label select {
+            width: 58px;
+            padding: 2px 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-main);
+            font: inherit;
+            font-weight: 600;
+        }
 
         /* --- СТИЛИ МОДАЛЬНОГО ОКНА ДЛЯ БОРТОВ (Как в MyFuel) --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
@@ -1214,6 +1254,13 @@
                 <span class="modal-title">Aircraft Info</span>
                 
                 <div id="infoModalContent" style="margin-top: 15px; font-size: 15px;">
+                    <div class="info-weight-row">
+                        <span class="info-weight-pair">
+                            <span class="info-weight-label">DOW:<span id="infoDow" class="info-weight-value">&mdash;</span></span>
+                            <span class="info-weight-label">DOI:<span id="infoDoi" class="info-weight-value">&mdash;</span></span>
+                        </span>
+                        <label class="info-crew-label">Crew<select id="infoCrewConfig" onchange="handleInfoCrewChange()"></select></label>
+                    </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
                         <span>Former reg:</span>
                         <span id="infoFormerReg" style="font-weight: bold;">—</span>
@@ -1308,7 +1355,7 @@
             const notes = normalizePushField(data.notes) || '-';
 
             return [
-                `${flightText} | ${aircraftText}`,
+                `${flightText} ${aircraftText}`,
                 `FOB${fob} | St.${stand} | Crew: ${crew}`,
                 `Notes: ${notes}`
             ].join('\n');
@@ -2143,6 +2190,7 @@ function showAmbiguity(matches, query) {
 }
 
 let currentAircraft = null;
+const INFO_CREW_CONFIG_STORAGE_KEY = 'myflight_info_crew_config';
 
 // Форматирование и вывод результата
 function applyAcResult(ac, query) {
@@ -2188,6 +2236,104 @@ function closeInfoModal() {
     setTimeout(() => { modal.style.display = 'none'; }, 300);
 }
 
+function getInfoCrewOptions(acType) {
+    if ((acType || '').includes("A321")) {
+        return {
+            options: ["2/5", "2/6", "3/5", "3/6"],
+            defaultVal: "2/5"
+        };
+    }
+
+    return {
+        options: ["2/4", "2/5", "3/4", "3/5"],
+        defaultVal: "2/4"
+    };
+}
+
+function getSavedInfoCrewConfig(storage = localStorage) {
+    try {
+        return storage.getItem(INFO_CREW_CONFIG_STORAGE_KEY) || '';
+    } catch (e) {
+        return '';
+    }
+}
+
+function saveInfoCrewConfig(value, storage = localStorage) {
+    try {
+        if (value) storage.setItem(INFO_CREW_CONFIG_STORAGE_KEY, value);
+    } catch (e) {
+        // Ignore storage failures; the modal should still work.
+    }
+}
+
+function resolveInfoCrewValue(ac, crewConfig, savedVal) {
+    if (savedVal && crewConfig.options.includes(savedVal)) {
+        return savedVal;
+    }
+
+    let selectedCrew = crewConfig.defaultVal;
+    if (ac && ac.perf && !ac.perf[selectedCrew]) {
+        const firstPerfKey = Object.keys(ac.perf)[0];
+        if (firstPerfKey) selectedCrew = firstPerfKey;
+    }
+    return selectedCrew;
+}
+
+function updateInfoDowDoi(ac, crewVal, doc = document) {
+    const dowEl = doc.getElementById('infoDow');
+    const doiEl = doc.getElementById('infoDoi');
+
+    if (!ac) {
+        if (dowEl) dowEl.innerText = "—";
+        if (doiEl) doiEl.innerText = "—";
+        return;
+    }
+
+    const perfRow = ac.perf && ac.perf[crewVal];
+    const dow = perfRow && perfRow.dow !== undefined ? perfRow.dow : (ac.dow || 0);
+    const doi = perfRow && perfRow.doi !== undefined ? perfRow.doi : "50.0";
+
+    if (dowEl) dowEl.innerText = String(dow);
+    if (doiEl) doiEl.innerText = String(doi);
+}
+
+function fillInfoCrewConfig(ac) {
+    const crewSelect = document.getElementById('infoCrewConfig');
+    if (!crewSelect) return;
+
+    const crewConfig = getInfoCrewOptions(ac && ac.type);
+    crewSelect.innerHTML = '';
+
+    crewConfig.options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        crewSelect.appendChild(el);
+    });
+
+    let selectedCrew = resolveInfoCrewValue(ac, crewConfig, getSavedInfoCrewConfig());
+    if (!crewConfig.options.includes(selectedCrew)) {
+        const el = document.createElement('option');
+        el.value = selectedCrew;
+        el.textContent = selectedCrew;
+        crewSelect.appendChild(el);
+    }
+
+    if (selectedCrew) {
+        saveInfoCrewConfig(selectedCrew);
+    }
+
+    crewSelect.value = selectedCrew;
+    updateInfoDowDoi(ac, selectedCrew);
+}
+
+function handleInfoCrewChange() {
+    const crewSelect = document.getElementById('infoCrewConfig');
+    if (!crewSelect || !currentAircraft) return;
+    saveInfoCrewConfig(crewSelect.value);
+    updateInfoDowDoi(currentAircraft, crewSelect.value);
+}
+
 function fillInfoModal(ac) {
     const formerRegEl = document.getElementById('infoFormerReg');
     const seatConfEl = document.getElementById('infoSeatConf');
@@ -2195,6 +2341,7 @@ function fillInfoModal(ac) {
     const limitEl = document.getElementById('infoOpsLimit');
     const minOatEl = document.getElementById('infoMinOAT');
 
+    fillInfoCrewConfig(ac);
     if (formerRegEl) formerRegEl.innerText = ac.formerReg || "—";
     if (seatConfEl) seatConfEl.innerText = ac.config || "—";
     if (minOatEl) minOatEl.innerText = ac.minOAT || "—";
