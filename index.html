@@ -1318,7 +1318,7 @@
         let myFlightPushLongPressTriggered = false;
         let myFlightPushLastTouchAt = 0;
 
-        const MYFLIGHT_PUSH_TITLE = '';
+        const MYFLIGHT_PUSH_TITLE = 'MyFlight';
         const MYFLIGHT_PUSH_TAG = 'myflight-status';
         const MYFLIGHT_PUSH_LONG_PRESS_MS = 700;
 
@@ -1333,30 +1333,6 @@
 
             const fallback = normalizePushField(fallbackQuery).replace(/[\s-]+/g, '');
             return fallback || '-';
-        }
-
-        function stylePushText(value, options) {
-            options = options || {};
-            const text = normalizePushField(value);
-            if (!text || text === '-') return text || '-';
-
-            const useBold = Boolean(options.bold);
-            const useUnderline = Boolean(options.underline);
-
-            return Array.from(text).map(char => {
-                const code = char.codePointAt(0);
-                let styled = char;
-
-                if (useBold && code >= 65 && code <= 90) {
-                    styled = String.fromCodePoint(0x1D400 + code - 65);
-                } else if (useBold && code >= 97 && code <= 122) {
-                    styled = String.fromCodePoint(0x1D41A + code - 97);
-                } else if (useBold && code >= 48 && code <= 57) {
-                    styled = String.fromCodePoint(0x1D7CE + code - 48);
-                }
-
-                return useUnderline && styled !== ' ' ? styled + '\u0332' : styled;
-            }).join('');
         }
 
         function readMyFlightQuickNotes() {
@@ -1377,12 +1353,10 @@
             const stand = normalizePushField(quickNotes.stand) || '-';
             const crew = normalizePushField(quickNotes.crew) || '-';
             const notes = normalizePushField(data.notes) || '-';
-            const styledFlightText = stylePushText(flightText, { bold: true, underline: true });
-            const styledAircraftText = stylePushText(aircraftText, { bold: true, underline: true });
 
             return [
-                `${styledFlightText} ${styledAircraftText}`,
-                `${stylePushText('FOB', { bold: true })}: ${fob} ${stylePushText('St.', { bold: true })}: ${stand} ${stylePushText('Crew', { bold: true })}: ${crew}`,
+                `${flightText} ${aircraftText}`,
+                `*FOB:${fob} *St.${stand} *Crew:${crew} *`,
                 `Notes: ${notes}`
             ].join('\n');
         }
