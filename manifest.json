@@ -2,14 +2,16 @@
   "name": "My Flight",
   "short_name": "MyFlight",
   "description": "all in one app",
-  "start_url": "/myflight/index.html",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0b0f19",
   "theme_color": "#0b0f19",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/myflight/icons/icon-shortcut-144.png",
+      "src": "./icons/icon-shortcut-144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
