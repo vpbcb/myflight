@@ -33,7 +33,7 @@
 
 // Service worker registration and safe cache-version auto update.
 (function () {
-    const SW_URL = './sw.js';
+    const SW_URL = './service-worker.js';
     const CACHE_KEY = 'hubActiveCacheVersion';
     const LABEL_KEY = 'hubVersion';
     const CACHE_NAME_RE = /CACHE_NAME\s*=\s*['"]([^'"]+)['"]/;

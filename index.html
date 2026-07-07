@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
     <title>MyFlight:All in one</title>
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <style>
         /* Базовые переменные (Светлая тема по умолчанию и принудительно) */
@@ -2016,7 +2016,7 @@
                 return;
             }
 
-            fetch('./sw.js?_=' + Date.now(), { cache: 'no-store' })
+            fetch('./service-worker.js?_=' + Date.now(), { cache: 'no-store' })
                 .then(response => response.text())
                 .then(text => {
                     const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
