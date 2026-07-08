@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260708-1';
+const CACHE_NAME = 'myflight_v.260628-ios-pwa-admin-offline-1';
 const ASSET_FETCH_TIMEOUT_MS = 12000;
 const SLOW_ASSET_LOG_MS = 2500;
 const FIREBASE_RUNTIME_ASSETS = [
@@ -253,6 +253,39 @@ self.addEventListener('message', event => {
     if (type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
+});
+
+self.addEventListener('notificationclick', event => {
+    const rawUrl = event.notification?.data?.url || './';
+    const targetUrl = new URL(rawUrl, self.registration.scope).href;
+    event.notification.close();
+
+    event.waitUntil((async () => {
+        const windowClients = await clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        });
+        const appClient = windowClients.find(client => client.url.startsWith(self.registration.scope));
+
+        if (appClient) {
+            try {
+                const navigatedClient = typeof appClient.navigate === 'function'
+                    ? await appClient.navigate(targetUrl)
+                    : appClient;
+                const focusClient = navigatedClient || appClient;
+                if (focusClient && typeof focusClient.focus === 'function') {
+                    await focusClient.focus();
+                    return;
+                }
+            } catch (error) {
+                console.warn('[SW] Notification focus failed; opening app window.', error);
+            }
+        }
+
+        if (clients.openWindow) {
+            await clients.openWindow(targetUrl);
+        }
+    })());
 });
 
 self.addEventListener('fetch', event => {
