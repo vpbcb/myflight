@@ -28,10 +28,6 @@
 
         }
 
-        html.is-browser-page {
-            --browser-bottom-reserve: 64px;
-        }
-
         /* Темная тема (включается ОС автоматически, если нет класса .light-theme) */
         @media (prefers-color-scheme: dark) {
             :root:not(.light-theme) {
@@ -894,9 +890,6 @@
             html.is-browser-page .quick-note-card {
                 min-height: 34px;
             }
-            html.is-browser-page .home-actions {
-                margin-top: 0;
-            }
             html.is-browser-page .container {
                 gap: 8px;
             }
@@ -1024,8 +1017,6 @@
                 const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : 0;
                 const innerHeight = Math.floor(window.innerHeight || 0);
                 const rootHeight = Math.floor(root.clientHeight || 0);
-                const browserPage = root.classList.contains('is-browser-page');
-                if (!editableFocused && browserPage && innerHeight) return innerHeight;
                 if (!editableFocused && visualHeight) return visualHeight;
                 return innerHeight || visualHeight || rootHeight || lockedHeight || 0;
             }
