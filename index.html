@@ -865,32 +865,30 @@
             max-width: 100%;
         }
 
-        @media (min-width: 768px) {
-            html.is-standalone .bottom-controls {
-                position: absolute;
-                left: 0;
-                right: 0;
-                width: 100%;
-                padding: 0 16px;
-                margin-top: 0;
-                bottom: max(12px, calc(var(--safe-bottom) + 8px));
-            }
-            html.is-standalone .home-actions {
-                padding-bottom: max(65px, calc(var(--safe-bottom) + 60px));
-                box-sizing: border-box;
-            }
-            html.is-standalone .container {
-                gap: 8px;
-            }
-            html.is-standalone .project-card {
-                aspect-ratio: 1.35 / 1;
-                padding: 8px 6px;
-            }
-            html.is-standalone .icon-box {
-                width: 32px;
-                height: 32px;
-                margin-bottom: 4px;
-            }
+        html.is-standalone.is-ipad .bottom-controls {
+            position: absolute;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 0 16px;
+            margin-top: 0;
+            bottom: max(12px, calc(var(--safe-bottom) + 8px));
+        }
+        html.is-standalone.is-ipad .home-actions {
+            padding-bottom: max(65px, calc(var(--safe-bottom) + 60px));
+            box-sizing: border-box;
+        }
+        html.is-standalone.is-ipad .container {
+            gap: 8px;
+        }
+        html.is-standalone.is-ipad .project-card {
+            aspect-ratio: 1.35 / 1;
+            padding: 8px 6px;
+        }
+        html.is-standalone.is-ipad .icon-box {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 4px;
         }
 
         @media (max-width: 480px) and (max-height: 900px), (pointer: coarse) and (max-height: 900px) {
@@ -980,6 +978,11 @@
         (function() {
             const root = document.documentElement;
             const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+            const isIPad = /iPad/.test(window.navigator.userAgent) || (
+                window.navigator.platform === 'MacIntel' &&
+                window.navigator.maxTouchPoints > 1
+            );
+            root.classList.toggle('is-ipad', isIPad);
             const syncDisplayMode = () => {
                 const isStandalone = standaloneQuery.matches || window.navigator.standalone === true;
                 root.classList.toggle('is-standalone', isStandalone);
