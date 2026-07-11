@@ -276,26 +276,6 @@
             position: relative; /* Гарантирует, что надпись кэша и кнопка не вылетят за пределы */
         }
 
-        .app-shell::before,
-        .app-shell::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: var(--border-color);
-            pointer-events: none;
-            z-index: 200;
-        }
-
-        .app-shell::before {
-            top: max(0px, var(--safe-top));
-        }
-
-        .app-shell::after {
-            bottom: max(0px, var(--safe-bottom));
-        }
-
         .header {
             width: 100%;
             padding: 20px 20px 20px;
@@ -1048,6 +1028,10 @@
                 const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : 0;
                 const innerHeight = Math.floor(window.innerHeight || 0);
                 const rootHeight = Math.floor(root.clientHeight || 0);
+                const isStandaloneIPad = root.classList.contains('is-standalone') && root.classList.contains('is-ipad');
+                if (!editableFocused && isStandaloneIPad) {
+                    return Math.max(innerHeight, visualHeight, rootHeight);
+                }
                 if (!editableFocused && visualHeight) return visualHeight;
                 return innerHeight || visualHeight || rootHeight || lockedHeight || 0;
             }
