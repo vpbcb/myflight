@@ -99,6 +99,9 @@
 
         .precision-scroll-container {
             flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             min-width: 0;
             max-width: 100%;
             overflow: hidden;
@@ -755,6 +758,10 @@
         }
 
         .npa-tabs-card {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             background: transparent;
             border: 0;
             border-radius: 0;
@@ -766,6 +773,8 @@
             flex-direction: column;
             min-width: 0;
             max-width: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
         }
         .npa-tab-line {
             display: flex;
@@ -868,6 +877,7 @@
             color: #cbd5e1;
         }
         .npa-tab-content-area {
+            flex: 1 1 auto;
             background: var(--npa-tabs-active-bg);
             border: 1px solid var(--npa-strong-border);
             border-top: 0;
