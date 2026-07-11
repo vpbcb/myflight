@@ -822,6 +822,13 @@ button:focus {
       }
 
       const root = document.documentElement;
+      const isIPad = /iPad/.test(window.navigator.userAgent) || (
+        window.navigator.platform === 'MacIntel' &&
+        window.navigator.maxTouchPoints > 1
+      );
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      root.classList.toggle('is-ipad', isIPad);
+      root.classList.toggle('is-standalone', isStandalone);
       const containerSelector = '.app-shell, .app-wrapper, .calculator, .app-container';
       const relockSteps = [60, 150, 350, 700, 1200];
       let lockedHeight = 0;
@@ -857,6 +864,10 @@ button:focus {
         const visualHeight = visualViewport ? Math.floor(visualViewport.height || 0) : 0;
         const innerHeight = Math.floor(window.innerHeight || 0);
         const rootHeight = Math.floor(root.clientHeight || 0);
+        const isStandaloneIPad = root.classList.contains('is-standalone') && root.classList.contains('is-ipad');
+        if (!editableFocused && isStandaloneIPad) {
+          return Math.max(innerHeight, visualHeight, rootHeight);
+        }
         if (!editableFocused && visualHeight) return visualHeight;
         return innerHeight || visualHeight || rootHeight || lockedHeight || 0;
       }
