@@ -715,6 +715,7 @@
             icao,
             runways: normalizeRunways(airportData?.runways),
             radioAids: normalizeRadioAids(airportData),
+            localReferenceOverride: false,
             updatedAt: getAirportUpdatedAt(airportData)
         };
     }
@@ -846,6 +847,8 @@
             const reference = references[rawCode];
             if (!code || !reference || typeof reference !== 'object') return;
             const normalizedReference = normalizeReferenceAirport(code, reference);
+            const localAirport = merged[code];
+            if (localAirport?.localReferenceOverride === true) return;
             const localApproaches = merged[code]?.approaches && typeof merged[code].approaches === 'object'
                 ? merged[code].approaches
                 : {};

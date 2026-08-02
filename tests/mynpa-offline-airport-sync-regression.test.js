@@ -5,6 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const appSource = fs.readFileSync(path.resolve(__dirname, '..', 'app.js'), 'utf8');
+const mynpaSource = fs.readFileSync(path.resolve(__dirname, '..', 'mynpa.html'), 'utf8');
 const syncModuleStart = appSource.indexOf('// Shared MyNPA Realtime Database bootstrap and pending cloud sync.');
 
 assert.notEqual(syncModuleStart, -1, 'MyNPA sync module should exist in app.js');
@@ -129,6 +130,24 @@ test('pending approach does not block an incoming airport reference update', () 
     assert.equal(harness.window.airportsDb.UAAA.approaches['VOR 19'].gpa, '3.2');
 });
 
+test('device-only airport reference edit survives a cloud-cache rebuild', () => {
+    const localAirport = airport('DEVICE', 300);
+    localAirport.localReferenceOverride = true;
+    const harness = createHarness({
+        [STORAGE_KEYS.airports]: { UAAA: localAirport },
+        [STORAGE_KEYS.references]: { UAAA: airport('CLOUD', 400) },
+        [STORAGE_KEYS.approaches]: {},
+        [STORAGE_KEYS.pending]: []
+    });
+
+    assert.equal(harness.window.airportsDb.UAAA.runways[0].thr1, 'DEVICE');
+    assert.equal(harness.window.airportsDb.UAAA.localReferenceOverride, true);
+});
+
+test('non-admin airport save marks the reference as device-only', () => {
+    assert.match(mynpaSource, /localReferenceOverride:\s*!adminMode/);
+});
+
 test('cloud write carries updatedAt and refreshes the persisted reference snapshot', async () => {
     const harness = createHarness({
         [STORAGE_KEYS.airports]: {},
@@ -142,5 +161,6 @@ test('cloud write carries updatedAt and refreshes the persisted reference snapsh
     assert.equal(harness.setCalls.length, 1);
     assert.equal(harness.setCalls[0].path, 'airportsReference/UAAA');
     assert.equal(harness.setCalls[0].payload.updatedAt, 400);
+    assert.equal('localReferenceOverride' in harness.setCalls[0].payload, false);
     assert.equal(harness.read(STORAGE_KEYS.references).UAAA.updatedAt, 400);
 });

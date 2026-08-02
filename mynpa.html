@@ -4162,6 +4162,7 @@
             runways,
             radioAids,
             approaches: airportData?.approaches && typeof airportData.approaches === 'object' ? airportData.approaches : {},
+            localReferenceOverride: airportData?.localReferenceOverride === true,
             updatedAt: Number.isFinite(Number(airportData?.updatedAt)) && Number(airportData.updatedAt) > 0
                 ? Number(airportData.updatedAt)
                 : 0
@@ -4276,8 +4277,9 @@
             const pending = pendingByAirport.get(normalizedCode);
             const pendingUpdatedAt = pending ? pending.updatedAt : 0;
             const cloudUpdatedAt = getNpaAirportUpdatedAt(airportData);
+            const localReferenceOverride = merged[normalizedCode]?.localReferenceOverride === true;
 
-            if (pendingUpdatedAt > cloudUpdatedAt) return;
+            if (localReferenceOverride || pendingUpdatedAt > cloudUpdatedAt) return;
 
             merged[normalizedCode] = normalizeNpaAirportDocument(normalizedCode, airportData);
             if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
@@ -8543,16 +8545,17 @@
         });
 
         const existingAirport = getAirportDocument(icao);
+        const adminMode = isNpaAdminMode();
         const airportData = {
             icao,
             runways,
             radioAids,
             approaches: existingAirport?.approaches && typeof existingAirport.approaches === 'object' ? existingAirport.approaches : {},
+            localReferenceOverride: !adminMode,
             updatedAt: Date.now()
         };
 
         upsertLocalAirport(icao, airportData);
-        const adminMode = isNpaAdminMode();
         if (adminMode) queueAirportSave(icao, airportData);
         const airportInput = document.getElementById('apprName');
         if (airportInput) airportInput.value = icao;
