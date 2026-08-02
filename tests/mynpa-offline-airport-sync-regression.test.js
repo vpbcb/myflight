@@ -107,16 +107,26 @@ test('pending offline airport edit wins over stale Firebase reference cache', ()
     assert.equal(harness.read(STORAGE_KEYS.pending).length, 1);
 });
 
-test('newer local airport is not replaced by an older reference snapshot', () => {
+test('pending approach does not block an incoming airport reference update', () => {
+    const localAirport = airport('OLD', 300);
+    localAirport.approaches = {
+        'VOR 19': { name: 'VOR 19', gpa: '3.0', updatedAt: 250 }
+    };
     const harness = createHarness({
-        [STORAGE_KEYS.airports]: { UAAA: airport('01', 300) },
-        [STORAGE_KEYS.references]: { UAAA: airport('OLD', 100) },
+        [STORAGE_KEYS.airports]: { UAAA: localAirport },
+        [STORAGE_KEYS.references]: { UAAA: airport('NEW', 200) },
         [STORAGE_KEYS.approaches]: {},
-        [STORAGE_KEYS.pending]: []
+        [STORAGE_KEYS.pending]: [{
+            kind: 'approach',
+            airportCode: 'UAAA',
+            approachName: 'VOR 19',
+            data: { name: 'VOR 19', gpa: '3.2', updatedAt: 300 },
+            updatedAt: 300
+        }]
     });
 
-    assert.equal(harness.window.airportsDb.UAAA.runways[0].thr1, '01');
-    assert.equal(harness.window.airportsDb.UAAA.updatedAt, 300);
+    assert.equal(harness.window.airportsDb.UAAA.runways[0].thr1, 'NEW');
+    assert.equal(harness.window.airportsDb.UAAA.approaches['VOR 19'].gpa, '3.2');
 });
 
 test('cloud write carries updatedAt and refreshes the persisted reference snapshot', async () => {
