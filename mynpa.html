@@ -4162,7 +4162,9 @@
             runways,
             radioAids,
             approaches: airportData?.approaches && typeof airportData.approaches === 'object' ? airportData.approaches : {},
-            updatedAt: Number.isFinite(Number(airportData?.updatedAt)) ? Number(airportData.updatedAt) : Date.now()
+            updatedAt: Number.isFinite(Number(airportData?.updatedAt)) && Number(airportData.updatedAt) > 0
+                ? Number(airportData.updatedAt)
+                : 0
         };
     }
 
@@ -4213,15 +4215,16 @@
 
         queue.forEach(item => {
             const airportCode = sanitizeNpaAirportCode(item?.airportCode);
-            if (!isValidNpaAirportReferenceKey(airportCode) || !item?.airportData) return;
+            const airportData = item?.data || item?.airportData;
+            if (item?.kind !== 'reference' || !isValidNpaAirportReferenceKey(airportCode) || !airportData) return;
 
             const updatedAt = Math.max(
                 getNpaAirportUpdatedAt(item),
-                getNpaAirportUpdatedAt(item.airportData)
+                getNpaAirportUpdatedAt(airportData)
             );
             const existing = pendingByAirport.get(airportCode);
             if (!existing || updatedAt >= existing.updatedAt) {
-                pendingByAirport.set(airportCode, { item, updatedAt });
+                pendingByAirport.set(airportCode, { item, airportData, updatedAt });
             }
         });
 
