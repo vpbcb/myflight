@@ -846,10 +846,6 @@
             const reference = references[rawCode];
             if (!code || !reference || typeof reference !== 'object') return;
             const normalizedReference = normalizeReferenceAirport(code, reference);
-            const localAirport = merged[code];
-            if (localAirport && getAirportUpdatedAt(localAirport) > getAirportUpdatedAt(normalizedReference)) {
-                return;
-            }
             const localApproaches = merged[code]?.approaches && typeof merged[code].approaches === 'object'
                 ? merged[code].approaches
                 : {};
