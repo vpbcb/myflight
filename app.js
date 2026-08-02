@@ -704,13 +704,18 @@
         });
     }
 
+    function getAirportUpdatedAt(value) {
+        const updatedAt = Number(value?.updatedAt);
+        return Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : 0;
+    }
+
     function normalizeReferenceAirport(airportCode, airportData) {
         const icao = sanitizeAirportCode(airportCode || airportData?.icao);
         return {
             icao,
             runways: normalizeRunways(airportData?.runways),
             radioAids: normalizeRadioAids(airportData),
-            updatedAt: Number(airportData?.updatedAt) || Date.now()
+            updatedAt: getAirportUpdatedAt(airportData)
         };
     }
 
@@ -761,7 +766,8 @@
         return {
             icao: normalized.icao,
             runways: runwayObjectFromArray(normalized.runways),
-            radioAids: serializeRadioAids(normalized.radioAids)
+            radioAids: serializeRadioAids(normalized.radioAids),
+            updatedAt: normalized.updatedAt || Date.now()
         };
     }
 
@@ -771,10 +777,64 @@
         return entry.approaches && typeof entry.approaches === 'object' ? entry.approaches : {};
     }
 
+    function applyPendingCloudWrites(merged, pendingWrites) {
+        pendingWrites.forEach(item => {
+            const code = sanitizeAirportCode(item?.airportCode);
+            if (!isValidAirportReferenceKey(code)) return;
+
+            if (item.kind === 'reference' && item.data && typeof item.data === 'object') {
+                const existingApproaches = merged[code]?.approaches && typeof merged[code].approaches === 'object'
+                    ? merged[code].approaches
+                    : item.data.approaches && typeof item.data.approaches === 'object'
+                        ? item.data.approaches
+                        : {};
+                const pendingAirport = normalizeReferenceAirport(code, item.data);
+                pendingAirport.updatedAt = Math.max(
+                    pendingAirport.updatedAt,
+                    getAirportUpdatedAt(item)
+                );
+                merged[code] = {
+                    ...pendingAirport,
+                    approaches: existingApproaches
+                };
+                return;
+            }
+
+            if (item.kind === 'approach' && item.data && typeof item.data === 'object') {
+                const approachName = String(item.approachName || item.data.name || '').trim();
+                if (!approachName) return;
+                const existing = merged[code] || normalizeReferenceAirport(code, { icao: code });
+                const existingApproaches = existing.approaches && typeof existing.approaches === 'object'
+                    ? existing.approaches
+                    : {};
+                merged[code] = {
+                    ...existing,
+                    approaches: {
+                        ...existingApproaches,
+                        [approachName]: {
+                            ...item.data,
+                            name: approachName,
+                            updatedAt: Math.max(
+                                getAirportUpdatedAt(item.data),
+                                getAirportUpdatedAt(item)
+                            )
+                        }
+                    }
+                };
+                return;
+            }
+
+            if (item.kind === 'deleteAirport' || item.kind === 'deleteReference') {
+                delete merged[code];
+            }
+        });
+    }
+
     function rebuildCombinedLocalDb() {
         const references = readJsonStorage(NPA_REFERENCE_CACHE_KEY, {});
         const cloudApproaches = readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {});
         const merged = readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+        const pendingWrites = getPendingCloudWrites();
 
         Object.keys(merged || {}).forEach(rawCode => {
             if (!isValidAirportReferenceKey(rawCode)) delete merged[rawCode];
@@ -785,11 +845,16 @@
             const code = sanitizeAirportCode(rawCode);
             const reference = references[rawCode];
             if (!code || !reference || typeof reference !== 'object') return;
+            const normalizedReference = normalizeReferenceAirport(code, reference);
+            const localAirport = merged[code];
+            if (localAirport && getAirportUpdatedAt(localAirport) > getAirportUpdatedAt(normalizedReference)) {
+                return;
+            }
             const localApproaches = merged[code]?.approaches && typeof merged[code].approaches === 'object'
                 ? merged[code].approaches
                 : {};
             merged[code] = {
-                ...normalizeReferenceAirport(code, reference),
+                ...normalizedReference,
                 approaches: localApproaches
             };
         });
@@ -810,6 +875,10 @@
                 }
             };
         });
+
+        // Unsynced local edits are the final authority. A stale Firebase cache
+        // must never replace them while the device is offline or reconnecting.
+        applyPendingCloudWrites(merged, pendingWrites);
 
         writeJsonStorage(NPA_AIRPORTS_DB_KEY, merged);
         window.airportsDb = merged;
@@ -870,7 +939,15 @@
         if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
         const code = sanitizeAirportCode(airportCode);
         if (!isValidAirportReferenceKey(code)) throw new Error('Valid airport code is required');
-        await window.npaDb.ref(`airportsReference/${code}`).set(serializeReferenceAirport(code, airportData));
+        const serialized = serializeReferenceAirport(code, airportData);
+        await window.npaDb.ref(`airportsReference/${code}`).set(serialized);
+
+        // Keep the manually persisted Firebase snapshot aligned before the
+        // realtime listener confirms the same write.
+        const references = readJsonStorage(NPA_REFERENCE_CACHE_KEY, {});
+        references[code] = serialized;
+        writeJsonStorage(NPA_REFERENCE_CACHE_KEY, references);
+        rebuildCombinedLocalDb();
     }
 
     async function deleteAirportReferenceFromCloud(airportCode) {
@@ -895,11 +972,29 @@
         const code = sanitizeAirportCode(airportCode);
         const key = safeApproachKey(approachName);
         if (!isValidAirportReferenceKey(code) || !key) throw new Error('Airport and approach are required');
-        await window.npaDb.ref(`airportsNpa/${code}/approaches/${key}`).set({
+        const serialized = {
             ...approachData,
             name: approachName,
             updatedAt: Number(approachData?.updatedAt) || Date.now()
-        });
+        };
+        await window.npaDb.ref(`airportsNpa/${code}/approaches/${key}`).set(serialized);
+
+        const cloudApproaches = readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {});
+        const airportEntry = cloudApproaches[code] && typeof cloudApproaches[code] === 'object'
+            ? cloudApproaches[code]
+            : {};
+        const approaches = airportEntry.approaches && typeof airportEntry.approaches === 'object'
+            ? airportEntry.approaches
+            : {};
+        cloudApproaches[code] = {
+            ...airportEntry,
+            approaches: {
+                ...approaches,
+                [key]: serialized
+            }
+        };
+        writeJsonStorage(NPA_CLOUD_APPROACHES_KEY, cloudApproaches);
+        rebuildCombinedLocalDb();
     }
 
     async function writePendingItem(item) {
