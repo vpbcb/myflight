@@ -4274,11 +4274,10 @@
             if (!isValidNpaAirportReferenceKey(normalizedCode)) return;
 
             const pending = pendingByAirport.get(normalizedCode);
-            const localUpdatedAt = getNpaAirportUpdatedAt(merged[normalizedCode]);
             const pendingUpdatedAt = pending ? pending.updatedAt : 0;
             const cloudUpdatedAt = getNpaAirportUpdatedAt(airportData);
 
-            if (Math.max(localUpdatedAt, pendingUpdatedAt) > cloudUpdatedAt) return;
+            if (pendingUpdatedAt > cloudUpdatedAt) return;
 
             merged[normalizedCode] = normalizeNpaAirportDocument(normalizedCode, airportData);
             if (canConfirmPending && pending && cloudUpdatedAt >= pendingUpdatedAt) {
