@@ -6,7 +6,7 @@ Make the MyFuel card on the home screen look inactive like MyWeather while keepi
 
 ## Interface
 
-- The MyFuel card uses the same `opacity: 0.5` appearance as MyWeather.
+- The MyFuel card uses the same inline `opacity: 0.5` appearance as MyWeather.
 - The label and fuel icon stay unchanged.
 - No hint about the hidden access gesture is shown.
 
@@ -20,7 +20,7 @@ Make the MyFuel card on the home screen look inactive like MyWeather while keepi
 
 ## Implementation
 
-- Give the MyFuel card a stable element ID and inactive visual class in `index.html`.
+- Give the MyFuel card a stable element ID and the same inline opacity as MyWeather in `index.html`.
 - Attach a small click handler that prevents the anchor's default navigation, tracks click count and timing, and navigates only on the third click.
 - Keep the real `href` so the destination remains declared in markup.
 - Do not change `CACHE_NAME` in `sw.js`.

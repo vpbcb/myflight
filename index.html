@@ -365,7 +365,11 @@
             transform: scale(0.97);
             opacity: 0.7;
         }
-        
+
+        #myfuelCard {
+            touch-action: manipulation;
+        }
+
         .icon-box {
             width: 42px;
             height: 42px;
@@ -1199,7 +1203,7 @@
         <div class="container">
             <button type="button" class="push-toggle-card" id="pushToggleBtn" title="Long press to show flight summary notification">Push Off</button>
 
-            <a href="./myfuel.html" class="project-card">
+            <a href="./myfuel.html" class="project-card" id="myfuelCard" style="opacity: 0.5;">
                 <div class="icon-box">⛽</div>
                 <div class="info"><span class="title">MyFuel</span></div>
             </a>
@@ -1841,6 +1845,37 @@
             document.addEventListener('DOMContentLoaded', bindThemeButtonControls, { once: true });
         } else {
             bindThemeButtonControls();
+        }
+
+        function bindMyFuelTripleClick(card, options = {}) {
+            if (!card) return;
+
+            const now = options.now || (() => Date.now());
+            const navigate = options.navigate || (url => window.location.assign(url));
+            const maxWindowMs = options.maxWindowMs || 900;
+            let clickTimes = [];
+
+            card.addEventListener('click', event => {
+                event.preventDefault();
+                const clickedAt = now();
+                clickTimes = clickTimes.filter(time => clickedAt - time <= maxWindowMs);
+                clickTimes.push(clickedAt);
+
+                if (clickTimes.length < 3) return;
+
+                clickTimes = [];
+                navigate(card.href);
+            });
+        }
+
+        function initMyFuelTripleClickAccess() {
+            bindMyFuelTripleClick(document.getElementById('myfuelCard'));
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMyFuelTripleClickAccess, { once: true });
+        } else {
+            initMyFuelTripleClickAccess();
         }
 
         async function checkRealInternet() {
