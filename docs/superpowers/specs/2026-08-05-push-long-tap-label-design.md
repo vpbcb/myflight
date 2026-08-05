@@ -18,5 +18,5 @@ Show the required gesture directly on the Push toggle button.
 
 ## Testing
 
-- Extend the existing push-notification regression test to verify the initial, enabled, and disabled labels.
+- Add a focused regression test for the initial, enabled, and disabled labels without modifying local untracked tests.
 - Confirm RED before changing `index.html`, then run the focused test again for GREEN.
