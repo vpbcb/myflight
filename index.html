@@ -386,10 +386,21 @@
             content: none;
         }
 
-        .settings-modal-content {
-            width: min(90%, 340px);
-            max-width: 340px;
-            padding: 20px;
+        .modal-content.settings-modal-content {
+            margin-bottom: 0;
+            margin-left: 0;
+            max-width: 360px;
+            padding: 30px 20px;
+        }
+
+        @media (max-width: 767px) {
+            .modal-content.settings-modal-content {
+                padding: 20px 10px;
+                width: 80%;
+                max-width: 280px;
+                margin-bottom: -45vh;
+                margin-left: 40px;
+            }
         }
 
         .settings-actions {

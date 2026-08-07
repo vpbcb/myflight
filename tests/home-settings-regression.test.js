@@ -4,6 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const indexHtml = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8');
+const mywindHtml = fs.readFileSync(path.resolve(__dirname, '..', 'mywind.html'), 'utf8');
 
 function functionBody(name) {
     const start = indexHtml.indexOf(`function ${name}(`);
@@ -75,6 +76,20 @@ test('Settings actions form two centered rows of equal tiles', () => {
     assert.match(stateBody, /getElementById\('pushText'\)/);
     assert.match(stateBody, /pushText\.textContent\s*=\s*myFlightPushEnabled\s*\?\s*'Push On'\s*:\s*'Push Off'/);
     assert.doesNotMatch(stateBody, /button\.textContent/);
+});
+
+test('Settings modal copies the MyWind RWY keypad size and placement', () => {
+    const myWindKeypadRule = /\.keypad-content\s*\{[\s\S]*?padding:\s*20px\s+10px;[\s\S]*?width:\s*80%;[\s\S]*?max-width:\s*280px;[\s\S]*?margin-bottom:\s*-45vh;[\s\S]*?margin-left:\s*40px;[\s\S]*?\}/;
+    assert.match(mywindHtml, myWindKeypadRule);
+    assert.match(
+        indexHtml,
+        /\.modal-content\.settings-modal-content\s*\{[\s\S]*?margin-bottom:\s*0;[\s\S]*?margin-left:\s*0;[\s\S]*?max-width:\s*360px;[\s\S]*?padding:\s*30px\s+20px;[\s\S]*?\}/
+    );
+    assert.match(
+        indexHtml,
+        /@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\.modal-content\.settings-modal-content\s*\{[\s\S]*?padding:\s*20px\s+10px;[\s\S]*?width:\s*80%;[\s\S]*?max-width:\s*280px;[\s\S]*?margin-bottom:\s*-45vh;[\s\S]*?margin-left:\s*40px;[\s\S]*?\}/
+    );
+    assert.doesNotMatch(indexHtml, /@media\s*\(\s*min-width:\s*768px\s*\)/);
 });
 
 test('Settings closes from its backdrop and Mail transitions to the mail modal', () => {
