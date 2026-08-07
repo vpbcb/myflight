@@ -580,6 +580,43 @@ button.pill{
 .mtLbl{ font-size:14px; color:var(--muted); }
 
 .sixRow{ display:grid; grid-template-columns:1fr; gap:10px; align-items:start; }
+#afterResultsCard { cursor:pointer; }
+.ldtCardHeader {
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:6px 34px;
+  border:1px solid var(--ctlBorder);
+  border-radius:10px;
+  background:var(--pillBg);
+  font-size:var(--titleFs);
+  font-weight:600;
+}
+.ldtCardHeader::after {
+  content:"⌄";
+  position:absolute;
+  right:12px;
+  font-size:20px;
+  line-height:1;
+  transition:transform 220ms ease;
+}
+.ldtFoldContent {
+  overflow:hidden;
+  max-height:140px;
+  margin-top:10px;
+  opacity:1;
+  transition:max-height 220ms ease, margin-top 220ms ease, opacity 180ms ease;
+}
+#afterResultsCard:not(.open) .ldtFoldContent {
+  max-height:0;
+  margin-top:0;
+  opacity:0;
+  pointer-events:none;
+}
+#afterResultsCard.open .ldtCardHeader::after { transform:rotate(180deg); }
+#flightTime { cursor:pointer; }
 .sixInline{
   display:grid;
   grid-template-columns:1fr auto;
@@ -1122,8 +1159,10 @@ button:focus {
           </div>
         </div>
 
-        <div class="card" id="afterResultsCard">
-          <div class="sixRow">
+        <div class="card" id="afterResultsCard" role="button" tabindex="0" aria-expanded="false" onclick="toggleLdtCard(event)" onkeydown="handleLdtCardKeydown(event)">
+          <div class="ldtCardHeader">Расчет LDT</div>
+          <div id="ldtCardContent" class="ldtFoldContent" aria-hidden="true">
+            <div class="sixRow">
 
             <div style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; align-items:center; background:var(--card); height:40px;">
               <div id="flightTimeTitle" class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-right:1px solid var(--ctlBorder); flex:1; height:100%; margin:0; padding:4px; white-space:normal; line-height:1.15; font-size:var(--titleFs); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
@@ -1143,6 +1182,7 @@ button:focus {
               </div>
             </div>
 
+            </div>
           </div>
         </div>
 
@@ -1192,6 +1232,23 @@ document.addEventListener('contextmenu', event => event.preventDefault());
 let paxMode = "none"; // 'none' | 'before' | 'after'  
 
 const $ = (id) => document.getElementById(id);
+
+function toggleLdtCard(event) {
+  if (event.target.closest('#flightTime')) return;
+
+  const card = $('afterResultsCard');
+  const isOpen = card.classList.toggle('open');
+  card.setAttribute('aria-expanded', String(isOpen));
+  $('ldtCardContent').setAttribute('aria-hidden', String(!isOpen));
+}
+
+function handleLdtCardKeydown(event) {
+  if (event.target.closest('#flightTime')) return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+
+  event.preventDefault();
+  toggleLdtCard(event);
+}
 
 let cabincrew="нет", airport="UUEE", reinforced="нет", landings="1-2", extend="нет";
 let tzMode = "MSK"; // MSK | UTC | LOCAL
