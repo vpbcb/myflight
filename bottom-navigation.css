@@ -1,5 +1,8 @@
 :root {
     --bottom-nav-color: #1e293b;
+    --bottom-nav-button-height: 32px;
+    --bottom-nav-padding-bottom: max(12px, calc(var(--safe-bottom) + 8px));
+    --bottom-nav-reserved-height: calc(var(--bottom-nav-button-height) + var(--bottom-nav-padding-bottom));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,7 +25,7 @@ html.dark-theme {
     right: 0;
     bottom: 0;
     width: 100%;
-    padding: 0 16px max(12px, calc(var(--safe-bottom) + 8px));
+    padding: 0 16px var(--bottom-nav-padding-bottom);
     margin: 0;
     box-sizing: border-box;
     display: grid;
@@ -48,7 +51,7 @@ html.dark-theme {
     right: auto !important;
     bottom: auto !important;
     width: min(90px, 100%);
-    height: 32px;
+    height: var(--bottom-nav-button-height);
     min-width: 0;
     margin: 0;
     padding: 5px;
@@ -121,13 +124,21 @@ html.dark-theme {
 }
 
 @media (hover: hover) and (pointer: fine) and (max-height: 680px) {
+    :root {
+        --bottom-nav-padding-bottom: max(4px, calc(var(--safe-bottom) + 4px));
+    }
+
     .bottom-controls {
-        padding-bottom: max(4px, calc(var(--safe-bottom) + 4px));
+        padding-bottom: var(--bottom-nav-padding-bottom);
     }
 }
 
 @media (max-height: 600px) {
+    :root {
+        --bottom-nav-padding-bottom: max(2px, calc(var(--safe-bottom) + 2px));
+    }
+
     .bottom-controls {
-        padding-bottom: max(2px, calc(var(--safe-bottom) + 2px));
+        padding-bottom: var(--bottom-nav-padding-bottom);
     }
 }

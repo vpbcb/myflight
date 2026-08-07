@@ -53,9 +53,9 @@ test('shared navigation copies the home action dimensions, typography and color'
     const css = fs.readFileSync(cssPath, 'utf8');
 
     assert.match(css, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/);
-    assert.match(css, /padding:\s*0 16px max\(12px,\s*calc\(var\(--safe-bottom\)\s*\+\s*8px\)\);/);
+    assert.match(css, /padding:\s*0 16px var\(--bottom-nav-padding-bottom\);/);
     assert.match(css, /width:\s*min\(90px,\s*100%\);/);
-    assert.match(css, /height:\s*32px;/);
+    assert.match(css, /height:\s*var\(--bottom-nav-button-height\);/);
     assert.match(css, /color:\s*var\(--bottom-nav-color,\s*var\(--text-main,\s*var\(--text,\s*var\(--ink,\s*#0b1026\)\)\)\);/);
     assert.match(css, /font-size:\s*0\.65rem;/);
     assert.match(css, /font-weight:\s*800;/);
@@ -66,8 +66,8 @@ test('shared navigation copies the home action dimensions, typography and color'
     assert.match(css, /html\.dark-theme\s*\{\s*--bottom-nav-color:\s*#cbd5e1;/);
     assert.match(css, /left:\s*auto\s*!important;/);
     assert.match(css, /right:\s*auto\s*!important;/);
-    assert.match(css, /@media\s*\(hover:\s*hover\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(max-height:\s*680px\)\s*\{[\s\S]*?padding-bottom:\s*max\(4px,\s*calc\(var\(--safe-bottom\)\s*\+\s*4px\)\);/);
-    assert.match(css, /@media\s*\(max-height:\s*600px\)\s*\{[\s\S]*?padding-bottom:\s*max\(2px,\s*calc\(var\(--safe-bottom\)\s*\+\s*2px\)\);/);
+    assert.match(css, /@media\s*\(hover:\s*hover\)\s*and\s*\(pointer:\s*fine\)\s*and\s*\(max-height:\s*680px\)\s*\{[\s\S]*?--bottom-nav-padding-bottom:\s*max\(4px,\s*calc\(var\(--safe-bottom\)\s*\+\s*4px\)\);/);
+    assert.match(css, /@media\s*\(max-height:\s*600px\)\s*\{[\s\S]*?--bottom-nav-padding-bottom:\s*max\(2px,\s*calc\(var\(--safe-bottom\)\s*\+\s*2px\)\);/);
 });
 
 test('bordered calculators compensate their one-pixel inset', () => {

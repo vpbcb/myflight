@@ -107,8 +107,8 @@
             max-width: 100%;
             overflow: hidden;
             z-index: 30;
-            margin: 5px 0 max(65px, calc(var(--safe-bottom) + 60px)) 0; 
-            padding: 8px 10px;
+            margin: 5px 0 var(--bottom-nav-reserved-height, 0px) 0;
+            padding: 8px 10px 6px;
             background: transparent; 
             border: none;
         }
@@ -761,6 +761,7 @@
         .npa-tabs-card {
             flex: 1 1 auto;
             min-height: 0;
+            margin-bottom: 0;
             display: flex;
             flex-direction: column;
             background: transparent;
@@ -5742,19 +5743,17 @@
     function getNpaLayoutVisibleBottom() {
         const scroll = document.getElementById('mainScroll');
         const wrapper = document.querySelector('.app-wrapper');
-        const refreshBtn = document.getElementById('refreshBtn');
-        const menuBtn = document.querySelector('.menu-btn');
+        const controls = document.querySelector('.bottom-controls');
         const scrollRect = scroll ? scroll.getBoundingClientRect() : null;
         const wrapperRect = wrapper ? wrapper.getBoundingClientRect() : null;
-        const buttonTops = [refreshBtn, menuBtn]
-            .filter(Boolean)
-            .map(button => button.getBoundingClientRect().top)
-            .filter(top => Number.isFinite(top));
-        const controlsTop = buttonTops.length ? Math.min(...buttonTops) : (wrapperRect ? wrapperRect.bottom - 50 : window.innerHeight - 50);
+        const controlsRect = controls ? controls.getBoundingClientRect() : null;
+        const controlsTop = controlsRect && Number.isFinite(controlsRect.top)
+            ? controlsRect.top - 6
+            : (wrapperRect ? wrapperRect.bottom - 50 : window.innerHeight - 50);
 
         return Math.min(
             scrollRect ? scrollRect.bottom : window.innerHeight,
-            controlsTop - 6,
+            controlsTop,
             wrapperRect ? wrapperRect.bottom - 6 : window.innerHeight
         );
     }

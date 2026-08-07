@@ -148,7 +148,7 @@ body {
   border-right: 1px solid var(--border);
   padding-top: max(2px, calc(var(--safe-top) + 2px));
   /* Отступ снизу для кнопок управления */
-  padding-bottom: max(65px, calc(var(--safe-bottom) + 60px));
+  padding-bottom: var(--bottom-nav-reserved-height, max(44px, calc(var(--safe-bottom) + 40px)));
 }
 
 /* Кнопки управления внизу (аналогия с образцом) */

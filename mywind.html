@@ -160,7 +160,10 @@
         .calculator {
             background: var(--card);
             border: 1px solid var(--border);
-            padding: max(2px, calc(var(--safe-top) + 2px)) 20px max(65px, calc(var(--safe-bottom) + 60px)) 20px; /* Чуть увеличили отступ снизу для комфорта */
+            padding-top: max(2px, calc(var(--safe-top) + 2px));
+            padding-right: 20px;
+            padding-bottom: var(--bottom-nav-reserved-height, max(44px, calc(var(--safe-bottom) + 40px)));
+            padding-left: 20px;
             border-radius: 0; /* Убираем скругления, чтобы на мобилках было строго от края до края */
             width: min(100vw, 440px);
             width: min(var(--app-width), 440px);
