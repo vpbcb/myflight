@@ -22,7 +22,7 @@ function functionBody(name) {
 }
 
 test('home footer keeps Refresh and replaces Theme and Mail with Settings', () => {
-    const footerStart = indexHtml.indexOf('<div class="bottom-controls">');
+    const footerStart = indexHtml.search(/<div class="bottom-controls(?: [^"]*)?">/);
     const settingsModalStart = indexHtml.indexOf('<div id="settingsModal"');
     assert.notEqual(footerStart, -1);
     assert.ok(settingsModalStart > footerStart);

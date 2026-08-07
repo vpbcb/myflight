@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
+    <link rel="stylesheet" href="./bottom-navigation.css">
 
     <style>
         :root {
@@ -1203,30 +1204,32 @@ html.dark-theme .shift-value-toast {
 
 <div class="calculator">
 
+    <div class="bottom-controls bottom-controls--bordered">
     <!-- Кнопка сброса (Слева) -->
-    <button class="refresh-btn" id="startApprBtn" title="Обновить поля">
+    <button class="refresh-btn bottom-action bottom-action--left" id="startApprBtn" title="Обновить поля">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
         </svg>
-        <span id="startBtnText" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 2px; text-transform: uppercase; white-space: nowrap;">Start here</span>
+        <span class="bottom-action-label" id="startBtnText">Start here</span>
     </button>
 
     <!-- Кнопка перехода в MyWind (По центру) -->
-    <a href="./mywind.html" class="wind-btn" title="RWY Wind Limits" style="text-decoration: none;">
+    <a href="./mywind.html" class="wind-btn bottom-action bottom-action--center" title="RWY Wind Limits" style="text-decoration: none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
             <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
         </svg>
-        <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">MyWind</span>
+        <span class="bottom-action-label">MyWind</span>
     </a>
 
     <!-- Кнопка GO HOME (Справа) -->
-    <a href="./index.html" class="theme-toggle" title="В главное меню" style="text-decoration: none;">
+    <a href="./index.html" class="theme-toggle bottom-action bottom-action--right" title="В главное меню" style="text-decoration: none;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
-        <span class="menu-text" style="margin-left: 4px;">GO HOME</span>
+        <span class="menu-text bottom-action-label">GO HOME</span>
     </a>
+    </div>
 
     <h2>Approach path calc</h2>
 

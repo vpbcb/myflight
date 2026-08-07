@@ -9,6 +9,7 @@
     <title>MyFlight:All in one</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <link rel="stylesheet" href="./bottom-navigation.css">
     <style>
         /* Базовые переменные (Светлая тема по умолчанию и принудительно) */
         :root, body.light-theme {
@@ -1041,7 +1042,7 @@
             }
         }
 
-        @media (hover: hover) and (pointer: fine) and (max-height: 600px) {
+        @media (max-height: 600px) {
             html.is-browser-page .container {
                 gap: clamp(2px, 0.8vh, 5px);
             }
@@ -1052,6 +1053,8 @@
             html.is-browser-page .icon-box {
                 width: clamp(22px, 5vh, 30px);
                 height: clamp(22px, 5vh, 30px);
+                font-size: clamp(20px, 4.6vh, 28px);
+                line-height: 1;
                 margin-bottom: 2px;
             }
             html.is-browser-page .info .title {
@@ -1340,20 +1343,20 @@
             </a>
         </div> <!-- Конец .container -->
 
-        <div class="bottom-controls">
-            <button class="refresh-btn" id="refreshBtn" title="Очистить поля">
+        <div class="bottom-controls bottom-controls--flow">
+            <button class="refresh-btn bottom-action bottom-action--left" id="refreshBtn" title="Очистить поля">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
                     <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
                 </svg>
-                <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Refresh</span>
+                <span class="bottom-action-label">Refresh</span>
             </button>
 
-            <button class="settings-toggle" id="settingsToggleBtn" type="button" onclick="openSettingsModal()" title="Settings">
+            <button class="settings-toggle bottom-action bottom-action--center" id="settingsToggleBtn" type="button" onclick="openSettingsModal()" title="Settings">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-2.83 2.83-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21h-4v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06-2.83-2.83.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3v-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06 2.83-2.83.06.06A1.65 1.65 0 0 0 8.92 4a1.65 1.65 0 0 0 1-1.51V2h4v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06 2.83 2.83-.06.06A1.65 1.65 0 0 0 19.4 9c.12.61.66 1.05 1.29 1.05H21v4h-.31c-.63 0-1.17.44-1.29 1.05z"></path>
                 </svg>
-                <span style="font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-left: 4px; text-transform: uppercase; white-space: nowrap;">Settings</span>
+                <span class="bottom-action-label">Settings</span>
             </button>
         </div>
         </div>

@@ -13,6 +13,7 @@ const CRITICAL_ASSETS = [
     './index.html',
     './manifest.json',
     './app.js',
+    './bottom-navigation.css',
     './myfuel.html',
     './mywind.html',
     './mypath.html',
