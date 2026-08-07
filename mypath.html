@@ -944,12 +944,12 @@ html.light-theme .shift-btn.active-shift {
 }
 
 .shift-alert-plate {
-    display: none;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(max(12px, calc(var(--safe-bottom) + 8px)) + 35px);
-    width: 100%;
+    display: block;
+    position: static;
+    visibility: hidden;
+    flex-shrink: 0;
+    width: calc(100% + 40px);
+    margin-left: -20px;
     background: rgba(251, 146, 60, 0.14);
     border-top: 1px solid rgba(251, 146, 60, 0.23);
     border-bottom: 1px solid rgba(251, 146, 60, 0.23);
@@ -967,6 +967,10 @@ html.light-theme .shift-btn.active-shift {
     letter-spacing: 0.1px;
     z-index: 90;
     pointer-events: none;
+}
+
+.shift-alert-plate.is-visible {
+    visibility: visible;
 }
 
 html.light-theme .shift-alert-plate {
@@ -1285,7 +1289,7 @@ html.light-theme .shift-alert-plate {
         </div>
     </div>
 
-    <div id="shiftAlert" class="shift-alert-plate">
+    <div id="shiftAlert" class="shift-alert-plate" aria-hidden="true">
         ATTENTION! The calculation perfomed NOT from the landing runway threshold. Manual shift from the threshold was inserted!
     </div>
 
@@ -1814,11 +1818,8 @@ function openModal(id) {
 
     const shiftAlert = document.getElementById('shiftAlert');
     if (shiftAlert) {
-        if (pathShift !== 0) {
-            shiftAlert.style.display = 'block';
-        } else {
-            shiftAlert.style.display = 'none';
-        }
+        shiftAlert.classList.toggle('is-visible', pathShift !== 0);
+        shiftAlert.setAttribute('aria-hidden', pathShift === 0 ? 'true' : 'false');
     }
     
     const tempRaw = document.getElementById('temp').value.replace(',', '.').replace(/[^\d.-]/g, '');
