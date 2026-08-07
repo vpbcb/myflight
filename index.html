@@ -1017,6 +1017,52 @@
             }
         }
 
+        /* Short desktop viewport fit */
+        @media (hover: hover) and (pointer: fine) and (max-height: 680px) {
+            html.is-browser-page .flight-search-card {
+                margin-bottom: 0;
+            }
+            html.is-browser-page .container {
+                gap: clamp(4px, 1vh, 8px);
+            }
+            html.is-browser-page .project-card {
+                height: clamp(64px, 14vh, 94px);
+                aspect-ratio: auto;
+                padding: 4px 6px;
+            }
+            html.is-browser-page .icon-box {
+                width: clamp(30px, 5.5vh, 36px);
+                height: clamp(30px, 5.5vh, 36px);
+                margin-bottom: clamp(2px, 0.8vh, 6px);
+            }
+            html.is-browser-page .bottom-controls {
+                margin-top: clamp(0px, 1vh, 4px);
+                padding-bottom: max(4px, calc(var(--safe-bottom) + 4px));
+            }
+        }
+
+        @media (hover: hover) and (pointer: fine) and (max-height: 600px) {
+            html.is-browser-page .container {
+                gap: clamp(2px, 0.8vh, 5px);
+            }
+            html.is-browser-page .project-card {
+                height: clamp(48px, calc(50vh - 216px), 84px);
+                padding: 2px 6px;
+            }
+            html.is-browser-page .icon-box {
+                width: clamp(22px, 5vh, 30px);
+                height: clamp(22px, 5vh, 30px);
+                margin-bottom: 2px;
+            }
+            html.is-browser-page .info .title {
+                font-size: clamp(12px, 2.3vh, 14px);
+            }
+            html.is-browser-page .bottom-controls {
+                margin-top: 0;
+                padding-bottom: max(2px, calc(var(--safe-bottom) + 2px));
+            }
+        }
+
     </style>
     <!-- Микро-скрипт защиты от белой вспышки (как на подстраницах) -->
     <script>
