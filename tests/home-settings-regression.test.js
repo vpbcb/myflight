@@ -50,6 +50,33 @@ test('Settings modal contains Theme, Awake, Push, Mail and Update in order', () 
     assert.match(settings, /id="updateAppBtn"[^>]*onclick="hardResetApp\(\)"/);
 });
 
+test('Settings actions form two centered rows of equal tiles', () => {
+    assert.match(
+        indexHtml,
+        /\.settings-actions\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:\s*repeat\(6,\s*minmax\(0,\s*1fr\)\);/
+    );
+    assert.match(
+        indexHtml,
+        /\.settings-actions\s*>\s*button\s*\{[\s\S]*grid-column:\s*span\s+2;/
+    );
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#btnMail\s*\{[\s\S]*grid-column:\s*2\s*\/\s*span\s+2;/);
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#updateAppBtn\s*\{[\s\S]*grid-column:\s*4\s*\/\s*span\s+2;/);
+    assert.match(
+        indexHtml,
+        /\.settings-action-btn,\s*\n\s*\.push-toggle-card\s*\{[\s\S]*height:\s*82px;[\s\S]*flex-direction:\s*column;/
+    );
+
+    const settingsStart = indexHtml.indexOf('<div id="settingsModal"');
+    const settingsEnd = indexHtml.indexOf('<div id="notesKeypadModal"', settingsStart);
+    const settings = indexHtml.slice(settingsStart, settingsEnd);
+    assert.match(settings, /id="pushToggleBtn"[\s\S]*<svg[\s\S]*<span id="pushText">Push Off<\/span>[\s\S]*<\/button>/);
+
+    const stateBody = functionBody('setMyFlightPushButtonState');
+    assert.match(stateBody, /getElementById\('pushText'\)/);
+    assert.match(stateBody, /pushText\.textContent\s*=\s*myFlightPushEnabled\s*\?\s*'Push On'\s*:\s*'Push Off'/);
+    assert.doesNotMatch(stateBody, /button\.textContent/);
+});
+
 test('Settings closes from its backdrop and Mail transitions to the mail modal', () => {
     assert.match(indexHtml, /id="settingsModal"[^>]*onclick="closeSettingsModal\(event\)"/);
     assert.match(functionBody('openSettingsModal'), /classList\.add\('show'\)/);

@@ -188,7 +188,7 @@ test('Settings modal owns the Push toggle', () => {
     const mailPosition = indexHtml.indexOf('id="btnMail"');
     assert.ok(settingsPosition >= 0 && pushPosition > settingsPosition);
     assert.ok(mailPosition > pushPosition);
-    assert.match(indexHtml, /id="pushToggleBtn"[^>]*>Push Off<\/button>/);
+    assert.match(indexHtml, /id="pushToggleBtn"[^>]*>[\s\S]*?<span id="pushText">Push Off<\/span>[\s\S]*?<\/button>/);
     assert.match(indexHtml, /\.push-toggle-card\.is-on\s*\{[\s\S]*background:\s*#16a34a/);
     assert.ok(pushPosition > indexHtml.indexOf('<span class="title">MyPath</span>'));
 });

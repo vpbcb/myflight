@@ -8,7 +8,7 @@ const indexHtml = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), '
 test('Push toggle uses concise short-tap labels in every state', () => {
     assert.match(
         indexHtml,
-        /id="pushToggleBtn"[^>]*>Push Off<\/button>/
+        /id="pushToggleBtn"[^>]*>[\s\S]*?<span id="pushText">Push Off<\/span>[\s\S]*?<\/button>/
     );
 
     const stateStart = indexHtml.indexOf('function setMyFlightPushButtonState');
