@@ -36,13 +36,15 @@ test('calculation applies only an active configured shift', () => {
     assert.match(functionBody('calculate'), /classList\.toggle\('active-shift',\s*isPathShiftActive\)/);
 });
 
-test('missing-value toast copies the MyWind RWY timing', () => {
+test('missing-value toast stays visible twice as long without slower fades', () => {
     assert.match(myPathHtml, /id="shiftValueToast"[^>]*>\s*INSERT SHIFT VALUE\. LONG TAP ON BUTTON/);
-    assert.match(myPathHtml, /const PATH_SHIFT_TOAST_PHASE_MS\s*=\s*700\s*;/);
+    assert.match(myPathHtml, /const PATH_SHIFT_TOAST_FADE_MS\s*=\s*700\s*;/);
+    assert.match(myPathHtml, /const PATH_SHIFT_TOAST_HOLD_MS\s*=\s*1400\s*;/);
     const toastBody = functionBody('showMissingPathShiftToast');
-    assert.match(toastBody, /opacity 0\.7s ease-out/);
-    assert.match(toastBody, /opacity 0\.7s ease-in/);
-    assert.ok((toastBody.match(/PATH_SHIFT_TOAST_PHASE_MS/g) || []).length >= 2);
+    assert.match(toastBody, /opacity \$\{PATH_SHIFT_TOAST_FADE_MS\}ms ease-out/);
+    assert.match(toastBody, /opacity \$\{PATH_SHIFT_TOAST_FADE_MS\}ms ease-in/);
+    assert.match(toastBody, /},\s*PATH_SHIFT_TOAST_FADE_MS\s*\);/);
+    assert.match(toastBody, /},\s*PATH_SHIFT_TOAST_FADE_MS\s*\+\s*PATH_SHIFT_TOAST_HOLD_MS\s*\);/);
 });
 
 test('shift active state persists, migrates, and resets with a new approach', () => {
