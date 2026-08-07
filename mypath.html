@@ -399,11 +399,12 @@
         .fpa-box label { margin-bottom: 2px; font-size: 0.5rem; }
         .fpa-val { font-size: 1.4rem; font-weight: 900; color: var(--accent); line-height: 1; }
 
-        .table { 
-    width: 100%; 
+.table {
+    width: 100%;
     min-width: 0;
     max-width: 100%;
-    background: var(--input-bg); 
+    position: relative;
+    background: var(--input-bg);
     border-radius: 20px; 
     overflow: hidden; 
     border: 1px solid var(--border); 
@@ -978,6 +979,32 @@ html.light-theme .shift-alert-plate {
     border-color: rgba(245, 158, 11, 0.2);
     color: #b45309;
 }
+
+.shift-value-toast {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 32px);
+    max-width: 360px;
+    box-sizing: border-box;
+    background: rgb(119, 192, 247);
+    color: #ffffff;
+    padding: 16px 20px;
+    border-radius: 16px;
+    font-size: clamp(0.8rem, 3.8vw, 1.1rem);
+    font-weight: 900;
+    text-align: center;
+    z-index: 2000;
+    pointer-events: none;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+}
+
+html.dark-theme .shift-value-toast {
+    background: rgb(2, 115, 173);
+}
     </style>
     
     <!-- Микро-скрипт синхронизации темы с Хабом -->
@@ -1205,10 +1232,13 @@ html.light-theme .shift-alert-plate {
 
 <div class="table">
         <input type="hidden" id="pathShiftInput" value="0">
+        <div id="shiftValueToast" class="shift-value-toast" role="status" aria-live="polite">
+            INSERT SHIFT VALUE. LONG TAP ON BUTTON
+        </div>
         <div class="t-head" style="align-items: center;">
             <div style="width: 90px; text-align: right;">Dist (NM)</div>
             <div style="flex: 1; position: relative;">
-                <button id="shiftBtn" class="shift-btn" onclick="openKeypad('pathShiftInput', 'PATH SHIFT')">ADD SHIFT</button>
+                <button id="shiftBtn" class="shift-btn" style="touch-action: pan-y;" onpointerdown="startPressShift(event)" onpointerup="endPressShift(event)" onpointerleave="cancelPressShift()" onpointercancel="cancelPressShift()" onclick="clickShift(event)" oncontextmenu="event.preventDefault()">ADD SHIFT</button>
             </div>
             <div style="width: 90px; text-align: left;">Alt (FT)</div>
         </div>
@@ -1436,6 +1466,80 @@ html.light-theme .shift-alert-plate {
     let currentKpVal = "";
     let placeholderVal = "";
     let isSequentialFlow = false;
+    const PATH_SHIFT_HOLD_MS = 300;
+    const PATH_SHIFT_TOAST_PHASE_MS = 700;
+    let isPathShiftActive = false;
+    let shiftPressTimer;
+    let isShiftLongPress = false;
+
+    function getConfiguredPathShift() {
+        const input = document.getElementById('pathShiftInput');
+        const value = input ? parseFloat(input.value) : 0;
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function showMissingPathShiftToast() {
+        const toast = document.getElementById('shiftValueToast');
+        if (!toast) return;
+        if (toast.hideTimeout) clearTimeout(toast.hideTimeout);
+        if (toast.visibilityTimeout) clearTimeout(toast.visibilityTimeout);
+
+        toast.style.transition = 'none';
+        toast.style.opacity = '0';
+        toast.style.visibility = 'visible';
+        void toast.offsetWidth;
+        toast.style.transition = 'opacity 0.7s ease-out';
+        toast.style.opacity = '1';
+
+        toast.hideTimeout = setTimeout(() => {
+            toast.style.transition = 'opacity 0.7s ease-in';
+            toast.style.opacity = '0';
+            toast.visibilityTimeout = setTimeout(() => {
+                toast.style.visibility = 'hidden';
+            }, PATH_SHIFT_TOAST_PHASE_MS);
+        }, PATH_SHIFT_TOAST_PHASE_MS);
+    }
+
+    function togglePathShiftActive() {
+        const configuredPathShift = getConfiguredPathShift();
+        if (configuredPathShift === 0) {
+            isPathShiftActive = false;
+            showMissingPathShiftToast();
+            return;
+        }
+
+        isPathShiftActive = !isPathShiftActive;
+        calculate('pathShiftToggle');
+    }
+
+    function startPressShift(event) {
+        if (event && event.button !== undefined && event.button !== 0) return;
+        isShiftLongPress = false;
+        clearTimeout(shiftPressTimer);
+        shiftPressTimer = setTimeout(() => {
+            isShiftLongPress = true;
+            openKeypad('pathShiftInput', 'PATH SHIFT');
+        }, PATH_SHIFT_HOLD_MS);
+    }
+
+    function endPressShift() {
+        clearTimeout(shiftPressTimer);
+    }
+
+    function cancelPressShift() {
+        clearTimeout(shiftPressTimer);
+        isShiftLongPress = false;
+    }
+
+    function clickShift(event) {
+        if (isShiftLongPress) {
+            event?.preventDefault();
+            event?.stopPropagation();
+            isShiftLongPress = false;
+            return;
+        }
+        togglePathShiftActive();
+    }
 
     function openKeypad(id, title) {
     activeKp = document.getElementById(id);
@@ -1551,6 +1655,9 @@ html.light-theme .shift-alert-plate {
     }
 
     let closedId = activeKp ? activeKp.id : null;
+    if (closedId === 'pathShiftInput' && getConfiguredPathShift() === 0) {
+        isPathShiftActive = false;
+    }
     document.getElementById('keypadModal').classList.remove('active');
     isSequentialFlow = false; // Обязательно сбрасываем флаг
     activeKp = null;
@@ -1574,7 +1681,7 @@ html.light-theme .shift-alert-plate {
         updateKpDisplay();
         if (activeKp) {
             activeKp.value = currentKpVal;
-            calculate();
+            if (activeKp.id !== 'pathShiftInput') calculate();
         }
         return;
     }
@@ -1802,24 +1909,24 @@ function openModal(id) {
     const angle  = getNumVal('angleInput');
     const h_min  = getNumVal('minInput'); 
     
-    const pathShiftRaw = document.getElementById('pathShiftInput') ? document.getElementById('pathShiftInput').value : "0";
-    const pathShift = (pathShiftRaw === "" || pathShiftRaw === "-" || isNaN(parseFloat(pathShiftRaw))) ? 0 : parseFloat(pathShiftRaw);
+    const configuredPathShift = getConfiguredPathShift();
+    if (configuredPathShift === 0) isPathShiftActive = false;
+    const pathShift = isPathShiftActive ? configuredPathShift : 0;
 
     const shiftBtn = document.getElementById('shiftBtn');
     if (shiftBtn) {
-        if (pathShift === 0) {
+        if (configuredPathShift === 0) {
             shiftBtn.innerText = "ADD SHIFT";
-            shiftBtn.classList.remove('active-shift');
         } else {
-            shiftBtn.innerText = "SHIFT: " + (pathShift > 0 ? "+" : "") + pathShift.toFixed(1) + " NM";
-            shiftBtn.classList.add('active-shift');
+            shiftBtn.innerText = "SHIFT: " + (configuredPathShift > 0 ? "+" : "") + configuredPathShift.toFixed(1) + " NM";
         }
+        shiftBtn.classList.toggle('active-shift', isPathShiftActive);
     }
 
     const shiftAlert = document.getElementById('shiftAlert');
     if (shiftAlert) {
-        shiftAlert.classList.toggle('is-visible', pathShift !== 0);
-        shiftAlert.setAttribute('aria-hidden', pathShift === 0 ? 'true' : 'false');
+        shiftAlert.classList.toggle('is-visible', isPathShiftActive);
+        shiftAlert.setAttribute('aria-hidden', isPathShiftActive ? 'false' : 'true');
     }
     
     const tempRaw = document.getElementById('temp').value.replace(',', '.').replace(/[^\d.-]/g, '');
@@ -2059,8 +2166,9 @@ for (let d = topMile; d >= 2; d--) {
         document.getElementById('minInput').value = "";
         document.getElementById('fdp').value = "2500";
         document.getElementById('fap').value = "2000";
-        document.getElementById('angleInput').value = "3.0°"; 
-        if (document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = "0"; 
+        document.getElementById('angleInput').value = "3.0°";
+        if (document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = "0";
+        isPathShiftActive = false;
         
         // Температуру НЕ сбрасываем, оставляем прошлое значение как подсказку
         
@@ -2089,6 +2197,7 @@ for (let d = topMile; d >= 2; d--) {
             fap: document.getElementById('fap').value,
             temp: document.getElementById('temp').value,
             pathShift: document.getElementById('pathShiftInput') ? document.getElementById('pathShiftInput').value : "0",
+            pathShiftActive: isPathShiftActive,
             isNeg: isNeg,
             // СЛЕПОК: Сохраняем всю сгенерированную таблицу
             tableHTML: document.getElementById('tableBody') ? document.getElementById('tableBody').innerHTML : ''
@@ -2108,6 +2217,11 @@ for (let d = topMile; d >= 2; d--) {
             if (state.fap) document.getElementById('fap').value = state.fap;
             if (state.temp) document.getElementById('temp').value = state.temp;
             if (state.pathShift !== undefined && document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = state.pathShift;
+            if (state.pathShiftActive !== undefined) {
+                isPathShiftActive = Boolean(state.pathShiftActive) && getConfiguredPathShift() !== 0;
+            } else {
+                isPathShiftActive = getConfiguredPathShift() !== 0;
+            }
             if (state.isNeg !== undefined) {
                 isNeg = state.isNeg;
                 const signBtn = document.getElementById('signBtn');

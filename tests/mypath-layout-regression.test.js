@@ -16,7 +16,7 @@ test('MyPath always reserves the full warning height in normal flow', () => {
 });
 
 test('MyPath toggles warning visibility without changing its layout space', () => {
-    assert.match(myPathHtml, /shiftAlert\.classList\.toggle\('is-visible',\s*pathShift\s*!==\s*0\)\s*;/);
-    assert.match(myPathHtml, /shiftAlert\.setAttribute\('aria-hidden',\s*pathShift\s*===\s*0\s*\?\s*'true'\s*:\s*'false'\)\s*;/);
+    assert.match(myPathHtml, /shiftAlert\.classList\.toggle\('is-visible',\s*isPathShiftActive\)\s*;/);
+    assert.match(myPathHtml, /shiftAlert\.setAttribute\('aria-hidden',\s*isPathShiftActive\s*\?\s*'false'\s*:\s*'true'\)\s*;/);
     assert.doesNotMatch(myPathHtml, /shiftAlert\.style\.display\s*=/);
 });
