@@ -5,10 +5,10 @@ const test = require('node:test');
 
 const indexHtml = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8');
 
-test('Push toggle shows the long-tap hint in every state', () => {
+test('Push toggle uses concise short-tap labels in every state', () => {
     assert.match(
         indexHtml,
-        /id="pushToggleBtn"[^>]*>Push Off \(long tap\)<\/button>/
+        /id="pushToggleBtn"[^>]*>Push Off<\/button>/
     );
 
     const stateStart = indexHtml.indexOf('function setMyFlightPushButtonState');
@@ -17,6 +17,7 @@ test('Push toggle shows the long-tap hint in every state', () => {
     assert.notEqual(stateEnd, -1, 'button state function boundary must exist');
 
     const buttonStateBody = indexHtml.slice(stateStart, stateEnd);
-    assert.match(buttonStateBody, /'Push On \(long tap\)'/);
-    assert.match(buttonStateBody, /'Push Off \(long tap\)'/);
+    assert.match(buttonStateBody, /'Push On'/);
+    assert.match(buttonStateBody, /'Push Off'/);
+    assert.doesNotMatch(buttonStateBody, /long tap/i);
 });
