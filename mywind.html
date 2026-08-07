@@ -682,6 +682,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             const applyTheme = theme => {
                 const isDark = theme === 'dark';
                 document.documentElement.classList.toggle('dark-theme', isDark);
+                document.documentElement.classList.toggle('light-theme', !isDark);
                 if (document.body) document.body.classList.toggle('dark-theme', isDark);
                 ensureMeta('theme-color', isDark ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
                 ensureMeta('apple-mobile-web-app-status-bar-style', isDark ? 'black' : 'default');

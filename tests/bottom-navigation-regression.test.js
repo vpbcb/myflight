@@ -70,6 +70,16 @@ test('shared navigation copies the home action dimensions, typography and color'
     assert.match(css, /@media\s*\(max-height:\s*600px\)\s*\{[\s\S]*?--bottom-nav-padding-bottom:\s*max\(2px,\s*calc\(var\(--safe-bottom\)\s*\+\s*2px\)\);/);
 });
 
+test('light subpages explicitly override a dark system color scheme', () => {
+    for (const name of ['myshift.html', 'mynpa.html', 'mywind.html']) {
+        assert.match(
+            pages[name],
+            /document\.documentElement\.classList\.toggle\('light-theme',\s*!isDark\);/,
+            `${name} must mark its explicit light theme for the shared navigation`
+        );
+    }
+});
+
 test('bordered calculators compensate their one-pixel inset', () => {
     assert.match(bottomControls('mywind.html'), /bottom-controls--bordered/);
     assert.match(bottomControls('mypath.html'), /bottom-controls--bordered/);
@@ -78,8 +88,8 @@ test('bordered calculators compensate their one-pixel inset', () => {
     assert.match(css, /\.bottom-controls\.bottom-controls--bordered\s*\{\s*bottom:\s*-1px;/);
 });
 
-test('service worker includes the shared stylesheet without changing the cache version', () => {
+test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260807-3';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260807-4';/);
     assert.match(sw, /'\.\/bottom-navigation\.css'/);
 });
