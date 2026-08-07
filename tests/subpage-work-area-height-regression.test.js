@@ -39,6 +39,10 @@ test('cached shared CSS cannot remove calculator side padding', () => {
     }
 });
 
+test('MyShift scroll frame keeps equal horizontal margins', () => {
+    assert.match(myShiftHtml, /\.scrollArea\s*\{[^}]*margin:\s*0 4px 5px 4px;/);
+});
+
 test('MyNPA measures its working bottom from the complete navigation bar', () => {
     const start = myNpaHtml.indexOf('function getNpaLayoutVisibleBottom()');
     const end = myNpaHtml.indexOf('\n    function ', start + 1);
