@@ -10,7 +10,7 @@ const bottomControlsMarkup = myShiftHtml.match(/<div class="bottom-controls">[\s
 test('MyShift carousel has a bottom Cancel action', () => {
     assert.match(myShiftHtml, /id="carouselCancelBtn"[^>]*class="[^"]*carouselNavBtn[^"]*carouselCancelBtn[^"]*"[^>]*hidden[^>]*>Отмена<\/button>/);
     assert.doesNotMatch(bottomControlsMarkup, /id="carouselCancelBtn"/);
-    assert.match(myShiftHtml, /\.carouselCancelBtn\s*\{[^}]*position:\s*fixed[^}]*left:\s*50%[^}]*bottom:[^}]*transform:\s*translateX\(-50%\)[^}]*background:\s*#ef4444/);
+    assert.match(myShiftHtml, /\.carouselCancelBtn\s*\{[^}]*position:\s*fixed[^}]*top:\s*auto[^}]*left:\s*50%[^}]*bottom:[^}]*transform:\s*translateX\(-50%\)[^}]*background:\s*#ef4444/);
     assert.match(myShiftHtml, /const isRunning = carouselStepIndex >= 0[^;]*;[\s\S]{0,240}cancelButton\.hidden = !isRunning;/);
 });
 
