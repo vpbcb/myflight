@@ -244,6 +244,7 @@ html.dark-theme {
   max-width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
   position: relative;
   border: 1px solid var(--ctlBorder); /* Заменили жесткий #b5b5b5 на переменную */
   border-radius: 12px;
@@ -617,37 +618,6 @@ button.pill{
   margin-top:10px;
   opacity:1;
   transition:max-height 220ms ease, margin-top 220ms ease, opacity 180ms ease;
-}
-.scrollArea.ldt-scroll-contained {
-  overflow-y:hidden;
-}
-#afterResultsCard.open {
-  display:flex;
-  flex-direction:column;
-  max-height:var(--ldt-card-max-height, 220px);
-  overflow:hidden;
-}
-#afterResultsCard.open .ldtFoldContent {
-  flex:1 1 auto;
-  min-height:0;
-  max-height:calc(var(--ldt-card-max-height, 220px) - 68px);
-  overflow-x:hidden;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-gutter:stable;
-}
-#afterResultsCard.open .ldtFoldContent::-webkit-scrollbar {
-  width:4px;
-}
-#afterResultsCard.open .ldtFoldContent::-webkit-scrollbar-thumb {
-  background:var(--accent);
-  border-radius:10px;
-}
-#afterResultsCard.open .ldtFoldContent::-webkit-scrollbar-button {
-  display:none;
-  width:0;
-  height:0;
 }
 #afterResultsCard:not(.open) .ldtFoldContent {
   max-height:0;
@@ -1428,29 +1398,13 @@ let paxMode = "none"; // 'none' | 'before' | 'after'
 
 const $ = (id) => document.getElementById(id);
 
-function updateLdtScrollLayout() {
-  const card = $('afterResultsCard');
-  const scrollArea = card?.closest('.scrollArea');
-  if(!card?.classList.contains('open') || !scrollArea) return;
-
-  const scrollRect = scrollArea.getBoundingClientRect();
-  const cardRect = card.getBoundingClientRect();
-  const availableHeight = Math.max(96, Math.floor(scrollRect.bottom - cardRect.top - 12));
-  card.style.setProperty('--ldt-card-max-height', `${availableHeight}px`);
-}
-
 function toggleLdtCard(event) {
   if (event.target.closest('#flightTime')) return;
 
   const card = $('afterResultsCard');
-  const scrollArea = card?.closest('.scrollArea');
   const isOpen = card.classList.toggle('open');
-  scrollArea?.classList.toggle('ldt-scroll-contained', isOpen);
   card.setAttribute('aria-expanded', String(isOpen));
   $('ldtCardContent').setAttribute('aria-hidden', String(!isOpen));
-
-  if(isOpen) updateLdtScrollLayout();
-  else card.style.removeProperty('--ldt-card-max-height');
 }
 
 function handleLdtCardKeydown(event) {
@@ -2135,10 +2089,6 @@ window.addEventListener("load", () => {
     window.addEventListener('orientationchange', queueCarouselButtonPosition);
     window.visualViewport?.addEventListener('resize', queueCarouselButtonPosition);
     window.visualViewport?.addEventListener('scroll', queueCarouselButtonPosition);
-    window.addEventListener('resize', updateLdtScrollLayout);
-    window.addEventListener('orientationchange', updateLdtScrollLayout);
-    window.visualViewport?.addEventListener('resize', updateLdtScrollLayout);
-
     document.addEventListener('keydown', (event) => {
         if(event.key === 'Escape' && $("resetConfirmOverlay")?.classList.contains("open")){
             event.preventDefault();

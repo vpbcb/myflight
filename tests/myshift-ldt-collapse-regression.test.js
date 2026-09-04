@@ -20,12 +20,10 @@ test('LDT card toggles except when its time input is clicked', () => {
     assert.match(myShiftHtml, /setAttribute\(['"]aria-expanded['"],\s*String\(isOpen\)\)/);
 });
 
-test('open LDT keeps the outer width stable and scrolls only its content', () => {
-    assert.match(myShiftHtml, /\.scrollArea\.ldt-scroll-contained\s*\{[^}]*overflow-y:\s*hidden/);
-    assert.match(myShiftHtml, /#afterResultsCard\.open \.ldtFoldContent\s*\{[^}]*min-height:\s*0[^}]*overflow-x:\s*hidden[^}]*overflow-y:\s*auto[^}]*scrollbar-gutter:\s*stable/);
-    assert.match(myShiftHtml, /function updateLdtScrollLayout\(\)[\s\S]{0,600}scrollArea\.getBoundingClientRect\(\)[\s\S]{0,600}card\.style\.setProperty\('--ldt-card-max-height'/);
-    assert.match(myShiftHtml, /scrollArea\?\.classList\.toggle\('ldt-scroll-contained', isOpen\)/);
-    assert.match(myShiftHtml, /if\(isOpen\) updateLdtScrollLayout\(\);[\s\S]{0,100}removeProperty\('--ldt-card-max-height'\)/);
-    assert.match(myShiftHtml, /window\.addEventListener\('resize', updateLdtScrollLayout\)/);
-    assert.match(myShiftHtml, /window\.addEventListener\('orientationchange', updateLdtScrollLayout\)/);
+test('open LDT keeps scrolling in the outer area without changing app width', () => {
+    assert.match(myShiftHtml, /\.scrollArea\s*\{[^}]*overflow-y:\s*auto[^}]*overflow-x:\s*hidden[^}]*scrollbar-gutter:\s*stable/);
+    assert.match(myShiftHtml, /\.ldtFoldContent\s*\{[^}]*overflow:\s*hidden/);
+    assert.doesNotMatch(myShiftHtml, /ldt-scroll-contained/);
+    assert.doesNotMatch(myShiftHtml, /function updateLdtScrollLayout\(\)/);
+    assert.doesNotMatch(myShiftHtml, /#afterResultsCard\.open \.ldtFoldContent\s*\{[^}]*overflow-y:\s*auto/);
 });
