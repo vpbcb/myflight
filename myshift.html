@@ -22,6 +22,9 @@
   --muted:#5b6474;
   --pillBg:#f0f2f7;
   --accent:#1976d2;
+  --carouselDim:rgba(246,247,249,0.84);
+  --carouselPrev:#60758d;
+  --carouselNext:#173f6b;
   --scrollBg: rgba(0, 0, 0, 0.05);
   --titleFs:13.6px;
   --titlePadV:6px;
@@ -143,6 +146,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  isolation: isolate;
   background: var(--card); /* Белый фон всего сайта по аналогии с образцом */
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
@@ -181,7 +185,11 @@ body {
 
 #btnBotRefresh { left: 16px; }
 #btnBotHome { right: 16px; }
-#btnBotRefresh span { margin-left: 2px; }
+#btnBotRefresh span {
+  margin-left:2px;
+  line-height:1.05;
+  text-align:left;
+}
 
 /* --- СТИЛЬ НАДПИСИ КЭША ИЗ ОБРАЗЦА --- */
 .cache-label {
@@ -202,20 +210,21 @@ body {
 
 /* Минимальная поддержка ночной темы для переменных */
 html.dark-theme {
-  --bg: #0b0f19;                      
-  --card: rgba(22, 30, 46, 0.98);     
-  --accent: #0273ad;                  
-  --border: rgba(255, 255, 255, 0.1); 
-  --ctlBorder: #57677d;               
-  --ink: #cbd5e1;                     
-  --muted: #96a4b3;                   
+  --bg: #0b0f19;
+  --card: rgba(22, 30, 46, 0.98);
+  --accent: #0273ad;
+  --border: rgba(255, 255, 255, 0.1);
+  --ctlBorder: #57677d;
+  --ink: #cbd5e1;
+  --muted: #96a4b3;
   --pillBg: rgba(255, 255, 255, 0.07);
+  --carouselDim: rgba(11, 15, 25, 0.84);
   --scrollBg: rgba(0, 0, 0, 0.2);
 }
 
 /* Шапка теперь элемент флекс-колонки, а не прибита к окну */
 .headerFixed {
-  flex-shrink: 0; 
+  flex-shrink: 0;
   z-index: 1000;
   background: transparent;
   /* Сохраняем стабильность ширины при появлении скролла */
@@ -726,9 +735,119 @@ button.pill{
   color:var(--muted);
 }
 
+/* подтверждение очистки расчета */
+.resetConfirmOverlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,0.55);
+  z-index:10050;
+}
+.resetConfirmOverlay.open{ display:flex; }
+.resetConfirmBox{
+  width:min(340px, 100%);
+  background:var(--card);
+  color:var(--ink);
+  border:1px solid var(--ctlBorder);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 18px 48px rgba(0,0,0,0.35);
+}
+.resetConfirmTitle{
+  margin:0;
+  font-size:17px;
+  line-height:1.35;
+  text-align:center;
+}
+.resetConfirmActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+.resetConfirmBtn{
+  min-height:42px;
+  font-weight:700;
+}
+.resetConfirmBtn--primary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+.resetConfirmBtn--neutral{
+  background:var(--card);
+  border-color:var(--ctlBorder);
+  color:var(--ink);
+}
+.resetConfirmBtn:focus-visible{
+  box-shadow:0 0 0 3px rgba(25,118,210,0.35) !important;
+}
+
+[data-carousel-step]{
+  border-radius:12px;
+  transition:box-shadow 180ms ease;
+}
+[data-carousel-step].carousel-complete{
+  box-shadow:none;
+}
+[data-carousel-step].carousel-current{
+  position:relative;
+  z-index:1500;
+  box-shadow:none;
+}
+.app-container.carousel-running::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1400;
+  background:var(--carouselDim);
+  pointer-events:none;
+}
+.app-container.carousel-running .headerFixed{
+  z-index:auto;
+}
+.app-container.carousel-running #ccBlock.open{
+  transform:none;
+}
+.app-container.carousel-running .bottom-btn{
+  z-index:900;
+}
+.carouselNavBtn{
+  position:absolute;
+  left:0;
+  top:0;
+  z-index:1800;
+  min-width:86px;
+  min-height:36px;
+  padding:7px 14px;
+  border:1px solid transparent;
+  border-radius:999px;
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:0.4px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.28);
+}
+.carouselPrevBtn{
+  border-color:var(--carouselPrev);
+  background:var(--carouselPrev);
+}
+.carouselNextBtn{
+  border-color:var(--carouselNext);
+  background:var(--carouselNext);
+}
+.carouselNavBtn[hidden]{ display:none !important; }
+.carouselNavBtn:active{ transform:scale(0.96); }
+.carouselNavBtn:focus-visible{
+  box-shadow:0 0 0 3px rgba(25,118,210,0.35), 0 6px 16px rgba(0,0,0,0.28) !important;
+}
+
 /* Полностью убираем системные рамки при клике (фокусе) для всех полей */
-input:focus, 
-select:focus, 
+input:focus,
+select:focus,
 button:focus {
   outline: none !important;
   box-shadow: none !important;
@@ -1016,7 +1135,7 @@ button:focus {
 
 <div class="headerFixed">
     <div class="headerWrap">
-      <div class="paxButtons" style="margin-bottom: 8px;">
+      <div class="paxButtons" data-carousel-step="pax" style="margin-bottom: 8px;">
         <button type="button" id="btnPaxBefore" class="paxBtn" onclick="setPaxMode('before')">pax before main flight</button>
         <button type="button" id="btnPaxNone" class="paxBtn active" onclick="setPaxMode('none')">no pax flight</button>
         <button type="button" id="btnPaxAfter" class="paxBtn" onclick="setPaxMode('after')">pax after main flight</button>
@@ -1043,22 +1162,22 @@ button:focus {
           </div>
         </div>
 
-        <div style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px; margin-bottom: 8px;">
+        <div data-carousel-step="crew" onclick="toggleCrewSelection()" style="cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px; margin-bottom: 8px;">
           <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:28px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Расчет для</div>
           <div class="modeButtons" style="flex:1; display:flex; gap:0;">
-            <button type="button" id="btnFlight" class="modeBtn active" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; border:none; border-radius:0; border-right:1px solid var(--ctlBorder); height:100%; font-size:15px; font-weight:600;" onclick="setCrew('flight')">Flight Crew</button>
-            <button type="button" id="btnCabin" class="modeBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; border:none; border-radius:0; height:100%; font-size:15px; font-weight:600;" onclick="setCrew('cabin')">Cabin Crew</button>
+            <button type="button" id="btnFlight" class="modeBtn active" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; border:none; border-radius:0; border-right:1px solid var(--ctlBorder); height:100%; font-size:15px; font-weight:600;">Flight Crew</button>
+            <button type="button" id="btnCabin" class="modeBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; border:none; border-radius:0; height:100%; font-size:15px; font-weight:600;">Cabin Crew</button>
           </div>
         </div>
 
         <div id="ccBlock">
           <div class="pairRow" style="margin-bottom: 8px;">
-            <div id="airportFold" onclick="toggleAirport()" style="cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
+            <div id="airportFold" data-carousel-step="airport" onclick="toggleAirport()" style="cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
               <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Аэропорт явки</div>
               <div id="airportBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--ink);">UUEE</div>
             </div>
 
-            <div onclick="toggleReinforced()" style="position:relative; cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
+            <div data-carousel-step="reinforced" onclick="toggleReinforced()" style="position:relative; cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
               <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Усиленный экипаж</div>
               <div onclick="event.stopPropagation(); openHint('reinforced')" style="position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; border:1px solid var(--ctlBorder); background:var(--pillBg); color:var(--ink); font-size:12px; font-weight:bold; display:flex; justify-content:center; align-items:center; z-index:2; line-height:1;">?</div>
               <div id="reinforcedBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--ink);">Нет</div>
@@ -1066,26 +1185,26 @@ button:focus {
           </div>
         </div>
 
-        <div class="pairRow">
-          <div onclick="toggleLandings()" style="cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
-            <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Кол-во посадок</div>
-            <div id="landingsBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--accent);">1–2</div>
-          </div>
-
-          <div onclick="toggleExtend()" style="position:relative; cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
-            <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Продление КВС</div>
-            <div onclick="event.stopPropagation(); openHint('extend')" style="position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; border:1px solid var(--ctlBorder); background:var(--pillBg); color:var(--ink); font-size:12px; font-weight:bold; display:flex; justify-content:center; align-items:center; z-index:2; line-height:1;">?</div>
-            <div id="extendBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--accent);">Нет</div>
-          </div>
-        </div>
-
-        <div style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; align-items:center; background:var(--card); height:40px; margin-top:8px;">
+        <div data-carousel-step="departure" style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; align-items:center; background:var(--card); height:40px; margin-bottom:8px;">
           <div id="depTimeTitle" class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-right:1px solid var(--ctlBorder); flex:1; height:100%; margin:0; padding:4px; white-space:normal; line-height:1.15; font-size:var(--titleFs); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
             Время вылета по<br>расписанию
           </div>
           <div class="time-container-fixed" onclick="openKeypad('depTime', 'ВРЕМЯ ВЫЛЕТА')">
             <input id="depTime" type="text" readonly value="00:00" class="input-time-pure">
             <span id="depTimeSuffix" class="suffix-overlay">Мск</span>
+          </div>
+        </div>
+
+        <div class="pairRow">
+          <div data-carousel-step="landings" onclick="toggleLandings()" style="cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
+            <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Кол-во посадок</div>
+            <div id="landingsBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--accent);">1–2</div>
+          </div>
+
+          <div data-carousel-step="extension" onclick="toggleExtend()" style="position:relative; cursor:pointer; border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; background:var(--card); height:60px;">
+            <div class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-bottom:1px solid var(--ctlBorder); width:100%; height:30px; pointer-events:none; display:flex; align-items:center; justify-content:center; font-size:var(--titleFs);">Продление КВС</div>
+            <div onclick="event.stopPropagation(); openHint('extend')" style="position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; border:1px solid var(--ctlBorder); background:var(--pillBg); color:var(--ink); font-size:12px; font-weight:bold; display:flex; justify-content:center; align-items:center; z-index:2; line-height:1;">?</div>
+            <div id="extendBtn" style="flex:1; display:flex; justify-content:center; align-items:center; padding:0; font-weight:600; font-size:var(--ctlFs); color:var(--accent);">Нет</div>
           </div>
         </div>
       </div>
@@ -1202,10 +1321,23 @@ button:focus {
   </div>
 </div>
 
+<div id="resetConfirmOverlay" class="resetConfirmOverlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="resetConfirmTitle" onclick="closeResetConfirm()">
+  <div class="resetConfirmBox" onclick="event.stopPropagation()">
+    <p class="resetConfirmTitle" id="resetConfirmTitle">Очистить данные и начать новый расчет?</p>
+    <div class="resetConfirmActions">
+      <button type="button" id="resetConfirmCancel" class="resetConfirmBtn resetConfirmBtn--primary" onclick="closeResetConfirm()">Отмена</button>
+      <button type="button" id="resetConfirmAccept" class="resetConfirmBtn resetConfirmBtn--neutral" onclick="confirmResetAndStart()">Очистить</button>
+    </div>
+  </div>
+</div>
+
+<button type="button" id="carouselPrevBtn" class="carouselNavBtn carouselPrevBtn" hidden>Назад</button>
+<button type="button" id="carouselNextBtn" class="carouselNavBtn carouselNextBtn" hidden>Далее</button>
+
   <div class="bottom-controls">
-  <button class="bottom-btn bottom-action bottom-action--left" id="btnBotRefresh" title="Сбросить поля">
+  <button class="bottom-btn bottom-action bottom-action--left" id="btnBotRefresh" title="Start calculation">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-    <span class="bottom-action-label">Refresh</span>
+    <span class="bottom-action-label">START<br>CALCULATION</span>
   </button>
 
   <a href="./index.html" class="bottom-btn bottom-action bottom-action--right" id="btnBotHome" title="В главное меню" style="text-decoration: none;">
@@ -1308,7 +1440,7 @@ function setTzMode(mode){
   $("btnMSK")?.classList.toggle("active", tzMode==="MSK");
   $("btnUTC")?.classList.toggle("active", tzMode==="UTC");
   $("btnLOCAL")?.classList.toggle("active", tzMode==="LOCAL");
-  
+
   updateInputSuffixes(); // Мгновенно обновляем текст в инпутах
 
   if (typeof markUnsaved === 'function') markUnsaved();
@@ -1335,6 +1467,10 @@ function setCrew(type){
   if (typeof markUnsaved === 'function') markUnsaved();
   render();
 
+}
+
+function toggleCrewSelection(){
+  setCrew(cabincrew === "да" ? "flight" : "cabin");
 }
 
 function toggleAirport(){
@@ -1694,6 +1830,140 @@ function resetState(){
   updateInputSuffixes();
 }
 
+let resetConfirmReturnFocus = null;
+
+function openResetConfirm(){
+  const overlay = $("resetConfirmOverlay");
+  if(!overlay) return;
+  resetConfirmReturnFocus = document.activeElement;
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => $("resetConfirmCancel")?.focus());
+}
+
+function closeResetConfirm(options = {}){
+  const overlay = $("resetConfirmOverlay");
+  if(!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  if(options.restoreFocus !== false){
+    (resetConfirmReturnFocus || $("btnBotRefresh"))?.focus();
+  }
+}
+
+function confirmResetAndStart(){
+  closeResetConfirm({ restoreFocus: false });
+  resetState();
+  startCarousel();
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+
+const BASE_CAROUSEL_STEPS = Object.freeze(["pax", "crew", "departure", "landings", "extension"]);
+const CABIN_CAROUSEL_STEPS = Object.freeze(["pax", "crew", "airport", "reinforced", "departure", "landings", "extension"]);
+let carouselStepIndex = -1;
+let carouselPositionFrame = 0;
+
+function getCarouselSteps(){
+  return cabincrew === "да" ? CABIN_CAROUSEL_STEPS : BASE_CAROUSEL_STEPS;
+}
+
+function getCarouselStepElements(steps = getCarouselSteps()){
+  return steps.map(step => document.querySelector(`[data-carousel-step="${step}"]`));
+}
+
+function startCarousel(){
+  document.querySelector(".app-container")?.classList.add("carousel-running");
+  carouselStepIndex = 0;
+  renderCarousel();
+}
+
+function advanceCarousel(){
+  if(carouselStepIndex < 0) return;
+  const steps = getCarouselSteps();
+  if(carouselStepIndex >= steps.length - 1){
+    finishCarousel();
+    return;
+  }
+  carouselStepIndex += 1;
+  renderCarousel();
+}
+
+function retreatCarousel(){
+  if(carouselStepIndex <= 0) return;
+  carouselStepIndex -= 1;
+  renderCarousel();
+}
+
+function finishCarousel(){
+  carouselStepIndex = -1;
+  document.querySelector(".app-container")?.classList.remove("carousel-running");
+  const nextButton = $("carouselNextBtn");
+  const prevButton = $("carouselPrevBtn");
+  if(nextButton) nextButton.hidden = true;
+  if(prevButton) prevButton.hidden = true;
+  document.querySelectorAll("[data-carousel-step]").forEach(element => {
+    element?.classList.remove("carousel-current", "carousel-complete");
+    element?.removeAttribute("aria-current");
+  });
+}
+
+function renderCarousel(){
+  const steps = getCarouselSteps();
+  const elements = getCarouselStepElements(steps);
+  document.querySelectorAll("[data-carousel-step]").forEach(element => {
+    element.classList.remove("carousel-current", "carousel-complete");
+    element.removeAttribute("aria-current");
+  });
+  elements.forEach((element, index) => {
+    if(!element) return;
+    element.classList.toggle("carousel-complete", index < carouselStepIndex);
+    element.classList.toggle("carousel-current", index === carouselStepIndex);
+    if(index === carouselStepIndex) element.setAttribute("aria-current", "step");
+    else element.removeAttribute("aria-current");
+  });
+
+  const nextButton = $("carouselNextBtn");
+  const prevButton = $("carouselPrevBtn");
+  const isRunning = carouselStepIndex >= 0 && carouselStepIndex < steps.length;
+  if(!nextButton || !prevButton) return;
+  nextButton.hidden = !isRunning;
+  prevButton.hidden = !isRunning || carouselStepIndex === 0;
+  if(isRunning){
+    queueCarouselButtonPosition();
+    requestAnimationFrame(() => nextButton.focus({ preventScroll: true }));
+  }
+}
+
+function positionCarouselButtons(){
+  const nextButton = $("carouselNextBtn");
+  const prevButton = $("carouselPrevBtn");
+  const active = document.querySelector('[data-carousel-step].carousel-current');
+  const app = document.querySelector(".app-container");
+  if(!nextButton || !prevButton || !active || !app || nextButton.hidden) return;
+
+  const activeRect = active.getBoundingClientRect();
+  const appRect = app.getBoundingClientRect();
+  const edgeGap = 6;
+  const verticalGap = 14;
+  const desiredTop = activeRect.bottom - appRect.top + verticalGap;
+  const nextLeft = activeRect.right - appRect.left - nextButton.offsetWidth;
+  const prevLeft = activeRect.left - appRect.left;
+  const nextMaxLeft = app.clientWidth - nextButton.offsetWidth - edgeGap;
+  const prevMaxLeft = app.clientWidth - prevButton.offsetWidth - edgeGap;
+  const maxTop = app.clientHeight - nextButton.offsetHeight - edgeGap;
+  const boundedTop = Math.max(edgeGap, Math.min(desiredTop, maxTop));
+
+  nextButton.style.left = `${Math.max(edgeGap, Math.min(nextLeft, nextMaxLeft))}px`;
+  nextButton.style.top = `${boundedTop}px`;
+  prevButton.style.left = `${Math.max(edgeGap, Math.min(prevLeft, prevMaxLeft))}px`;
+  prevButton.style.top = `${boundedTop}px`;
+}
+
+function queueCarouselButtonPosition(){
+  cancelAnimationFrame(carouselPositionFrame);
+  carouselPositionFrame = requestAnimationFrame(positionCarouselButtons);
+}
+
 /* Toast минимум 3 секунды */
 const updateToast = $("updateToast");
 let toastShownAt = 0;
@@ -1708,10 +1978,23 @@ window.addEventListener("load", () => {
     if (refreshBtn) {
         refreshBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            resetState();
-            if (navigator.vibrate) navigator.vibrate(30);
+            openResetConfirm();
         });
     }
+
+    $("carouselPrevBtn")?.addEventListener('click', retreatCarousel);
+    $("carouselNextBtn")?.addEventListener('click', advanceCarousel);
+    window.addEventListener('resize', queueCarouselButtonPosition);
+    window.addEventListener('orientationchange', queueCarouselButtonPosition);
+    window.visualViewport?.addEventListener('resize', queueCarouselButtonPosition);
+    window.visualViewport?.addEventListener('scroll', queueCarouselButtonPosition);
+
+    document.addEventListener('keydown', (event) => {
+        if(event.key === 'Escape' && $("resetConfirmOverlay")?.classList.contains("open")){
+            event.preventDefault();
+            closeResetConfirm();
+        }
+    });
 });
 
 /* ====== ЛОГИКА АВИАЦИОННОЙ КЛАВИАТУРЫ ВРЕМЕНИ ====== */
