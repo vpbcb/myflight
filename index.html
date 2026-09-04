@@ -740,9 +740,10 @@
         html.dark-theme .quick-note-card.note-crew,
         html.dark-theme .note-chip.note-crew { background: linear-gradient(135deg, #519eba 0%, #277fa3 52%, #0b668f 100%); color: #031e2f; }
 
-        .notes-keypad-content {
+        .modal-content.notes-keypad-content {
             width: 80%;
             max-width: 280px;
+            min-width: 140px;
             padding: 20px 10px;
             border-radius: 16px;
             margin-bottom: -15vh;
@@ -750,9 +751,23 @@
         }
 
         @media (min-device-width: 768px) {
-            .notes-keypad-content {
+            .modal-content.notes-keypad-content {
                 margin-bottom: 0 !important;
                 margin-left: 0 !important;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .modal-content.notes-keypad-content {
+                max-width: 360px !important;
+                padding: 30px 20px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            }
+            .notes-keypad-grid {
+                gap: 6px !important;
+            }
+            .notes-kp-btn {
+                --btn-height: 55px;
             }
         }
 
@@ -760,7 +775,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
             margin-bottom: 15px;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -771,35 +785,45 @@
         #notesKpTitle {
             color: var(--accent-color);
             font-size: 0.75rem;
-            font-weight: 900;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         #notesKpValue {
-            min-height: 34px;
+            min-height: 2.4rem;
             color: var(--accent-color);
             font-size: 1.8rem;
             font-weight: 900;
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .notes-keypad-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 3px;
-            margin-bottom: 10px;
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .notes-keypad-actions {
+            display: flex;
+            gap: 8px;
         }
 
         .notes-kp-btn {
-            height: 58px;
+            --btn-height: 60px;
+            height: var(--btn-height);
+            padding: 0;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             background: var(--input-bg);
             color: var(--text-main);
             font-family: inherit;
-            font-size: 1.85rem;
-            font-weight: 800;
+            font-size: calc(var(--btn-height) * 0.55);
+            font-weight: 700;
             line-height: 1;
             display: flex;
             align-items: center;
@@ -807,22 +831,30 @@
             cursor: pointer;
             touch-action: manipulation;
             -webkit-appearance: none;
+            -webkit-font-smoothing: antialiased;
         }
         .notes-kp-btn:active {
             background: rgba(25, 118, 210, 0.14);
             transform: scale(0.95);
         }
-        .notes-kp-del { color: #ef4444; }
-        .notes-kp-clr {
+        .notes-kp-del {
             color: #ef4444;
-            font-size: 1rem;
-            font-weight: 900;
+            font-size: calc(var(--btn-height) * 0.5);
+            padding-right: 2px;
+        }
+        .notes-kp-clr {
+            flex: 1;
+            width: 100%;
+            color: #ef4444;
+            font-size: calc(var(--btn-height) * 0.35);
+            font-weight: 700;
         }
         .notes-kp-done {
-            grid-column: span 2;
+            flex: 2;
+            width: 100%;
             color: var(--accent-color);
-            font-size: 1rem;
-            font-weight: 900;
+            font-size: calc(var(--btn-height) * 0.38);
+            font-weight: 800;
             letter-spacing: 0.5px;
             background: rgba(25, 118, 210, 0.1);
             border-color: var(--accent-color);
@@ -1428,6 +1460,8 @@
                     <button type="button" class="notes-kp-btn" onclick="notesKpPress('00')">00</button>
                     <button type="button" class="notes-kp-btn" onclick="notesKpPress('0')">0</button>
                     <button type="button" class="notes-kp-btn notes-kp-del" onclick="notesKpPress('del')">&#9003;</button>
+                </div>
+                <div class="notes-keypad-actions">
                     <button type="button" class="notes-kp-btn notes-kp-clr" onclick="notesKpPress('clear')">CLR</button>
                     <button type="button" class="notes-kp-btn notes-kp-done" onclick="confirmNotesKeypad()">DONE</button>
                 </div>

@@ -90,6 +90,6 @@ test('bordered calculators compensate their one-pixel inset', () => {
 
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260904-4';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260904-5';/);
     assert.match(sw, /'\.\/bottom-navigation\.css'/);
 });
