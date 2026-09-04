@@ -830,9 +830,6 @@ button.pill{
 .app-container.carousel-ready #btnBotRefresh{
   z-index:1800;
 }
-#carouselCancelBtn{
-  color:#ef4444;
-}
 .carouselNavBtn{
   position:absolute;
   left:0;
@@ -861,6 +858,17 @@ button.pill{
 .carouselNavBtn:active{ transform:scale(0.96); }
 .carouselNavBtn:focus-visible{
   box-shadow:0 0 0 3px rgba(25,118,210,0.35), 0 6px 16px rgba(0,0,0,0.28) !important;
+}
+.carouselCancelBtn{
+  position:fixed;
+  left:50%;
+  bottom:max(14px, env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  border-color:#ef4444;
+  background:#ef4444;
+}
+.carouselCancelBtn:active{
+  transform:translateX(-50%) scale(0.96);
 }
 
 /* Полностью убираем системные рамки при клике (фокусе) для всех полей */
@@ -1351,15 +1359,12 @@ button:focus {
 
 <button type="button" id="carouselPrevBtn" class="carouselNavBtn carouselPrevBtn" hidden>Назад</button>
 <button type="button" id="carouselNextBtn" class="carouselNavBtn carouselNextBtn" hidden>Далее</button>
+<button type="button" id="carouselCancelBtn" class="carouselNavBtn carouselCancelBtn" title="Отменить карусель" hidden>Отмена</button>
 
   <div class="bottom-controls">
   <button class="bottom-btn bottom-action bottom-action--left" id="btnBotRefresh" title="Start calculation">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
     <span class="bottom-action-label">START<br>CALCULATION</span>
-  </button>
-
-  <button type="button" id="carouselCancelBtn" class="bottom-btn bottom-action bottom-action--center" title="Отменить карусель" hidden>
-    <span class="bottom-action-label">Отмена</span>
   </button>
 
   <a href="./index.html" class="bottom-btn bottom-action bottom-action--right" id="btnBotHome" title="В главное меню" style="text-decoration: none;">
