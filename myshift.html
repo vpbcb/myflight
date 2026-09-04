@@ -1216,8 +1216,8 @@ button:focus {
           <div id="depTimeTitle" class="fieldTitle" style="border:none; border-radius:0; background:var(--pillBg); border-right:1px solid var(--ctlBorder); flex:1; height:100%; margin:0; padding:4px; white-space:normal; line-height:1.15; font-size:var(--titleFs); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
             Время вылета по<br>расписанию
           </div>
-          <div class="time-container-fixed" onclick="openKeypad('depTime', 'ВРЕМЯ ВЫЛЕТА')">
-            <input id="depTime" type="text" readonly value="00:00" class="input-time-pure">
+          <div class="time-container-fixed" onclick="openDepartureKeypad()">
+            <input id="depTime" type="text" readonly value="00:00" class="input-time-pure" onfocus="openDepartureKeypad()">
             <span id="depTimeSuffix" class="suffix-overlay">Мск</span>
           </div>
         </div>
@@ -1988,6 +1988,10 @@ function cancelCarousel(){
   document.activeElement?.blur();
 }
 
+function openDepartureKeypad(){
+  openKeypad('depTime', 'ВРЕМЯ ВЫЛЕТА');
+}
+
 function renderCarousel(){
   const steps = getCarouselSteps();
   const elements = getCarouselStepElements(steps);
@@ -2013,7 +2017,11 @@ function renderCarousel(){
   cancelButton.hidden = !isRunning;
   if(isRunning){
     queueCarouselButtonPosition();
-    requestAnimationFrame(() => nextButton.focus({ preventScroll: true }));
+    if(steps[carouselStepIndex] === 'departure'){
+      requestAnimationFrame(() => $("depTime")?.focus({ preventScroll: true }));
+    } else {
+      requestAnimationFrame(() => nextButton.focus({ preventScroll: true }));
+    }
   }
 }
 

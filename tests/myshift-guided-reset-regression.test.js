@@ -92,6 +92,21 @@ test('carousel uses Flight and Cabin step sequences with backward navigation', (
     assert.match(myShiftHtml, /function positionCarouselButtons\(\)[\s\S]{0,1400}getBoundingClientRect\(\)[\s\S]{0,1400}Math\.min/);
 });
 
+test('departure step immediately opens the custom time keypad on focus', () => {
+    assert.match(
+        headerMarkup,
+        /class="time-container-fixed"[^>]*onclick="openDepartureKeypad\(\)"[\s\S]{0,180}id="depTime"[^>]*readonly[^>]*onfocus="openDepartureKeypad\(\)"/
+    );
+    assert.match(
+        myShiftHtml,
+        /function openDepartureKeypad\(\)\s*\{\s*openKeypad\('depTime',\s*'ВРЕМЯ ВЫЛЕТА'\);\s*\}/
+    );
+    assert.match(
+        myShiftHtml,
+        /function renderCarousel\(\)[\s\S]{0,1800}steps\[carouselStepIndex\] === 'departure'[\s\S]{0,240}\$\("depTime"\)\?\.focus\(\{ preventScroll: true \}\)/
+    );
+});
+
 test('carousel pales the page and keeps only the current step prominent', () => {
     assert.match(myShiftHtml, /--carouselDim:/);
     assert.match(
