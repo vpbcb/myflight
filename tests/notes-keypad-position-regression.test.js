@@ -44,6 +44,9 @@ test('Notes keypad copies MyPath phone dimensions and position', () => {
 });
 
 test('Notes keypad copies MyPath tablet geometry', () => {
+    const doneRulePosition = indexHtml.indexOf('.notes-kp-done {');
+    const wideMediaPosition = indexHtml.indexOf('@media (min-width: 768px)', doneRulePosition);
+    assert.ok(doneRulePosition >= 0 && wideMediaPosition > doneRulePosition, 'tablet overrides must follow phone rules');
     assert.match(indexHtml, /@media\s*\(min-device-width:\s*768px\)\s*\{\s*\.modal-content\.notes-keypad-content\s*\{[^}]*margin-bottom:\s*0\s*!important[^}]*margin-left:\s*0\s*!important/);
     assert.match(indexHtml, /@media\s*\(min-width:\s*768px\)\s*\{[\s\S]*?\.modal-content\.notes-keypad-content\s*\{[^}]*max-width:\s*360px\s*!important[^}]*padding:\s*30px 20px\s*!important/);
     assert.match(indexHtml, /@media\s*\(min-width:\s*768px\)\s*\{[\s\S]*?\.notes-kp-btn\s*\{[^}]*--btn-height:\s*55px/);

@@ -757,20 +757,6 @@
             }
         }
 
-        @media (min-width: 768px) {
-            .modal-content.notes-keypad-content {
-                max-width: 360px !important;
-                padding: 30px 20px !important;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-            }
-            .notes-keypad-grid {
-                gap: 6px !important;
-            }
-            .notes-kp-btn {
-                --btn-height: 55px;
-            }
-        }
-
         .notes-keypad-header {
             display: flex;
             flex-direction: column;
@@ -858,6 +844,20 @@
             letter-spacing: 0.5px;
             background: rgba(25, 118, 210, 0.1);
             border-color: var(--accent-color);
+        }
+
+        @media (min-width: 768px) {
+            .modal-content.notes-keypad-content {
+                max-width: 360px !important;
+                padding: 30px 20px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+            }
+            .notes-keypad-grid {
+                gap: 6px !important;
+            }
+            .notes-kp-btn {
+                --btn-height: 55px;
+            }
         }
 
         /* --- Стили содержимого окна Aircraft Info --- */
