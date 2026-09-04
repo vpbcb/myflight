@@ -43,11 +43,11 @@ test('Refresh opens an accessible confirmation before clearing data', () => {
     assert.match(myShiftHtml, /id="resetConfirmAccept"[^>]*class="[^"]*resetConfirmBtn--neutral/);
     assert.match(
         myShiftHtml,
-        /refreshBtn\.addEventListener\(['"]click['"],[\s\S]{0,180}openResetConfirm\(\)/
+        /refreshBtn\.addEventListener\(['"]click['"],[\s\S]{0,420}openResetConfirm\(\)/
     );
     assert.doesNotMatch(
         myShiftHtml,
-        /refreshBtn\.addEventListener\(['"]click['"],[\s\S]{0,180}resetState\(\)/
+        /refreshBtn\.addEventListener\(['"]click['"],[\s\S]{0,420}resetState\(\)/
     );
     assert.match(
         myShiftHtml,
@@ -88,7 +88,7 @@ test('carousel uses Flight and Cabin step sequences with backward navigation', (
     assert.match(myShiftHtml, /classList\.toggle\(["']carousel-current["'], index === carouselStepIndex\)/);
     assert.match(myShiftHtml, /function advanceCarousel\(\)[\s\S]{0,260}finishCarousel\(\)/);
     assert.match(myShiftHtml, /function retreatCarousel\(\)[\s\S]{0,220}carouselStepIndex -= 1;[\s\S]{0,120}renderCarousel\(\)/);
-    assert.match(myShiftHtml, /function finishCarousel\(\)[\s\S]{0,420}carouselStepIndex = -1;[\s\S]{0,420}carouselPrevBtn/);
+    assert.match(myShiftHtml, /function finishCarousel\(\{ completed = true \} = \{\}\)[\s\S]{0,520}carouselStepIndex = -1;[\s\S]{0,520}carouselPrevBtn/);
     assert.match(myShiftHtml, /function positionCarouselButtons\(\)[\s\S]{0,1400}getBoundingClientRect\(\)[\s\S]{0,1400}Math\.min/);
 });
 
@@ -96,7 +96,7 @@ test('carousel pales the page and keeps only the current step prominent', () => 
     assert.match(myShiftHtml, /--carouselDim:/);
     assert.match(
         myShiftHtml,
-        /\.app-container\.carousel-running::before\s*\{[\s\S]{0,320}background:\s*var\(--carouselDim\)/
+        /\.app-container\.carousel-running::before,[\s\S]{0,80}\.app-container\.carousel-ready::before\s*\{[\s\S]{0,320}background:\s*var\(--carouselDim\)/
     );
     assert.match(
         myShiftHtml,
@@ -108,7 +108,7 @@ test('carousel pales the page and keeps only the current step prominent', () => 
     );
     assert.match(
         myShiftHtml,
-        /function finishCarousel\(\)[\s\S]{0,320}classList\.remove\(["']carousel-running["']\)/
+        /function finishCarousel\(\{ completed = true \} = \{\}\)[\s\S]{0,420}classList\.remove\(["']carousel-running["']\)/
     );
 
     const currentRule = myShiftHtml.match(

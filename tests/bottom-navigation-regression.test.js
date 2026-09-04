@@ -28,7 +28,7 @@ test('bottom actions use fixed three-column slots on every page', () => {
     const expectedSlots = {
         'index.html': ['left', 'center'],
         'myfuel.html': ['left', 'right'],
-        'myshift.html': ['left', 'right'],
+        'myshift.html': ['left', 'center', 'right'],
         'mynpa.html': ['left', 'center', 'right'],
         'mywind.html': ['left', 'center', 'right'],
         'mypath.html': ['left', 'center', 'right']
@@ -90,6 +90,6 @@ test('bordered calculators compensate their one-pixel inset', () => {
 
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260904-1';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260904-2';/);
     assert.match(sw, /'\.\/bottom-navigation\.css'/);
 });

@@ -798,7 +798,8 @@ button.pill{
   z-index:1500;
   box-shadow:none;
 }
-.app-container.carousel-running::before{
+.app-container.carousel-running::before,
+.app-container.carousel-ready::before{
   content:"";
   position:absolute;
   inset:0;
@@ -814,6 +815,23 @@ button.pill{
 }
 .app-container.carousel-running .bottom-btn{
   z-index:900;
+}
+.app-container.carousel-running .bottom-controls,
+.app-container.carousel-ready .bottom-controls{
+  z-index:1700;
+}
+.app-container.carousel-running #btnBotRefresh,
+.app-container.carousel-running #btnBotHome{
+  visibility:hidden;
+}
+.app-container.carousel-ready #btnBotHome{
+  visibility:hidden;
+}
+.app-container.carousel-ready #btnBotRefresh{
+  z-index:1800;
+}
+#carouselCancelBtn{
+  color:#ef4444;
 }
 .carouselNavBtn{
   position:absolute;
@@ -1340,6 +1358,10 @@ button:focus {
     <span class="bottom-action-label">START<br>CALCULATION</span>
   </button>
 
+  <button type="button" id="carouselCancelBtn" class="bottom-btn bottom-action bottom-action--center" title="Отменить карусель" hidden>
+    <span class="bottom-action-label">Отмена</span>
+  </button>
+
   <a href="./index.html" class="bottom-btn bottom-action bottom-action--right" id="btnBotHome" title="В главное меню" style="text-decoration: none;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; display: block;">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -1718,6 +1740,23 @@ function closeHint(){
 }
 
 /* сохранение */
+const SHIFT_STATE_KEY = "shiftcalc_state";
+const SHIFT_COMPLETED_DAY_KEY = "shiftcalc_completed_day";
+
+// SHIFT_STATE_LIFETIME_START
+const SHIFT_DAY_MS = 24 * 60 * 60 * 1000;
+
+function getLocalDayStamp(date = new Date()){
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / SHIFT_DAY_MS);
+}
+
+function isShiftStateFresh(completedDay, currentDay = getLocalDayStamp()){
+  const storedDay = Number(completedDay);
+  const ageInDays = currentDay - storedDay;
+  return Number.isInteger(storedDay) && ageInDays >= 0 && ageInDays <= 1;
+}
+// SHIFT_STATE_LIFETIME_END
+
 function saveState(){
   const state = {
     depTime: $("depTime").value,
@@ -1732,7 +1771,7 @@ function saveState(){
     extend,
     paxMode
   };
-  localStorage.setItem("shiftcalc_state", JSON.stringify(state));
+  localStorage.setItem(SHIFT_STATE_KEY, JSON.stringify(state));
 }
 
 // Защита при сворачивании или закрытии приложения (Kill App)
@@ -1744,7 +1783,7 @@ document.addEventListener("visibilitychange", () => {
 
 function loadState(){
   try {
-    const raw = localStorage.getItem("shiftcalc_state");
+    const raw = localStorage.getItem(SHIFT_STATE_KEY);
     
     // Если сохранений нет, принудительно прокликиваем все состояния по умолчанию (включая no pax flight)
     if(!raw) {
@@ -1796,6 +1835,7 @@ function loadState(){
 
 
 function resetState(){
+  localStorage.removeItem(SHIFT_COMPLETED_DAY_KEY);
   const suffix = " Мск";
   $("depTime").value = "00:00" + suffix;
   if($("paxDepTime")) $("paxDepTime").value = "00:00" + suffix;
@@ -1872,9 +1912,32 @@ function getCarouselStepElements(steps = getCarouselSteps()){
 }
 
 function startCarousel(){
-  document.querySelector(".app-container")?.classList.add("carousel-running");
+  const app = document.querySelector(".app-container");
+  app?.classList.remove("carousel-ready");
+  app?.classList.add("carousel-running");
   carouselStepIndex = 0;
   renderCarousel();
+}
+
+function showCarouselStart(){
+  const app = document.querySelector(".app-container");
+  app?.classList.remove("carousel-running");
+  app?.classList.add("carousel-ready");
+  document.activeElement?.blur();
+  requestAnimationFrame(() => $("btnBotRefresh")?.focus({ preventScroll: true }));
+}
+
+function initializeShiftState(){
+  const completedDay = localStorage.getItem(SHIFT_COMPLETED_DAY_KEY);
+  const hasStoredState = localStorage.getItem(SHIFT_STATE_KEY) !== null;
+  if(hasStoredState && isShiftStateFresh(completedDay)){
+    loadState();
+    return;
+  }
+
+  localStorage.removeItem(SHIFT_STATE_KEY);
+  resetState();
+  showCarouselStart();
 }
 
 function advanceCarousel(){
@@ -1894,17 +1957,29 @@ function retreatCarousel(){
   renderCarousel();
 }
 
-function finishCarousel(){
+function finishCarousel({ completed = true } = {}){
   carouselStepIndex = -1;
   document.querySelector(".app-container")?.classList.remove("carousel-running");
   const nextButton = $("carouselNextBtn");
   const prevButton = $("carouselPrevBtn");
+  const cancelButton = $("carouselCancelBtn");
   if(nextButton) nextButton.hidden = true;
   if(prevButton) prevButton.hidden = true;
+  if(cancelButton) cancelButton.hidden = true;
   document.querySelectorAll("[data-carousel-step]").forEach(element => {
     element?.classList.remove("carousel-current", "carousel-complete");
     element?.removeAttribute("aria-current");
   });
+  if(completed){
+    saveState();
+    localStorage.setItem(SHIFT_COMPLETED_DAY_KEY, String(getLocalDayStamp()));
+  }
+}
+
+function cancelCarousel(){
+  closeKeypad();
+  finishCarousel({ completed: false });
+  document.activeElement?.blur();
 }
 
 function renderCarousel(){
@@ -1924,10 +1999,12 @@ function renderCarousel(){
 
   const nextButton = $("carouselNextBtn");
   const prevButton = $("carouselPrevBtn");
+  const cancelButton = $("carouselCancelBtn");
   const isRunning = carouselStepIndex >= 0 && carouselStepIndex < steps.length;
-  if(!nextButton || !prevButton) return;
+  if(!nextButton || !prevButton || !cancelButton) return;
   nextButton.hidden = !isRunning;
   prevButton.hidden = !isRunning || carouselStepIndex === 0;
+  cancelButton.hidden = !isRunning;
   if(isRunning){
     queueCarouselButtonPosition();
     requestAnimationFrame(() => nextButton.focus({ preventScroll: true }));
@@ -1972,18 +2049,24 @@ let toastHideTimer = null;
 
 /* Init */
 window.addEventListener("load", () => {
-    loadState();
+    initializeShiftState();
 
     const refreshBtn = $("btnBotRefresh");
     if (refreshBtn) {
         refreshBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            if(document.querySelector(".app-container")?.classList.contains("carousel-ready")){
+                startCarousel();
+                if(navigator.vibrate) navigator.vibrate(30);
+                return;
+            }
             openResetConfirm();
         });
     }
 
     $("carouselPrevBtn")?.addEventListener('click', retreatCarousel);
     $("carouselNextBtn")?.addEventListener('click', advanceCarousel);
+    $("carouselCancelBtn")?.addEventListener('click', cancelCarousel);
     window.addEventListener('resize', queueCarouselButtonPosition);
     window.addEventListener('orientationchange', queueCarouselButtonPosition);
     window.visualViewport?.addEventListener('resize', queueCarouselButtonPosition);
