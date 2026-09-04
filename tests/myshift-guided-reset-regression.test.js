@@ -107,6 +107,25 @@ test('departure step immediately opens the custom time keypad on focus', () => {
     );
 });
 
+test('departure field stays undimmed while its keypad is open', () => {
+    assert.match(
+        myShiftHtml,
+        /#keypadModal\.keep-carousel-step-visible\s*\{[^}]*background:\s*transparent/
+    );
+    assert.match(
+        myShiftHtml,
+        /const keepDepartureVisible = id === 'depTime'[\s\S]{0,180}classList\.contains\('carousel-running'\)/
+    );
+    assert.match(
+        myShiftHtml,
+        /keypadModal\.classList\.toggle\('keep-carousel-step-visible', keepDepartureVisible\)/
+    );
+    assert.match(
+        myShiftHtml,
+        /function hideKeypadModal\(\)\s*\{[\s\S]{0,160}classList\.remove\('active', 'keep-carousel-step-visible'\)/
+    );
+});
+
 test('carousel pales the page and keeps only the current step prominent', () => {
     assert.match(myShiftHtml, /--carouselDim:/);
     assert.match(

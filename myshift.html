@@ -925,6 +925,9 @@ button:focus {
     z-index: 3000;
   }
   .modal-overlay.active { display: flex; }
+  #keypadModal.keep-carousel-step-visible {
+    background: transparent;
+  }
 
   .keypad-content {
     background: var(--card); 
@@ -2148,13 +2151,22 @@ window.addEventListener("load", () => {
 let activeKp = null;
 let currentKpVal = "";
 
+function hideKeypadModal() {
+    document.getElementById('keypadModal')?.classList.remove('active', 'keep-carousel-step-visible');
+}
+
 function openKeypad(id, title) {
     activeKp = document.getElementById(id);
     document.getElementById('kpTitle').innerText = title;
-    currentKpVal = ""; 
+    currentKpVal = "";
     document.getElementById('kpValue').style.color = 'var(--accent)'; // Сброс цвета на синий
     updateKpDisplay();
-    document.getElementById('keypadModal').classList.add('active');
+
+    const keypadModal = document.getElementById('keypadModal');
+    const keepDepartureVisible = id === 'depTime'
+        && document.querySelector('.app-container')?.classList.contains('carousel-running');
+    keypadModal.classList.toggle('keep-carousel-step-visible', keepDepartureVisible);
+    keypadModal.classList.add('active');
 }
 
 function closeKeypad(e) {
@@ -2165,7 +2177,7 @@ function closeKeypad(e) {
         
         // Если ничего не ввели, просто закрываем
         if (val.length === 0) {
-            document.getElementById('keypadModal').classList.remove('active');
+            hideKeypadModal();
             activeKp = null;
             return;
         }
@@ -2192,10 +2204,10 @@ function closeKeypad(e) {
         updateInputSuffixes(); // Буквы добавятся в span автоматически
         if (typeof render === 'function') render(); // Вызываем render() для моментального сохранения и обновления UI
         
-        document.getElementById('keypadModal').classList.remove('active');
+        hideKeypadModal();
         activeKp = null;
     } else {
-        document.getElementById('keypadModal').classList.remove('active');
+        hideKeypadModal();
         activeKp = null;
     }
 }
