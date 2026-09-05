@@ -65,7 +65,15 @@ const FALLBACK_HTML = `
 // available only as offline fallback until optional assets finish warming.
 const get = async (request, options) => {
     const activeCache = await caches.open(CACHE_NAME);
-    return await activeCache.match(request, options) || await caches.match(request, options);
+    const activeMatch = await activeCache.match(request, options);
+    if (activeMatch) return activeMatch;
+    const keys = await caches.keys();
+    for (const key of keys.reverse()) {
+        if (key === CACHE_NAME || !/^myflight_/i.test(key)) continue;
+        const cached = await (await caches.open(key)).match(request, options);
+        if (cached) return cached;
+    }
+    return undefined;
 };
 
 const getAppShell = async (request) => {

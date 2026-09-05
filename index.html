@@ -1950,43 +1950,26 @@
 
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Двойная жесткая вибрация
             
-            // Чистим память полностью, но сохраняем пользовательские данные, не относящиеся к кешу.
-            const preservedLocalStorage = {};
-            [
-                'last_flight_num',
-                'last_ac_query',
-                'hub_quick_notes',
-                'hub_quick_notes_text',
-                'mynpa_airports_v2',
-                'mynpa_airports_rtdb_v1',
-                'mynpa_airports_reference_v1',
-                'mynpa_cloud_approaches_v1',
-                'mynpa_pending_airport_saves_v2',
-                'mynpa_pending_cloud_writes_v1',
-                'mynpa_confirmed_cloud_airports_v1',
-                'mynpa_sync_status_v1'
-            ].forEach(key => {
-                const value = localStorage.getItem(key);
-                if (value !== null) preservedLocalStorage[key] = value;
-            });
-
-            localStorage.clear();
-            Object.entries(preservedLocalStorage).forEach(([key, value]) => {
-                localStorage.setItem(key, value);
-            });
-            sessionStorage.clear();
+            // Storage belongs to the origin, including other installed PWAs.
+            localStorage.removeItem('hubActiveCacheVersion');
+            localStorage.removeItem('hubVersion');
+            const appScope = new URL('./', window.location.href).href;
 
             try {
-                // Дожидаемся удаления всех service worker'ов
+                // Only unregister this application's exact scope.
                 if ('serviceWorker' in navigator) {
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations.map(r => r.unregister()));
+                    await Promise.all(registrations
+                        .filter(r => r.scope === appScope)
+                        .map(r => r.unregister()));
                 }
 
-                // Дожидаемся удаления всех хранилищ кэша
+                // MyActivity and other PWAs keep their offline caches.
                 if ('caches' in window) {
                     const keys = await caches.keys();
-                    await Promise.all(keys.map(key => caches.delete(key)));
+                    await Promise.all(keys
+                        .filter(key => /^myflight_/i.test(key))
+                        .map(key => caches.delete(key)));
                 }
             } catch (e) {
                 console.error("Ошибка при очистке кэша:", e);
