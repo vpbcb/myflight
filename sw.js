@@ -1,267 +1,235 @@
-const CACHE_NAME = 'myflight_v.260904-10';
-const ASSET_FETCH_TIMEOUT_MS = 12000;
-const SLOW_ASSET_LOG_MS = 2500;
-const FIREBASE_RUNTIME_ASSETS = [
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js'
-];
+const CACHE_NAME = 'myflight_v.260906-1';
+const APP_CACHE = CACHE_NAME;
+const PRECACHE_BUILD = {"id":"84f6c49dc5b733d7aee901e5","assets":[{"url":"app.js","sha256":"3818287cba0a696d99b342ca934ea8da2c46b69edb8811213a3858e62c6ea278","mime":["text/javascript","application/javascript"]},{"url":"bottom-navigation.css","sha256":"99240caf45cdcb3e957ca32ff5b3443d2396a3a29a663fca4b3c5c854878de6d","mime":["text/css"]},{"url":"dbaircraft.js","sha256":"6158e2df5043f5c19efebfa5ebdce36a46b3f9f4f7a855a2889e84e7710154e8","mime":["text/javascript","application/javascript"]},{"url":"index.html","sha256":"7a8e9cd39fd418ff8379fe47a989c32a2db5d37b6f15a103380ec01d6551270f","mime":["text/html"]},{"url":"manifest.json","sha256":"e382db87c44960721e4b8ab0cd06a97d665d8dea6fce18564324fe645c3d913d","mime":["application/json","application/manifest+json"]},{"url":"myfuel.html","sha256":"2bc179aa7f8fcca32a7456f3d23c9e45739d22594adfa88a259557cf5df3f349","mime":["text/html"]},{"url":"mynpa.html","sha256":"72045aac386c210629d51881a2ff5dce711319b397d1d89559265f49b3f831b5","mime":["text/html"]},{"url":"mypath.html","sha256":"cf58b36504c53f7c13f2a09a543db65779cc0f18b2fac4652d09fb81aef0affb","mime":["text/html"]},{"url":"myshift.html","sha256":"d630f7cd73425e9809563af7a0337b4359b979bdb2e61e59513975245b1d1a98","mime":["text/html"]},{"url":"mywind.html","sha256":"ccfa3328e9d5265cbf94be2f7f0ce26ad243036d63aea5d0ffeff1629d16d702","mime":["text/html"]},{"url":"offline-client.js","sha256":"586b942a120aa82cf89c3da5aa75fcc120d76df670550a02fe9167225ec9d112","mime":["text/javascript","application/javascript"]},{"url":"offline.html","sha256":"4c09a1323f85c13aa1ca7f012573fd3610a484c074661032c061d8e5651daec4","mime":["text/html"]},{"url":"suflights.js","sha256":"cf60f70830ceedeb0242971216ccced6d4246313e6e84a3b77913113d7543235","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-app-compat.js","sha256":"2d038b9f99cdc28119b4e5c2a4ed86d561fc36c051e515ef35176b1cabe780c1","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-auth-compat.js","sha256":"1451e1285d1a09eed6c9f71b07ba01fb097add66b024d13e2454ba07d50a53c6","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-database-compat.js","sha256":"1fdd331f8fd0448f9d7ce97573cb828a83aad7a7bb2c4da0e75fdb9563eef129","mime":["text/javascript","application/javascript"]}]};
+const APP_ID = "myflight";
+const LEGACY_PREFIXES = ["myflight_"];
+const OPTIONAL_ASSETS = ["myflightlogo.png", "icons/icon-shortcut-144.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-192.png", "icons/icon-maskable-512.png", "toicon.png", "landicon.png", "fdp.png", "fap.png", "handicon.png"];
+const FALLBACK_HTML = '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MyFlight — офлайн</title><body><h1>MyFlight</h1><p>Офлайн-копия недоступна. Подключитесь к интернету и откройте приложение снова. Пользовательские данные не удалены.</p></body></html>';
 
-// New worker activates only after every critical asset is cached.
-const CRITICAL_ASSETS = [
-    './',
-    './index.html',
-    './manifest.json',
-    './app.js',
-    './bottom-navigation.css',
-    './myfuel.html',
-    './mywind.html',
-    './mypath.html',
-    './mynpa.html',
-    './myshift.html',
-    './offline.html',
-    './suflights.js',
-    './dbaircraft.js'
-];
+// Offline protocol 2: immutable releases, repair, persistent client pins.
+const APP_BASE_URL = new URL(self.registration.scope);
+const CACHE_PREFIX = APP_ID + "-shell-v2:" + encodeURIComponent(APP_BASE_URL.href) + ":";
+const BUILD_CACHE = CACHE_PREFIX + APP_CACHE + ":" + PRECACHE_BUILD?.id;
+const CLIENT_CACHE = APP_ID + "-clients:" + encodeURIComponent(APP_BASE_URL.href);
+const READY_URL = new URL("__offline_ready__", APP_BASE_URL).href;
+const PENDING_URL = new URL("__offline_pending__", APP_BASE_URL).href;
+const COMPATIBILITY = 1; // Bump before an incompatible local database migration.
+const appUrl = path => new URL(path, APP_BASE_URL).href;
+const belongsToApp = url => url.origin === APP_BASE_URL.origin && url.pathname.startsWith(APP_BASE_URL.pathname)
+  && !["/__/auth/", "/__/firebase/"].some(prefix => url.pathname.startsWith(prefix));
+const urlOf = request => typeof request === "string" ? request : request.url;
+const digest = async response => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await response.clone().arrayBuffer())), n => n.toString(16).padStart(2, "0")).join("");
+const mimeMatches = (response, asset) => !asset.mime || asset.mime.includes((response.headers.get("Content-Type") || "").split(";")[0].trim());
 
-// Images warm after the new worker controls the page.
-const OPTIONAL_ASSETS = [
-    './myflightlogo.png',
-    './icons/icon-192.png',
-    './icons/icon-512.png',
-    './icons/icon-maskable-192.png',
-    './icons/icon-maskable-512.png',
-    './toicon.png',
-    './landicon.png',
-    './fdp.png',
-    './fap.png',
-    './handicon.png',
-    ...FIREBASE_RUNTIME_ASSETS
-];
-
-const FALLBACK_HTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0b0f19; color: #cbd5e1; text-align: center; padding: 20px; margin: 0; }
-        .box { background: #161e2e; padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); }
-        h2 { margin-top: 0; color: #38bdf8; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>Application is initializing</h2>
-        <p>Cache is empty. Connect to the internet for a few seconds.</p>
-    </div>
-</body>
-</html>
-`;
-
-// Always prefer the cache owned by this worker. Older app caches remain
-// available only as offline fallback until optional assets finish warming.
-const get = async (request, options) => {
-    const activeCache = await caches.open(CACHE_NAME);
-    const activeMatch = await activeCache.match(request, options);
-    if (activeMatch) return activeMatch;
-    const keys = await caches.keys();
-    for (const key of keys.reverse()) {
-        if (key === CACHE_NAME || !/^myflight_/i.test(key)) continue;
-        const cached = await (await caches.open(key)).match(request, options);
-        if (cached) return cached;
-    }
-    return undefined;
-};
-
-const getAppShell = async (request) => {
-    const cachedResponse = await get(request) || await get(request, { ignoreSearch: true });
-    if (cachedResponse) return cachedResponse;
-
-    const url = new URL(request.url);
-    if (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) {
-        return await get('./') || await get('./index.html');
-    }
-    return null;
-};
-
-const put = async (request, response) => {
-    if (!response || response.status !== 200 || response.type !== 'basic') return response;
-
-    const cache = await caches.open(CACHE_NAME);
-    await cache.put(request, response.clone());
-
-    if (request.mode === 'navigate') {
-        const url = new URL(request.url);
-        if (url.pathname.endsWith('/index.html')) {
-            await cache.put(url.pathname.replace('/index.html', '/'), response.clone());
-        } else if (url.pathname.endsWith('/')) {
-            await cache.put(url.pathname + 'index.html', response.clone());
-        }
-    }
+async function readDescriptor(name, verify = true) {
+  if (!name?.startsWith(CACHE_PREFIX)) return null;
+  try {
+    const cache = await caches.open(name), marker = await cache.match(READY_URL);
+    if (!marker) return null;
+    const meta = await marker.json();
+    if (meta.schema !== 2 || meta.compatibility !== COMPATIBILITY || !meta.assets?.length
+      || !meta.assets.some(asset => asset.url === "index.html")) return null;
+    if (verify && !(await Promise.all(meta.assets.map(async asset => {
+      if (!belongsToApp(new URL(appUrl(asset.url))) || !/^[a-f0-9]{64}$/.test(asset.sha256)) return false;
+      const response = await cache.match(appUrl(asset.url));
+      return response?.ok && mimeMatches(response, asset) && await digest(response) === asset.sha256;
+    }))).every(Boolean)) return null;
+    return { name, cache, meta };
+  } catch { return null; }
+}
+async function completeBuilds() {
+  const names = (await caches.keys()).filter(name => name.startsWith(CACHE_PREFIX));
+  const builds = (await Promise.all(names.map(name => readDescriptor(name)))).filter(Boolean);
+  return builds.sort((a, b) => Number(b.meta.id === PRECACHE_BUILD?.id) - Number(a.meta.id === PRECACHE_BUILD?.id)
+    || b.meta.installedAt - a.meta.installedAt);
+}
+async function downloadAsset(cache, asset) {
+  const controller = new AbortController();
+  let timer;
+  try {
+    await Promise.race([(async () => {
+      const url = appUrl(asset.url);
+      if (!belongsToApp(new URL(url))) throw new Error("Asset outside application scope");
+      const response = await fetch(new Request(url, { cache: "reload" }), { signal: controller.signal });
+      if (!response.ok || !mimeMatches(response, asset) || await digest(response) !== asset.sha256)
+        throw new Error("Invalid release resource: " + asset.url);
+      await cache.put(url, response);
+    })(), new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(new Error("Resource download timed out")); }, 12000);
+    })]);
+  } finally { clearTimeout(timer); }
+}
+let repairPromise;
+function ensureCurrentBuild() {
+  if (repairPromise) return repairPromise;
+  repairPromise = (async () => {
+    if (!PRECACHE_BUILD?.assets?.length) throw new Error("Build the offline shell before publishing");
+    const existing = (await completeBuilds()).find(item => item.meta.id === PRECACHE_BUILD.id);
+    if (existing) return existing;
+    // Even repair writes elsewhere: an open page may still use the damaged cache.
+    const names = await caches.keys();
+    const name = names.includes(BUILD_CACHE) ? BUILD_CACHE + ":repair:" + Date.now() + "-" + Math.random() : BUILD_CACHE;
+    const cache = await caches.open(name);
+    try {
+      await cache.put(PENDING_URL, new Response(String(Date.now())));
+      const results = await Promise.allSettled(PRECACHE_BUILD.assets.map(asset => downloadAsset(cache, asset)));
+      if (results.some(result => result.status === "rejected")) throw new Error("Incomplete offline shell");
+      const index = await cache.match(appUrl("index.html"));
+      if (!index) throw new Error("Missing entry page");
+      await cache.put(appUrl(""), index);
+      const meta = { schema: 2, compatibility: COMPATIBILITY, ...PRECACHE_BUILD, appCache: APP_CACHE, installedAt: Date.now() };
+      await cache.put(READY_URL, new Response(JSON.stringify(meta), { headers: { "X-App-Installed-At": String(meta.installedAt) } }));
+      const committed = await readDescriptor(name);
+      if (!committed) throw new Error("Offline cache verification failed");
+      return committed;
+    } catch (error) { await caches.delete(name); throw error; }
+  })().finally(() => { repairPromise = null; });
+  return repairPromise;
+}
+async function installAppShell() {
+  await ensureCurrentBuild();
+  if (!self.registration.active) await self.skipWaiting();
+}
+async function pinnedBuild(clientId) {
+  if (!clientId) return null;
+  try {
+    const response = await (await caches.open(CLIENT_CACHE)).match(appUrl("__offline_client__/" + clientId));
+    const pin = response && await response.json();
+    return pin ? await readDescriptor(pin.name, false) : null;
+  } catch { return null; }
+}
+async function pinClient(clientId, build) {
+  if (!clientId || !build) return;
+  try {
+    await (await caches.open(CLIENT_CACHE)).put(appUrl("__offline_client__/" + clientId), new Response(JSON.stringify({ name: build.name })));
+  } catch { /* Never discard a release or user data if metadata storage fails. */ }
+}
+async function legacyMatch(request) {
+  for (const name of (await caches.keys()).reverse()) {
+    if (!LEGACY_PREFIXES.some(prefix => name.startsWith(prefix))) continue;
+    const response = await (await caches.open(name)).match(request);
+    if (response) return response;
+  }
+}
+async function matchAppCaches(request, clientId) {
+  if (!belongsToApp(new URL(urlOf(request)))) return undefined;
+  const pin = await pinnedBuild(clientId);
+  for (const build of pin ? [pin] : await completeBuilds()) {
+    const response = await build.cache.match(request);
+    if (!response) continue;
+    const asset = build.meta.assets.find(asset => appUrl(asset.url) === urlOf(request));
+    if (asset && (await digest(response) !== asset.sha256 || !mimeMatches(response, asset))) continue;
     return response;
-};
-
-const isFirebaseRuntimeRequest = (request) => FIREBASE_RUNTIME_ASSETS.includes(request.url);
-
-const putRuntimeAsset = async (request, response) => {
-    if (!response) return response;
-    const canCache = response.type === 'opaque'
-        || response.type === 'basic'
-        || response.type === 'cors';
-    const hasUsableStatus = response.type === 'opaque' || response.status === 200;
-    if (!canCache || !hasUsableStatus) return response;
-
-    const cache = await caches.open(CACHE_NAME);
-    await cache.put(request, response.clone());
+  }
+  return pin ? undefined : legacyMatch(request);
+}
+async function fetchWithTimeout(request, milliseconds = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), milliseconds);
+  try {
+    const response = await fetch(request, { signal: controller.signal });
+    await response.clone().arrayBuffer();
     return response;
-};
-
-const inet = async (request, timeoutMs = 0) => {
-    try {
-        if (timeoutMs > 0) {
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                return await fetch(request, { signal: controller.signal });
-            } finally {
-                clearTimeout(id);
-            }
-        }
-        return await fetch(request);
-    } catch (error) {
-        return null;
+  } finally { clearTimeout(timer); }
+}
+async function appShellResponse(request, clientId) {
+  try {
+    let build = (await completeBuilds())[0];
+    if (!build) { try { build = await ensureCurrentBuild(); } catch { /* Legacy fallback below. */ } }
+    if (build) {
+      const relative = new URL(urlOf(request)).pathname.slice(APP_BASE_URL.pathname.length);
+      const page = relative.endsWith(".html") ? appUrl(relative) : appUrl("index.html");
+      const response = await build.cache.match(page);
+      if (response) { await pinClient(clientId, build); return response; }
     }
-};
-
-const cacheOrInet = async (request) => {
-    const cachedResponse = await get(request);
-    if (cachedResponse) return cachedResponse;
-
-    const networkResponse = await inet(request);
-    if (networkResponse) return await put(request, networkResponse);
-    return null;
-};
-
-const isExternalRequest = (request) => {
-    try {
-        return new URL(request.url).origin !== self.location.origin;
-    } catch (error) {
-        return false;
+    const legacy = await legacyMatch(urlOf(request)) || await legacyMatch(appUrl("index.html")) || await legacyMatch(appUrl(""));
+    if (legacy) return legacy;
+  } catch { /* Storage failure must not prevent an online launch or a readable fallback. */ }
+  try { const response = await fetchWithTimeout(request, 3000); if (response.ok) return response; }
+  catch { /* No network. */ }
+  return new Response(FALLBACK_HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+}
+async function cacheFirst(request, clientId) {
+  try { const cached = await matchAppCaches(request, clientId); if (cached) return cached; } catch { /* Try network. */ }
+  try {
+    const pin = await pinnedBuild(clientId);
+    const asset = (pin?.meta.assets ?? PRECACHE_BUILD?.assets)?.find(asset => appUrl(asset.url) === urlOf(request));
+    if (asset) {
+      if (!pin || pin.meta.id === PRECACHE_BUILD?.id) {
+        try { const build = await ensureCurrentBuild(); const cached = await build.cache.match(request); if (cached) return cached; }
+        catch { /* Online resources can still run when persistence is unavailable. */ }
+      }
+      const response = await fetchWithTimeout(request);
+      return response.ok && mimeMatches(response, asset) && await digest(response) === asset.sha256 ? response : Response.error();
     }
-};
-
-const cacheAsset = async (cache, asset, required) => {
-    const controller = new AbortController();
-    const startedAt = Date.now();
-    const timeoutId = setTimeout(() => controller.abort(), ASSET_FETCH_TIMEOUT_MS);
-    try {
-        const request = new Request(asset, FIREBASE_RUNTIME_ASSETS.includes(asset)
-            ? { cache: 'reload', mode: 'no-cors' }
-            : { cache: 'reload' });
-        const response = await fetch(request, { signal: controller.signal });
-        if (!response || (!response.ok && response.type !== 'opaque')) {
-            throw new Error(`HTTP ${response ? response.status : 'no response'}`);
-        }
-        await cache.put(request, response);
-        const elapsedMs = Date.now() - startedAt;
-        if (elapsedMs >= SLOW_ASSET_LOG_MS) {
-            console.warn(`[SW] Slow ${required ? 'critical' : 'optional'} asset cached in ${elapsedMs}ms: ${asset}`);
-        }
-        return true;
-    } catch (error) {
-        const level = required ? 'error' : 'warn';
-        console[level](`[SW] ${required ? 'Critical' : 'Optional'} asset failed: ${asset}`, error);
-        if (required) throw error;
-        return false;
-    } finally {
-        clearTimeout(timeoutId);
-    }
-};
-
-const cacheAssets = async (assets, required) => {
-    const cache = await caches.open(CACHE_NAME);
-    const results = await Promise.all(assets.map(asset => cacheAsset(cache, asset, required)));
-    return results.every(Boolean);
-};
-
-const getMissingCurrentAssets = async assets => {
-    const cache = await caches.open(CACHE_NAME);
-    const checks = await Promise.all(assets.map(async asset => ({
-        asset,
-        cached: Boolean(await cache.match(asset))
-    })));
-    return checks.filter(item => !item.cached).map(item => item.asset);
-};
-
-const deleteOldAppCaches = async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys
-        .filter(key => /^myflight_/i.test(key) && key !== CACHE_NAME)
-        .map(key => caches.delete(key)));
-};
-
-let optionalWarmPromise = null;
-const warmOptionalCache = () => {
-    if (!optionalWarmPromise) {
-        optionalWarmPromise = getMissingCurrentAssets(OPTIONAL_ASSETS)
-            .then(missingAssets => cacheAssets(missingAssets, false))
-            .then(async complete => {
-                if (complete) {
-                    await deleteOldAppCaches();
-                    console.log('[SW] Optional cache ready; old app caches removed.');
-                } else {
-                    console.warn('[SW] Optional cache incomplete; old app cache kept as fallback.');
-                }
-                return complete;
-            })
-            .finally(() => {
-                optionalWarmPromise = null;
-            });
-    }
-    return optionalWarmPromise;
-};
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        cacheAssets(CRITICAL_ASSETS, true)
-            .then(() => {
-                console.log('[SW] Critical cache ready; activating new worker.');
-                return self.skipWaiting();
-            })
-            .catch(async error => {
-                await caches.delete(CACHE_NAME);
-                console.error('[SW] Critical cache failed; keeping previous worker active.', error);
-                throw error;
-            })
-    );
+    if (pin && pin.meta.id !== PRECACHE_BUILD?.id) return Response.error();
+    return await fetchWithTimeout(request);
+  } catch { return Response.error(); }
+}
+let optionalWarmPromise;
+function warmOptionalCache() {
+  if (optionalWarmPromise) return optionalWarmPromise;
+  optionalWarmPromise = (async () => {
+    const build = await ensureCurrentBuild();
+    await Promise.allSettled(OPTIONAL_ASSETS.map(async path => {
+      const url = appUrl(path);
+      if (await build.cache.match(url)) return;
+      const response = await fetchWithTimeout(new Request(url));
+      if (response.ok && !response.headers.get("Content-Type")?.includes("text/html")) await build.cache.put(url, response);
+    }));
+  })().catch(() => undefined).finally(() => { optionalWarmPromise = null; });
+  return optionalWarmPromise;
+}
+async function collectOldBuilds() {
+  if (self.registration.installing || self.registration.waiting || repairPromise || !self.clients?.matchAll) return;
+  const builds = await completeBuilds();
+  if (builds[0]?.meta.id !== PRECACHE_BUILD?.id) return;
+  const clients = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter(client => belongsToApp(new URL(client.url)));
+  const pins = await Promise.all(clients.map(client => pinnedBuild(client.id)));
+  if (pins.some(pin => !pin)) return; // Unknown old clients block collection.
+  const generations = [...new Set(builds.map(build => build.meta.id))].slice(0, 2);
+  const keep = new Set([...builds.filter(build => generations.includes(build.meta.id)).map(build => build.name), ...pins.map(pin => pin.name)]);
+  for (const name of await caches.keys()) {
+    if (!name.startsWith(CACHE_PREFIX) || keep.has(name)) continue;
+    const cache = await caches.open(name), descriptor = await readDescriptor(name, false);
+    const pending = await cache.match(PENDING_URL);
+    const createdAt = descriptor?.meta.installedAt || Number(pending && await pending.text());
+    if (createdAt > 0 && Date.now() - createdAt > 86400000) await caches.delete(name);
+  }
+  const clientCache = await caches.open(CLIENT_CACHE);
+  if (clientCache.keys && clientCache.delete) {
+    const live = new Set(clients.map(client => appUrl("__offline_client__/" + client.id)));
+    for (const request of await clientCache.keys()) if (!live.has(request.url)) await clientCache.delete(request);
+  }
+}
+self.addEventListener("install", event => event.waitUntil(installAppShell()));
+self.addEventListener("activate", event => event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", event => {
+  const request = event.request;
+  if (request.method !== "GET" || !belongsToApp(new URL(request.url))) return;
+  if (request.mode === "navigate") {
+    event.respondWith(appShellResponse(request, event.resultingClientId));
+    event.waitUntil(warmOptionalCache());
+  } else event.respondWith(cacheFirst(request, event.clientId));
 });
-
-self.addEventListener('activate', event => {
-    event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('message', event => {
-    const type = event.data && event.data.type;
-    if (type === 'GET_CACHE_NAME') {
-        if (event.ports && event.ports[0]) {
-            event.ports[0].postMessage({ cacheName: CACHE_NAME });
-        }
+self.addEventListener("message", event => {
+  const type = event.data?.type, reply = data => event.ports?.[0]?.postMessage(data);
+  event.waitUntil((async () => {
+    try {
+      if (type === "ACTIVATE_UPDATE" || type === "SKIP_WAITING") { await ensureCurrentBuild(); await self.skipWaiting(); return; }
+      if (type === "REPAIR_OFFLINE_CACHE") await ensureCurrentBuild();
+      if (type === "CLIENT_READY") {
+        const build = (await completeBuilds()).find(build => build.meta.id === event.data.buildId);
+        if (build && event.source?.id) { await pinClient(event.source.id, build); await collectOldBuilds(); }
         return;
-    }
-    if (type === 'WARM_OPTIONAL_CACHE') {
-        const promise = warmOptionalCache();
-        event.waitUntil(promise);
-        if (event.ports && event.ports[0]) {
-            promise.then(complete => event.ports[0].postMessage({ complete }));
-        }
-        return;
-    }
-    if (type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+      }
+      if (type === "WARM_OPTIONAL_CACHE") { await warmOptionalCache(); reply({ complete: true }); return; }
+      const build = (await completeBuilds()).find(build => build.meta.id === PRECACHE_BUILD?.id);
+      if (type === "GET_CACHE_NAME") { reply({ cacheName: APP_CACHE, buildId: build?.meta.id }); return; }
+      if (type === "GET_APP_INSTALLATION") { reply({ appCache: APP_CACHE, installedAt: build?.meta.installedAt ?? null }); return; }
+      reply({ ready: Boolean(build), buildId: build?.meta.id, protocol: 2 });
+    } catch { reply({ ready: false, installedAt: null, appCache: APP_CACHE, protocol: 2 }); }
+  })());
 });
 
 self.addEventListener('notificationclick', event => {
@@ -294,50 +262,5 @@ self.addEventListener('notificationclick', event => {
         if (clients.openWindow) {
             await clients.openWindow(targetUrl);
         }
-    })());
-});
-
-self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
-
-    if (event.request.mode === 'navigate') {
-        const networkFetch = inet(event.request, 3000)
-            .then(networkResponse => {
-                if (networkResponse && networkResponse.status === 200) {
-                    return put(event.request, networkResponse.clone());
-                }
-                return null;
-            })
-            .catch(() => null);
-        event.waitUntil(networkFetch);
-
-        event.respondWith((async () => {
-            const cachedResponse = await getAppShell(event.request);
-            if (cachedResponse) return cachedResponse;
-
-            const fallbackNetwork = await inet(event.request, 3000);
-            return fallbackNetwork || new Response(FALLBACK_HTML, {
-                status: 200,
-                headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            });
-        })());
-        return;
-    }
-
-    event.respondWith((async () => {
-        if (isExternalRequest(event.request)) {
-            if (isFirebaseRuntimeRequest(event.request)) {
-                const cachedResponse = await get(event.request);
-                const networkResponse = await inet(event.request);
-                if (networkResponse) return await putRuntimeAsset(event.request, networkResponse);
-                return cachedResponse || Response.error();
-            }
-
-            const networkResponse = await inet(event.request);
-            return networkResponse || Response.error();
-        }
-
-        const response = await cacheOrInet(event.request);
-        return response || new Response('', { status: 200 });
     })());
 });

@@ -81,15 +81,15 @@
   pointer-events: none;
 }
 
-* { 
-    box-sizing: border-box; 
-    font-family: Arial, sans-serif; 
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
     /* Полный запрет выделения и системных меню */
-    -webkit-user-select: none; 
-    user-select: none; 
-    -webkit-touch-callout: none; 
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
     /* Убираем блик при нажатии в Safari */
-    -webkit-tap-highlight-color: transparent; 
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Разрешаем ввод и взаимодействие только для элементов управления */
@@ -98,15 +98,15 @@ input, textarea, select, [contenteditable="true"] {
     user-select: text;
 }
 
-h2 { 
-    font-size: 0.6rem; 
-    text-align: center; 
-    letter-spacing: 5px; 
-    color: var(--muted); 
-    text-transform: uppercase; 
-    margin: 5px 0; 
-    font-weight: 800; 
-    opacity: 0.6; 
+h2 {
+    font-size: 0.6rem;
+    text-align: center;
+    letter-spacing: 5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 5px 0;
+    font-weight: 800;
+    opacity: 0.6;
 }
 
 html {
@@ -123,15 +123,15 @@ html, body {
     overflow: hidden;
 }
 
-body { 
-    margin: 0; 
-    background: transparent; 
-    color: var(--ink); 
-    display: flex; 
+body {
+    margin: 0;
+    background: transparent;
+    color: var(--ink);
+    display: flex;
     justify-content: center;
-    height: var(--app-height); 
+    height: var(--app-height);
     /* manipulation отключает зум по двойному тапу, сохраняя скролл */
-    touch-action: manipulation; 
+    touch-action: manipulation;
 }
 
 /* Главный контейнер-приложение (строго 440px по центру) */
@@ -231,14 +231,14 @@ html.dark-theme {
   scrollbar-gutter: stable;
 }
 
-.headerWrap { 
-  width: 100%; 
-  padding: 4px 5px; 
+.headerWrap {
+  width: 100%;
+  padding: 4px 5px;
 }
 
 /* Зона скролла занимает всё оставшееся место */
 .scrollArea {
-  flex: 1; 
+  flex: 1;
   min-height: 0;
   min-width: 0;
   max-width: 100%;
@@ -250,31 +250,31 @@ html.dark-theme {
   border-radius: 12px;
   margin: 0 4px 5px 4px;
   background: var(--scrollBg);
-  
+
   /* ЛОГИКА ИЗ ЭТАЛОНА: */
   -webkit-overflow-scrolling: touch; /* Инерционный скролл iOS */
-  display: block; 
+  display: block;
   touch-action: pan-y; /* Разрешаем только вертикальный свайп внутри */
 }
 
 /* Кастомная полоса прокрутки по аналогии с образцом */
-.scrollArea::-webkit-scrollbar { 
-  width: 4px; 
+.scrollArea::-webkit-scrollbar {
+  width: 4px;
 }
-.scrollArea::-webkit-scrollbar-thumb { 
-  background: var(--accent); 
-  border-radius: 10px; 
+.scrollArea::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
 }
-.scrollArea::-webkit-scrollbar-button { 
-  display: none; width: 0; height: 0; 
+.scrollArea::-webkit-scrollbar-button {
+  display: none; width: 0; height: 0;
 }
 
 /* Внутренние отступы контента */
-.wrap { 
-  width: 100%; 
+.wrap {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
-  padding: 10px; 
+  padding: 10px;
 }
 
 .headerFixed,
@@ -421,8 +421,8 @@ button.fieldTitle{
   border-radius:50%;
   border:1px solid var(--ctlBorder);
   /* ИСПОЛЬЗУЕМ НЕПРОЗРАЧНЫЕ ПЕРЕМЕННЫЕ */
-  background: var(--ctlBorder); 
-  color: var(--ink);           
+  background: var(--ctlBorder);
+  color: var(--ink);
   font-size:11px;
   line-height:16px;
   text-align:center;
@@ -494,10 +494,10 @@ button.fieldTitle{
   margin-bottom: 0;
   transition: max-height 260ms ease, opacity 260ms ease, transform 260ms ease, margin-bottom 260ms ease;
 }
-.foldBlock.open { 
+.foldBlock.open {
   max-height: 120px;
-  opacity: 1; 
-  transform: translateY(0); 
+  opacity: 1;
+  transform: translateY(0);
   margin-bottom: 0; /* Убираем лишний внешний отступ */
 }
 
@@ -647,7 +647,7 @@ button.pill{
   padding-right: 32px !important; /* Жесткий заслон для защиты иконки '?' */
   padding-left: 6px !important;
   /* Минимально 11px, максимально 13.6px, плавает в зависимости от ширины */
-  font-size: clamp(11px, 3.2vw, 13.6px) !important; 
+  font-size: clamp(11px, 3.2vw, 13.6px) !important;
   line-height: 1.05 !important; /* Уплотняем для корректного переноса в 40px высоты */
   word-break: break-word; /* Разрешаем перенос слов, если экран совсем узкий */
 }
@@ -900,38 +900,38 @@ button:focus {
   }
 
   .keypad-content {
-    background: var(--card); 
+    background: var(--card);
     border: 1px solid var(--accent); /* Тонкая рамка акцентным цветом */
     border-radius: 16px; /* Чуть меньший радиус для строгости */
-    padding: 20px 10px; 
-    width: 80%; 
+    padding: 20px 10px;
+    width: 80%;
     max-width: 280px;
     box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.5); /* Тяжелая авиационная тень */
-    
+
     /* ЭРГОНОМИЧЕСКИЙ СДВИГ ПОД БОЛЬШОЙ ПАЛЕЦ ПРАВОЙ РУКИ */
     margin-bottom: -35vh;
     margin-left: 40px;
-    
+
     animation: modalPop 0.15s ease-out;
   }
 
   .keypad-header {
     display: flex; flex-direction: column; align-items: center;
-    margin-bottom: 15px; 
+    margin-bottom: 15px;
     background: rgba(0,0,0,0.09); /* Инпут-фон из образца */
-    border-radius: 12px; 
-    padding: 10px; 
+    border-radius: 12px;
+    padding: 10px;
     border: 1px solid var(--border);
   }
-  
-  #kpTitle { 
-    font-size: 0.75rem; color: var(--accent); font-weight: 800; 
+
+  #kpTitle {
+    font-size: 0.75rem; color: var(--accent); font-weight: 800;
     letter-spacing: 1px; text-transform: uppercase;
   }
-  
-  #kpValue { 
-    font-size: 1.8rem; font-weight: 900; margin: 0; 
-    color: var(--accent); min-height: 2.4rem; display: flex; 
+
+  #kpValue {
+    font-size: 1.8rem; font-weight: 900; margin: 0;
+    color: var(--accent); min-height: 2.4rem; display: flex;
     align-items: center; justify-content: center;
   }
 
@@ -946,25 +946,25 @@ button:focus {
     -webkit-appearance: none;
   }
   .kp-btn:active { background: rgba(25, 118, 210, 0.15); transform: scale(0.95); }
-  
+
   .kp-del { color: #ef4444; font-size: 30px; }
 
-  .kp-clr { 
-    flex: 1; font-size: 21px !important; color: #ef4444; font-weight: 700; 
-    height: 60px; border-radius: 12px; background: rgba(0,0,0,0.09); 
+  .kp-clr {
+    flex: 1; font-size: 21px !important; color: #ef4444; font-weight: 700;
+    height: 60px; border-radius: 12px; background: rgba(0,0,0,0.09);
     border: 1px solid var(--border); cursor:pointer;
   }
-  
-  .kp-done { 
-    flex: 2; font-size: 23px !important; color: var(--accent); font-weight: 800; 
-    background: rgba(25, 118, 210, 0.1) !important; 
+
+  .kp-done {
+    flex: 2; font-size: 23px !important; color: var(--accent); font-weight: 800;
+    background: rgba(25, 118, 210, 0.1) !important;
     border: 1px solid var(--accent) !important;
     height: 60px; border-radius: 12px; cursor:pointer;
   }
 
   @media (min-device-width: 768px) {
     .keypad-content {
-        margin-bottom: 0 !important; 
+        margin-bottom: 0 !important;
         margin-left: 0 !important;
     }
 }
@@ -1156,7 +1156,7 @@ button:focus {
       }
     })();
   </script>
-</head>
+<meta name="offline-build" content="84f6c49dc5b733d7aee901e5"></head>
 
 <body>
 
@@ -1279,7 +1279,7 @@ button:focus {
                 Продолжительность смены
                 <div onclick="event.stopPropagation(); openHint('duration')" style="position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; border:1px solid var(--ctlBorder); background:var(--pillBg); color:var(--ink); font-size:12px; font-weight:bold; display:flex; justify-content:center; align-items:center; z-index:2; line-height:1;">?</div>
               </div>
-              
+
               <div id="outDuration" style="color:var(--ink); font-weight:700; width:120px; height:100%; display:flex; justify-content:center; align-items:center; text-align:center; margin:0; border:none; font-size:var(--timeFs);">
                 —
               </div>
@@ -1380,7 +1380,7 @@ button:focus {
     <span class="bottom-action-label">GO HOME</span>
   </a>
   </div>
-  
+
 
 </div>
 <script>
@@ -1394,7 +1394,7 @@ document.addEventListener('contextmenu', event => event.preventDefault());
 
 
 
-let paxMode = "none"; // 'none' | 'before' | 'after'  
+let paxMode = "none"; // 'none' | 'before' | 'after'
 
 const $ = (id) => document.getElementById(id);
 
@@ -1424,7 +1424,7 @@ function setPaxMode(mode){
   $("btnPaxNone")?.classList.toggle("active", mode === "none");
   $("btnPaxBefore")?.classList.toggle("active", mode === "before");
   $("btnPaxAfter")?.classList.toggle("active", mode === "after");
-  
+
   const pb = $("paxBeforeBlock");
   const dtTitle = $("depTimeTitle");
   const ftTitle = $("flightTimeTitle");
@@ -1464,7 +1464,7 @@ function setPaxMode(mode){
   }
 
   if (typeof markUnsaved === 'function') markUnsaved();
-  render(); 
+  render();
 }
 
 function setTzMode(mode){
@@ -1596,7 +1596,7 @@ function calculate(){
   if(depInput==null || flt==null) return null;
 
   const dep = toMskMinutes(depInput);
-  if(isNaN(dep)) return null; 
+  if(isNaN(dep)) return null;
 
   let checkIn;
   if (paxMode === "before") {
@@ -1624,7 +1624,7 @@ function calculate(){
   if(!norm) return null;
 
   let end = checkIn + norm;
-  
+
   if (paxMode === "before") {
     // Берем значение из доп. поля (которое теперь "Время выключения двигателей")
     const pOffRaw = parseTime($("paxDepTime")?.value);
@@ -1634,14 +1634,14 @@ function calculate(){
 
     let offBlocksAdjusted = pOffMsk;
     // Если время выключения меньше времени явки (переход через полночь)
-    if (offBlocksAdjusted < checkIn) offBlocksAdjusted += 1440; 
-    
+    if (offBlocksAdjusted < checkIn) offBlocksAdjusted += 1440;
+
     // Окончание = явка + норма + (выключение - явка) / 2
     end = checkIn + norm + Math.floor((offBlocksAdjusted - checkIn) / 2);
-    
+
   } else if (paxMode === "after") {
     // Окончание = явка + норма + 2 часа (120 минут)
-    end = checkIn + norm + 120; 
+    end = checkIn + norm + 120;
   }
 
   const engMsk = (paxMode === "after") ? end : end - 30;
@@ -1706,7 +1706,7 @@ function updateLocalTzButton(){
   const btn = $("btnLOCAL");
   if(!btn) return;
   const isDisabled = (delta === null);
-  
+
   if(btn.disabled !== isDisabled){
     btn.disabled = isDisabled;
     // Если кнопка заблокировалась, а выбран был LOCAL - переключаем на MSK
@@ -1794,7 +1794,7 @@ document.addEventListener("visibilitychange", () => {
 function loadState(){
   try {
     const raw = localStorage.getItem(SHIFT_STATE_KEY);
-    
+
     // Если сохранений нет, принудительно прокликиваем все состояния по умолчанию (включая no pax flight)
     if(!raw) {
       resetState();
@@ -1834,7 +1834,7 @@ function loadState(){
       setPaxMode("none");
     }
 
-    
+
     render();
   } catch(e) {
     // Если произошла ошибка чтения памяти, запускаем с чистого листа
@@ -2124,7 +2124,7 @@ function closeKeypad(e) {
 
     if (e === 'done') {
         let val = currentKpVal;
-        
+
         // Если ничего не ввели, просто закрываем
         if (val.length === 0) {
             hideKeypadModal();
@@ -2153,7 +2153,7 @@ function closeKeypad(e) {
         activeKp.value = hh + ":" + mm; // В сам инпут пишем только цифры
         updateInputSuffixes(); // Буквы добавятся в span автоматически
         if (typeof render === 'function') render(); // Вызываем render() для моментального сохранения и обновления UI
-        
+
         hideKeypadModal();
         activeKp = null;
     } else {
@@ -2175,7 +2175,7 @@ function kpPress(key) {
         // Ограничение: максимум 4 цифры
         if (currentKpVal.length > 4) currentKpVal = currentKpVal.slice(0, 4);
     }
-    
+
     updateKpDisplay();
 }
 
@@ -2185,15 +2185,15 @@ function updateKpDisplay() {
 
     let val = currentKpVal;
     const suffix = (activeKp && activeKp.id === 'flightTime') ? "" : getTimeSuffix();
-    
+
     if (val === "" && activeKp && activeKp.value !== "") {
-        displayEl.textContent = activeKp.value; 
+        displayEl.textContent = activeKp.value;
         displayEl.style.opacity = '0.15';
-        return; 
+        return;
     }
-    
+
     displayEl.style.opacity = '1';
-    
+
     if (val === "") {
         displayEl.innerHTML = "&nbsp;";
     } else {
@@ -2202,7 +2202,7 @@ function updateKpDisplay() {
         else if (val.length === 2) { hh = "00"; mm = val; }
         else if (val.length === 3) { hh = "0" + val[0]; mm = val.substring(1); }
         else if (val.length === 4) { hh = val.substring(0,2); mm = val.substring(2); }
-        
+
         displayEl.textContent = (hh + ":" + mm) + suffix;
     }
 }
@@ -2234,6 +2234,6 @@ function updateKpDisplay() {
           </div>
       </div>
   </div>
-<script src="./app.js"></script>
+<script src="./offline-client.js"></script><script src="./app.js"></script>
 </body>
 </html>

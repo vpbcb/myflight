@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -73,7 +73,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            height: var(--app-height); 
+            height: var(--app-height);
             min-height: var(--app-height);
             max-height: var(--app-height);
             overflow: hidden;
@@ -121,7 +121,7 @@
 
         /* Автоматически увеличиваем иконки рядом с крупным текстом */
         .grid-label.large-text .icon-img {
-            height: 18px !important; 
+            height: 18px !important;
         }
 /* Отступ справа для всех полей с единицами */
 /* Отступ с обеих сторон для идеального центрирования текста */
@@ -147,13 +147,13 @@
     padding-right: 20px;
     padding-bottom: var(--bottom-nav-reserved-height, max(44px, calc(var(--safe-bottom) + 40px)));
     padding-left: 20px;
-    border-radius: 0; 
+    border-radius: 0;
     width: min(100vw, 440px);
     width: min(var(--app-width), 440px);
     max-width: 100%;
     min-width: 0;
     box-shadow: var(--shadow);
-    
+
     /* Делаем калькулятор гибким по вертикали */
     display: flex;
     flex-direction: column;
@@ -165,12 +165,12 @@
 }
 .theme-toggle {
     position: absolute;
-    bottom: max(12px, calc(var(--safe-bottom) + 8px));  
-    
-    right: 16px; 
+    bottom: max(12px, calc(var(--safe-bottom) + 8px));
+
+    right: 16px;
     left: auto;
     margin: 0;
-    
+
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -179,8 +179,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    color: var(--text); 
-    opacity: 1;         
+    color: var(--text);
+    opacity: 1;
     z-index: 100;
     transition: transform 0.2s ease, color 0.3s ease;
     user-select: none;
@@ -267,7 +267,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 5px 5px;
             margin-bottom: 0;
-            flex-shrink: 0; 
+            flex-shrink: 0;
             min-width: 0;
             max-width: 100%;
         }
@@ -277,11 +277,11 @@
 
         /* Убедись, что перед этим классом нет ошибок в коде выше */
         .sign-btn-outer {
-            width: 65px !important; 
-            height: 40px !important; 
-            border-radius: 12px !important; 
-            border: 1px solid var(--border); 
-            background: var(--input-bg); 
+            width: 65px !important;
+            height: 40px !important;
+            border-radius: 12px !important;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
             font-weight: 600;
             cursor: pointer;
             font-size: 1.8rem !important;
@@ -295,14 +295,14 @@
             margin: 0;
         }
 
-        .sign-btn-outer.neg { 
-            color: var(--accent); 
-            background: rgba(56, 189, 248, 0.1); 
+        .sign-btn-outer.neg {
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
             border-color: rgba(56, 189, 248, 0.3);
         }
-        .sign-btn-outer.pos { 
-            color: #ef4444; 
-            background: rgba(239, 68, 68, 0.1); 
+        .sign-btn-outer.pos {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
             border-color: rgba(239, 68, 68, 0.3);
         }
 
@@ -318,7 +318,7 @@
     font-weight: 800;
     color: var(--text);
     pointer-events: none;
-    
+
     /* НОВОЕ: Выравнивание иконки и текста */
     display: flex;
     align-items: center;
@@ -326,9 +326,9 @@
     z-index: 5;
 }
 
-      input { 
-            width: 100%; height: 40px; padding: 0 10px; background: var(--input-bg); border: 1px solid var(--border); 
-            border-radius: 12px; color: var(--text); font-size: 1.3rem; outline: none; box-sizing: border-box; 
+      input {
+            width: 100%; height: 40px; padding: 0 10px; background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 1.3rem; outline: none; box-sizing: border-box;
             text-align: center; font-weight: 600;
         }
         input:focus { border-color: var(--accent); }
@@ -337,11 +337,11 @@
 
         ./* Новая кнопка, стоящая рядом с полем */
        .sign-btn-outer {
-            width: 65px !important; 
-            height: 40px !important; 
-            border-radius: 12px !important; 
-            border: 1px solid var(--border); 
-            background: var(--input-bg); 
+            width: 65px !important;
+            height: 40px !important;
+            border-radius: 12px !important;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
             font-weight: 600;
             cursor: pointer;
             font-size: 1.8rem !important;
@@ -355,46 +355,46 @@
             margin: 0;
         }
         /* Аккуратные оттенки для плюса и минуса, не ломающие дизайн инпутов */
-       .sign-btn-outer.neg { 
-            color: var(--accent); 
-            background: rgba(56, 189, 248, 0.1); 
+       .sign-btn-outer.neg {
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
             border-color: rgba(56, 189, 248, 0.3);
         }
-        .sign-btn-outer.pos { 
-            color: #ef4444; 
-            background: rgba(239, 68, 68, 0.1); 
+        .sign-btn-outer.pos {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
             border-color: rgba(239, 68, 68, 0.3);
         }
 
         .angle-container { position: relative; width: 100%; height: 100%; }
         .arrow-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--accent); font-size: 0.6rem; z-index: 10; }
-        
-        .dropdown-menu { 
-    position: absolute; 
+
+        .dropdown-menu {
+    position: absolute;
     /* МЕНЯЕМ top: 100% НА bottom: 100% */
-    bottom: 100%; 
-    left: 0; 
-    width: 100%; 
+    bottom: 100%;
+    left: 0;
+    width: 100%;
     box-sizing: border-box;
-    background: var(--card); 
-    border: 1px solid var(--accent); 
-    border-radius: 10px; 
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
     /* МЕНЯЕМ margin-top НА margin-bottom */
-    margin-bottom: 5px; 
-    display: none; 
-    z-index: 100; 
+    margin-bottom: 5px;
+    display: none;
+    z-index: 100;
 }
         .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 0.9rem; text-align: center; color: var(--text); }
         .dropdown-item:last-child { border-bottom: none; color: var(--orange); font-weight: bold; }
 
-        .fpa-box { 
-            background: var(--highlight); 
-            border: 1px dashed var(--accent); 
+        .fpa-box {
+            background: var(--highlight);
+            border: 1px dashed var(--accent);
             border-radius: 12px;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             height: 100%; /* Изменили 50px на 100% */
             box-sizing: border-box;
@@ -409,43 +409,43 @@
     max-width: 100%;
     position: relative;
     background: var(--input-bg);
-    border-radius: 20px; 
-    overflow: hidden; 
-    border: 1px solid var(--border); 
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border);
     margin-top: 5px;
     margin-bottom: 5px;
     /* Таблица забирает всё свободное место */
-    flex: 1; 
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
 }
-    
 
-        .t-head { 
-    display: flex; 
+
+        .t-head {
+    display: flex;
     /* Изменил 15px на 18px, чтобы совпадало со строками ниже */
-    padding: 10px 18px; 
-    font-size: 0.55rem; 
-    color: var(--accent); 
-    font-weight: 900; 
-    text-transform: uppercase; 
-    border-bottom: 1px solid var(--border); 
+    padding: 10px 18px;
+    font-size: 0.55rem;
+    color: var(--accent);
+    font-weight: 900;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
     background: rgba(40, 69, 110, 0.6);
 }
 
-.t-row { 
-    display: flex; 
+.t-row {
+    display: flex;
     height: 45px;
     padding: 0 18px;
-    border-bottom: 1px solid var(--border); 
-    font-variant-numeric: tabular-nums; 
-    align-items: center; 
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+    align-items: center;
     font-size: 1.2rem;
     font-weight: 500;
     box-sizing: border-box;
     /* Ускоряем анимацию, чтобы не было ощущения "желе" */
-    
+
 }
 
 @keyframes rowAppear {
@@ -458,19 +458,19 @@
         transform: translateY(0);
     }
 }
-    @keyframes spin { 
-    100% { transform: rotate(360deg); } 
+    @keyframes spin {
+    100% { transform: rotate(360deg); }
 }
 
 /*настрока увето строк таблицы*/
 /* 1. Красим ВСЕ строки в базовый цвет (нечетные) */
-#tableBody .t-row:not(.highlight) { 
-    background: var(--row-bg); 
+#tableBody .t-row:not(.highlight) {
+    background: var(--row-bg);
 }
 
 /* 2. Четные строки перекрашиваем в цвет зебры */
-#tableBody .t-row:nth-child(even):not(.highlight) { 
-    background: var(--zebra); 
+#tableBody .t-row:nth-child(even):not(.highlight) {
+    background: var(--zebra);
 }
 
 /* 3. Оставляем твою задержку анимации для четных строк */
@@ -479,35 +479,35 @@
 }
 
 /* 4. Стиль для выделенных строк (FDP/FAP) остается главным */
-    .t-row.highlight-fdp, 
-.t-row.highlight-fap { 
-    color: var(--text); 
+    .t-row.highlight-fdp,
+.t-row.highlight-fap {
+    color: var(--text);
     font-weight: 800;
 }
 
 /* Специфический фон для FDP в таблице */
-.t-row.highlight-fdp { 
-    background-color: rgba(56, 189, 248, 0.25) !important; 
+.t-row.highlight-fdp {
+    background-color: rgba(56, 189, 248, 0.25) !important;
 }
 
 /* Специфический фон для FAP в таблице */
-.t-row.highlight-fap { 
+.t-row.highlight-fap {
     background-color: rgba(251, 146, 60, 0.25) !important;
 }
 
        .col-nm { width: 90px; flex-shrink: 0; text-align: right; }
        .col-ft { width: 90px; flex-shrink: 0; text-align: left; }
-       .col-mid {flex: 1; text-align: center; 
-    
+       .col-mid {flex: 1; text-align: center;
+
     /* НОВЫЕ ПРАВИЛА: Гарантируют центрирование иконки+текста внутри фиксированной строки 45px */
     display: flex;
     justify-content: center; /* По горизонтали */
     align-items: center;     /* По вертикали */
-    
-    font-size: 1.1rem; 
-    font-weight: 900; 
-    letter-spacing: 1px; 
-    text-transform: uppercase; 
+
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
     color: inherit;
 }
 #temp {
@@ -533,12 +533,12 @@ html.light-theme .icon-img {
 }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-       #tableBody { 
+       #tableBody {
         position: relative;
-    flex: 1; 
-    overflow-y: auto; 
+    flex: 1;
+    overflow-y: auto;
     display: block;
-    -webkit-overflow-scrolling: touch; 
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Делаем скроллбар тонким и аккуратным */
@@ -568,12 +568,12 @@ html.light-theme .icon-img {
     padding: 0;
     line-height: 1;
     margin-top: -4px;
-    
-    opacity: 0; 
+
+    opacity: 0;
     visibility: hidden;
-    pointer-events: none; 
+    pointer-events: none;
     display: none;
-    transition: opacity 0.3s ease; 
+    transition: opacity 0.3s ease;
 }
 
 /* Состояние, когда кнопка ПОЯВЛЯЕТСЯ */
@@ -582,7 +582,7 @@ html.light-theme .icon-img {
     pointer-events: auto;
     visibility: visible;
     display: flex;
-    
+
     /* АНИМАЦИЮ СТАВИМ ИМЕННО СЮДА: */
     animation: beacon-pulse 0.3s ease-in-out 8 forwards;
 }
@@ -608,7 +608,7 @@ html.light-theme .icon-img {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.65);
-            display: none; 
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
@@ -624,15 +624,15 @@ html.light-theme .icon-img {
             font-weight: 700;
             text-align: center;
             margin-bottom: 15px;
-            
+
             /* ВОТ ЭТО ИСПРАВИТ ВЫСОТУ: */
             min-height: 2.4rem; /* Высота не даст полю "схлопнуться" */
             display: flex;
             align-items: center;
             justify-content: center;
-            
+
             /* Возвращаем твой стандартный синий цвет по умолчанию */
-            color: var(--accent); 
+            color: var(--accent);
             transition: color 0.2s;
         }
 
@@ -679,18 +679,18 @@ html.light-theme .icon-img {
     height: var(--btn-height);
     font-weight: 700;
     /* Пропорциональный размер шрифта */
-    font-size: calc(var(--btn-height) * 0.55); 
+    font-size: calc(var(--btn-height) * 0.55);
     color: var(--text); /* 1. Жестко задаем цвет (белый в темной, темный в светлой) */
     -webkit-appearance: none; /* 2. Отключаем встроенные выпуклости и цвета iOS */
     /* Идеальное центрирование */
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     /* Убираем лишние отступы, которые могут давать браузеры по умолчанию */
     padding: 0;
     line-height: 1;
-    
+
     /* Твои остальные стили */
     background: var(--input-bg);
     border: 1px solid var(--border);
@@ -708,7 +708,7 @@ html.light-theme .icon-img {
         font-size: calc(var(--btn-height) * 0.35) !important;
         color: #ef4444;
         font-weight: 700;
-        
+
         /* ДОБАВИТЬ ЭТО: */
         width: 100% !important; /* Растягиваем на всю ширину колонки */
     }
@@ -728,7 +728,7 @@ html.light-theme .icon-img {
         grid-column: span 2;      /* КЛЮЧЕВОЙ МОМЕНТ: заставляет кнопку занять 2 колонки из 3 */
     }
 
-        
+
         .modal-content h3 {
             margin: 0 0 10px 0;
             font-size: 0.75rem;
@@ -773,30 +773,30 @@ html.light-theme .icon-img {
 /* --- КНОПКИ УПРАВЛЕНИЯ ВНИЗУ (ОБНОВЛЕНО) --- */
 .refresh-btn, .wind-btn {
     position: absolute;
-    bottom: max(12px, calc(var(--safe-bottom) + 8px)); 
+    bottom: max(12px, calc(var(--safe-bottom) + 8px));
     margin: 0;
-    background: transparent !important; 
-    border: none !important;            
-    box-shadow: none !important;        
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     padding: 5px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    color: var(--text); 
+    color: var(--text);
     z-index: 100;
     transition: transform 0.2s ease, color 0.3s ease;
     user-select: none;
     outline: none;
     -webkit-tap-highlight-color: transparent;
 }
-.refresh-btn { 
-    left: 16px; 
-    justify-content: flex-start; 
+.refresh-btn {
+    left: 16px;
+    justify-content: flex-start;
 }
-.wind-btn { 
-    left: 50%; 
-    transform: translateX(-50%); 
-    justify-content: center; 
+.wind-btn {
+    left: 50%;
+    transform: translateX(-50%);
+    justify-content: center;
 }
 
 /* Сенсорная область для удобного тапа */
@@ -821,11 +821,11 @@ html.light-theme .icon-img {
 
 /* --- АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ (IPAD И ДР.) --- */
 /* --- 1. АДАПТАЦИЯ ДЛЯ ПЛАНШЕТОВ: ЦЕНТРИРОВАНИЕ В ЛЮБОМ РЕЖИМЕ --- */
-/* min-device-width смотрит на железо (экран), а не на размер окна. 
+/* min-device-width смотрит на железо (экран), а не на размер окна.
    Поэтому даже в узком Slide Over сдвиги отменятся, и окно встанет по центру */
 @media (min-device-width: 768px) {
     .keypad-content {
-        margin-bottom: 0 !important; 
+        margin-bottom: 0 !important;
         margin-left: 0 !important;
     }
 }
@@ -834,56 +834,56 @@ html.light-theme .icon-img {
 /* min-width смотрит на окно. Клавиатура станет большой, только если есть место */
 @media (min-width: 768px) {
     .keypad-content {
-        max-width: 360px !important; 
+        max-width: 360px !important;
         padding: 30px 20px !important;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
     }
 
     .keypad-grid {
-        gap: 6px !important; 
+        gap: 6px !important;
     }
-    
+
     .kp-btn {
-        --btn-height: 55px; 
+        --btn-height: 55px;
     }
 }
 
 /* --- ЯРКОСТЬ ОБВОДКИ ДЛЯ ELEV, ANGLE, DA/MDA (ТЕМНАЯ ТЕМА) --- */
 #elev, #angleInput, #minInput {
     /* 0.4 — это уровень яркости. Попробуй 0.6 или 0.8, если нужно еще ярче */
-    border: 1px solid rgba(255, 255, 255, 0.3) !important; 
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 /* --- ЯРКОСТЬ ОБВОДКИ ДЛЯ ТЕХ ЖЕ ПОЛЕЙ (СВЕТЛАЯ ТЕМА) --- */
-html.light-theme #elev, 
-html.light-theme #angleInput, 
+html.light-theme #elev,
+html.light-theme #angleInput,
 html.light-theme #minInput {
     /* На светлом фоне используем черный цвет с прозрачностью */
-    border: 1px solid rgba(0, 0, 0, 0.4) !important; 
+    border: 1px solid rgba(0, 0, 0, 0.4) !important;
 }
 
 /* --- ВНЕШНЯЯ РАМКА ТАБЛИЦЫ (ТЕМНАЯ ТЕМА) --- */
 .table {
     /* Настраиваем саму рамку: толщина 2px, цвет белый, прозрачность 0.4 */
-    border: 1px solid rgba(255, 255, 255, 0.3) !important; 
-    
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+
     /* Делаем аккуратные закругленные углы. Если 8px мало, верни 20px, как было у тебя раньше! */
-    border-radius: 8px !important; 
-    
+    border-radius: 8px !important;
+
     /* Обрезаем всё, что вылезает за закругленные края */
-    overflow: hidden !important; 
+    overflow: hidden !important;
 
 }
 
 /* --- ВНЕШНЯЯ РАМКА ТАБЛИЦЫ (СВЕТЛАЯ ТЕМА) --- */
 html.light-theme .table {
     /* Темная рамка для светлой темы */
-    border: 1px solid rgba(0, 0, 0, 0.3) !important; 
+    border: 1px solid rgba(0, 0, 0, 0.3) !important;
 }
     /* Свой цвет шапки для СВЕТЛОЙ темы */
 html.light-theme .t-head {
     /* Например, светло-серый с легким голубым оттенком */
-    background: rgba(135, 166, 207, 0.3); 
+    background: rgba(135, 166, 207, 0.3);
 }
 
 .shift-btn {
@@ -891,25 +891,25 @@ html.light-theme .t-head {
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
-    
+
     /* Адаптивная ширина: занимает свободное место, но не более 120px */
     width: 100%;
     max-width: 100px;
-    height: 28px; 
-    padding: 0; 
+    height: 28px;
+    padding: 0;
     box-sizing: border-box;
-    
+
     /* Выводим кнопку из потока: она больше не влияет на высоту строки */
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    
+
     /* Идеальное центрирование текста по вертикали и горизонтали */
     display: flex;
     justify-content: center;
     align-items: center;
-    
+
     /* Динамический шрифт для узких экранов */
     font-size: clamp(0.5rem, 3vw, 0.65rem);
     font-weight: 800;
@@ -1010,7 +1010,7 @@ html.dark-theme .shift-value-toast {
     background: rgb(2, 115, 173);
 }
     </style>
-    
+
     <!-- Микро-скрипт синхронизации темы с Хабом -->
     <!-- Микро-скрипт синхронизации темы с Хабом (Без вспышек) -->
     <script>
@@ -1201,7 +1201,7 @@ html.dark-theme .shift-value-toast {
             }
         })();
     </script>
-</head>
+<meta name="offline-build" content="84f6c49dc5b733d7aee901e5"></head>
 
 <body>
 
@@ -1275,9 +1275,9 @@ html.dark-theme .shift-value-toast {
             <input type="text" id="elev" class="unit-input" value="" readonly onclick="openKeypad('elev', 'ELEVATION')">
             <span class="unit-label">ft</span>
         </div>
-               
-        <div class="angle-container" onclick="toggleMenu(event)" style="cursor: pointer;"> 
-            <input type="text" id="angleInput" value="3.0°" readonly 
+
+        <div class="angle-container" onclick="toggleMenu(event)" style="cursor: pointer;">
+            <input type="text" id="angleInput" value="3.0°" readonly
             onkeydown="handleEnter(event)">
             <div class="arrow-btn">▼</div>
             <div id="angleMenu" class="dropdown-menu">
@@ -1308,16 +1308,16 @@ html.dark-theme .shift-value-toast {
             <input type="text" id="fdp" class="unit-input" value="" readonly onclick="openKeypad('fdp', 'FDP')">
             <span class="unit-label">ft</span>
         </div>
-               
+
         <div class="input-wrapper">
             <input type="text" id="fap" class="unit-input" value="" readonly onclick="openKeypad('fap', 'FAP')">
             <span class="unit-label">ft</span>
         </div>
-               
+
         <div style="display: flex; gap: 4px; width: 100%; height: 50px; align-items: center;">
             <div style="position: relative; display: flex; gap: 2px; width: 100%; height: 40px; align-items: center;">
             <button class="sign-btn-outer" id="signBtn" onclick="toggleSign()" style="width: 40px !important; font-size: 1.4rem !important; flex-shrink: 0;">+</button>
-            <input type="text" id="temp" class="unit-input" value="15" readonly 
+            <input type="text" id="temp" class="unit-input" value="15" readonly
        style="flex-grow: 1; text-align: center; height: 100%; margin: 0;"
        onclick="openKeypad('temp', 'TEMPERATURE')">
             <span class="unit-label">°C</span>
@@ -1378,12 +1378,12 @@ html.dark-theme .shift-value-toast {
             <button class="kp-btn" onclick="kpPress('0')">0</button>
             <button class="kp-btn kp-del" id="delBtn" onclick="kpPress('del')">⌫</button>
         </div>
-        
+
         <div style="display: flex; gap: 8px;">
             <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
             <button id="doneBtn" class="kp-btn kp-done" onclick="closeKeypad('done')">DONE</button>
         </div>
-        
+
     </div>
 </div>
 </div>
@@ -1465,7 +1465,7 @@ html.dark-theme .shift-value-toast {
         setTimeout(scrollToActivePoint, 50);
     }
 
-    let isNeg = false; 
+    let isNeg = false;
 
 // --- ПЕРЕМЕННЫЕ КЛАВИАТУРЫ ---
     let activeKp = null;
@@ -1550,7 +1550,7 @@ html.dark-theme .shift-value-toast {
 
     function openKeypad(id, title) {
     activeKp = document.getElementById(id);
-    
+
     let iconHTML = "";
     if (id === 'elev') {
         iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>';
@@ -1563,21 +1563,21 @@ html.dark-theme .shift-value-toast {
     } else if (id === 'pathShiftInput') {
         iconHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; margin-bottom: -2px;"><path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l-4-4m4 4l4-4"/></svg>';
     }
-    
+
     if (id === 'pathShiftInput') {
         document.getElementById('kpTitle').innerHTML = '<div style="text-align: center; line-height: 1.25; font-size: 0.68rem;">Shift from the threshold <br> <span style="font-size: 0.48rem; font-weight: 600; text-transform: none; color: var(--dim); display: block; margin-top: 2px;">+ radio aid behind the THR / - radio aid is in front of THR</span></div>';
     } else {
         document.getElementById('kpTitle').innerHTML = '<span style="display: flex; align-items: center; justify-content: center;">' + iconHTML + title + '</span>';
     }
 
-    placeholderVal = activeKp.value || ""; 
-    currentKpVal = ""; 
-    
+    placeholderVal = activeKp.value || "";
+    currentKpVal = "";
+
     const dotBtn = document.getElementById('dotBtn');
     const delBtn = document.getElementById('delBtn');
-    
-    dotBtn.style.visibility = 'visible'; 
-    delBtn.style.visibility = 'visible'; 
+
+    dotBtn.style.visibility = 'visible';
+    delBtn.style.visibility = 'visible';
     delBtn.innerText = "⌫";
     delBtn.onclick = function() { kpPress('del'); };
     delBtn.classList.add('kp-del');
@@ -1590,10 +1590,10 @@ html.dark-theme .shift-value-toast {
         dotBtn.innerText = "00";
         dotBtn.onclick = function() { kpPress('00'); };
     } else if (id === 'elev') {
-        dotBtn.innerText = "−"; 
+        dotBtn.innerText = "−";
         dotBtn.onclick = function() { kpPress('minus_toggle'); };
     } else if (id === 'minInput') {
-        dotBtn.style.visibility = 'hidden'; 
+        dotBtn.style.visibility = 'hidden';
     } else if (id === 'pathShiftInput') {
         dotBtn.innerText = ".";
         dotBtn.onclick = function() { kpPress('.'); };
@@ -1619,7 +1619,7 @@ html.dark-theme .shift-value-toast {
     document.getElementById('keypadModal').classList.add('active');
 }
 
-    
+
     function closeKeypad(e) {
     // Закрываем, если нажали DONE или мимо окна (по темному фону)
     if (e && e !== 'done' && e.target !== e.currentTarget) return;
@@ -1630,19 +1630,19 @@ html.dark-theme .shift-value-toast {
         calculate(currentId);
         if (activeKp && activeKp.id === 'elev') {
             openKeypad('fdp', 'FDP');
-            return; 
+            return;
         } else if (activeKp && activeKp.id === 'fdp') {
             openKeypad('fap', 'FAP');
-            return; 
+            return;
         } else if (activeKp && activeKp.id === 'fap') {
             openKeypad('temp', 'TEMPERATURE');
-            return; 
+            return;
         } else if (activeKp && activeKp.id === 'temp') {
             // Завершаем цепочку клавиатуры и открываем список углов
             document.getElementById('keypadModal').classList.remove('active');
             activeKp = null;
             isSequentialFlow = false;
-            
+
             // Имитируем открытие меню Angle
             const angleMenu = document.getElementById('angleMenu');
             if (angleMenu) angleMenu.style.display = 'block';
@@ -1676,7 +1676,7 @@ html.dark-theme .shift-value-toast {
         toggleSign();
         return;
     }
-    
+
     if (key === 'shift_sign') {
         if (currentKpVal === "") {
             currentKpVal = "-";
@@ -1695,7 +1695,7 @@ html.dark-theme .shift-value-toast {
 
     if (key === 'minus_toggle') {
         if (currentKpVal === "") {
-            currentKpVal = "- "; 
+            currentKpVal = "- ";
         } else {
             let cleanVal = currentKpVal.replace(/^-\s*/, '');
             if (currentKpVal.startsWith('-')) {
@@ -1709,12 +1709,12 @@ html.dark-theme .shift-value-toast {
             activeKp.value = currentKpVal;
             calculate();
         }
-        return; 
+        return;
     }
 
     if (key === 'clear') {
         currentKpVal = "";
-        if (activeKp) activeKp.value = (activeKp.id === 'pathShiftInput') ? "0" : ""; 
+        if (activeKp) activeKp.value = (activeKp.id === 'pathShiftInput') ? "0" : "";
     } else if (key === 'del') {
         currentKpVal = currentKpVal.slice(0, -1);
     } else {
@@ -1724,7 +1724,7 @@ html.dark-theme .shift-value-toast {
         }
 
         let newVal = (currentKpVal === "0" && key !== '.') ? key : currentKpVal + key;
-        
+
         if (currentKpVal === "-0" && key !== '.') newVal = "-" + key;
         if (currentKpVal === "-" && key === '.') newVal = "-0.";
 
@@ -1736,7 +1736,7 @@ html.dark-theme .shift-value-toast {
 
         currentKpVal = newVal;
     }
-    
+
     updateKpDisplay();
 
     if (activeKp) {
@@ -1745,7 +1745,7 @@ html.dark-theme .shift-value-toast {
         } else {
             activeKp.value = currentKpVal;
         }
-        updateTempColors(); 
+        updateTempColors();
     }
 }
 
@@ -1761,11 +1761,11 @@ html.dark-theme .shift-value-toast {
         if (val === "") {
             if (activeKp.value !== "") {
                 // Режим бледной подсказки (если есть старое значение)
-                let cleanVal = activeKp.value.replace(/[+−-]/g, ''); 
+                let cleanVal = activeKp.value.replace(/[+−-]/g, '');
                 displayEl.textContent = sign + cleanVal;
                 // Делаем цвет бледно-серым, точно как у остальных полей!
-                displayEl.style.color = 'var(--text)'; 
-                displayEl.style.opacity = '0.15';      
+                displayEl.style.color = 'var(--text)';
+                displayEl.style.opacity = '0.15';
             } else {
                 // Поле пустое: показываем только знак
                 displayEl.textContent = sign;
@@ -1809,16 +1809,16 @@ html.dark-theme .shift-value-toast {
         displayEl.textContent = activeKp.value; // Берем старое значение
         displayEl.style.color = 'var(--text)';  // Используем стандартный цвет текста
         displayEl.style.opacity = '0.15';       // Делаем его бледным
-        return; 
+        return;
     }
-    
+
     // Если начали вводить (val не пустой)
     displayEl.style.opacity = '1';
     displayEl.style.color = 'var(--accent)';
-    
+
     if (val === "") {
         // Держим высоту блока невидимым пробелом, если текста нет совсем
-        displayEl.innerHTML = "&nbsp;"; 
+        displayEl.innerHTML = "&nbsp;";
     } else {
         displayEl.textContent = val;
     }
@@ -1836,9 +1836,9 @@ function openModal(id) {
 
     // --- ФУНКЦИИ ФОРМАТИРОВАНИЯ ЕДИНИЦ ИЗМЕРЕНИЯ ---
     function formatUnit(input, unit) {
-        let val = input.value.replace(',', '.').replace(/[^\d.-]/g, ''); 
+        let val = input.value.replace(',', '.').replace(/[^\d.-]/g, '');
         if (val !== '') {
-            input.value = val + (unit === '°' ? '' : ' ') + unit; 
+            input.value = val + (unit === '°' ? '' : ' ') + unit;
         }
     }
 
@@ -1866,7 +1866,7 @@ function openModal(id) {
     if (highlights.length === 0) return;
 
     const targetRow = container.querySelector('.highlight-fap') || highlights[highlights.length - 1];
-    const rowHeight = targetRow.offsetHeight || 45; 
+    const rowHeight = targetRow.offsetHeight || 45;
     const containerHeight = container.clientHeight;
     const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
     const targetScroll = targetRow.offsetTop - (containerHeight - (MY_PATH_ACTIVE_POINT_ROWS_FROM_BOTTOM * rowHeight));
@@ -1891,14 +1891,14 @@ function openModal(id) {
 
     function closeLimitModal() {
         document.getElementById('limitModal').classList.remove('active');
-        
+
         if (activeKp && activeKp.id === 'temp') {
             currentKpVal = "";   // Внутренняя переменная пуста
             activeKp.value = ""; // Поле ввода в таблице пусто
             isNeg = false;       // Сброс на плюс по умолчанию
-            
+
             document.getElementById('signBtn').innerText = "+";
-            
+
             updateKpDisplay();   // Теперь покажет пустоту, а не "0"
             updateTempColors();  // Сбросит фон поля в нейтральный
             calculate();         // Пересчитает (OAT будет считаться как 0 или пропуск)
@@ -1908,14 +1908,14 @@ function openModal(id) {
     function calculate(sourceId = null, isInitLoad = false) {
     // 1. Обновляем цвета (плюс/минус) для поля температуры
     updateTempColors();
-    
+
     // 2. Получаем значения из полей ввода
     const h_elev = getNumVal('elev');
     const h_fdp  = getNumVal('fdp');
     const h_fap  = getNumVal('fap');
     const angle  = getNumVal('angleInput');
-    const h_min  = getNumVal('minInput'); 
-    
+    const h_min  = getNumVal('minInput');
+
     const configuredPathShift = getConfiguredPathShift();
     if (configuredPathShift === 0) isPathShiftActive = false;
     const pathShift = isPathShiftActive ? configuredPathShift : 0;
@@ -1935,14 +1935,14 @@ function openModal(id) {
         shiftAlert.classList.toggle('is-visible', isPathShiftActive);
         shiftAlert.setAttribute('aria-hidden', isPathShiftActive ? 'false' : 'true');
     }
-    
+
     const tempRaw = document.getElementById('temp').value.replace(',', '.').replace(/[^\d.-]/g, '');
     let t_val = (tempRaw === "") ? NaN : parseFloat(tempRaw);
-    
+
     // Элементы интерфейса
     const tableBody = document.getElementById('tableBody');
     const fpaDisp = document.getElementById('fpaCorrValue');
-    const minCorrDisp = document.getElementById('minCorrValue'); 
+    const minCorrDisp = document.getElementById('minCorrValue');
     const minInfoBtn = document.getElementById('minInfoBtn');
     const angleInfoBtn = document.getElementById('angleInfoBtn');
 
@@ -1954,7 +1954,7 @@ function openModal(id) {
     if (!isNaN(h_elev) && !isNaN(angle) && !isNaN(t_val)) {
         const t_gr = isNeg ? -t_val : t_val;
         const K = (288.15 - (0.00198 * h_elev)) / (t_gr + 273.15);
-        
+
         // 1. Расчет угла (FPA)
         const calculatedFPA = (angle * K).toFixed(1);
         const oldFPA = fpaDisp.innerText; // Читаем то, что было на экране ДО обновления
@@ -1974,13 +1974,13 @@ function openModal(id) {
 
         // 2. Расчет Minimum Corrected
         if (minValid && h_min >= h_elev) {
-            const height = h_min - h_elev; 
-            const corrHeight = height * K; 
+            const height = h_min - h_elev;
+            const corrHeight = height * K;
             const minCorr = Math.round(h_elev + corrHeight); // Округляем до целого фута
-            
+
             // Запоминаем прошлое вычисленное значение через data-атрибут
-            const oldMinCorr = minCorrDisp.getAttribute('data-val'); 
-            minCorrDisp.setAttribute('data-val', minCorr); 
+            const oldMinCorr = minCorrDisp.getAttribute('data-val');
+            minCorrDisp.setAttribute('data-val', minCorr);
 
             minCorrDisp.innerHTML = minCorr + '<span style="font-size: 0.6em; margin-left: 2px; color: var(--dim);">ft</span>';
 
@@ -2002,10 +2002,10 @@ function openModal(id) {
             minCorrDisp.innerText = "---";
             minInfoBtn.classList.remove('show');
         }
-        
+
     } else {
         // Если базовые данные не введены
-        fpaDisp.innerText = "---"; 
+        fpaDisp.innerText = "---";
         minCorrDisp.innerText = "---";
         if (minInfoBtn) minInfoBtn.classList.remove('show');
         if (angleInfoBtn) angleInfoBtn.classList.remove('show');
@@ -2034,9 +2034,9 @@ function openModal(id) {
     const d_fdp = fdpValid ? getDistFromInd(h_fdp) + pathShift : null;
     const d_fap = fapValid ? getDistFromInd(h_fap) + pathShift : null;
 
-    let tableHTML = ''; 
+    let tableHTML = '';
     let fdpIns = false, fapIns = false;
-    
+
     // Определяем верхнюю точку таблицы
     let startDist = fdpValid ? d_fdp : d_fap;
     let topMile = Math.floor(startDist + 20);
@@ -2074,7 +2074,7 @@ for (let d = topMile; d >= 2; d--) {
             <div class="col-ft">${getIndFromDist(d)} ft</div>
         </div>`;
 }
-    
+
     // Рендерим таблицу и сохраняем текущую позицию после обычных пересчетов
     const isInitialTablePosition = myPathInitialTablePositionPending;
     if (!isInitialTablePosition) saveMyPathTableScrollPosition();
@@ -2086,27 +2086,27 @@ for (let d = topMile; d >= 2; d--) {
     if (typeof saveAppState === 'function') saveAppState();
 }
 
-    
+
 
     function handleEnter(e) { if (e.key === 'Enter') { e.target.blur(); calculate(); } }
-    
-    function toggleMenu(e) { 
-        if (e) e.stopPropagation(); 
-        const m = document.getElementById('angleMenu'); 
-        m.style.display = m.style.display === 'block' ? 'none' : 'block'; 
+
+    function toggleMenu(e) {
+        if (e) e.stopPropagation();
+        const m = document.getElementById('angleMenu');
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
     }
-    
+
     function setAngle(val, e) {
     if (e) e.stopPropagation();
     const inp = document.getElementById('angleInput');
     document.getElementById('angleMenu').style.display = 'none';
 
-    if (val === 'another') { 
-        openKeypad('angleInput', 'ANGLE'); 
-    } else { 
+    if (val === 'another') {
+        openKeypad('angleInput', 'ANGLE');
+    } else {
         // ДОБАВЛЯЕМ ЗНАЧОК ГРАДУСА ТУТ:
-        inp.value = val.toFixed(1) + "°"; 
-        calculate('angleInput'); 
+        inp.value = val.toFixed(1) + "°";
+        calculate('angleInput');
     }
 }
 
@@ -2114,7 +2114,7 @@ for (let d = topMile; d >= 2; d--) {
         const tempInput = document.getElementById('temp');
         const tempRaw = tempInput.value.replace(',', '.').replace(/[^\d.-]/g, '');
         const t_val = tempRaw === "" ? NaN : parseFloat(tempRaw);
-        
+
         const signBtn = document.getElementById('signBtn');
 
         // Базовые классы для цвета текста и рамки (+ красный, - синий)
@@ -2127,26 +2127,26 @@ for (let d = topMile; d >= 2; d--) {
         if (isNaN(t_val)) {
             // Если пусто
             tempInput.style.background = 'var(--input-bg)';
-            signBtn.style.background = ''; 
-            signBtn.style.color = ''; 
+            signBtn.style.background = '';
+            signBtn.style.color = '';
         } else if (t_val === 0) {
             // МАГИЯ ЕДИНОГО ГРАДИЕНТА
             // Кнопка переливается от синего в начале до красного где-то далеко вправо
             signBtn.style.background = `linear-gradient(90deg, ${blue} 0%, ${red} 400%)`;
             // Поле ввода тянет синий цвет откуда-то слева и переходит в красный в конце
             tempInput.style.background = `linear-gradient(90deg, ${blue} -30%, ${red} 100%)`;
-            
+
             signBtn.style.color = 'var(--dim)'; // Серый плюс/минус
         } else if (!isNeg) {
             // Плюс
             tempInput.style.background = red;
-            signBtn.style.background = ''; 
-            signBtn.style.color = ''; 
+            signBtn.style.background = '';
+            signBtn.style.color = '';
         } else {
             // Минус
             tempInput.style.background = blue;
-            signBtn.style.background = ''; 
-            signBtn.style.color = ''; 
+            signBtn.style.background = '';
+            signBtn.style.color = '';
         }
     }
 
@@ -2159,7 +2159,7 @@ for (let d = topMile; d >= 2; d--) {
 
         isNeg = !isNeg;
         document.getElementById('signBtn').innerText = isNeg ? '−' : '+';
-        
+
         if (activeKp && activeKp.id === 'temp') {
             updateKpDisplay();
         }
@@ -2176,9 +2176,9 @@ for (let d = topMile; d >= 2; d--) {
         document.getElementById('angleInput').value = "3.0°";
         if (document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = "0";
         isPathShiftActive = false;
-        
+
         // Температуру НЕ сбрасываем, оставляем прошлое значение как подсказку
-        
+
         // 2. Вызываем пересчет (это также сохранит стейт)
         calculate();
 
@@ -2190,7 +2190,7 @@ for (let d = topMile; d >= 2; d--) {
         }
 
         // 4. Включаем режим цепочки и открываем первое поле
-        isSequentialFlow = true; 
+        isSequentialFlow = true;
         openKeypad('elev', 'ELEVATION');
     }
 
@@ -2234,7 +2234,7 @@ for (let d = topMile; d >= 2; d--) {
                 const signBtn = document.getElementById('signBtn');
                 if(signBtn) signBtn.innerText = isNeg ? '−' : '+';
             }
-            
+
             // СЛЕПОК: Восстанавливаем таблицу визуально
             let hasSnapshot = false;
             if (state.tableHTML) {
@@ -2247,7 +2247,7 @@ for (let d = topMile; d >= 2; d--) {
                 myPathInitialTablePositionPending = false;
                 hasSnapshot = true;
             }
-            
+
             return hasSnapshot; // Возвращаем true, только если слепок реально загрузился
         } catch (e) {
             console.error('Ошибка чтения сессии:', e);
@@ -2255,13 +2255,13 @@ for (let d = topMile; d >= 2; d--) {
         }
     }
 
-    
+
     // --- СТАРТ ПРИ ЗАГРУЗКЕ ---
     window.onload = () => {
         initMyPathTableScrollMemory();
         // Читаем, удалось ли загрузить слепок
-        const hasSavedState = loadAppState(); 
-        
+        const hasSavedState = loadAppState();
+
         if (!document.getElementById('elev').value) {
             document.getElementById('elev').value = "620";
             document.getElementById('minInput').value = "821";
@@ -2272,8 +2272,8 @@ for (let d = topMile; d >= 2; d--) {
 
         // Передаем статус слепка в расчет, чтобы не сломать мгновенную отрисовку
         calculate(null, hasSavedState);
-       
-        
+
+
         if (sessionStorage.getItem('apprStarted') === 'true') {
             document.getElementById('startBtnText').innerText = 'NEW APPR';
         }
@@ -2302,9 +2302,9 @@ for (let d = topMile; d >= 2; d--) {
         }
     };
 
-    window.onclick = (e) => { 
+    window.onclick = (e) => {
         if (!e.target.matches('.arrow-btn') && !e.target.matches('#angleInput')) {
-            document.getElementById('angleMenu').style.display = 'none'; 
+            document.getElementById('angleMenu').style.display = 'none';
         }
     }
 
@@ -2317,6 +2317,6 @@ for (let d = topMile; d >= 2; d--) {
         calculate();
     }
 </script>
-<script src="./app.js"></script>
+<script src="./offline-client.js"></script><script src="./app.js"></script>
 </body>
 </html>

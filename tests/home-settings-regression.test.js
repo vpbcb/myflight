@@ -89,7 +89,8 @@ test('Settings modal copies the MyWind RWY keypad size and placement', () => {
         indexHtml,
         /@media\s*\(max-width:\s*767px\)\s*\{[\s\S]*?\.modal-content\.settings-modal-content\s*\{[\s\S]*?padding:\s*20px\s+10px;[\s\S]*?width:\s*80%;[\s\S]*?max-width:\s*280px;[\s\S]*?margin-bottom:\s*-45vh;[\s\S]*?margin-left:\s*40px;[\s\S]*?\}/
     );
-    assert.doesNotMatch(indexHtml, /@media\s*\(\s*min-width:\s*768px\s*\)/);
+    // Unrelated tablet rules (e.g. the notes keypad) are allowed.
+    assert.doesNotMatch(indexHtml, /@media\s*\(\s*min-width:\s*768px\s*\)\s*\{\s*\.modal-content\.settings-modal-content/);
 });
 
 test('Settings closes from its backdrop and Mail transitions to the mail modal', () => {

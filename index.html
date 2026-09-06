@@ -179,7 +179,7 @@
             -webkit-user-select: text; user-select: text; box-sizing: border-box;
         }
         #mailText:focus { border-color: var(--accent-color); }
-        
+
         /* Стили для прикрепления файла */
         .mail-file-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .mail-file-btn {
@@ -190,7 +190,7 @@
         .mail-file-btn:active { background: var(--border-color); }
         #mailFileName { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
         #mailFileClear { display: none; background: none; border: none; color: #ef4444; font-size: 18px; cursor: pointer; padding: 0 5px; line-height: 1; }
-        
+
         .mail-footer { display: flex; gap: 10px; }
         .mail-btn-cancel {
             flex: 1; height: 45px; border-radius: 10px; border: 1px solid var(--border-color);
@@ -502,14 +502,14 @@
             overflow: hidden;
             height: 48px;
             width: 115px; /* Еще более узкое поле */
-            flex-shrink: 0; 
+            flex-shrink: 0;
         }
         .prefix {
             color: #fff;
             font-weight: 800;
             font-size: 1.1rem;
             padding: 0;
-            width: 55px; 
+            width: 55px;
             height: 100%;
             display: flex;
             align-items: center;
@@ -519,7 +519,7 @@
         }
         .su-color { background: var(--accent-color); }
         .ac-color { background: var(--accent-color); font-size: 1.1rem; }
-        
+
         .short-input {
             flex: 1;
             border: none;
@@ -538,24 +538,24 @@
         }
         .inline-result {
             flex: 1;
-            display: flex; 
+            display: flex;
             align-items: center;
             height: 100%;
-            position: relative; 
-            padding-right: 30px; 
+            position: relative;
+            padding-right: 30px;
             min-width: 0; /* Обязательно для корректных замеров скриптом внутри flex */
         }
         .result-route {
             font-size: 1.1rem; /* Оптимальный размер */
-            font-weight: 800; 
+            font-weight: 800;
             color: var(--accent-color); /* Фирменный синий цвет */
-            line-height: 1.2; 
+            line-height: 1.2;
             white-space: nowrap; /* Жестко запрещаем тексту падать на новую строку */
-            overflow: hidden; 
+            overflow: hidden;
             text-overflow: ellipsis; /* Многоточие на случай, если текст не успел сжаться */
-            display: block; 
+            display: block;
             width: 100%;
-            letter-spacing: -0.3px; 
+            letter-spacing: -0.3px;
         }
         .result-ac {
             font-size: 0.9rem;
@@ -1286,28 +1286,28 @@
             }
         })();
     </script>
-</head>
+<meta name="offline-build" content="84f6c49dc5b733d7aee901e5"></head>
 <body>
     <div class="app-shell">
-        
+
         <div class="header">
             <img src="./myflightlogo.png" alt="My Flight" class="main-logo">
         </div>
-        
+
         <!-- Надпись кэша под логотипом -->
         <div class="cache-label" id="cacheLabel">cache: checking...</div>
 
         <!-- БЛОК ПОИСКА РЕЙСА И БОРТА -->
         <div class="flight-search-card">
             <div class="search-wrapper">
-                
+
                 <!-- Строка 1: Рейс и маршрут -->
                 <div class="search-row">
                     <div class="input-group">
                         <div class="prefix su-color">SU</div>
                         <input type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="search" autocomplete="off" id="flightNumInput" class="short-input" placeholder="1512" maxlength="4" oninput="searchLocalRoute(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
-                    
+
                     <!-- Результат будет показан справа от поля ввода -->
                     <div id="flightResult" class="inline-result" style="display: flex;">
                         <span id="resRoute" class="result-route" style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 600;text-align: center">поиск маршрута по номеру рейса</span>
@@ -1321,11 +1321,11 @@
                         <!-- Разрешаем буквы и цифры (type="text"). Ограничение длины снято. -->
                         <input type="text" id="acNumInput" class="short-input" placeholder="73821" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" oninput="searchLocalAc(this)" onfocus="handleFocus(this)" onblur="handleBlur(this)">
                     </div>
-                    
+
 <!-- Место под вывод информации о самолете -->
                     <div id="acResult" class="inline-result" style="display: flex;">
                         <span id="resAc" class="result-route" style="color: var(--text-secondary); font-size: 0.7rem; font-weight: 600;text-align: center">поиск ВС по номеру или имени</span>
-                        
+
                         <!-- Кнопка 'i' -->
                         <div id="infoBtnContainer" style="display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%);">
                             <div style="width: 22px; height: 22px; background-color: var(--accent-color); color: white; border: 2px solid var(--card-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: serif; font-size: 14px; pointer-events: none;">i</div>
@@ -1492,7 +1492,7 @@
             <div class="mail-modal-content" onclick="event.stopPropagation()">
                 <span class="modal-title" style="margin-bottom: 0; text-align: left;">Message to Developer</span>
                 <textarea id="mailText" placeholder="Введите ваше сообщение..."></textarea>
-                
+
                 <div class="mail-file-wrapper">
                     <label for="mailFile" class="mail-file-btn" title="Прикрепить файл">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5a2.5 2.5 0 0 0 5 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
@@ -1513,7 +1513,7 @@
             <div class="modal-content" onclick="event.stopPropagation()">
                 <button class="modal-close-btn" style="top: 5px;" onclick="closeInfoModal()">×</button>
                 <span class="modal-title">Aircraft Info</span>
-                
+
                 <div id="infoModalContent" style="margin-top: 15px; font-size: 15px;">
                     <div class="info-weight-row">
                         <span class="info-weight-pair">
@@ -1544,7 +1544,7 @@
                 </div>
             </div>
         </div>
-                
+
     </div> <!-- Конец .app-shell -->
     <script src="./suflights.js"></script>
     <script>
@@ -1552,8 +1552,8 @@
     </script>
 
     <script src="./dbaircraft.js"></script>
-    <script src="./app.js"></script>
-    
+    <script src="./offline-client.js"></script><script src="./app.js"></script>
+
 
     <!-- Скрипт логики -->
     <script>
@@ -1761,7 +1761,7 @@
         function toggleTheme() {
             const html = document.documentElement;
             let isDark;
-            
+
             if (html.classList.contains('dark-theme')) {
                 html.classList.remove('dark-theme');
                 html.classList.add('light-theme');
@@ -1928,57 +1928,30 @@
             if (!navigator.onLine) return false;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000); 
-                const res = await fetch('./manifest.json?ping=' + Date.now(), { 
-                    method: 'GET', cache: 'no-store', signal: controller.signal 
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const res = await fetch('./manifest.json?ping=' + Date.now(), {
+                    method: 'GET', cache: 'no-store', signal: controller.signal
                 });
                 clearTimeout(timeoutId);
                 const contentType = res.headers.get("content-type");
                 return res.ok && contentType && contentType.includes("application/json");
             } catch (e) {
-                return false; 
+                return false;
             }
         }
 
         // 2. Ядерный сброс (Хард Ресет)
         async function hardResetApp() {
-            const hasInternet = await checkRealInternet();
-            if (!hasInternet) {
-                alert("СБРОС ОТКЛОНЕН: Нет стабильного интернета или активен Captive Portal.\n\nПриложение защищено от саморазрушения в оффлайн-режиме.");
-                return; 
-            }
-
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Двойная жесткая вибрация
-            
-            // Storage belongs to the origin, including other installed PWAs.
-            localStorage.removeItem('hubActiveCacheVersion');
-            localStorage.removeItem('hubVersion');
-            const appScope = new URL('./', window.location.href).href;
-
+            const button = document.getElementById('updateAppBtn');
+            if (button) button.disabled = true;
             try {
-                // Only unregister this application's exact scope.
-                if ('serviceWorker' in navigator) {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(registrations
-                        .filter(r => r.scope === appScope)
-                        .map(r => r.unregister()));
-                }
-
-                // MyActivity and other PWAs keep their offline caches.
-                if ('caches' in window) {
-                    const keys = await caches.keys();
-                    await Promise.all(keys
-                        .filter(key => /^myflight_/i.test(key))
-                        .map(key => caches.delete(key)));
-                }
-            } catch (e) {
-                console.error("Ошибка при очистке кэша:", e);
-            }
-
-            // Жесткая перезагрузка с параметром-антикэшем
-            window.location.href = window.location.pathname + '?reset=' + new Date().getTime();
+                const result = await window.MyFlightUpdate?.update() || 'failed';
+                if (result === 'offline') alert('Нет интернета. Текущая версия сохранена.');
+                else if (result === 'failed') alert('Обновить не удалось. Текущая версия сохранена.');
+                else if (result === 'current') alert('Установлена актуальная версия.');
+            } catch { alert('Обновить не удалось. Текущая версия сохранена.'); }
+            finally { if (button) button.disabled = false; }
         }
-
         function openSettingsModal() {
             const modal = document.getElementById('settingsModal');
             if (!modal) return;
@@ -2079,12 +2052,12 @@
             }
             updateMailModalViewport();
             modal.style.display = 'flex';
-            setTimeout(() => { 
+            setTimeout(() => {
                 updateMailModalViewport();
                 modal.classList.add('show');
             }, 10);
         }
-        
+
         function closeMailModal(e) {
             if (e && e.target !== e.currentTarget) return;
             document.getElementById('mailText')?.blur();
@@ -2116,56 +2089,56 @@
             input.value = '';
             updateMailFileName(input);
         };
-        
+
         async function sendMail() {
             const txtInput = document.getElementById('mailText');
             const fileInput = document.getElementById('mailFile');
             const msg = txtInput.value.trim();
             const file = fileInput.files[0];
             const btn = document.getElementById('btnSendMail');
-            
+
             if (!msg && !file) return; // Разрешаем отправить либо текст, либо файл, либо и то и другое
-            
+
             // Защита от огромных файлов (Telegram API лимит для ботов ~20 МБ)
             if (file && file.size > 18 * 1024 * 1024) {
                 alert('Файл слишком большой. Лимит 18 МБ.');
                 return;
             }
-            
-            btn.disabled = true; 
+
+            btn.disabled = true;
             btn.textContent = 'Sending...';
 
             // Формируем мультипарт дату для отправки файла
             const formData = new FormData();
             if (msg) formData.append('text', msg);
             if (file) formData.append('file', file);
-            
+
             try {
                 // При отправке FormData браузер сам установит нужные заголовки Content-Type и boundary
                 const r = await fetch('https://myflight.vpbcb1.workers.dev', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 if (r.ok) {
-                    btn.textContent = 'Done!'; 
+                    btn.textContent = 'Done!';
                     txtInput.value = '';
                     clearMailFile();
-                    setTimeout(() => { 
-                        closeMailModal(); 
-                        btn.disabled = false; 
-                        btn.textContent = 'Send'; 
+                    setTimeout(() => {
+                        closeMailModal();
+                        btn.disabled = false;
+                        btn.textContent = 'Send';
                     }, 1000);
                 } else {
                     throw new Error();
                 }
             } catch (e) {
-                btn.textContent = 'Error!'; 
+                btn.textContent = 'Error!';
                 btn.style.background = '#ef4444';
-                setTimeout(() => { 
-                    btn.disabled = false; 
-                    btn.textContent = 'Send'; 
-                    btn.style.background = 'var(--accent-color)'; 
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = 'Send';
+                    btn.style.background = 'var(--accent-color)';
                 }, 2000);
             }
         }
@@ -2189,7 +2162,7 @@
             // 2. Логика проверки кэша
             const label = document.getElementById('cacheLabel');
             const savedVersion = localStorage.getItem('hubVersion');
-            
+
             if (savedVersion && !navigator.onLine) {
                 label.textContent = `cache: ${savedVersion}`;
                 return;
@@ -2231,14 +2204,14 @@ const iataFlags = {
 // --- Умная функция автоподгона размера текста ---
 function autoFitText(element, baseSize = '') {
     element.style.fontSize = baseSize; // Фиксируем базовый размер
-    
+
     requestAnimationFrame(() => {
         if (element.scrollWidth > element.clientWidth && element.clientWidth > 0) {
             const currentFontSize = parseFloat(window.getComputedStyle(element).fontSize);
             // Коэффициент 0.95 дает запас, чтобы многоточие 100% исчезло
             const ratio = (element.clientWidth / element.scrollWidth) * 0.95;
             const newFontSize = currentFontSize * ratio;
-            element.style.fontSize = Math.max(newFontSize, 9) + 'px'; 
+            element.style.fontSize = Math.max(newFontSize, 9) + 'px';
         }
     });
 }
@@ -2257,7 +2230,7 @@ function searchLocalRoute(inputElem) {
         resRoute.style.color = "var(--text-secondary)";
         resRoute.style.fontWeight = "600";
         resRoute.style.textAlign = "center";
-        autoFitText(resRoute, '0.7rem'); 
+        autoFitText(resRoute, '0.7rem');
         return;
     }
 
@@ -2270,9 +2243,9 @@ function searchLocalRoute(inputElem) {
             const routeWithFlags = found.route.split(' ➔ ').map(code => {
                 return iataFlags[code] ? `${iataFlags[code]} ${code}` : code;
             }).join(' ➔ ');
-            resRoute.innerHTML = routeWithFlags; 
-            resRoute.style.color = "var(--accent-color)"; 
-            autoFitText(resRoute, ''); 
+            resRoute.innerHTML = routeWithFlags;
+            resRoute.style.color = "var(--accent-color)";
+            autoFitText(resRoute, '');
         } else {
             resRoute.innerHTML = "Маршрут не найден";
             resRoute.style.color = "#ef4444";
@@ -2337,17 +2310,17 @@ function applyAcResult(ac, query) {
     currentAircraft = ac;
     const resAc = document.getElementById('resAc');
     const infoBtn = document.getElementById('infoBtnContainer');
-    
+
     if (infoBtn) infoBtn.style.display = "block";
-    
+
     resAc.style.color = "var(--accent-color)";
     resAc.style.fontWeight = "";
-    resAc.style.textAlign = "center"; 
-    
+    resAc.style.textAlign = "center";
+
     // Имя выводим полностью, без сокращений
     let displayName = ac.nameDisplay || ac.name || "";
     const cleanReg = ac.regFull ? ac.regFull.replace('-', '') : (ac.reg || "");
-    
+
     // Двухстрочный вывод: Тип + Рег (верх), Имя (низ)
     resAc.innerHTML = `
         <span style="display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; line-height: 1.1;">
@@ -2356,7 +2329,7 @@ function applyAcResult(ac, query) {
         </span>
     `;
 
-    autoFitText(resAc, '1.05rem'); 
+    autoFitText(resAc, '1.05rem');
     fillInfoModal(ac);
     if (typeof scheduleMyFlightPushRefresh === 'function') scheduleMyFlightPushRefresh();
 }
@@ -2364,7 +2337,7 @@ function applyAcResult(ac, query) {
 // --- ЛОГИКА ОКНА ИНФОРМАЦИИ (AIRCRAFT) ---
 function openInfoModal() {
     const acInput = document.getElementById('acNumInput');
-    if (acInput) acInput.blur(); 
+    if (acInput) acInput.blur();
     const modal = document.getElementById('infoModal');
     modal.style.display = 'flex';
     setTimeout(() => { modal.classList.add('show'); }, 10);
@@ -2496,11 +2469,11 @@ function fillInfoModal(ac) {
     if (kzEl) {
         const kzVal = ac.kazakhstanApproval || "No";
         kzEl.innerText = kzVal;
-        kzEl.style.color = (kzVal.toLowerCase() === "yes") ? "#16a34a" : "#ef4444"; 
+        kzEl.style.color = (kzVal.toLowerCase() === "yes") ? "#16a34a" : "#ef4444";
     }
 }
 
-// Умный поиск борта 
+// Умный поиск борта
 function searchLocalAc(inputElem) {
     localStorage.setItem('last_ac_query', inputElem.value);
     const query = inputElem.value.toLowerCase().trim();
@@ -2548,7 +2521,7 @@ function searchLocalAc(inputElem) {
         } else if (matches.length > 1) {
             const uniqueBaseNames = new Set(matches.map(ac => (ac.name || "").split('(')[0].trim().toLowerCase()));
             const isVishnevsky = matches.every(ac => (ac.name || "").toLowerCase().includes("вишневск")) && query.includes("виш");
-            
+
             if (uniqueBaseNames.size === 1 || isVishnevsky) {
                 showAmbiguity(matches, query);
             } else {
@@ -2579,19 +2552,19 @@ function searchLocalAc(inputElem) {
 window.addEventListener('DOMContentLoaded', () => {
     const fInput = document.getElementById('flightNumInput');
     const aInput = document.getElementById('acNumInput');
-    
+
     if (fInput) {
         const savedFlight = localStorage.getItem('last_flight_num');
         if (savedFlight) fInput.value = savedFlight;
         // Запускаем поиск. Если данные были - покажет маршрут. Если нет - покажет и сожмет подсказку.
-        searchLocalRoute(fInput); 
+        searchLocalRoute(fInput);
     }
-    
+
     if (aInput) {
         const savedAc = localStorage.getItem('last_ac_query');
         if (savedAc) aInput.value = savedAc;
         // Запускаем поиск борта.
-        searchLocalAc(aInput); 
+        searchLocalAc(aInput);
     }
 });
 </script>
@@ -2768,6 +2741,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     </script>
 
-    
+
 </body>
 </html>

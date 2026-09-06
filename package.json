@@ -1,0 +1,10 @@
+{
+  "name": "myflight-pwa",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/run-tests.cjs",
+    "lint": "node scripts/check-syntax.cjs",
+    "build": "node scripts/build-offline.cjs",
+    "check:offline": "node scripts/build-offline.cjs --check"
+  }
+}

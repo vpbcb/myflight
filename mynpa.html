@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -6,18 +6,18 @@
     <meta name="color-scheme" content="light dark">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#f1f5f9">
-    
+
     <title>MyNPA</title>
-    
+
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <link rel="stylesheet" href="./bottom-navigation.css">
 
     <style>
         :root {
-            --bg-main: #f1f5f9;          
-            --card-bg: #ffffff;          
-            --text-main: #0f172a;        
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
             --accent-blue: #1976d2;
             --accent-orange: #fb923c;
             --border-color: rgba(15, 23, 42, 0.08);
@@ -32,9 +32,9 @@
         }
 
         html.dark-theme {
-            --bg-main: #0b0f19;          
-            --card-bg: #151f32;          
-            --text-main: #cbd5e1;        
+            --bg-main: #0b0f19;
+            --card-bg: #151f32;
+            --text-main: #cbd5e1;
             --accent-blue: #38bdf8;
             --border-color: rgba(255, 255, 255, 0.08);
             --npa-tabs-active-bg: #151f32;
@@ -82,7 +82,7 @@
             background: var(--bg-main);
             border-left: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
-            padding: 0; 
+            padding: 0;
             width: min(100vw, 440px);
             width: min(var(--app-width), 100dvw, 440px);
             max-width: min(440px, 100vw, 100dvw);
@@ -95,7 +95,7 @@
             max-height: var(--app-height);
             position: relative;
             box-sizing: border-box;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         .precision-scroll-container {
@@ -109,7 +109,7 @@
             z-index: 30;
             margin: 5px 0 var(--bottom-nav-reserved-height, 0px) 0;
             padding: 8px 10px 6px;
-            background: transparent; 
+            background: transparent;
             border: none;
         }
 
@@ -125,18 +125,18 @@
             justify-content: center;
         }
 
-        .app-title { 
+        .app-title {
             position: relative;
             z-index: 30;
-            font-size: 0.6rem; 
-            text-align: center; 
-            letter-spacing: 5px; 
-            color: var(--text-main); 
-            text-transform: uppercase; 
+            font-size: 0.6rem;
+            text-align: center;
+            letter-spacing: 5px;
+            color: var(--text-main);
+            text-transform: uppercase;
             margin: 5px 0;
             padding: 0;
-            font-weight: 800; 
-            opacity: 0.6; 
+            font-weight: 800;
+            opacity: 0.6;
             line-height: normal;
             cursor: pointer;
             -webkit-user-select: none;
@@ -344,10 +344,10 @@
         }
 
         /* БЕЛЫЕ ФОНОВЫЕ БЛОКИ (КОНТЕЙНЕРЫ) */
-        .section-card { 
-            background-color: var(--card-bg); 
-            border: 1px solid var(--border-color); 
-            border-radius: 16px; 
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
             margin-bottom: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
             min-width: 0;
@@ -477,12 +477,12 @@
             /* Используем ease-in-out для идеальной синхронизации старта */
             transition: max-height 250ms ease-in-out, opacity 250ms ease-in-out, transform 250ms ease-in-out;
         }
-        
-        .foldBlock.open { 
+
+        .foldBlock.open {
             /* Значение 220px убирает "задержку пустоты", но оставляет запас для ваших полей */
-            max-height: 220px; 
-            opacity: 1; 
-            transform: translateY(0); 
+            max-height: 220px;
+            opacity: 1;
+            transform: translateY(0);
         }
 
         #npaBlock4.open {
@@ -1139,9 +1139,9 @@
         }
 
         .btn-label-style {
-            font-size: 0.65rem; 
-            font-weight: 800; 
-            letter-spacing: 1px; 
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 1px;
             text-transform: uppercase;
             white-space: nowrap;
         }
@@ -1550,7 +1550,7 @@
             font-size: 0.8rem !important;
             line-height: 1 !important;
         }
-        
+
         /* Убираем системные стрелочки, которые сдвигают текст влево */
         .cell-input::-webkit-outer-spin-button,
         .cell-input::-webkit-inner-spin-button {
@@ -1725,14 +1725,14 @@
             color: #94a3b8;
         }
         .btn-val {
-            font-size: 15px; 
-            font-weight: 600; 
+            font-size: 15px;
+            font-weight: 600;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            text-align: center; 
-            color: var(--text-main); 
-            height: 22px; 
-            display: flex; 
-            align-items: center; 
+            text-align: center;
+            color: var(--text-main);
+            height: 22px;
+            display: flex;
+            align-items: center;
             justify-content: center;
             width: 100%;
         }
@@ -2697,7 +2697,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .npa-profile-dist-icon {
             position: absolute;
             left: -0.65em; /* Отступ от левой границы первого столбца */
@@ -2883,7 +2883,7 @@
             text-transform: none;
             text-align: center;
         }
-        
+
         .keypad-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -2957,7 +2957,7 @@
             color: var(--accent-blue);
             font-weight: 800;
             letter-spacing: 0.5px;
-            background: rgba(14, 165, 233, 0.1) !important; 
+            background: rgba(14, 165, 233, 0.1) !important;
             border-color: var(--accent-blue) !important;
             width: 100% !important;
             grid-column: span 2;
@@ -3242,7 +3242,7 @@
             }
         })();
     </script>
-</head>
+<meta name="offline-build" content="84f6c49dc5b733d7aee901e5"></head>
 <body>
 
 <div class="app-wrapper">
@@ -3258,7 +3258,7 @@
     </div>
 
     <div class="precision-scroll-container" id="mainScroll">
-        
+
         <div class="section-card npa-search-card">
             <div class="card-content" style="padding: 8px;">
                 <div class="c2-row" style="margin-bottom: 0;">
@@ -3346,7 +3346,7 @@
                     <div id="npaBlock2" class="foldBlock npa-tab-panel">
                         <div class="card-content">
                             <div class="npa-subsection-title">Racetrack entry</div>
-                            
+
                             <div class="c2-row">
                                 <div class="cell-wrapper flex-1" style="cursor: pointer;" onclick="toggleRacetrack()">
                                     <span class="cell-label">Racetrack conf</span>
@@ -3439,7 +3439,7 @@
             </div>
         </div>
 
-        
+
         </div>
 
     <span class="npa-pending-sync-indicator" id="npaPendingSyncIndicator" role="status" aria-live="polite" aria-label="Waiting for Firebase sync" onclick="handleNpaPendingSyncIndicatorClick(event)" onkeydown="handleNpaPendingSyncIndicatorKeydown(event)">
@@ -3861,7 +3861,7 @@
         const block = document.getElementById(id);
         if (block) {
             const exclusiveBlocks = getNpaTabBlockIds();
-            
+
             if (exclusiveBlocks.includes(id)) {
                 if (document.getElementById('npaBlock4')?.classList.contains('open')) {
                     saveNpaProfileScrollPosition();
@@ -3878,7 +3878,7 @@
             } else {
                 block.classList.add('open');
             }
-            
+
             syncNpaTabState();
             if (navigator.vibrate) navigator.vibrate(15);
             scheduleNpaProfileLayoutUpdate();
@@ -5164,7 +5164,7 @@
         const modal = document.getElementById('npaModal');
         if (modal) modal.style.display = 'none';
         closeNpaApproachDropdown();
-        
+
         checkAndFillFromDB();
         npaProfilePendingInitialFapScroll = true;
         renderNpaProfileTable();
@@ -10023,6 +10023,6 @@
     }
 </script>
 
-<script src="./app.js"></script>
+<script src="./offline-client.js"></script><script src="./app.js"></script>
 </body>
 </html>

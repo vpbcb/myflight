@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,7 @@
     <meta name="format-detection" content="date=no">
     <meta name="format-detection" content="address=no">
     <meta name="format-detection" content="email=no">
-    
+
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,13 +29,13 @@
             --dim: #64748b;
             --border: rgba(0, 0, 0, 0.1);
             --input-bg: #f7f9fa;
-            --row-bg: #ffffff; 
+            --row-bg: #ffffff;
             --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
             --rwy-asphalt: #6b7280;
             --rwy-line: #ffffff;
             --limit-kt: #7f1d1d;
             --limit-mps:#1e40af ;
-            --zebra-bg: #f0f1f2; 
+            --zebra-bg: #f0f1f2;
             --app-height: 100vh;
             --app-width: 100vw;
             --safe-top: env(safe-area-inset-top, 0px);
@@ -43,25 +43,25 @@
 
         }
 
-        
+
         /* --- НОЧНАЯ ТЕМА --- */
         html.dark-theme {
             --bg: #0b0f19;
-            --card: rgba(22, 30, 46, 0.98); 
-            --accent: #0273ad; 
-            --status-bg: #016091; 
-            --table-border: #57677d; 
-            --text: #cbd5e1; 
-            --dim: #96a4b3;  
+            --card: rgba(22, 30, 46, 0.98);
+            --accent: #0273ad;
+            --status-bg: #016091;
+            --table-border: #57677d;
+            --text: #cbd5e1;
+            --dim: #96a4b3;
             --border: rgba(255, 255, 255, 0.3);  /* Взяли ваш новый бордер (0.1 вместо 0.3) */
             --input-bg: rgba(0, 0, 0, 0.09);     /* Взяли ваш новый фон под таблицу */
             --row-bg: transparent;               /* Оставляем прозрачным, чтобы работал input-bg */
             --shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.04); /* Ваш новый shadow */
-            --rwy-asphalt: #475569; 
-            --rwy-line: #cbd5e1; 
-            --limit-kt: #c70606; 
-            --limit-mps: #047fbf; 
-            --zebra-bg: rgba(255, 255, 255, 0.07); 
+            --rwy-asphalt: #475569;
+            --rwy-line: #cbd5e1;
+            --limit-kt: #c70606;
+            --limit-mps: #047fbf;
+            --zebra-bg: rgba(255, 255, 255, 0.07);
         }
 
         /* Убираем краевые границы контейнера, чтобы они не бликовали в темноте */
@@ -87,35 +87,35 @@
 
         /* --- ФОН БЛОКА НИЖНИХ ВКЛАДОК В ТЕМНОЙ ТЕМЕ --- */
         html.dark-theme .tabs-content-area {
-            background: rgba(0, 0, 0, 0.15); 
+            background: rgba(0, 0, 0, 0.15);
         }
 
         /* --- ЦВЕТ НЕАКТИВНЫХ КНОПОК НИЖНЕГО РЯДА (6, 5, 4, 3...) --- */
         html.dark-theme .tabs-row.lower .tab-btn:not(.active) {
-            background: #121824 !important; 
-            color: #bed0e8 !important;              
-            border: 1px solid rgba(255, 255, 255, 0.25) !important; 
+            background: #121824 !important;
+            color: #bed0e8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
         }
 
         /* Жесткие переопределения для элементов без переменных */
         html.dark-theme #tableBody .t-row.beam-row { background-color: rgba(56, 189, 248, 0.15) !important; } /* Ночной бледно-голубой фон */
         /* Вкладки в тёмной теме: текст совпадает с кнопками первого ряда (#cbd5e1) */
-        html.dark-theme .tab-btn { 
-            background: #262e3d; 
-            border-color: var(--border); 
+        html.dark-theme .tab-btn {
+            background: #262e3d;
+            border-color: var(--border);
             color: var(--text) !important; /* Тот же цвет, что в AC TYPE и RWY */
         }
-        html.dark-theme .tab-btn.active { 
-            background: #121824; 
-            color: var(--text) !important; 
-            border-bottom: 1px solid #121824 !important; 
-            border-top: 3px solid var(--accent); 
+        html.dark-theme .tab-btn.active {
+            background: #121824;
+            color: var(--text) !important;
+            border-bottom: 1px solid #121824 !important;
+            border-top: 3px solid var(--accent);
         }
         /* Убран дублирующий border-bottom для нижнего ряда (кнопка должна быть плоской) */
 
         * {
             -webkit-tap-highlight-color: transparent;
-            
+
             /* === АБСОЛЮТНЫЙ БЛОК ВЫДЕЛЕНИЯ И СИСТЕМНЫХ МЕНЮ === */
             -webkit-touch-callout: none; /* Убивает всплывающее меню (лупу/копирование) на iOS */
             -webkit-user-select: none;   /* Safari */
@@ -123,7 +123,7 @@
             -ms-user-select: none;       /* Старые Edge/IE */
             user-select: none;           /* Стандартный синтаксис */
             /* ================================================= */
-            
+
             outline: none;
             box-sizing: border-box;
             touch-action: manipulation;
@@ -142,7 +142,7 @@
             min-height: var(--app-height);
             max-height: var(--app-height);
         }
-        
+
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: transparent;
@@ -150,7 +150,7 @@
             display: flex;
             justify-content: center;
             margin: 0; padding: 0;
-            height: var(--app-height); 
+            height: var(--app-height);
             min-height: var(--app-height);
             max-height: var(--app-height);
             overflow: hidden;
@@ -183,25 +183,25 @@
 
         /* --- ТАБЛИЦА (Техпаспорт) --- */
         /* Добавили position: relative, чтобы слой держался внутри таблицы */
-        .table { 
-            width: 100%; background: var(--input-bg); border-radius: 8px; 
+        .table {
+            width: 100%; background: var(--input-bg); border-radius: 8px;
             min-width: 0;
             max-width: 100%;
-            border: 1px solid var(--table-border); flex: 1; display: flex; 
+            border: 1px solid var(--table-border); flex: 1; display: flex;
             flex-direction: column; min-height: 0; overflow: hidden; margin-top: 5px;
-            position: relative; 
+            position: relative;
         }
 
         /* --- ИКОНКИ (ПРОЗРАЧНЫЕ PNG) --- */
-        .op-icon { 
-            mix-blend-mode: normal; 
+        .op-icon {
+            mix-blend-mode: normal;
             filter: none;
             display: block;        /* Убирает влияние line-height шрифта */
             vertical-align: bottom; /* Прижимает к нижней границе контейнера */
         }
-        html.dark-theme .op-icon { 
+        html.dark-theme .op-icon {
             /* Легкое осветление иконки для лучшей читаемости в ночном режиме (если нужно) */
-            filter: brightness(1.8); 
+            filter: brightness(1.8);
         }
 
         #tableBody { flex: 1; overflow-y: auto; background: var(--row-bg); }
@@ -210,41 +210,41 @@
         #tableBody::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         #tableBody::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 
-        .t-row { 
+        .t-row {
             display: grid; grid-template-columns: 1fr 1fr 0.25fr 1fr 1fr;
-            height: 42px; padding: 0 18px; border-bottom: 1px solid var(--border); 
+            height: 42px; padding: 0 18px; border-bottom: 1px solid var(--border);
             align-items: center; font-size: 1.1rem; text-align: center;
             background-color: var(--row-bg); /* ИЗМЕНЕНИЕ: Динамический фон (белый днем, темный ночью) */
         }
 
         /* Динамическая зебра (автоматически меняется от темы) */
-        #tableBody .t-row:nth-child(even) { 
-            background-color: var(--zebra-bg) !important; 
+        #tableBody .t-row:nth-child(even) {
+            background-color: var(--zebra-bg) !important;
         }
 
         /* Выделение 10-й строки (90° Beam) ТОЛЬКО для круглых курсов (19 строк) */
-        #tableBody .t-row.beam-row { 
+        #tableBody .t-row.beam-row {
             background-color: rgba(14, 165, 233, 0.05) !important; /* Стерильный бледно-голубой цвет */
         }
 
         /* ВАРИАНТ 6: Неоновый экватор (Правило z-index: 20) */
-        #tableBody .t-row.beam-divider { 
-            position: relative; 
-            border-bottom-color: transparent !important; 
+        #tableBody .t-row.beam-divider {
+            position: relative;
+            border-bottom-color: transparent !important;
         }
 
         /* Отрисовываем экватор поверх всех столбцов (включая ВПП) */
         #tableBody .t-row.beam-divider::after {
             content: '';
             position: absolute;
-            bottom: 0; 
+            bottom: 0;
             left: 0;
             width: 100%;
             height: 1px;
-            background-color: var(--accent); 
-            z-index: 20; 
+            background-color: var(--accent);
+            z-index: 20;
             pointer-events: none;
-            
+
             /* МАКСИМАЛЬНЫЙ НЕОН (4 СЛОЯ): Сверхъяркое ядро и глубокий ореол */
             box-shadow: 0 0 8px rgba(14, 165, 233, 1),   /* Ядро (Core) */
                         0 0 15px rgba(14, 165, 233, 0.8), /* Основной свет */
@@ -253,45 +253,45 @@
         }
 
         /* Полоса (закрашенная ячейка сетки с маскировкой границ) */
-        .rwy-divider { 
-            height: 100%; width: 100%; background-color: var(--rwy-asphalt); 
-            
+        .rwy-divider {
+            height: 100%; width: 100%; background-color: var(--rwy-asphalt);
+
             /* Шаг 45px (20px линия, 25px пустота) */
-            background-image: repeating-linear-gradient(to bottom, var(--rwy-line) 0, var(--rwy-line) 20px, transparent 20px, transparent 45px); 
-            
-            background-size: 2px 100%; 
-            background-repeat: repeat-y; 
-            
+            background-image: repeating-linear-gradient(to bottom, var(--rwy-line) 0, var(--rwy-line) 20px, transparent 20px, transparent 45px);
+
+            background-size: 2px 100%;
+            background-repeat: repeat-y;
+
             /* === ИЗМЕНЕНИЕ: Сдвигаем фон на 12.5px вниз для идеальной центровки штриха === */
-            background-position: center 12.5px; 
-            
+            background-position: center 12.5px;
+
             position: relative;
-            z-index: 1; 
-            box-shadow: 0 1px 0 var(--rwy-asphalt); 
+            z-index: 1;
+            box-shadow: 0 1px 0 var(--rwy-asphalt);
         }
 
         .course-cell { font-weight: 800; }
 
        /* --- кнопки первая строка (ШРИФТЫ 1.1rem) --- расстояние между синей плашкой и кнопками , расстояние между заголовком и кнопками*/
-        
-        .controls-layout { 
-            display: grid; 
+
+        .controls-layout {
+            display: grid;
             /* minmax(0, 1fr) гарантирует, что кнопка не растянется из-за текста внутри */
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); 
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
             column-gap: 5px; /* Сохраняем горизонтальные зазоры между кнопками */
             row-gap: 0px;    /* <-- Убрали вертикальный зазор между текстом и кнопкой */
-            margin-top: 5px; 
+            margin-top: 5px;
             align-items: center; /* Выравниваем базовые кнопки (40px) и высокое поле курса по нижней линии */
             min-width: 0;
             max-width: 100%;
         }
         .grid-label { font-size: 0.7rem; font-weight: 800; color: var(--dim); text-transform: uppercase; text-align: center; margin-bottom: 0px; /* <-- Убрали нижний отступ у текста */ }
-        
-        .action-btn, .data-input { 
-            height: 40px; border-radius: 12px; border: 1px solid var(--border); 
-            background: var(--input-bg); color: var(--text); 
-            font-weight: 800; text-align: center; font-size: 1.1rem; 
-            
+
+        .action-btn, .data-input {
+            height: 40px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--input-bg); color: var(--text);
+            font-weight: 800; text-align: center; font-size: 1.1rem;
+
             /* === БРОНЯ ОТ ВЫДЕЛЕНИЯ СПЕЦИАЛЬНО ДЛЯ INPUT === */
             /* Глобальный * { user-select: none } уже справляется, оставляем только каретку */
             caret-color: transparent; /* Полностью скрываем мигающий курсор текста */
@@ -316,12 +316,12 @@
 
         /* Индивидуальные стили для выделения поля RW COURSE */
         #windDirInput {
-            height: 50px; 
+            height: 50px;
             width: calc(100% + 2px); /* Расширяем поле на 6px */
             margin-left: -1px;       /* Притягиваем левую кнопку на 3px ближе */
             margin-right: -1px;      /* Притягиваем правую кнопку на 3px ближе */
             position: relative;      /* Гарантируем правильное наложение */
-            z-index: 2; 
+            z-index: 2;
             justify-self: center;
             border: 2px solid var(--accent); /* Акцентная синяя рамка */
             color: var(--accent); /* Синий текст */
@@ -334,7 +334,7 @@
 
         /* --- КАРТОТЕКА И СПЕЦ-КНОПКИ --- ДВИГАТЬ ВСЮ БИБЛИОТЕКУ ВВЕРХ ВНИЗ*/
         .tabs-container { margin-top: 10px; display: flex; flex-direction: column; min-width: 0; max-width: 100%; }
-        
+
         .tab-line-wrapper {
             display: flex; align-items: flex-end; gap: 12px; width: 100%;
         }
@@ -353,15 +353,15 @@
             padding: 4px;
         }
 
-        .tab-btn { 
-            height: 35px; background: #e2e8f0; border: 1px solid var(--border); 
-            color: var(--dim); font-size: 0.8rem; font-weight: 800; 
+        .tab-btn {
+            height: 35px; background: #e2e8f0; border: 1px solid var(--border);
+            color: var(--dim); font-size: 0.8rem; font-weight: 800;
             text-transform: none; /* <-- ИЗМЕНЕНИЕ: Отключили принудительный CAPS */
-            cursor: pointer; border-radius: 8px 8px 0 0; 
+            cursor: pointer; border-radius: 8px 8px 0 0;
         }
-        .tab-btn.active { 
-            background: var(--card); color: var(--accent); 
-            border-bottom: 1px solid var(--card) !important; border-top: 3px solid var(--accent); 
+        .tab-btn.active {
+            background: var(--card); color: var(--accent);
+            border-bottom: 1px solid var(--card) !important; border-top: 3px solid var(--accent);
         }
 
         /* Возвращаем видимую нижнюю границу для активных кнопок нижнего ряда */
@@ -371,20 +371,20 @@
 
         /* --- СТИЛЬ ДЛЯ МНОГОСТРОЧНОГО ТЕКСТА ATIS --- */
         .tab-btn.active.atis-display-btn {
-            height: auto !important; 
+            height: auto !important;
             min-height: 35px;
             padding: 8px 4px; /* Внутренний отступ для комфортного чтения */
         }
 
         /* высота белого блока белый блок библиотеки табов */
-        .tabs-content-area { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
+        .tabs-content-area {
+            background: var(--card);
+            border: 1px solid var(--border);
             border-top: 0;
-            border-radius: 0 0 12px 12px; 
+            border-radius: 0 0 12px 12px;
             padding: 17px 5px 5px 5px; /* Увеличили padding-top до 17px для имитации центра */
-            flex: 1; 
-            z-index: 5; 
+            flex: 1;
+            z-index: 5;
             min-height: 60px;
             display: flex;
             align-items: flex-start; /* Фиксируем верхнюю границу кнопки */
@@ -392,18 +392,18 @@
         .lower .tab-btn { border-radius: 8px; }
 
         .special-btn {
-            width: 55px; height: 35px; border-radius: 8px !important; 
+            width: 55px; height: 35px; border-radius: 8px !important;
             background: var(--input-bg); /* Светло-серая по умолчанию (как LAND) */
-            color: var(--text) !important; font-size: 0.65rem; font-weight: 800; 
+            color: var(--text) !important; font-size: 0.65rem; font-weight: 800;
             border: 1px solid var(--border); cursor: pointer; text-transform: uppercase; flex-shrink: 0;
         }
-        .special-btn.active { 
+        .special-btn.active {
             background: #f97316 !important; /* Ярко-оранжевая при активации */
-            color: white !important; 
-            border-color: #ea580c !important; 
+            color: white !important;
+            border-color: #ea580c !important;
         }
-        
-        #contBtn { margin-bottom: 12px; } 
+
+        #contBtn { margin-bottom: 12px; }
 
         /* --- CSS ВРЕМЕННОЙ ПОДСКАЗКИ LAND --- */
         .hint-toast {
@@ -448,43 +448,43 @@
             background: rgb(2, 115, 173) !important; /* Чистый RGB для ночи */
         }
 
-        
+
         /* --- СТРОКА СТАТУСА LAND ПОД ТАБЛИЦЕЙ (ИНФОРМАЦИОННЫЙ СТИЛЬ) --- */
         .land-status-row {
             text-align: center;
             font-size: clamp(0.7rem, 3.5vw, 0.95rem); /* Увеличенный гибкий шрифт */
             font-weight: 900;
-            color: var(--accent); 
-            background-color: rgba(14, 165, 233, 0.12); 
-            border: 1px solid rgba(14, 165, 233, 0.25); 
-            border-radius: 6px; 
-            padding: 5px 2px; 
-            margin-top: 8px; 
-            width: 100%; 
+            color: var(--accent);
+            background-color: rgba(14, 165, 233, 0.12);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-radius: 6px;
+            padding: 5px 2px;
+            margin-top: 8px;
+            width: 100%;
             letter-spacing: 1px; /* Сжали интервал, чтобы всё влезло */
             text-transform: uppercase;
             transition: opacity 0.3s ease, background-color 0.3s ease;
-            opacity: 0; 
+            opacity: 0;
             pointer-events: none;
             white-space: nowrap; /* Жестко запрещаем перенос на вторую строку */
         }
 
-        
+
 
         /* --- МОДАЛКИ --- */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
-        
+
         /* Базовое окно (остается по центру) */
-        .modal-content { 
-            background: var(--card); 
-            border: 1px solid var(--accent); 
-            border-radius: 16px; 
-            padding: 10px; 
-            width: 90%; 
-            max-width: 420px; 
-            box-shadow: var(--shadow); 
-            
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 10px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: var(--shadow);
+
             /* === РЕШЕНИЕ ПРОБЛЕМЫ ВЫСОТЫ === */
             max-height: 95vh; /* Окно никогда не будет выше 85% высоты экрана */
             overflow-y: auto; /* Включаем вертикальную прокрутку, если контент не влез */
@@ -497,13 +497,13 @@
         .modal-content::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 
         /* Сужаем модальные окна A/C Type, Crew и Land для большей стерильности */
-        #acModal .modal-content, 
-        #crewModal .modal-content, 
+        #acModal .modal-content,
+        #crewModal .modal-content,
         #landModal .modal-content {
-            max-width: 280px; 
+            max-width: 280px;
             margin-top: 15vh;
         }
-        
+
         /* Специфическое окно клавиатуры (под правый палец) */
         .keypad-content {
             padding: 20px 10px;
@@ -515,20 +515,20 @@
 
         /* Возвращаем по центру на iPad и десктопах */
         @media (min-width: 768px) {
-            .keypad-content { 
-                margin-bottom: 0 !important; 
-                margin-left: 0 !important; 
-                max-width: 360px !important; 
-                padding: 30px 20px !important; 
+            .keypad-content {
+                margin-bottom: 0 !important;
+                margin-left: 0 !important;
+                max-width: 360px !important;
+                padding: 30px 20px !important;
             }
         }
-        
+
         #kpValue { color: var(--accent); font-size: 3rem; font-weight: 900; text-align: center; display: block; margin: 10px 0; }
         .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-        .kp-btn { 
-            height: 50px; font-weight: 700; font-size: 1.4rem; 
-            background: var(--input-bg); border: 1px solid var(--border); 
-            border-radius: 10px; cursor: pointer; color: var(--text); 
+        .kp-btn {
+            height: 50px; font-weight: 700; font-size: 1.4rem;
+            background: var(--input-bg); border: 1px solid var(--border);
+            border-radius: 10px; cursor: pointer; color: var(--text);
         }
 
         /* --- КЛАВИАТУРА: Цвета для темной темы (из Approach Path Calc) --- */
@@ -560,26 +560,26 @@
             text-align: center; /* Выравниваем текст по центру */
         }
 
-        
-        
+
+
         /* Используем minmax(0, 1fr) — это не даст длинному тексту выломать границы модалки */
         .grid-1 { grid-template-columns: minmax(0, 1fr); }
         .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        
+
         /* Применяется СТРОГО только к кнопкам внутри окна atis, не затрагивая остальное приложение */
-        #manModal .man-btn { 
-            min-height: 30px; 
-            height: auto; 
-            padding: 2px 4px; 
-            font-size: 0.65rem; 
-            line-height: 1.1; 
-            white-space: normal; 
+        #manModal .man-btn {
+            min-height: 30px;
+            height: auto;
+            padding: 2px 4px;
+            font-size: 0.65rem;
+            line-height: 1.1;
+            white-space: normal;
         }
 
         /* Уменьшаем шрифт кнопок настроек посадки, чтобы они идеально ложились в сетку */
         #landModal .man-group .action-btn {
-            font-size: 0.75rem; 
+            font-size: 0.75rem;
             min-height: 45px;
             height: auto;
             padding: 4px;
@@ -604,12 +604,12 @@
         .refresh-btn { left: 16px; justify-content: flex-start; }
         .path-btn { left: 50%; transform: translateX(-50%); justify-content: center; }
         .menu-btn { right: 16px; justify-content: flex-end; }
-        
+
         /* Увеличенная невидимая сенсорная область для легкого тапа пальцем */
         .refresh-btn::after, .path-btn::after, .menu-btn::after {
             content: ''; position: absolute; top: -15px; bottom: -15px; left: -15px; right: -15px;
         }
-        
+
         /* Анимация нажатия (с сохранением центра для центральной кнопки) */
         .refresh-btn:active, .menu-btn:active { transform: scale(0.9); color: var(--text); }
         .path-btn:active { transform: translateX(-50%) scale(0.9); color: var(--text); }
@@ -849,7 +849,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
         })();
     </script>
-    </head>
+    <meta name="offline-build" content="84f6c49dc5b733d7aee901e5"></head>
 <body>
 
 <div class="calculator">
@@ -868,26 +868,26 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
 
 <div class="controls-layout">
         <div class="grid-label">A/c type</div>
-        
+
         <div class="grid-label" style="display: flex; justify-content: center; align-items: flex-end; padding-bottom: 2px;">
             <img src="toicon.png" class="op-icon" width="28" height="15" alt="Take off" style="object-fit: contain; opacity: 0.6;">
         </div>
-        
+
         <div class="grid-label">RWY </div>
-        
+
         <div class="grid-label" style="display: flex; justify-content: center; align-items: flex-end; padding-bottom: 2px;">
             <img src="landicon.png" class="op-icon" width="28" height="15" alt="Land" style="object-fit: contain; opacity: 0.6;">
         </div>
-        
+
         <div class="grid-label">PF</div>
-        
+
         <button class="action-btn" id="acTypeBtn" onclick="openAcModal()">A320</button>
-        
+
         <button class="action-btn active-op" id="courseMinusBtn" onclick="toggleOpMode('courseMinusBtn')">Take off</button>
-        
-        <div id="windDirInput" class="data-input" style="touch-action: pan-y; display: flex; align-items: center; justify-content: center;" onpointerdown="startPressWindDir(event)" onpointerup="endPressWindDir(event)" onpointerleave="cancelPressWindDir()" onclick="clickWindDir(event)" oncontextmenu="event.preventDefault()">243°</div>  
+
+        <div id="windDirInput" class="data-input" style="touch-action: pan-y; display: flex; align-items: center; justify-content: center;" onpointerdown="startPressWindDir(event)" onpointerup="endPressWindDir(event)" onpointerleave="cancelPressWindDir()" onclick="clickWindDir(event)" oncontextmenu="event.preventDefault()">243°</div>
         <button class="action-btn" id="coursePlusBtn" style="touch-action: pan-y;" onpointerdown="startPressLand(event)" onpointerup="endPressLand(event)" onpointerleave="cancelPressLand()" oncontextmenu="event.preventDefault()">Land</button>
-        
+
         <button class="action-btn" id="crewBtn" style="touch-action: pan-y;" onpointerdown="startPressCrew(event)" onpointerup="endPressCrew(event)" onpointerleave="cancelPressCrew()" oncontextmenu="event.preventDefault()">
             <span style="font-size:1.1rem; font-weight: 800;">КВС</span>
         </button>
@@ -917,27 +917,27 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             <span class="bottom-action-label">GO HOME</span>
         </a>
         </div>
-        
-       
+
+
     </div>
 
     <div class="tabs-container">
         <div class="tab-line-wrapper">
                <div class="tabs-row upper">
                 <button class="tab-btn active" onclick="selectTab(this)" style="font-size: 0.75rem;">RWYCC</button>
-                
+
                 <!-- ТЕПЕРЬ ВТОРОЙ ИДЕТ µ изм -->
                 <button class="tab-btn" onclick="selectTab(this)" style="display: flex; align-items: center; justify-content: center;">
                     <div style="transform: translateY(-3px); white-space: nowrap;"><span style="font-family: Arial, Helvetica, sans-serif; font-size: 1.9em; font-weight: 400; display: inline-block; transform: translateY(3px);">µ</span><span style="font-size: 0.8em;">изм</span></div>
                 </button>
-                
+
                 <button class="tab-btn" onclick="selectTab(this)">ESF</button>
-                
+
                 <!-- А ЧЕТВЕРТОЙ ИДЕТ µ норм -->
                 <button class="tab-btn" onclick="selectTab(this)" style="display: flex; align-items: center; justify-content: center;">
                     <div style="transform: translateY(-3px); white-space: nowrap;"><span style="font-family: Arial, Helvetica, sans-serif; font-size: 1.9em; font-weight: 400; display: inline-block; transform: translateY(3px);">µ</span><span style="font-size: 0.8em;">норм</span></div>
                 </button>
-                
+
                 <button class="tab-btn" onclick="selectTab(this)">ATIS</button>
             </div>
         </div>
@@ -947,7 +947,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 <div class="tabs-row lower" id="lowerTabsContainer"></div>
             </div>
         </div>
-        
+
         <button class="special-btn" id="narrowContBtn" style="width: 100%; height: 30px; margin-top: 5px; font-size: 0.75rem; letter-spacing: 0.99px; touch-action: pan-y;" onpointerdown="startPressNarrow(event)" onpointerup="endPressNarrow(event)" onpointerleave="cancelPressNarrow()" oncontextmenu="event.preventDefault()">RWY WIDTH < 45m & CONTAMINATED</button>
     </div>
 </div>
@@ -959,13 +959,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             <div class="man-group grid-1">
                 <button class="action-btn man-btn" onclick="selectManType(this, 0)">DRY</button>
             </div>
-            
+
             <div class="rwycc-group-title">RWYCC 5</div>
             <div class="man-group grid-2">
                 <button class="action-btn man-btn" onclick="selectManType(this, 1)">DAMP</button>
                 <button class="action-btn man-btn" onclick="selectManType(this, 1)">WET: ≤ 3 mm of water</button>
             </div>
-            
+
             <div class="rwycc-group-title">RWYCC 5S</div>
             <div class="man-group grid-2">
                 <button class="action-btn man-btn" onclick="selectManType(this, 2)">SLUSH: ≤ 3 mm</button>
@@ -1049,7 +1049,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             <button class="action-btn" style="height: auto; min-height: 45px; padding: 4px;" onclick="selectCrew('2П', '80%')">
                 <span>2П</span>
                 <small>80%</small>
-            </button> 
+            </button>
             <button class="action-btn" style="height: auto; min-height: 45px; padding: 4px;" onclick="selectCrew('2П', '50%')">
                 <span>2П</span>
                 <small>50%</small>
@@ -1067,7 +1067,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 <button class="action-btn active-op" id="btn-manual" onclick="selectLandBase('MANUAL')">MANUAL LANDING</button>
                 <button class="action-btn" id="btn-manual-cat2" onclick="toggleLandMod('MANUAL_CAT2')">CAT2</button>
             </div>
-            
+
             <div class="man-group" style="grid-template-columns: 2fr 1fr;">
                 <button class="action-btn" id="btn-auto" onclick="selectLandBase('AUTO')">AUTOLAND</button>
                 <button class="action-btn" id="btn-auto-roll" onclick="toggleLandMod('AUTO_ROLL')">AUTOROLL</button>
@@ -1112,7 +1112,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     ];
 
     let currentMappingIndex = 0, currentCategory = 'RWYCC';
-    let currentRwycc5State = '5'; 
+    let currentRwycc5State = '5';
     let selectedManValue = rwyMapping[0]['MAN_DEFAULT']; // Инициализируем из базы
     const PATH_SWITCH_STORAGE_KEY = 'rwyWind_path_target';
     const TABLE_SCROLL_STORAGE_KEY = 'rwyWind_tableScrollTop';
@@ -1150,13 +1150,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 b.classList.toggle('active', b.innerText.trim() === currentCategory);
             });
         }
-        
+
         updateLowerTabs({ center: false });
-        toggleOpMode(currentOpMode, { center: false }); 
+        toggleOpMode(currentOpMode, { center: false });
         // Принудительно проявляем плашку сразу после загрузки
         document.getElementById('landStatusRow').style.opacity = '1';
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
-        restoreTableScrollPosition(); 
+        restoreTableScrollPosition();
     };
 
     function renderPathSwitchButton() {
@@ -1283,11 +1283,11 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 openManModal();
             } else {
                 const idx = rwyMapping.findIndex(i => i[currentCategory] === val);
-                if (idx !== -1) { 
-                    currentMappingIndex = idx; 
+                if (idx !== -1) {
+                    currentMappingIndex = idx;
                     // Обновляем значение MAN, чтобы оно соответствовало новому индексу RWYCC/ESF
                     selectedManValue = rwyMapping[idx]['MAN_DEFAULT'];
-                    updateLowerTabs({ center: false }); 
+                    updateLowerTabs({ center: false });
                 }
             }
         }
@@ -1296,7 +1296,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function updateLowerTabs(options = {}) {
         const container = document.getElementById('lowerTabsContainer');
         const isAtis = currentCategory === 'ATIS';
-        
+
         container.classList.toggle('atis-active', isAtis);
 
         if (isAtis) {
@@ -1309,16 +1309,16 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 .replace(/Up to 3 mm/gi, '≤ 3 mm')
                 .replace(/OAT -15°C or colder/gi, 'OAT ≤ -15°C')
                 .replace(/OAT above -15°C/gi, 'OAT > -15°C');
-            
+
             // Динамический расчет: чем больше символов, тем меньше шрифт и плотнее строки
             const len = formattedText.length;
-            let dynSize = '1.0rem'; 
+            let dynSize = '1.0rem';
             let dynLH = '1.1';
 
-            if  (len > 75) { 
-                dynSize = '0.9rem'; dynLH = '1.0'; 
-            } else if (len > 120) { 
-                dynSize = '3.8rem'; dynLH = '1.0'; 
+            if  (len > 75) {
+                dynSize = '0.9rem'; dynLH = '1.0';
+            } else if (len > 120) {
+                dynSize = '3.8rem'; dynLH = '1.0';
             }
 
             //высота ATIS кнопки
@@ -1331,7 +1331,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         } else {
             const labels = tabPresets[currentCategory] || tabPresets['RWYCC'];
             const activeVal = rwyMapping[currentMappingIndex][currentCategory];
-            
+
             // Устанавливаем свойства контейнера для жесткой сетки
             container.style.display = 'flex';
             container.style.gap = '4px';
@@ -1345,29 +1345,29 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 if (currentCategory === 'ESF' && l.includes('to')) {
                     // Индивидуальная логика переноса
                     if (l === 'GOOD to MEDIUM') {
-                        displayText = 'GOOD to <br> MEDIUM'; 
+                        displayText = 'GOOD to <br> MEDIUM';
                     } else if (l === 'MEDIUM to POOR') {
-                        displayText = 'MEDIUM <br> to POOR'; 
+                        displayText = 'MEDIUM <br> to POOR';
                     }
-                    
+
                     // Функция clamp() будет плавно сжимать шрифт на маленьких экранах
-                    fontSize = 'clamp(0.45rem, 2.5vw, 0.55rem)'; 
+                    fontSize = 'clamp(0.45rem, 2.5vw, 0.55rem)';
                     lh = '1.2';
                 }
-                
+
                 // baseStyle обновлен для поддержки динамического переноса
-                const baseStyle = `flex: 1; min-width: 0; height: 35px; border-radius: 8px; font-size: ${fontSize}; 
-                                   white-space: normal; line-height: ${lh}; display: flex; align-items: center; 
+                const baseStyle = `flex: 1; min-width: 0; height: 35px; border-radius: 8px; font-size: ${fontSize};
+                                   white-space: normal; line-height: ${lh}; display: flex; align-items: center;
                                    justify-content: center; text-align: center; padding: 0 2px; text-transform: none;`;
 
                 if (l === '5_GROUP') {
                     const isActive = (currentMappingIndex === 1 || currentMappingIndex === 2) && currentCategory === 'RWYCC';
                     return `
-                        <button class="tab-btn ${isActive ? 'active' : ''}" 
-                            style="${baseStyle} touch-action: pan-y;" 
-                            onpointerdown="startPress5(event)" 
-                            onpointerup="endPress5(event)" 
-                            onpointerleave="cancelPress5()" 
+                        <button class="tab-btn ${isActive ? 'active' : ''}"
+                            style="${baseStyle} touch-action: pan-y;"
+                            onpointerdown="startPress5(event)"
+                            onpointerup="endPress5(event)"
+                            onpointerleave="cancelPress5()"
                             oncontextmenu="event.preventDefault()">
                             <div style="width: 100%;">${currentRwycc5State}</div>
                         </button>
@@ -1376,8 +1376,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                     const isActive = (l === activeVal);
                     // Мы оборачиваем текст в <div>, чтобы flex-выравнивание работало корректно для многострочного текста
                     return `
-                        <button class="tab-btn ${isActive ? 'active' : ''}" 
-                            style="${baseStyle}" 
+                        <button class="tab-btn ${isActive ? 'active' : ''}"
+                            style="${baseStyle}"
                             onclick="selectTab(this)">
                             <div style="width: 100%;">${displayText}</div>
                         </button>
@@ -1387,7 +1387,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         }
         updateTable(options);
     }
-    
+
 
     // === ЛОГИКА ДОЛГОГО НАЖАТИЯ ДЛЯ 5/5S ===
     let longPressTimer;
@@ -1407,10 +1407,10 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (!isLongPress) {
             currentCategory = 'RWYCC';
             currentMappingIndex = (currentRwycc5State === '5S') ? 2 : 1;
-            
+
             // СИНХРОНИЗАЦИЯ
             selectedManValue = rwyMapping[currentMappingIndex]['MAN_DEFAULT'];
-            
+
             document.querySelectorAll('.tabs-row.upper .tab-btn').forEach(b => {
                 b.classList.toggle('active', b.innerText.trim() === 'RWYCC');
             });
@@ -1423,32 +1423,32 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     }
 
     // === УПРАВЛЕНИЕ ОКНОМ 5/5S ===
-    function openRwycc5Modal() { 
+    function openRwycc5Modal() {
         // Находим кнопки 5 и 5S внутри модалки
         const btns = document.getElementById('rwycc5Modal').querySelectorAll('.action-btn');
-        
+
         // Сравниваем текст кнопки с текущим состоянием и вешаем/снимаем выделение
         btns.forEach(btn => {
             btn.classList.toggle('active-op', btn.innerText.trim() === currentRwycc5State);
         });
-        
+
         // Показываем саму модалку
-        document.getElementById('rwycc5Modal').classList.add('active'); 
+        document.getElementById('rwycc5Modal').classList.add('active');
     }
     function closeRwycc5Modal() { document.getElementById('rwycc5Modal').classList.remove('active'); }
-    
+
     function selectRwycc5(val) {
         currentRwycc5State = val; // Сохраняем "5" или "5S"
         currentCategory = 'RWYCC';
         currentMappingIndex = (val === '5S') ? 2 : 1; // Устанавливаем правильный индекс
-        
+
         // СИНХРОНИЗАЦИЯ С MAN
         selectedManValue = rwyMapping[currentMappingIndex]['MAN_DEFAULT'];
-        
+
         document.querySelectorAll('.tabs-row.upper .tab-btn').forEach(b => {
             b.classList.toggle('active', b.innerText.trim() === 'RWYCC');
         });
-        
+
         closeRwycc5Modal();
         updateLowerTabs({ center: false });
     }
@@ -1456,18 +1456,18 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     // === ЛОГИКА СИНХРОНИЗАЦИИ КНОПОК В ОКНЕ MAN ===
     function updateManModalUI() {
         const manButtons = document.querySelectorAll('#manModal .man-btn');
-        
+
         // 1. Очищаем выбранное значение от HTML-тегов (span), чтобы split сработал корректно
         const cleanSelected = selectedManValue.replace(/<[^>]*>/g, '');
         const activeParts = cleanSelected.split(/ OR /i).map(s => s.trim().toLowerCase());
 
         manButtons.forEach(btn => {
             btn.classList.remove('active-op');
-            
+
             // 2. Берем базовый текст кнопки
             const originalBtnText = btn.textContent.replace(/\s+/g, ' ').trim();
             const lowerBtnText = originalBtnText.toLowerCase();
-            
+
             // 3. Сжимаем длинный текст кнопки до коротких математических символов (как в rwyMapping)
             const shortBtnText = originalBtnText
                 .replace(/More than 3 mm, up to 50 mm/gi, '> 3 mm, ≤ 50 mm')
@@ -1478,8 +1478,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 .replace(/OAT -15°C or colder/gi, 'OAT ≤ -15°C')
                 .replace(/OAT above -15°C/gi, 'OAT > -15°C')
                 .toLowerCase();
-            
-            // 4. Кнопка активна, если совпадает либо её короткий вариант (выбрано целое RWYCC), 
+
+            // 4. Кнопка активна, если совпадает либо её короткий вариант (выбрано целое RWYCC),
             // либо длинный (если пилот вручную выбрал одну конкретную кнопку)
             if (activeParts.includes(shortBtnText) || activeParts.includes(lowerBtnText)) {
                 btn.classList.add('active-op');
@@ -1487,11 +1487,11 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         });
     }
 
-    function openManModal() { 
+    function openManModal() {
         updateManModalUI(); // <--- Синхронизируем визуальное состояние перед открытием
-        document.getElementById('manModal').classList.add('active'); 
+        document.getElementById('manModal').classList.add('active');
     }
-    
+
     function closeManModal() { document.getElementById('manModal').classList.remove('active'); }
 
     function selectManType(element, rowIndex) {
@@ -1505,49 +1505,49 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     // МОДАЛКИ (ТЕХПАСПОРТ)
     function openAcModal() { document.getElementById('acModal').classList.add('active'); }
     function closeAcModal() { document.getElementById('acModal').classList.remove('active'); }
-    function selectAcType(m, s) { 
-        document.getElementById('acTypeBtn').innerHTML = s ? `<span>${m}</span><small>${s}</small>` : `<span>${m}</span>`; 
+    function selectAcType(m, s) {
+        document.getElementById('acTypeBtn').innerHTML = s ? `<span>${m}</span><small>${s}</small>` : `<span>${m}</span>`;
         closeAcModal();
-        
+
         // Проверяем, разрешен ли CAT2 для выбранного типа ВС (Только A321 / A321 Winglet)
         const acTypeStr = document.getElementById('acTypeBtn').innerText.toUpperCase();
         const isA321Allowed = acTypeStr.includes('321') && !acTypeStr.includes('NEO');
-        
+
         // Если выбран другой самолет, жестко сбрасываем модификатор CAT2
         if (!isA321Allowed) {
             landMods['MANUAL_CAT2'] = false;
         }
-        
+
         // Вызываем updateLandModalUI (он обновит блокировку кнопок, строку статуса и вызовет updateTable)
-        updateLandModalUI({ center: true }); 
+        updateLandModalUI({ center: true });
     }
 
     let activeKp = null, kpVal = "", isKpError = false;
-    
-    function openKeypad(id) { 
-        activeKp = document.getElementById(id); 
+
+    function openKeypad(id) {
+        activeKp = document.getElementById(id);
         kpVal = ""; // Сбрасываем ВВОД, но плейсхолдер покажет текущее значение
         isKpError = false; // Сбрасываем флаг ошибки при открытии
         document.getElementById('kpValue').style.color = 'var(--accent)'; // Возвращаем цвет по умолчанию на всякий случай
-        updateKp(); 
-        document.getElementById('keypadModal').classList.add('active'); 
+        updateKp();
+        document.getElementById('keypadModal').classList.add('active');
     }
-    
-    function closeKeypad(e) { 
+
+    function closeKeypad(e) {
         if (e === 'done' && activeKp) {
             // Если пилот нажал ОК, но ничего не ввел — просто закрываем
             if (kpVal === "") {
                 document.getElementById('keypadModal').classList.remove('active');
                 return;
             }
-            
+
             let num = parseInt(kpVal, 10);
             if (isNaN(num) || num < 1 || num > 360) {
                 isKpError = true; // <--- Включаем режим ошибки
                 const valDisplay = document.getElementById('kpValue');
                 valDisplay.style.color = '#ef4444'; // Подсвечиваем красным
                 setTimeout(() => { valDisplay.style.color = 'var(--accent)'; }, 500);
-                return; 
+                return;
             }
             // Форматируем число (3 цифры) и приклеиваем знак градуса
             activeKp.textContent = num.toString().padStart(3, '0') + '°';
@@ -1555,14 +1555,14 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             kpVal = "";
             isKpError = false; // Сбрасываем флаг при успешном вводе
         }
-        document.getElementById('keypadModal').classList.remove('active'); 
+        document.getElementById('keypadModal').classList.remove('active');
     }
-    
-    function kpPress(k) { 
+
+    function kpPress(k) {
         if (k === 'backspace') {
             if (isKpError) {
                 // Если поле горело красным, Backspace просто сбрасывает ошибку и очищает ввод
-                kpVal = ""; 
+                kpVal = "";
                 isKpError = false;
                 document.getElementById('kpValue').style.color = 'var(--accent)';
             } else {
@@ -1576,29 +1576,29 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 isKpError = false; // Снимаем флаг ошибки
                 document.getElementById('kpValue').style.color = 'var(--accent)'; // Мгновенно сбрасываем красный цвет
             } else if (kpVal.length < 3) {
-                kpVal += k; 
+                kpVal += k;
             }
         }
-        updateKp(); 
+        updateKp();
     }
-    
-    function updateKp() { 
-        const d = document.getElementById('kpValue'); 
+
+    function updateKp() {
+        const d = document.getElementById('kpValue');
         const isCourse = activeKp && activeKp.id === 'windDirInput';
-        
+
         // Очищаем старое значение от знака градуса для чистой математики
         let placeholder = activeKp ? activeKp.textContent.replace('°', '') : "000";
-        
+
         // Формируем то, что будет на экране
         let displayValue = kpVal || placeholder;
-        
+
         // Если это окно курса, приклеиваем градус "°" на лету к активному ИЛИ бледному тексту
         if (isCourse && displayValue !== "") {
             displayValue += "°";
         }
-        
-        d.textContent = displayValue; 
-        d.style.opacity = kpVal ? "1" : "0.3"; 
+
+        d.textContent = displayValue;
+        d.style.opacity = kpVal ? "1" : "0.3";
     }
 
     // === ЛОГИКА ПОЛЯ RW COURSE (Быстрый тап = Keypad, Долгий тап = обратный курс) ===
@@ -1608,41 +1608,41 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function startPressWindDir(e) {
         if (e && e.button !== undefined && e.button !== 0) return;
         isWindDirLongPress = false; // Сбрасываем флаг при каждом новом касании
-        
+
         windDirPressTimer = setTimeout(() => {
             isWindDirLongPress = true; // Фиксируем долгий тап
-            
+
             const input = document.getElementById('windDirInput');
             let currentCourse = parseInt(input.textContent.replace('°', ''), 10);
             if (isNaN(currentCourse) || currentCourse === 0) currentCourse = 243;
-            
+
             let reciprocal = currentCourse + 180;
             if (reciprocal > 360) reciprocal -= 360;
-            
+
             let newCourseStr = reciprocal.toString().padStart(3, '0') + '°';
             input.textContent = newCourseStr;
-            
+
             updateTable({ center: true });
 
             // === НОВОЕ ОКНО: Показ курса с микро-задержкой CSS ===
             const cToast = document.getElementById('courseToast');
             cToast.textContent = newCourseStr;
-            
+
             // Очищаем старый цикл, если пилот нажал курс дважды
             if (cToast.hideTimeout) clearTimeout(cToast.hideTimeout);
-            
+
             // 1. Подготовка: окно прозрачно, но активно для рендера
-            cToast.style.transition = 'none'; 
+            cToast.style.transition = 'none';
             cToast.style.opacity = '0';
             cToast.style.visibility = 'visible';
-            
+
             // 2. Принудительный кадр
-            void cToast.offsetWidth; 
-            
+            void cToast.offsetWidth;
+
             // 3. ФАЗА 1 (Fade In): Плавное появление до пика за 0.7 секунды
             cToast.style.transition = 'opacity 0.7s ease-out';
             cToast.style.opacity = '1';
-            
+
             // 4. ФАЗА 2 (Fade Out): Ровно через 0.7с (в момент пика) запускаем затухание
             cToast.hideTimeout = setTimeout(() => {
                 cToast.style.transition = 'opacity 0.7s ease-in';
@@ -1677,7 +1677,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function startPressUnit(e) {
         if (e && e.button !== undefined && e.button !== 0) return; // Игнорируем правый клик
         isUnitLongPress = false;
-        
+
         unitPressTimer = setTimeout(() => {
             isUnitLongPress = true;
             isMps = !isMps; // Переключаем флаг (узлы <-> м/с)
@@ -1712,9 +1712,9 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
 
     function startPressCrew(e) {
         if (e && e.button !== undefined && e.button !== 0) return; // Игнорируем правый клик
-        
+
         // ЗАЩИТА: Блокируем кнопку, только если мы в режиме LAND и включена автоматика
-        const isLandMode = currentOpMode === 'coursePlusBtn'; 
+        const isLandMode = currentOpMode === 'coursePlusBtn';
         const isAutoActive = isLandMode && (currentLandBase === 'AUTO' || landMods['MANUAL_CAT2'] || landMods['AUTO_CAT2']);
         if (isAutoActive) return;
 
@@ -1734,7 +1734,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
 
     function endPressCrew(e) {
         clearTimeout(crewPressTimer);
-        
+
         const isLandMode = currentOpMode === 'coursePlusBtn';
         const isAutoActive = isLandMode && (currentLandBase === 'AUTO' || landMods['MANUAL_CAT2'] || landMods['AUTO_CAT2']);
         if (isAutoActive) return;
@@ -1777,7 +1777,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         document.getElementById('coursePlusBtn').classList.remove('active-op');
         // Назначаем выделение нажатой
         document.getElementById(selectedId).classList.add('active-op');
-        
+
         // === ПЛАШКА ТЕПЕРЬ АКТИВНА ВСЕГДА ===
         // === ПЛАШКА ТЕПЕРЬ АКТИВНА ВСЕГДА ===
         updateStatusRow();
@@ -1803,8 +1803,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         clearTimeout(landPressTimer);
         if (!isLandLongPress) {
             // Одиночный быстрый тап (срабатывает моментально без задержек)
-            toggleOpMode('coursePlusBtn'); 
-            showLandHint(); 
+            toggleOpMode('coursePlusBtn');
+            showLandHint();
         }
     }
 
@@ -1823,7 +1823,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function getLandSelectionText() {
         let text = (currentLandBase === 'MANUAL') ? "MANUAL LANDING" : "AUTOLAND";
         let mods = [];
-        
+
         if (currentLandBase === 'MANUAL') {
             if (landMods['MANUAL_CAT2']) mods.push("CAT2");
         } else if (currentLandBase === 'AUTO') {
@@ -1873,22 +1873,22 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         }, 2000);
     }
 
-    function openLandModal() { 
+    function openLandModal() {
         updateLandModalUI({ center: false });
-        document.getElementById('landModal').classList.add('active'); 
+        document.getElementById('landModal').classList.add('active');
     }
-    
-    function closeLandModal() { 
-        document.getElementById('landModal').classList.remove('active'); 
+
+    function closeLandModal() {
+        document.getElementById('landModal').classList.remove('active');
     }
 
     function selectLandBase(base) {
         currentLandBase = base;
-        
+
         // Сбрасываем все дополнительные кнопки (модификаторы) в ненажатое состояние
         landMods['MANUAL_CAT2'] = false;
         landMods['AUTO_ROLL'] = false;
-        
+
         updateLandModalUI({ center: false });
     }
 
@@ -1896,7 +1896,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         // Блокируем нажатие модификаторов от неактивной строки
         if (mod.startsWith('MANUAL') && currentLandBase !== 'MANUAL') return;
         if (mod.startsWith('AUTO') && currentLandBase !== 'AUTO') return;
-        
+
         landMods[mod] = !landMods[mod]; // Переключаем состояние (вкл/выкл)
         updateLandModalUI({ center: false });
     }
@@ -1909,16 +1909,16 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         // Взаимоисключающие базовые кнопки (Радио)
         document.getElementById('btn-manual').classList.toggle('active-op', currentLandBase === 'MANUAL');
         document.getElementById('btn-auto').classList.toggle('active-op', currentLandBase === 'AUTO');
-        
-        // === МАГИЯ ЗДЕСЬ: БЛОКИРОВКА КНОПОК === 
+
+        // === МАГИЯ ЗДЕСЬ: БЛОКИРОВКА КНОПОК ===
         // CAT2 доступен ТОЛЬКО для MANUAL LANDING и ТОЛЬКО для A321 / A321 Winglet
         document.getElementById('btn-manual-cat2').disabled = (currentLandBase !== 'MANUAL' || !isA321Allowed);
         document.getElementById('btn-auto-roll').disabled = (currentLandBase !== 'AUTO');
-        
+
         // Модификаторы строк (Чекбоксы, работают только если активна их база)
         document.getElementById('btn-manual-cat2').classList.toggle('active-op', currentLandBase === 'MANUAL' && landMods['MANUAL_CAT2']);
         document.getElementById('btn-auto-roll').classList.toggle('active-op', currentLandBase === 'AUTO' && landMods['AUTO_ROLL']);
-        
+
         // Сброс экипажа на КВС при включении автоматики
         const isAutoActive = currentLandBase === 'AUTO' || landMods['MANUAL_CAT2'];
         if (isAutoActive) {
@@ -1927,10 +1927,10 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
                 btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
             }
         }
-        
+
         // === ОБНОВЛЕНИЕ ТЕКСТА СТРОКИ СТАТУСА ===
         updateStatusRow();
-        updateTable(options);    
+        updateTable(options);
     }
 
     // === ЛОГИКА ЗАДЕРЖКИ ДЛЯ NARROW/CONTAMINATED ===
@@ -1940,7 +1940,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function startPressNarrow(e) {
         if (e.button !== undefined && e.button !== 0) return; // Игнорируем правый клик
         isNarrowLongPress = false;
-        
+
         // Запускаем таймер задержки включения/выключения
         narrowPressTimer = setTimeout(() => {
             isNarrowLongPress = true;
@@ -1971,13 +1971,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         const isLand = !isTO;
         const acTypeStr = document.getElementById('acTypeBtn').innerText.toUpperCase();
         const crewStr = document.getElementById('crewBtn').innerText.toUpperCase();
-        
+
         // Считываем состояние новой объединенной кнопки
         const isNarrowCont = document.getElementById('narrowContBtn').classList.contains('active');
 
         // --- ЭТАП А: МАНУАЛЬНЫЕ ЛИМИТЫ ---
         let base_xw = null;
-        let base_tw = isTO ? 15 : 10; 
+        let base_tw = isTO ? 15 : 10;
         const rwycc = currentMappingIndex === 7 ? '-' : rwyMapping[currentMappingIndex]['RWYCC'];
 
         if (rwycc === '-') {
@@ -2022,7 +2022,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             } else if (isCat2 && isA321 && !isNeo) {
                 // CAT2 Automatic Approach without Autoland актуально ТОЛЬКО для A321 и A321 Winglet
                 auto_tw = 10;
-                auto_hw = 40; 
+                auto_hw = 40;
                 auto_xw = 25;
             }
         }
@@ -2035,7 +2035,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     if (!tableBody) return;
     const shouldCenter = options.center === true;
     const previousScrollTop = tableBody.scrollTop;
-    
+
     // ВАЖНО: Читаем textContent, так как поле курса теперь <div>, а не <input>
     let rwCourseStr = document.getElementById('windDirInput').textContent.replace('°', '');
     let rwCourse = parseInt(rwCourseStr, 10);
@@ -2044,7 +2044,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     const rawLimits = getActiveLimitsData();
     const limitsData = { ...rawLimits };
 
-    
+
     let h = '';
 
     // ---- НОВАЯ ЛОГИКА ГЕНЕРАЦИИ СТОЛБЦОВ КУРСА ВЕТРА ----
@@ -2054,13 +2054,13 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     // Формируем стартовые точки компаса для левой и правой колонки
     let startL = Math.floor(rwCourse / 10) * 10;
     let startR = Math.ceil(rwCourse / 10) * 10;
-    
+
     if (isRoundCourse) {
         // Для круглых курсов колонки начинаются одинаково (симметрично)
-        startR = startL; 
+        startR = startL;
     } else if (startL === startR) {
         // Защита от дубликатов для смещенных курсов
-        startR += 10; 
+        startR += 10;
     }
 
     // Корректируем компасные значения 1-360
@@ -2076,15 +2076,15 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         let ignoreXW = false;
         // Игнорируем XW для малых углов. Теперь diff - это точный угол до градуса.
         if (diff <= 10 || diff >= 170) {
-            ignoreXW = true; 
+            ignoreXW = true;
         } else if ((diff <= 20 || diff >= 160) && currentMappingIndex < 4) {
             ignoreXW = true;
         }
 
         // Мануальные лимиты
-        if (diff > 0 && diff <= 90) { 
+        if (diff > 0 && diff <= 90) {
             if (!ignoreXW) currentMaxLimit = Math.min(currentMaxLimit, limitsData.base_xw / Math.sin(angleRad));
-        } else if (diff > 90 && diff < 180) { 
+        } else if (diff > 90 && diff < 180) {
             let tailRad = (180 - diff) * Math.PI / 180;
             if (!ignoreXW) currentMaxLimit = Math.min(currentMaxLimit, limitsData.base_xw / Math.sin(tailRad));
             currentMaxLimit = Math.min(currentMaxLimit, limitsData.base_tw / Math.cos(tailRad));
@@ -2160,7 +2160,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         let lCStr = lC.toString().padStart(3, '0');
         let rCStr = rC.toString().padStart(3, '0');
 
-        let limitColor = isMps ? 'var(--limit-mps)' : 'var(--limit-kt)'; 
+        let limitColor = isMps ? 'var(--limit-mps)' : 'var(--limit-kt)';
         let leftOpacity = (dimSide === 'right') ? '0.2' : '1';
         let rightOpacity = (dimSide === 'left') ? '0.2' : '1';
 
@@ -2201,7 +2201,7 @@ function centerTable() {
     setTimeout(() => {
         const tableBody = document.getElementById('tableBody');
         if (!tableBody || tableBody.children.length === 0) return;
-        
+
         let targetTop = 0;
         const isRoundCourse = tableBody.children.length === 19;
 
@@ -2226,13 +2226,13 @@ function centerTable() {
         saveTableScrollPosition();
     }, 0);
 }
-    
+
 
 
     // === ФУНКЦИИ СБРОСА ПРИЛОЖЕНИЯ (Dual Action Refresh) ===
     function softResetApp() {
         if (navigator.vibrate) navigator.vibrate(30); // Короткая легкая вибрация
-        
+
         // Базовые переменные FCOM (Сброс на дефолт)
         currentMappingIndex = 0;
         currentCategory = 'RWYCC';
@@ -2246,7 +2246,7 @@ function centerTable() {
         document.getElementById('acTypeBtn').innerHTML = "<span>A320</span>";
         document.getElementById('crewBtn').innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
         document.getElementById('narrowContBtn').classList.remove('active');
-        
+
         // Вкладки верхнего ряда
         document.querySelectorAll('.tabs-row.upper .tab-btn').forEach(b => {
             b.classList.toggle('active', b.innerText.trim() === 'RWYCC');
@@ -2256,15 +2256,15 @@ function centerTable() {
         currentLandBase = 'MANUAL';
         landMods = { 'MANUAL_CAT2': false, 'AUTO_ROLL': false };
         toggleOpMode('courseMinusBtn', { center: false }); // Включает Take off и пересчитывает таблицу
-        
+
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Сбрасываем блокировки CAT2
         updateLowerTabs({ center: true }); // Обновляет нижние кнопки и таблицу
-        
+
         // Мгновенно сохраняем это чистое состояние в память
         saveAppState();
     }
 
-   
+
 
 
 // --- STATE PERSISTENCE LOGIC (ТОЧНАЯ АВИАЦИОННАЯ СИНХРОНИЗАЦИЯ) ---
@@ -2283,7 +2283,7 @@ function saveAppState() {
         category: currentCategory,
         manValue: selectedManValue,
         rwycc5: currentRwycc5State,
-        isNarrow: document.getElementById('narrowContBtn').classList.contains('active')        
+        isNarrow: document.getElementById('narrowContBtn').classList.contains('active')
     };
     localStorage.setItem('rwyWind_state', JSON.stringify(state));
 }
@@ -2294,32 +2294,32 @@ function loadAppState() {
 
     try {
         const state = JSON.parse(saved);
-        
+
         // 1. Восстанавливаем курс
         if (state.course) document.getElementById('windDirInput').textContent = state.course;
-        
+
         // 2. Восстанавливаем самолет и экипаж
         if (state.acBtnHTML) document.getElementById('acTypeBtn').innerHTML = state.acBtnHTML;
         if (state.crewBtnHTML) document.getElementById('crewBtn').innerHTML = state.crewBtnHTML;
         if (state.lastC) lastC = state.lastC;
-        
+
         // 3. Восстанавливаем режимы посадки/взлета и единицы измерения
         if (state.opMode) currentOpMode = state.opMode;
         if (state.landBase) currentLandBase = state.landBase;
         if (state.landMods) landMods = state.landMods;
         if (state.isMps !== undefined) isMps = state.isMps;
-        
+
         // 4. Восстанавливаем состояние полосы (RWYCC, ESF, ATIS)
         if (state.mappingIndex !== undefined) currentMappingIndex = state.mappingIndex;
         if (state.category) currentCategory = state.category;
         if (state.manValue) selectedManValue = state.manValue;
         if (state.rwycc5) currentRwycc5State = state.rwycc5;
-        
+
         // 5. Восстанавливаем кнопку Narrow/Contaminated
         if (state.isNarrow) document.getElementById('narrowContBtn').classList.add('active');
         else document.getElementById('narrowContBtn').classList.remove('active');
 
-                
+
         return true;
     } catch (e) {
         console.error('Ошибка чтения сессии:', e);
@@ -2339,7 +2339,7 @@ function loadAppState() {
 
 // --- ЗАПУСК ---
 window.addEventListener('load', () => {
-    
+
     // Простая кнопка сброса (без долгого тапа)
     const refBtn = document.getElementById('refreshBtn');
     if (refBtn) {
@@ -2350,6 +2350,6 @@ window.addEventListener('load', () => {
     }
 });
 </script>
-<script src="./app.js"></script>
+<script src="./offline-client.js"></script><script src="./app.js"></script>
 </body>
 </html>
