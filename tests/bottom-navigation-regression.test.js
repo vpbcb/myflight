@@ -90,7 +90,7 @@ test('bordered calculators compensate their one-pixel inset', () => {
 
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260906-1';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260909-1';/);
     const release = JSON.parse(sw.match(/const PRECACHE_BUILD = (\{.*\});/)[1]);
     assert.ok(release.assets.some(asset => asset.url === 'bottom-navigation.css' && /^[a-f0-9]{64}$/.test(asset.sha256)));
 });

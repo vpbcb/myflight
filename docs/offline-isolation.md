@@ -1,6 +1,6 @@
-# Offline shell protocol 2 — 6 September 2026
+# Offline shell protocol 2 — 9 September 2026
 
-Release cache: `myflight_v.260906-1`.
+Release cache: `myflight_v.260909-1`.
 
 ## Source and deployment
 
