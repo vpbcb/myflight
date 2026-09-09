@@ -7671,6 +7671,11 @@
         if (target.type === 'thr') {
             return String(target.input?.value || '').toUpperCase().replace(/[^0-9LCR]/g, '').slice(0, getAirportKeypadMaxDigits(target));
         }
+        if (target.type === 'elev') {
+            const value = String(target.input?.value || '').replace('−', '-');
+            const digits = value.replace(/\D/g, '').slice(0, getAirportKeypadMaxDigits(target));
+            return `${value.trim().startsWith('-') ? '-' : ''}${digits}`;
+        }
         return String(target.input?.value || '').replace(/\D/g, '').slice(0, getAirportKeypadMaxDigits(target));
     }
 
@@ -7678,8 +7683,12 @@
         if (target?.type === 'thr') {
             return String(value || '').toUpperCase().replace(/[^0-9LCR]/g, '').slice(0, getAirportKeypadMaxDigits(target));
         }
-        const digits = String(value || '').replace(/\D/g, '').slice(0, getAirportKeypadMaxDigits(target));
-        if (target?.type === 'elev') return digits ? `${digits} ft` : "";
+        const normalized = String(value || '').replace('−', '-');
+        const digits = normalized.replace(/\D/g, '').slice(0, getAirportKeypadMaxDigits(target));
+        if (target?.type === 'elev') {
+            if (!digits) return normalized.trim().startsWith('-') ? '−' : "";
+            return `${normalized.trim().startsWith('-') ? '−' : ''}${digits} ft`;
+        }
         return digits;
     }
 
@@ -7774,7 +7783,8 @@
             updateAirportRunwayThresholdLabels(target.block);
             updateAirportTarThresholdLabels();
         } else if (target.type === 'elev') {
-            target.input.value = digits ? `${digits} ft` : "";
+            const isNegative = String(finalVal || '').replace('−', '-').trim().startsWith('-');
+            target.input.value = digits ? `${isNegative ? '-' : ''}${digits} ft` : "";
             renderAirportElevDisplay(target.input);
         }
     }
@@ -7803,8 +7813,10 @@
             updateKpDisplay();
             return;
         }
-        const nextValue = `${currentKpVal}${key}`.replace(/\D/g, '').slice(0, maxDigits);
-        if (nextValue === currentKpVal && currentKpVal.length >= maxDigits) return;
+        const isNegativeElevation = activeAirportKeypad?.type === 'elev' && currentKpVal.startsWith('-');
+        const digits = `${currentKpVal}${key}`.replace(/\D/g, '').slice(0, maxDigits);
+        const nextValue = `${isNegativeElevation ? '-' : ''}${digits}`;
+        if (nextValue === currentKpVal && digits.length >= maxDigits) return;
         currentKpVal = nextValue;
         keypadWasCleared = false;
         updateKpDisplay();
@@ -9218,6 +9230,9 @@
             }
             if (activeAirportKeypad?.type === 'length') {
                 updateRwLengthKeypadUnit();
+            } else if (activeAirportKeypad?.type === 'elev' && dotBtn) {
+                dotBtn.innerText = "−";
+                dotBtn.onclick = function() { kpPress('minus_toggle'); };
             } else if (dotBtn) {
                 dotBtn.style.visibility = 'hidden';
             }
@@ -9633,7 +9648,8 @@
         }
 
         if (key === 'minus_toggle') {
-            if (activeNpaField !== 'elevation') return;
+            const isAirportElevation = activeNpaField === 'airportModal' && activeAirportKeypad?.type === 'elev';
+            if (activeNpaField !== 'elevation' && !isAirportElevation) return;
             keypadWasCleared = false;
             npaTempSignOnlyInput = false;
             if (currentKpVal.startsWith('-')) {
