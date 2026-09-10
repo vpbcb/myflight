@@ -78,6 +78,14 @@ test('Settings actions form two centered rows of equal tiles', () => {
     assert.doesNotMatch(stateBody, /button\.textContent/);
 });
 
+test('Settings toggle state is not hidden by sticky touch hover', () => {
+    assert.match(
+        indexHtml,
+        /@media\s*\(hover:\s*hover\)\s*and\s*\(pointer:\s*fine\)\s*\{[\s\S]*?#settingsModal button:not\(\.is-on\):not\(\[aria-pressed="true"\]\):hover:not\(:disabled\)/
+    );
+    assert.doesNotMatch(indexHtml, /#settingsModal button:hover:not\(:disabled\)/);
+});
+
 test('Settings modal copies the MyWind RWY keypad size and placement', () => {
     const myWindKeypadRule = /\.keypad-content\s*\{[\s\S]*?padding:\s*20px\s+10px;[\s\S]*?width:\s*80%;[\s\S]*?max-width:\s*280px;[\s\S]*?margin-bottom:\s*-45vh;[\s\S]*?margin-left:\s*40px;[\s\S]*?\}/;
     assert.match(mywindHtml, myWindKeypadRule);

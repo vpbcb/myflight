@@ -400,12 +400,14 @@
             transition: transform 80ms ease, box-shadow 80ms ease,
                 border-color 120ms ease, background 120ms ease;
         }
-        #settingsModal button:hover:not(:disabled) {
-            border-color: #397897;
-            background: linear-gradient(180deg, #ffffff 0%, #dcecf2 100%);
-            color: #173f54;
-            box-shadow: 0 2px 0 #7895a5, 0 5px 10px rgb(33 73 94 / 23%),
-                inset 0 1px 0 #ffffff;
+        @media (hover: hover) and (pointer: fine) {
+            #settingsModal button:not(.is-on):not([aria-pressed="true"]):hover:not(:disabled) {
+                border-color: #397897;
+                background: linear-gradient(180deg, #ffffff 0%, #dcecf2 100%);
+                color: #173f54;
+                box-shadow: 0 2px 0 #7895a5, 0 5px 10px rgb(33 73 94 / 23%),
+                    inset 0 1px 0 #ffffff;
+            }
         }
         #settingsModal .push-toggle-card.is-on,
         #settingsModal button[aria-pressed="true"] {
@@ -441,10 +443,12 @@
             place-items: center;
             line-height: 1;
         }
-        #settingsModal .modal-close-btn:hover:not(:disabled) {
-            border-color: #b91c1c;
-            background: linear-gradient(180deg, #f56565 0%, #dc2626 100%);
-            color: #fff;
+        @media (hover: hover) and (pointer: fine) {
+            #settingsModal .modal-close-btn:hover:not(:disabled) {
+                border-color: #b91c1c;
+                background: linear-gradient(180deg, #f56565 0%, #dc2626 100%);
+                color: #fff;
+            }
         }
         html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):not(:disabled) {
             border-color: #4c6579;
@@ -453,11 +457,13 @@
             box-shadow: 0 2px 0 #101c28, 0 4px 8px rgb(0 0 0 / 30%),
                 inset 0 1px 0 rgb(255 255 255 / 8%);
         }
-        html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):hover:not(:disabled) {
-            border-color: #66849b;
-            background: linear-gradient(180deg, #344c60 0%, #25394a 100%);
-            box-shadow: 0 2px 0 #101c28, 0 5px 10px rgb(0 0 0 / 35%),
-                inset 0 1px 0 rgb(255 255 255 / 12%);
+        @media (hover: hover) and (pointer: fine) {
+            html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):hover:not(:disabled) {
+                border-color: #66849b;
+                background: linear-gradient(180deg, #344c60 0%, #25394a 100%);
+                box-shadow: 0 2px 0 #101c28, 0 5px 10px rgb(0 0 0 / 35%),
+                    inset 0 1px 0 rgb(255 255 255 / 12%);
+            }
         }
         html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):active:not(:disabled) {
             box-shadow: 0 1px 3px rgb(0 0 0 / 30%), inset 0 2px 4px rgb(0 0 0 / 25%);
@@ -1397,7 +1403,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="5ef3a1522b83d9ba2665e9e4"></head>
+<meta name="offline-build" content="d45a7cb97266940f21d5b197"></head>
 <body>
     <div class="app-shell">
 
