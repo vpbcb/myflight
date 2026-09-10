@@ -22,7 +22,7 @@ function functionBody(name) {
 }
 
 test('home footer keeps Refresh and replaces Theme and Mail with Settings', () => {
-    const footerStart = indexHtml.search(/<div class="bottom-controls(?: [^"]*)?">/);
+    const footerStart = indexHtml.search(/<div class="bottom-controls(?: [^"]*)?"[^>]*>/);
     const settingsModalStart = indexHtml.indexOf('<div id="settingsModal"');
     assert.notEqual(footerStart, -1);
     assert.ok(settingsModalStart > footerStart);
@@ -70,11 +70,11 @@ test('Settings actions form two centered rows of equal tiles', () => {
     const settingsStart = indexHtml.indexOf('<div id="settingsModal"');
     const settingsEnd = indexHtml.indexOf('<div id="notesKeypadModal"', settingsStart);
     const settings = indexHtml.slice(settingsStart, settingsEnd);
-    assert.match(settings, /id="pushToggleBtn"[\s\S]*<svg[\s\S]*<span id="pushText">Push Off<\/span>[\s\S]*<\/button>/);
+    assert.match(settings, /id="pushToggleBtn"[\s\S]*<svg[\s\S]*<span id="pushText">Phone notifications disabled<\/span>[\s\S]*<\/button>/);
 
     const stateBody = functionBody('setMyFlightPushButtonState');
     assert.match(stateBody, /getElementById\('pushText'\)/);
-    assert.match(stateBody, /pushText\.textContent\s*=\s*myFlightPushEnabled\s*\?\s*'Push On'\s*:\s*'Push Off'/);
+    assert.match(stateBody, /pushText\.textContent\s*=\s*myFlightPushEnabled\s*\?\s*'Phone notifications enabled'\s*:\s*'Phone notifications disabled'/);
     assert.doesNotMatch(stateBody, /button\.textContent/);
 });
 

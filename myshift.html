@@ -157,6 +157,7 @@ body {
 }
 
 /* Кнопки управления внизу (аналогия с образцом) */
+
 .bottom-btn {
   position: absolute;
   bottom: max(12px, calc(var(--safe-bottom) + 8px));
@@ -189,7 +190,7 @@ body {
 #btnBotRefresh span {
   margin-left:2px;
   line-height:1.05;
-  text-align:left;
+  text-align:center;
 }
 
 /* --- СТИЛЬ НАДПИСИ КЭША ИЗ ОБРАЗЦА --- */
@@ -250,7 +251,7 @@ html.dark-theme {
   position: relative;
   border: 1px solid var(--ctlBorder); /* Заменили жесткий #b5b5b5 на переменную */
   border-radius: 12px;
-  margin: 0 4px 5px 4px;
+  margin: 0 4px 17px 4px;
   background: var(--scrollBg);
 
   /* ЛОГИКА ИЗ ЭТАЛОНА: */
@@ -390,6 +391,24 @@ select.deltaSelect{
   appearance: none;
 }
 
+.app-container{
+  --sectionTitleBg:#ebf3fa;
+  --sectionTitleInk:#294e73;
+}
+html.dark-theme .app-container{
+  --sectionTitleBg:#1e2f41;
+  --sectionTitleInk:#aecbe4;
+}
+.app-container .fieldTitle,
+.app-container .ldtCardHeader{
+  --pillBg:var(--sectionTitleBg);
+  color:var(--sectionTitleInk);
+  font-weight:700;
+}
+.app-container .durationSummary .fieldTitle{
+  --pillBg:transparent;
+  color:var(--durationInk);
+}
 .fieldTitle{
   display:flex;
   align-items:center;
@@ -453,13 +472,6 @@ button.fieldTitle{
 }
 
 .tzGroup{ display:flex; gap:8px; flex-wrap:nowrap; }
-.tzBtn{
-  font-weight:600;
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:var(--ctlFs);
-}
-.tzBtn.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
 /* Состояние заблокированной кнопки Local */
 .tzBtn:disabled{ opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
 
@@ -536,6 +548,14 @@ button.fieldTitle{
   width: auto;
   padding-left: 5px;
   padding-right: 22px;
+}
+
+.deltaInner .hasHint{
+  padding-right:28px;
+}
+.deltaInner .hasHint::after{
+  top:2px;
+  right:2px;
 }
 
 /* Светлая стрелка для темной темы */
@@ -706,12 +726,14 @@ html.dark-theme .durationSummary{
   gap: 8px;
   margin-bottom: 8px; /* Добавили отступ от следующей карточки */
 }
-.paxBtn {
+.paxBtn,
+.tzBtn {
+  box-sizing: border-box;
   flex: 1;
   height: 35px;
-  background: var(--card); /* Используем переменную */
-  color: var(--accent); /* Синий текст */
-  border: 2px solid var(--accent); /* Синяя рамка */
+  background: linear-gradient(180deg, #ffffff 0%, #e7f0f4 100%);
+  color: #28566d;
+  border: 1px solid #91a9b7;
   border-radius: 8px;
   font-size: 11px;
   line-height: 1.15;
@@ -719,15 +741,68 @@ html.dark-theme .durationSummary{
   text-align: center;
   cursor: pointer;
   padding: 0 4px;
-  transition: all 0.15s ease;
+  /* Full surface and press feedback from MyActivity .section-mode-button. */
+  box-shadow:
+    0 2px 0 #9eb2bd,
+    0 4px 8px rgb(33 73 94 / 18%),
+    inset 0 1px 0 rgb(255 255 255 / 95%);
+  transform: translateY(0);
+  transition: transform 80ms ease, box-shadow 80ms ease,
+    border-color 120ms ease, background 120ms ease;
 }
 
 /* Явное выделение нажатой кнопки */
-.paxBtn.active {
-  background: var(--accent); /* Нажатая кнопка - синяя */
+.tzBtn{
+  font-size:var(--ctlFs);
+}
+
+.paxBtn.active,
+.tzBtn.active {
+  background: linear-gradient(180deg, #328be0 0%, #1767b5 100%);
   color: #fff; /* Белый текст */
-  border: 2px solid var(--accent); /* Рамка остается синей */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12); /* Легкая тень для объема */
+  border-color: #235f94;
+  box-shadow:
+    0 2px 0 #9eb2bd,
+    0 4px 8px rgb(33 73 94 / 18%);
+}
+
+.paxBtn:hover:not(:disabled),
+.tzBtn:hover:not(:disabled){
+  border-color: #397897;
+  background: linear-gradient(180deg, #ffffff 0%, #dcecf2 100%);
+  color: #173f54;
+  box-shadow:
+    0 2px 0 #7895a5,
+    0 5px 10px rgb(33 73 94 / 23%),
+    inset 0 1px 0 #ffffff;
+}
+.paxBtn.active:hover:not(:disabled),
+.tzBtn.active:hover:not(:disabled){
+  border-color: #235f94;
+  background: linear-gradient(180deg, #4098ec 0%, #1b70bf 100%);
+  color: #fff;
+  box-shadow:
+    0 2px 0 #7895a5,
+    0 5px 10px rgb(33 73 94 / 23%);
+}
+.paxBtn:active:not(:disabled),
+.tzBtn:active:not(:disabled){
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 #7895a5,
+    0 1px 3px rgb(33 73 94 / 18%),
+    inset 0 2px 4px rgb(33 73 94 / 14%);
+}
+.paxBtn:disabled,
+.tzBtn:disabled{
+  border-color: #c8d5dc;
+  background: #e5e7eb;
+  color: #94a3b8;
+  opacity: 0.72;
+  filter:none;
+  cursor:not-allowed;
+  box-shadow:none;
+  transform:none;
 }
 
 /* оверлей подсказок */
@@ -870,17 +945,13 @@ html.dark-theme .durationSummary{
   transform-origin:center;
 }
 @keyframes startCalculationPulse{
-  0%, 100%{ opacity:0.65; transform:scale(1); }
-  50%{ opacity:1; transform:scale(1.04); }
+  0%, 100%{ transform:scale(1); }
+  50%{ transform:scale(1.04); }
 }
 @media (prefers-reduced-motion: reduce){
   .app-container.carousel-ready #btnBotRefresh .bottom-action-label{
-    animation:startCalculationFade 3s ease-in-out infinite;
+    animation:none;
   }
-}
-@keyframes startCalculationFade{
-  0%, 100%{ opacity:0.55; }
-  50%{ opacity:1; }
 }
 .carouselNavBtn{
   position:absolute;
@@ -912,16 +983,25 @@ html.dark-theme .durationSummary{
   box-shadow:0 0 0 3px rgba(25,118,210,0.35), 0 6px 16px rgba(0,0,0,0.28) !important;
 }
 .carouselCancelBtn{
-  position:fixed;
+  position:relative;
   top:auto;
-  left:50%;
-  bottom:max(14px, env(safe-area-inset-bottom));
-  transform:translateX(-50%);
+  left:auto;
+  bottom:auto;
+  grid-column:2;
+  grid-row:1;
+  justify-self:center;
+  align-self:center;
+  min-width:0;
+  width:min(100px, 100%);
+  min-height:0;
+  height:min(36px, 100%);
+  padding:4px 10px;
+  transform:none;
   border-color:#ef4444;
   background:#ef4444;
 }
 .carouselCancelBtn:active{
-  transform:translateX(-50%) scale(0.96);
+  transform:scale(0.96);
 }
 
 /* Полностью убираем системные рамки при клике (фокусе) для всех полей */
@@ -929,6 +1009,8 @@ input:focus,
 select:focus,
 button:focus {
   outline: none !important;
+}
+button:focus:not(.paxBtn):not(.tzBtn) {
   box-shadow: none !important;
 }
 
@@ -1207,7 +1289,7 @@ button:focus {
       }
     })();
   </script>
-<meta name="offline-build" content="8bdf06cc811d3e8f8c7f5d83"></head>
+<meta name="offline-build" content="5ef3a1522b83d9ba2665e9e4"></head>
 
 <body>
 
@@ -1224,14 +1306,14 @@ button:focus {
       </div>
 
       <div class="card" id="mainSettingsCard" style="margin-bottom: 4px; padding: 5px; border: none">
-        <div style="font-size: 11px; font-weight: 600; color: var(--muted); text-align: center; margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--muted); text-align: center; margin-bottom: 2px; letter-spacing: 0.5px; text-transform: uppercase;">
           Часовой пояс времени вылета / выключения
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom: 12px;">
           <div class="tzGroup" style="flex: 1 1 auto; display: flex; justify-content: space-between; gap: 8px; min-width: 180px;">
-            <button type="button" id="btnMSK" class="tzBtn active" style="flex:1; text-align:center; padding-left:0; padding-right:0;" onclick="setTzMode('MSK')">МСК</button>
-            <button type="button" id="btnUTC" class="tzBtn" style="flex:1; text-align:center; padding-left:0; padding-right:0;" onclick="setTzMode('UTC')">UTC</button>
-            <button type="button" id="btnLOCAL" class="tzBtn" style="flex:1; text-align:center; padding-left:0; padding-right:0;" onclick="setTzMode('LOCAL')">LT</button>
+            <button type="button" id="btnMSK" class="tzBtn active" onclick="setTzMode('MSK')">МСК</button>
+            <button type="button" id="btnUTC" class="tzBtn" onclick="setTzMode('UTC')">UTC</button>
+            <button type="button" id="btnLOCAL" class="tzBtn" onclick="setTzMode('LOCAL')">LT</button>
           </div>
           <div class="deltaInner" style="padding-top:0; margin: 0 auto;">
             <button type="button" class="fieldTitle hasHint" onclick="openHint('delta')">Δ UTC</button>
@@ -1415,9 +1497,9 @@ button:focus {
 
 <button type="button" id="carouselPrevBtn" class="carouselNavBtn carouselPrevBtn" hidden>Назад</button>
 <button type="button" id="carouselNextBtn" class="carouselNavBtn carouselNextBtn" hidden>Далее</button>
-<button type="button" id="carouselCancelBtn" class="carouselNavBtn carouselCancelBtn" title="Отменить карусель" hidden>Отмена</button>
 
-  <div class="bottom-controls">
+  <div class="bottom-controls bottom-controls--panel" role="navigation" aria-label="Навигация MyShift">
+  <button type="button" id="carouselCancelBtn" class="carouselNavBtn carouselCancelBtn" title="Отменить карусель" hidden>Отмена</button>
   <button class="bottom-btn bottom-action bottom-action--left" id="btnBotRefresh" title="Start calculation">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
     <span class="bottom-action-label">START<br>CALCULATION</span>

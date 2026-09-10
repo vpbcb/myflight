@@ -1,3 +1,72 @@
+/* Shared three-zone panel: opt in with bottom-controls--panel. */
+.bottom-controls.bottom-controls--panel{
+  --nav-panel-bg:#ebf3fa;
+  --nav-panel-ink:#294e73;
+  --bottom-nav-color:var(--nav-panel-ink);
+  --nav-divider:rgba(255,255,255,0.2);
+  height:var(--bottom-nav-reserved-height);
+  padding:0 0 var(--safe-bottom);
+  gap:0;
+  background:linear-gradient(to right,
+    color-mix(in srgb, var(--nav-panel-bg), black 8%) 0%,
+    color-mix(in srgb, var(--nav-panel-bg), black 8%) calc(100% / 3),
+    color-mix(in srgb, var(--nav-panel-bg), black 4%) calc(100% / 3),
+    color-mix(in srgb, var(--nav-panel-bg), black 4%) calc(200% / 3),
+    color-mix(in srgb, var(--nav-panel-bg), black 8%) calc(200% / 3),
+    color-mix(in srgb, var(--nav-panel-bg), black 8%) 100%);
+  box-shadow:inset 0 1px 0 var(--nav-divider);
+}
+.bottom-controls.bottom-controls--panel::before,
+.bottom-controls.bottom-controls--panel::after{
+  content:"";
+  position:absolute;
+  top:6px;
+  bottom:6px;
+  width:1px;
+  background:var(--nav-divider);
+  pointer-events:none;
+}
+.bottom-controls.bottom-controls--panel::before{ left:calc(100% / 3); }
+.bottom-controls.bottom-controls--panel::after{ left:calc(200% / 3); }
+.bottom-controls.bottom-controls--panel > .bottom-action{
+  width:100%;
+  height:100%;
+  align-items:center;
+  justify-content:center;
+}
+.bottom-controls.bottom-controls--panel > .bottom-action::after{
+  inset:0;
+}
+.bottom-controls.bottom-controls--panel > .bottom-action > .bottom-action-label{
+  color:var(--bottom-nav-color);
+  opacity:1;
+  font-weight:600;
+}
+.bottom-controls.bottom-controls--panel.bottom-controls--flow{
+  position:relative;
+}
+html.dark-theme .bottom-controls.bottom-controls--panel{
+  --nav-panel-bg:#1e2f41;
+  --nav-panel-ink:#aecbe4;
+}
+@media (prefers-color-scheme: dark){
+  html:not(.light-theme) .bottom-controls.bottom-controls--panel{
+    --nav-panel-bg:#1e2f41;
+    --nav-panel-ink:#aecbe4;
+  }
+}
+
+.bottom-action-label > .bottom-action-hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.6rem;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1;
+}
+
 :root {
     --bottom-nav-color: #1e293b;
     --bottom-nav-button-height: 32px;

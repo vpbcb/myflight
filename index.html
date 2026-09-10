@@ -119,6 +119,7 @@
             flex-shrink: 0;
         }
 
+
         .home-actions {
             width: 100%;
             margin-top: auto;
@@ -387,6 +388,92 @@
             content: none;
         }
 
+        /* Same raised surface as MyActivity/MyShift, scoped to Settings. */
+        #settingsModal button {
+            font-weight: 500;
+            border: 1px solid #91a9b7;
+            background: linear-gradient(180deg, #ffffff 0%, #e7f0f4 100%);
+            color: #28566d;
+            box-shadow: 0 2px 0 #9eb2bd, 0 4px 8px rgb(33 73 94 / 18%),
+                inset 0 1px 0 rgb(255 255 255 / 95%);
+            transform: translateY(0);
+            transition: transform 80ms ease, box-shadow 80ms ease,
+                border-color 120ms ease, background 120ms ease;
+        }
+        #settingsModal button:hover:not(:disabled) {
+            border-color: #397897;
+            background: linear-gradient(180deg, #ffffff 0%, #dcecf2 100%);
+            color: #173f54;
+            box-shadow: 0 2px 0 #7895a5, 0 5px 10px rgb(33 73 94 / 23%),
+                inset 0 1px 0 #ffffff;
+        }
+        #settingsModal .push-toggle-card.is-on,
+        #settingsModal button[aria-pressed="true"] {
+            border-color: #15803d;
+            background: linear-gradient(180deg, #22b657 0%, #15803d 100%);
+            color: #fff;
+            box-shadow: inset 0 2px 4px rgb(0 0 0 / 20%), 0 1px 2px rgb(33 73 94 / 18%);
+        }
+        #settingsModal button:active:not(:disabled) {
+            transform: translateY(2px);
+            opacity: 1;
+            box-shadow: 0 0 0 #7895a5, 0 1px 3px rgb(33 73 94 / 18%),
+                inset 0 2px 4px rgb(33 73 94 / 14%);
+        }
+        #settingsModal button:disabled {
+            border-color: #c8d5dc;
+            background: #e5e7eb;
+            color: #94a3b8;
+            box-shadow: none;
+            transform: none;
+            opacity: 0.72;
+            cursor: not-allowed;
+        }
+        #settingsModal .modal-close-btn {
+            border-color: #c53030;
+            background: linear-gradient(180deg, #ef5350 0%, #c62828 100%);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            line-height: 1;
+        }
+        #settingsModal .modal-close-btn:hover:not(:disabled) {
+            border-color: #b91c1c;
+            background: linear-gradient(180deg, #f56565 0%, #dc2626 100%);
+            color: #fff;
+        }
+        html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):not(:disabled) {
+            border-color: #4c6579;
+            background: linear-gradient(180deg, #2c4052 0%, #1b2a38 100%);
+            color: #cbd5e1;
+            box-shadow: 0 2px 0 #101c28, 0 4px 8px rgb(0 0 0 / 30%),
+                inset 0 1px 0 rgb(255 255 255 / 8%);
+        }
+        html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):hover:not(:disabled) {
+            border-color: #66849b;
+            background: linear-gradient(180deg, #344c60 0%, #25394a 100%);
+            box-shadow: 0 2px 0 #101c28, 0 5px 10px rgb(0 0 0 / 35%),
+                inset 0 1px 0 rgb(255 255 255 / 12%);
+        }
+        html.dark-theme #settingsModal button:not(.modal-close-btn):not(.is-on):not([aria-pressed="true"]):active:not(:disabled) {
+            box-shadow: 0 1px 3px rgb(0 0 0 / 30%), inset 0 2px 4px rgb(0 0 0 / 25%);
+        }
+        html.dark-theme #settingsModal button:disabled {
+            border-color: #374151;
+            background: #202a36;
+            color: #7b8796;
+        }
+        #settingsModal #awakeText,
+        #settingsModal #pushText {
+            font-size: 0.65rem;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
         .modal-content.settings-modal-content {
             margin-bottom: 0;
             margin-left: 0;
@@ -419,6 +506,18 @@
             grid-column: 2 / span 2;
         }
 
+        #settingsModal #updateAppBtn {
+            gap: 10px;
+        }
+        #settingsModal #updateAppBtn svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+            flex: 0 0 24px;
+        }
+        #settingsModal #updateAppBtn span {
+            line-height: 1.2;
+        }
         .settings-actions > #updateAppBtn {
             grid-column: 4 / span 2;
         }
@@ -473,12 +572,18 @@
         }
 /* --- СТИЛИ БЛОКА ПОИСКА РЕЙСА И БОРТА --- */
         .flight-search-card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             width: 100%;
             padding: 0 20px;
             box-sizing: border-box;
             margin-bottom: 15px;
         }
         .search-wrapper {
+            flex: 1;
+            min-height: 0;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
@@ -570,12 +675,15 @@
 
 
         .quick-notes-block {
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
         .notes-field {
+            flex: 1;
             min-height: 104px;
             width: 100%;
             box-sizing: border-box;
@@ -618,12 +726,15 @@
         }
 
         .quick-notes-picker {
+            flex-shrink: 0;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
         }
 
         .notes-free-text {
+            flex: 1;
+            overflow-y: auto;
             width: 100%;
             min-height: 56px;
             border: none;
@@ -1286,7 +1397,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="8bdf06cc811d3e8f8c7f5d83"></head>
+<meta name="offline-build" content="5ef3a1522b83d9ba2665e9e4"></head>
 <body>
     <div class="app-shell">
 
@@ -1384,7 +1495,7 @@
             </a>
         </div> <!-- Конец .container -->
 
-        <div class="bottom-controls bottom-controls--flow">
+        <div class="bottom-controls bottom-controls--flow bottom-controls--panel" role="navigation" aria-label="Главная навигация">
             <button class="refresh-btn bottom-action bottom-action--left" id="refreshBtn" title="Очистить поля">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
                     <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
@@ -1417,13 +1528,13 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M8.5 14.5A6 6 0 1 1 15.5 14.5C14.6 15.2 14 16.1 14 17h-4c0-.9-.6-1.8-1.5-2.5z"></path>
                         </svg>
-                        <span id="awakeText">Awake Off</span>
+                        <span id="awakeText">Always on display</span>
                     </button>
                     <button type="button" class="push-toggle-card" id="pushToggleBtn" aria-pressed="false">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>
                         </svg>
-                        <span id="pushText">Push Off</span>
+                        <span id="pushText">Phone notifications disabled</span>
                     </button>
                     <button type="button" class="settings-action-btn mail-btn" id="btnMail" onclick="openMailFromSettings()" title="Mail to me">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.36-.48.99-.74 3.84-1.67 6.39-2.77 7.64-3.3 3.64-1.51 4.4-1.77 4.9-.18.1.33.01 1.15-.04 1.9z"/></svg>
@@ -1431,7 +1542,10 @@
                     </button>
                     <button type="button" class="settings-action-btn" id="updateAppBtn" onclick="hardResetApp()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 11a8.1 8.1 0 1 0 2 5.3"></path><polyline points="20 4 20 11 13 11"></polyline>
+                            <path d="M3 12a9 9 0 0 1 15.36-6.36L21 9"></path>
+                            <polyline points="21 3 21 9 15 9"></polyline>
+                            <path d="M21 12a9 9 0 0 1-15.36 6.36L3 15"></path>
+                            <polyline points="3 21 3 15 9 15"></polyline>
                         </svg>
                         <span>Update app</span>
                     </button>
@@ -1570,9 +1684,11 @@
         let awakePendingFeedbackActive = false;
         let myFlightPushEnabled = false;
         let myFlightPushRefreshTimer = null;
+        let myFlightPushPreferenceInitialized = false;
 
         const MYFLIGHT_PUSH_TITLE = 'MyFlight';
         const MYFLIGHT_PUSH_TAG = 'myflight-status';
+        const MYFLIGHT_PUSH_PREFERENCE_KEY = 'myflight_phone_notifications_enabled';
 
         function normalizePushField(value) {
             return String(value ?? '').replace(/\s+/g, ' ').trim();
@@ -1649,7 +1765,7 @@
             const pushText = document.getElementById('pushText');
             if (!button || !pushText) return;
             button.classList.toggle('is-on', myFlightPushEnabled);
-            pushText.textContent = myFlightPushEnabled ? 'Push On' : 'Push Off';
+            pushText.textContent = myFlightPushEnabled ? 'Phone notifications enabled' : 'Phone notifications disabled';
             button.setAttribute('aria-pressed', myFlightPushEnabled ? 'true' : 'false');
         }
 
@@ -1658,34 +1774,66 @@
             return navigator.serviceWorker.ready;
         }
 
-        async function closeMyFlightPushNotification() {
-            const registration = await getMyFlightPushRegistration();
-            if (registration && typeof registration.getNotifications === 'function') {
-                const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
-                notifications.forEach(notification => notification.close());
+        function saveMyFlightPushPreference(enabled) {
+            myFlightPushPreferenceInitialized = true;
+            setMyFlightPushButtonState(enabled);
+            try {
+                localStorage.setItem(MYFLIGHT_PUSH_PREFERENCE_KEY, String(Boolean(enabled)));
+            } catch (error) {
+                console.warn('Notification preference could not be saved:', error);
             }
-            setMyFlightPushButtonState(false);
+        }
+
+        async function closeMyFlightPushNotification() {
+            saveMyFlightPushPreference(false);
+            clearTimeout(myFlightPushRefreshTimer);
+            myFlightPushRefreshTimer = null;
+            try {
+                const registration = await getMyFlightPushRegistration();
+                if (registration && typeof registration.getNotifications === 'function') {
+                    const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
+                    notifications.forEach(notification => notification.close());
+                }
+            } catch (error) {
+                console.warn('Notification could not be closed:', error);
+            }
         }
 
         async function syncMyFlightPushButtonState() {
-            if (!('Notification' in window) || Notification.permission !== 'granted') {
-                setMyFlightPushButtonState(false);
-                return;
+            if (myFlightPushPreferenceInitialized) return;
+            try {
+                const saved = localStorage.getItem(MYFLIGHT_PUSH_PREFERENCE_KEY);
+                if (saved === 'true' || saved === 'false') {
+                    myFlightPushPreferenceInitialized = true;
+                    setMyFlightPushButtonState(saved === 'true');
+                    return;
+                }
+            } catch (error) {
+                console.warn('Notification preference could not be read:', error);
             }
 
-            const registration = await getMyFlightPushRegistration();
-            if (!registration || typeof registration.getNotifications !== 'function') return;
-            const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
-            setMyFlightPushButtonState(notifications.length > 0);
+            // Migrate the old notification-based state only once. Closing a
+            // notification afterwards must never change the Settings preference.
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            try {
+                const registration = await getMyFlightPushRegistration();
+                if (!registration || typeof registration.getNotifications !== 'function') return;
+                const notifications = await registration.getNotifications({ tag: MYFLIGHT_PUSH_TAG });
+                if (!myFlightPushPreferenceInitialized) {
+                    saveMyFlightPushPreference(notifications.length > 0);
+                }
+            } catch (error) {
+                console.warn('Notification state could not be restored:', error);
+            }
         }
 
         async function showMyFlightPushNotification(options = {}) {
             const requestPermission = Boolean(options.requestPermission);
             const reportErrors = options.reportErrors !== false;
+            if (!requestPermission && !myFlightPushEnabled) return false;
 
             if (!('Notification' in window) || !('serviceWorker' in navigator)) {
                 if (reportErrors) alert('Notifications are not supported on this device.');
-                setMyFlightPushButtonState(false);
                 return false;
             }
 
@@ -1696,7 +1844,6 @@
 
             if (permission !== 'granted') {
                 if (reportErrors && requestPermission) alert('Notifications are not allowed.');
-                setMyFlightPushButtonState(false);
                 return false;
             }
 
@@ -1705,13 +1852,17 @@
                 if (!registration || typeof registration.showNotification !== 'function') {
                     throw new Error('Service worker notifications are unavailable');
                 }
+                if (!requestPermission && !myFlightPushEnabled) return false;
                 await registration.showNotification(MYFLIGHT_PUSH_TITLE, buildMyFlightPushOptions());
-                setMyFlightPushButtonState(true);
+                if (!requestPermission && !myFlightPushEnabled) {
+                    await closeMyFlightPushNotification();
+                    return false;
+                }
+                if (requestPermission) saveMyFlightPushPreference(true);
                 return true;
             } catch (error) {
                 console.warn('Push notification skipped:', error);
                 if (reportErrors) alert('Notification could not be shown.');
-                setMyFlightPushButtonState(false);
                 return false;
             }
         }
@@ -1721,7 +1872,7 @@
             if (myFlightPushRefreshTimer) clearTimeout(myFlightPushRefreshTimer);
             myFlightPushRefreshTimer = setTimeout(() => {
                 myFlightPushRefreshTimer = null;
-                showMyFlightPushNotification({ reportErrors: false });
+                if (myFlightPushEnabled) showMyFlightPushNotification({ reportErrors: false });
             }, 120);
         }
 
@@ -1806,10 +1957,15 @@
             const awakeText = document.getElementById('awakeText');
             if (!awakeButton || !awakeText) return;
             const awakeStatus = getAwakeStatus();
-            awakeText.textContent = awakeStatus?.active ? 'Awake On' : 'Awake Off';
+            awakeText.textContent = 'Always on display';
             awakeButton.setAttribute('aria-pressed', awakeStatus?.active ? 'true' : 'false');
+            awakeButton.setAttribute('aria-label', awakeStatus?.active ? 'Always on display enabled' : 'Always on display disabled');
 
-            if (awakeStatus?.active || awakePendingFeedbackActive) {
+            if (awakeStatus?.active) {
+                awakeText.style.color = '';
+                return;
+            }
+            if (awakePendingFeedbackActive) {
                 awakeText.style.color = AWAKE_ACTIVE_COLOR;
                 return;
             }

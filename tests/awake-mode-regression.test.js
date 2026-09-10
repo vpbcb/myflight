@@ -62,7 +62,7 @@ test('separate Awake button requests wake lock on an ordinary click', () => {
 
 test('Awake button text and color reflect the active state', () => {
     const updateBody = extractFunctionBody(indexHtml, 'updateAwakeUI');
-    assert.match(updateBody, /awakeText\.textContent\s*=\s*awakeStatus\?\.active\s*\?\s*'Awake On'\s*:\s*'Awake Off'/);
+    assert.match(updateBody, /awakeText\.textContent\s*=\s*'Always on display'/);
     assert.match(updateBody, /setAttribute\('aria-pressed'/);
     assert.match(updateBody, /awakeText\.style\.color\s*=\s*AWAKE_ACTIVE_COLOR/);
 });

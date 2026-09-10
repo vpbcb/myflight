@@ -188,7 +188,7 @@ test('Settings modal owns the Push toggle', () => {
     const mailPosition = indexHtml.indexOf('id="btnMail"');
     assert.ok(settingsPosition >= 0 && pushPosition > settingsPosition);
     assert.ok(mailPosition > pushPosition);
-    assert.match(indexHtml, /id="pushToggleBtn"[^>]*>[\s\S]*?<span id="pushText">Push Off<\/span>[\s\S]*?<\/button>/);
+    assert.match(indexHtml, /id="pushToggleBtn"[^>]*>[\s\S]*?<span id="pushText">Phone notifications disabled<\/span>[\s\S]*?<\/button>/);
     assert.match(indexHtml, /\.push-toggle-card\.is-on\s*\{[\s\S]*background:\s*#16a34a/);
     assert.ok(pushPosition > indexHtml.indexOf('<span class="title">MyPath</span>'));
 });
@@ -264,4 +264,137 @@ test('service worker opens MyFlight when an existing client cannot be focused', 
         ['focus'],
         ['openWindow', 'https://example.test/myflight/']
     ]);
+});
+
+
+function loadPushLifecycle(storage = new Map()) {
+    const timers = new Map();
+    let nextTimer = 1;
+    const button = { classList: { toggle() {} }, setAttribute() {} };
+    const label = { textContent: 'Phone notifications disabled' };
+    const registration = {
+        notifications: [],
+        failShow: false,
+        async getNotifications() { return this.notifications; },
+        async showNotification() {
+            if (this.failShow) throw new Error('temporary platform failure');
+            this.notifications = [{ close: () => { this.notifications = []; } }];
+        }
+    };
+    const sandbox = {
+        localStorage: {
+            getItem: key => storage.get(key) ?? null,
+            setItem: (key, value) => storage.set(key, String(value))
+        },
+        document: { getElementById: id => id === 'pushToggleBtn' ? button : id === 'pushText' ? label : null },
+        navigator: { serviceWorker: { ready: Promise.resolve(registration) } },
+        Notification: { permission: 'granted', requestPermission: async () => 'granted' },
+        console: { warn() {} },
+        alert() {},
+        setTimeout: fn => { const id = nextTimer++; timers.set(id, fn); return id; },
+        clearTimeout: id => timers.delete(id)
+    };
+    sandbox.window = sandbox;
+    const start = indexHtml.indexOf('        let myFlightPushEnabled');
+    const end = indexHtml.indexOf('        function bindMyFlightPushControls', start);
+    assert.ok(start >= 0 && end > start);
+    vm.createContext(sandbox);
+    vm.runInContext(indexHtml.slice(start, end), sandbox);
+    return { sandbox, registration, timers, label, storage };
+}
+
+test('notification tap or dismissal does not disable the saved preference, even after app reload', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    app.registration.notifications[0].close();
+    await app.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(app.label.textContent, 'Phone notifications enabled');
+    const reopened = loadPushLifecycle(app.storage);
+    await reopened.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(reopened.label.textContent, 'Phone notifications enabled');
+});
+
+test('manual settings toggle disables notifications durably and cancels a queued refresh', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    app.sandbox.scheduleMyFlightPushRefresh();
+    assert.strictEqual(app.timers.size, 1);
+    await app.sandbox.toggleMyFlightPush();
+    assert.strictEqual(app.timers.size, 0);
+    assert.strictEqual(app.registration.notifications.length, 0);
+    await app.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(app.label.textContent, 'Phone notifications disabled');
+    const reopened = loadPushLifecycle(app.storage);
+    await reopened.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(reopened.label.textContent, 'Phone notifications disabled');
+});
+
+test('temporary notification delivery failure does not disable an enabled preference', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    app.registration.failShow = true;
+    await app.sandbox.showMyFlightPushNotification({ reportErrors: false });
+    assert.strictEqual(app.label.textContent, 'Phone notifications enabled');
+});
+
+test('denied initial permission does not enable phone notifications', async () => {
+    const app = loadPushLifecycle();
+    app.sandbox.Notification.permission = 'denied';
+    await app.sandbox.syncMyFlightPushButtonState();
+    await app.sandbox.toggleMyFlightPush();
+    assert.strictEqual(app.label.textContent, 'Phone notifications disabled');
+    assert.strictEqual(app.registration.notifications.length, 0);
+});
+
+test('manual disable wins over a notification refresh already in flight', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    let finishShow;
+    let startedShow;
+    const started = new Promise(resolve => { startedShow = resolve; });
+    const show = app.registration.showNotification.bind(app.registration);
+    app.registration.showNotification = async () => {
+        startedShow();
+        await new Promise(resolve => { finishShow = resolve; });
+        await show();
+    };
+    const refresh = app.sandbox.showMyFlightPushNotification({ reportErrors: false });
+    await started;
+    await app.sandbox.toggleMyFlightPush();
+    finishShow();
+    await refresh;
+    assert.strictEqual(app.label.textContent, 'Phone notifications disabled');
+    assert.strictEqual(app.registration.notifications.length, 0);
+});
+
+test('OS permission changes do not erase the user preference', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    const reopened = loadPushLifecycle(app.storage);
+    reopened.sandbox.Notification.permission = 'denied';
+    await reopened.sandbox.syncMyFlightPushButtonState();
+    await reopened.sandbox.showMyFlightPushNotification({ reportErrors: false });
+    assert.strictEqual(reopened.label.textContent, 'Phone notifications enabled');
+    await reopened.sandbox.toggleMyFlightPush();
+    assert.strictEqual(reopened.label.textContent, 'Phone notifications disabled');
+});
+
+test('existing visible notification migrates to a persistent enabled preference', async () => {
+    const app = loadPushLifecycle();
+    await app.registration.showNotification();
+    await app.sandbox.syncMyFlightPushButtonState();
+    app.registration.notifications[0].close();
+    const reopened = loadPushLifecycle(app.storage);
+    await reopened.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(reopened.label.textContent, 'Phone notifications enabled');
+});
+
+test('blocked storage does not disable the current session after notification dismissal', async () => {
+    const app = loadPushLifecycle();
+    await app.sandbox.toggleMyFlightPush();
+    app.sandbox.localStorage.getItem = () => { throw new Error('storage blocked'); };
+    app.sandbox.localStorage.setItem = () => { throw new Error('storage blocked'); };
+    app.registration.notifications[0].close();
+    await app.sandbox.syncMyFlightPushButtonState();
+    assert.strictEqual(app.label.textContent, 'Phone notifications enabled');
 });

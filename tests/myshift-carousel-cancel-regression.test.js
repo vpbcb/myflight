@@ -5,12 +5,12 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const myShiftHtml = fs.readFileSync(path.resolve(__dirname, '..', 'myshift.html'), 'utf8');
-const bottomControlsMarkup = myShiftHtml.match(/<div class="bottom-controls">[\s\S]*?<\/div>/)?.[0] ?? '';
+const bottomControlsMarkup = myShiftHtml.match(/<div class="bottom-controls[^\"]*"[^>]*>[\s\S]*?<\/div>/)?.[0] ?? '';
 
 test('MyShift carousel has a bottom Cancel action', () => {
     assert.match(myShiftHtml, /id="carouselCancelBtn"[^>]*class="[^"]*carouselNavBtn[^"]*carouselCancelBtn[^"]*"[^>]*hidden[^>]*>Отмена<\/button>/);
-    assert.doesNotMatch(bottomControlsMarkup, /id="carouselCancelBtn"/);
-    assert.match(myShiftHtml, /\.carouselCancelBtn\s*\{[^}]*position:\s*fixed[^}]*top:\s*auto[^}]*left:\s*50%[^}]*bottom:[^}]*transform:\s*translateX\(-50%\)[^}]*background:\s*#ef4444/);
+    assert.match(bottomControlsMarkup, /id="carouselCancelBtn"/);
+    assert.match(myShiftHtml, /\.carouselCancelBtn\s*\{[^}]*grid-column:\s*2[^}]*grid-row:\s*1[^}]*justify-self:\s*center[^}]*align-self:\s*center[^}]*background:\s*#ef4444/);
     assert.match(myShiftHtml, /const isRunning = carouselStepIndex >= 0[^;]*;[\s\S]{0,240}cancelButton\.hidden = !isRunning;/);
 });
 
