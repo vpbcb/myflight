@@ -3,7 +3,7 @@
   --nav-panel-bg:#ebf3fa;
   --nav-panel-ink:#294e73;
   --bottom-nav-color:var(--nav-panel-ink);
-  --nav-divider:rgba(255,255,255,0.2);
+  --nav-divider:rgba(41,78,115,0.28);
   height:var(--bottom-nav-reserved-height);
   padding:0 0 var(--safe-bottom);
   gap:0;
@@ -48,11 +48,13 @@
 html.dark-theme .bottom-controls.bottom-controls--panel{
   --nav-panel-bg:#1e2f41;
   --nav-panel-ink:#aecbe4;
+  --nav-divider:rgba(255,255,255,0.2);
 }
 @media (prefers-color-scheme: dark){
   html:not(.light-theme) .bottom-controls.bottom-controls--panel{
     --nav-panel-bg:#1e2f41;
     --nav-panel-ink:#aecbe4;
+    --nav-divider:rgba(255,255,255,0.2);
   }
 }
 

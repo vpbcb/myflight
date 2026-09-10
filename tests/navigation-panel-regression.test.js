@@ -22,7 +22,11 @@ test('shared panel owns colors, zones, typography and flow positioning', () => {
     assert.match(css, /\.bottom-controls\.bottom-controls--panel\s*\{/);
     assert.match(css, /--nav-panel-bg:\s*#ebf3fa/);
     assert.match(css, /--nav-panel-ink:\s*#294e73/);
+    assert.match(css, /--nav-divider:\s*rgba\(41,78,115,0\.28\)/);
     assert.match(css, /html\.dark-theme[^{}]*bottom-controls--panel\s*\{[^}]*--nav-panel-bg:\s*#1e2f41/);
+    assert.match(css, /html\.dark-theme[^{}]*bottom-controls--panel\s*\{[^}]*--nav-divider:\s*rgba\(255,255,255,0\.2\)/);
+    assert.match(css, /box-shadow:\s*inset 0 1px 0 var\(--nav-divider\)/);
+    assert.match(css, /\.bottom-controls\.bottom-controls--panel::(?:before|after)[\s\S]*?width:\s*1px;[\s\S]*?background:\s*var\(--nav-divider\)/);
     assert.match(css, /\.bottom-controls\.bottom-controls--panel\.bottom-controls--flow\s*\{\s*position:\s*relative/);
     assert.match(css, /\.bottom-controls\.bottom-controls--panel::before\s*\{\s*left:calc\(100% \/ 3\)/);
     assert.match(css, /\.bottom-controls\.bottom-controls--panel::after\s*\{\s*left:calc\(200% \/ 3\)/);
