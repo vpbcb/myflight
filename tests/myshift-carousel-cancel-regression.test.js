@@ -40,6 +40,8 @@ test('completed MyShift data stays valid for its calendar day and the next day',
 
 test('first or expired opening spotlights Start Calculation', () => {
     assert.match(myShiftHtml, /\.app-container\.carousel-ready::before/);
+    assert.match(myShiftHtml, /animation:startCalculationPulse 1s ease-in-out infinite/);
+    assert.match(myShiftHtml, /50%\{ transform:scale\(1\.12\); \}/);
     assert.match(myShiftHtml, /function showCarouselStart\(\)\s*\{[\s\S]*?classList\.add\("carousel-ready"\)[\s\S]*?\$\("btnBotRefresh"\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/);
     assert.match(myShiftHtml, /function initializeShiftState\(\)\s*\{[\s\S]*?isShiftStateFresh[\s\S]*?loadState\(\)[\s\S]*?resetState\(\)[\s\S]*?showCarouselStart\(\)/);
     assert.match(myShiftHtml, /window\.addEventListener\("load",\s*\(\)\s*=>\s*\{\s*initializeShiftState\(\)/);
