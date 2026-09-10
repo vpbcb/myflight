@@ -15,7 +15,7 @@ test('LDT card starts collapsed under the calculation heading', () => {
 
 test('LDT card toggles except when its time input is clicked', () => {
     assert.match(myShiftHtml, /function toggleLdtCard\(event\)/);
-    assert.match(myShiftHtml, /event\.target\.closest\(['"]#flightTime['"]\)/);
+    assert.match(myShiftHtml, /event\.target\.closest\(['"]#flightTime, \.resultTimeColumn['"]\)/);
     assert.match(myShiftHtml, /classList\.toggle\(['"]open['"]\)/);
     assert.match(myShiftHtml, /setAttribute\(['"]aria-expanded['"],\s*String\(isOpen\)\)/);
 });
