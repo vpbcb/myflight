@@ -60,8 +60,8 @@ test('rendering keeps the selected zone prominent and the other zones visible bu
         html,
         /\.resultTimeColumn\.time-column-dimmed\s*\{[^}]*opacity:\s*0\.[23]/
     );
-    assert.match(html, /--resultTimeSelected:\s*rgba\(25,118,210,0\.55\)/);
-    assert.match(html, /html\.dark-theme\s*\{[\s\S]{0,420}--resultTimeSelected:\s*rgba\(2,115,173,0\.55\)/);
+    assert.match(html, /--resultTimeSelected:\s*#edf5fd/);
+    assert.match(html, /html\.dark-theme\s*\{[\s\S]{0,420}--resultTimeSelected:\s*#1b3047/);
     assert.match(
         html,
         /\.resultTimeColumn\s*\{[^}]*border-radius:\s*0/

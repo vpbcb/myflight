@@ -21,7 +21,7 @@
   --ink:#111;
   --muted:#5b6474;
   --pillBg:#f0f2f7;
-  --resultTimeSelected:rgba(25,118,210,0.55);
+  --resultTimeSelected:#edf5fd;
   --accent:#1976d2;
   --carouselDim:rgba(246,247,249,0.84);
   --carouselPrev:#60758d;
@@ -219,7 +219,7 @@ html.dark-theme {
   --ink: #cbd5e1;
   --muted: #96a4b3;
   --pillBg: rgba(255, 255, 255, 0.07);
-  --resultTimeSelected:rgba(2,115,173,0.55);
+  --resultTimeSelected:#1b3047;
   --carouselDim: rgba(11, 15, 25, 0.84);
   --scrollBg: rgba(0, 0, 0, 0.2);
 }
@@ -587,6 +587,17 @@ button.pill{
   gap:8px;
   align-items:start;
 }
+.durationSummary{
+  --card:#fff1df;
+  --pillBg:transparent;
+  --ctlBorder:#e7bc87;
+  --durationInk:#185a9d;
+}
+html.dark-theme .durationSummary{
+  --card:#3b2c20;
+  --ctlBorder:#795837;
+  --durationInk:#96caff;
+}
 .mtCol{ display:flex; flex-direction:column; align-items:center; gap:4px; }
 .resultTimeColumn{
   padding:3px 0;
@@ -853,6 +864,23 @@ button.pill{
 }
 .app-container.carousel-ready #btnBotRefresh{
   z-index:1800;
+}
+.app-container.carousel-ready #btnBotRefresh .bottom-action-label{
+  animation:startCalculationPulse 1.8s ease-in-out infinite;
+  transform-origin:center;
+}
+@keyframes startCalculationPulse{
+  0%, 100%{ opacity:0.65; transform:scale(1); }
+  50%{ opacity:1; transform:scale(1.04); }
+}
+@media (prefers-reduced-motion: reduce){
+  .app-container.carousel-ready #btnBotRefresh .bottom-action-label{
+    animation:startCalculationFade 3s ease-in-out infinite;
+  }
+}
+@keyframes startCalculationFade{
+  0%, 100%{ opacity:0.55; }
+  50%{ opacity:1; }
 }
 .carouselNavBtn{
   position:absolute;
@@ -1179,7 +1207,7 @@ button:focus {
       }
     })();
   </script>
-<meta name="offline-build" content="69f2fdcb37207bdfeb97ecd2"></head>
+<meta name="offline-build" content="8bdf06cc811d3e8f8c7f5d83"></head>
 
 <body>
 
@@ -1297,13 +1325,13 @@ button:focus {
               </div>
             </div>
 
-            <div style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; align-items:center; background:var(--card); height:40px;">
+            <div class="durationSummary" style="border:1px solid var(--ctlBorder); border-radius:12px; overflow:hidden; display:flex; align-items:center; background:var(--card); height:40px;">
               <div class="fieldTitle dynamic-header" style="position:relative; border:none; border-radius:0; background:var(--pillBg); border-right:1px solid var(--ctlBorder); flex:1; height:100%; margin:0; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
                 Продолжительность смены
                 <div onclick="event.stopPropagation(); openHint('duration')" style="position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; border:1px solid var(--ctlBorder); background:var(--pillBg); color:var(--ink); font-size:12px; font-weight:bold; display:flex; justify-content:center; align-items:center; z-index:2; line-height:1;">?</div>
               </div>
 
-              <div id="outDuration" style="color:var(--ink); font-weight:700; width:120px; height:100%; display:flex; justify-content:center; align-items:center; text-align:center; margin:0; border:none; font-size:var(--timeFs);">
+              <div id="outDuration" style="color:var(--durationInk); font-weight:700; width:120px; height:100%; display:flex; justify-content:center; align-items:center; text-align:center; margin:0; border:none; font-size:var(--timeFs);">
                 —
               </div>
             </div>
