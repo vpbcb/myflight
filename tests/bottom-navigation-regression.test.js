@@ -94,9 +94,20 @@ test('home uses the same bottom-anchored safe-area panel as subpages', () => {
     assert.match(pages['index.html'], /\.home-actions\s*\{[\s\S]*?padding-bottom:\s*var\(--bottom-nav-reserved-height\);/);
 });
 
+test('installed iPad reserves a fixed gap above home navigation without changing other devices', () => {
+    assert.match(
+        pages['index.html'],
+        /html\.is-standalone\.is-ipad\s+\.home-actions\s*\{\s*padding-bottom:\s*calc\(var\(--bottom-nav-reserved-height\)\s*\+\s*12px\);\s*\}/
+    );
+    assert.doesNotMatch(
+        pages['index.html'],
+        /(?<!html\.is-standalone\.is-ipad )\.home-actions\s*\{[^}]*padding-bottom:\s*calc\(var\(--bottom-nav-reserved-height\)\s*\+\s*12px\);/
+    );
+});
+
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260911-2';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260911-3';/);
     const release = JSON.parse(sw.match(/const PRECACHE_BUILD = (\{.*\});/)[1]);
     assert.ok(release.assets.some(asset => asset.url === 'bottom-navigation.css' && /^[a-f0-9]{64}$/.test(asset.sha256)));
 });
