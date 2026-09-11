@@ -161,20 +161,35 @@
 
         .npa-admin-mode-label {
             display: none;
-            margin-top: -6px;
-            color: #64748b;
-            font-size: 6px;
-            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: -5px;
+            padding: 2px 6px;
+            border: 1px solid rgba(193, 139, 0, 0.48);
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(255, 215, 92, 0.14), rgba(193, 139, 0, 0.06));
+            color: #b27c00;
+            box-shadow: 0 1px 4px rgba(178, 124, 0, 0.12);
+            font-size: 7px;
+            font-weight: 800;
             line-height: 1;
-            letter-spacing: 0.45px;
-            text-transform: lowercase;
-            opacity: 0.48;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
             pointer-events: none;
             user-select: none;
         }
 
         .npa-admin-mode-label.active {
+            display: inline-flex;
+        }
+
+        .npa-admin-mode-crown {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 auto;
             display: block;
+            fill: currentColor;
         }
 
         .npa-pending-sync-indicator {
@@ -209,9 +224,15 @@
             display: block;
         }
 
-        html.dark-theme .npa-admin-mode-label,
         html.dark-theme .npa-pending-sync-indicator {
             color: #94a3b8;
+        }
+
+        html.dark-theme .npa-admin-mode-label {
+            border-color: rgba(246, 196, 83, 0.55);
+            background: linear-gradient(135deg, rgba(246, 196, 83, 0.16), rgba(183, 121, 31, 0.08));
+            color: #f6c453;
+            box-shadow: 0 1px 5px rgba(246, 196, 83, 0.12);
         }
 
         html.dark-theme .npa-pending-sync-indicator.manual-sync-available {
@@ -3242,7 +3263,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="33827bb93d8f4e17313d5e80"></head>
+<meta name="offline-build" content="682fc48f45d862071e167a70"></head>
 <body>
 
 <div class="app-wrapper">
@@ -3252,7 +3273,12 @@
         </button>
         <div class="npa-title-stack">
             <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
-            <span class="npa-admin-mode-label" id="npaAdminModeLabel">admin mode ON</span>
+            <span class="npa-admin-mode-label" id="npaAdminModeLabel">
+                <span class="npa-admin-mode-text">admin mode ON</span>
+                <svg class="npa-admin-mode-crown" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M2 4.25 5.2 7 8 2.25 10.8 7 14 4.25 12.75 12H3.25L2 4.25Zm1.4 8.75h9.2v1H3.4v-1Z"/>
+                </svg>
+            </span>
             <button type="button" class="header-action-btn save" id="npaSaveButton" onclick="saveToFirebase()" disabled aria-disabled="true">Save to device</button>
         </div>
     </div>
@@ -3576,7 +3602,8 @@
         const label = document.getElementById('npaAdminModeLabel');
         const saveButton = document.getElementById('npaSaveButton');
         if (label) {
-            label.textContent = 'admin mode ON';
+            const labelText = label.querySelector('.npa-admin-mode-text');
+            if (labelText) labelText.textContent = 'admin mode ON';
             label.classList.toggle('active', Boolean(adminUser));
         }
         if (saveButton) saveButton.textContent = adminUser ? 'Save to cloud' : 'Save to device';

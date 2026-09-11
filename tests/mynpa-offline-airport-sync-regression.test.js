@@ -18,6 +18,14 @@ const STORAGE_KEYS = {
     pending: 'mynpa_pending_cloud_writes_v1'
 };
 
+test('active admin mode is marked by a gold badge with a crown', () => {
+    assert.match(mynpaSource, /class="npa-admin-mode-label" id="npaAdminModeLabel"/);
+    assert.match(mynpaSource, /class="npa-admin-mode-text">admin mode ON<\/span>/);
+    assert.match(mynpaSource, /class="npa-admin-mode-crown"/);
+    assert.match(mynpaSource, /\.npa-admin-mode-label\.active\s*\{\s*display:\s*inline-flex;/);
+    assert.match(mynpaSource, /\.npa-admin-mode-label[\s\S]*?color:\s*#b27c00;/);
+});
+
 function createHarness(initialStorage = {}) {
     const storage = new Map(
         Object.entries(initialStorage).map(([key, value]) => [key, JSON.stringify(value)])
