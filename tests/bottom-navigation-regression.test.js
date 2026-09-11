@@ -100,13 +100,27 @@ test('home uses the same bottom-anchored safe-area panel as subpages', () => {
 test('installed iPad keeps the same fixed gap above home navigation', () => {
     assert.match(
         pages['index.html'],
-        /html\.is-standalone\.is-ipad\s+\.home-actions\s*\{\s*padding-bottom:\s*calc\(var\(--bottom-nav-reserved-height\)\s*\+\s*12px\);\s*\}/
+        /html\.is-standalone\.is-ipad\s+\.home-actions\s*,\s*html\.is-standalone\.is-android-tablet\s+\.home-actions\s*\{\s*padding-bottom:\s*calc\(var\(--bottom-nav-reserved-height\)\s*\+\s*12px\);\s*\}/
     );
+});
+
+test('standalone Android tablets share the current iPad home geometry', () => {
+    assert.match(pages['index.html'], /const isAndroidTablet = \/Android\/i\.test\(window\.navigator\.userAgent\)/);
+    assert.match(pages['index.html'], /!\/Mobile\/i\.test\(window\.navigator\.userAgent\)\s*\|\|\s*androidTabletShortestSide >= 600/);
+    assert.match(pages['index.html'], /root\.classList\.toggle\('is-android-tablet',\s*isAndroidTablet\);/);
+
+    for (const className of ['container', 'project-card', 'icon-box', 'home-actions']) {
+        assert.match(
+            pages['index.html'],
+            new RegExp(`html\\.is-standalone\\.is-ipad\\s+\\.${className}\\s*,\\s*html\\.is-standalone\\.is-android-tablet\\s+\\.${className}`),
+            `${className} must use the shared tablet PWA geometry`
+        );
+    }
 });
 
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260911-4';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260911-5';/);
     const release = JSON.parse(sw.match(/const PRECACHE_BUILD = (\{.*\});/)[1]);
     assert.ok(release.assets.some(asset => asset.url === 'bottom-navigation.css' && /^[a-f0-9]{64}$/.test(asset.sha256)));
 });

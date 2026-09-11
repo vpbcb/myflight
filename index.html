@@ -1055,19 +1055,23 @@
             max-width: 100%;
         }
 
-        html.is-standalone.is-ipad .container {
+        html.is-standalone.is-ipad .container,
+        html.is-standalone.is-android-tablet .container {
             gap: 8px;
         }
-        html.is-standalone.is-ipad .project-card {
+        html.is-standalone.is-ipad .project-card,
+        html.is-standalone.is-android-tablet .project-card {
             aspect-ratio: 1.35 / 1;
             padding: 8px 6px;
         }
-        html.is-standalone.is-ipad .icon-box {
+        html.is-standalone.is-ipad .icon-box,
+        html.is-standalone.is-android-tablet .icon-box {
             width: 32px;
             height: 32px;
             margin-bottom: 4px;
         }
-        html.is-standalone.is-ipad .home-actions {
+        html.is-standalone.is-ipad .home-actions,
+        html.is-standalone.is-android-tablet .home-actions {
             padding-bottom: calc(var(--bottom-nav-reserved-height) + 12px);
         }
 
@@ -1210,7 +1214,15 @@
                 window.navigator.platform === 'MacIntel' &&
                 window.navigator.maxTouchPoints > 1
             );
+            const androidTabletShortestSide = Math.min(
+                Number(window.screen && window.screen.width) || 0,
+                Number(window.screen && window.screen.height) || 0
+            );
+            const isAndroidTablet = /Android/i.test(window.navigator.userAgent) && (
+                !/Mobile/i.test(window.navigator.userAgent) || androidTabletShortestSide >= 600
+            );
             root.classList.toggle('is-ipad', isIPad);
+            root.classList.toggle('is-android-tablet', isAndroidTablet);
             const syncDisplayMode = () => {
                 const isStandalone = standaloneQuery.matches || window.navigator.standalone === true;
                 root.classList.toggle('is-standalone', isStandalone);
@@ -1379,7 +1391,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="e0b546e0d28e2cf3eb6e8fab"></head>
+<meta name="offline-build" content="311d380532c8babe992b412b"></head>
 <body>
     <div class="app-shell">
 
