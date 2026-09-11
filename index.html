@@ -104,28 +104,14 @@
             user-select: text;
         }
 
-        .bottom-controls {
-            position: static;
-            width: 100%;
-            padding: 0 16px max(12px, calc(var(--safe-bottom) + 8px));
-            margin-top: 12px;
-            box-sizing: border-box;
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
-            align-items: center;
-            justify-items: center;
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-
         .home-actions {
             width: 100%;
             margin-top: auto;
+            padding-bottom: var(--bottom-nav-reserved-height);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            box-sizing: border-box;
         }
 
         /* Settings trigger in the home footer */
@@ -1069,19 +1055,6 @@
             max-width: 100%;
         }
 
-        html.is-standalone.is-ipad .bottom-controls {
-            position: absolute;
-            left: 0;
-            right: 0;
-            width: 100%;
-            padding: 0 16px;
-            margin-top: 0;
-            bottom: max(12px, calc(var(--safe-bottom) + 8px));
-        }
-        html.is-standalone.is-ipad .home-actions {
-            padding-bottom: max(65px, calc(var(--safe-bottom) + 60px));
-            box-sizing: border-box;
-        }
         html.is-standalone.is-ipad .container {
             gap: 8px;
         }
@@ -1403,7 +1376,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="682fc48f45d862071e167a70"></head>
+<meta name="offline-build" content="2f565b598ef64f7e42bd0705"></head>
 <body>
     <div class="app-shell">
 
@@ -1501,7 +1474,7 @@
             </a>
         </div> <!-- Конец .container -->
 
-        <div class="bottom-controls bottom-controls--flow bottom-controls--panel" role="navigation" aria-label="Главная навигация">
+        <div class="bottom-controls bottom-controls--panel" role="navigation" aria-label="Главная навигация">
             <button class="refresh-btn bottom-action bottom-action--left" id="refreshBtn" title="Очистить поля">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
                     <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
