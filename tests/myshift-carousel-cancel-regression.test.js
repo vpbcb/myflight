@@ -42,9 +42,17 @@ test('first or expired opening spotlights Start Calculation', () => {
     assert.match(myShiftHtml, /\.app-container\.carousel-ready::before/);
     assert.match(myShiftHtml, /animation:startCalculationPulse 1s ease-in-out infinite/);
     assert.match(myShiftHtml, /50%\{ transform:scale\(1\.12\); \}/);
-    assert.match(myShiftHtml, /function showCarouselStart\(\)\s*\{[\s\S]*?classList\.add\("carousel-ready"\)[\s\S]*?\$\("btnBotRefresh"\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/);
+    assert.match(myShiftHtml, /function showCarouselStart\(\)\s*\{[\s\S]*?classList\.add\("carousel-ready"\)[\s\S]*?cancelButton\.hidden = false;[\s\S]*?\$\("btnBotRefresh"\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/);
+    assert.doesNotMatch(myShiftHtml, /\.app-container\.carousel-ready #btnBotHome\s*\{[^}]*visibility:\s*hidden/);
     assert.match(myShiftHtml, /function initializeShiftState\(\)\s*\{[\s\S]*?isShiftStateFresh[\s\S]*?loadState\(\)[\s\S]*?resetState\(\)[\s\S]*?showCarouselStart\(\)/);
     assert.match(myShiftHtml, /window\.addEventListener\("load",\s*\(\)\s*=>\s*\{\s*initializeShiftState\(\)/);
+});
+
+test('Cancel leaves the carousel start screen', () => {
+    assert.match(
+        myShiftHtml,
+        /function finishCarousel\(\{ completed = true \} = \{\}\)[\s\S]*?classList\.remove\("carousel-running", "carousel-ready"\)/
+    );
 });
 
 test('only full carousel completion records the retention day', () => {

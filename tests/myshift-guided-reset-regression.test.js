@@ -142,7 +142,7 @@ test('carousel pales the page and keeps only the current step prominent', () => 
     );
     assert.match(
         myShiftHtml,
-        /function finishCarousel\(\{ completed = true \} = \{\}\)[\s\S]{0,420}classList\.remove\(["']carousel-running["']\)/
+        /function finishCarousel\(\{ completed = true \} = \{\}\)[\s\S]{0,420}classList\.remove\(["']carousel-running["'], ["']carousel-ready["']\)/
     );
 
     const currentRule = myShiftHtml.match(

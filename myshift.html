@@ -934,9 +934,6 @@ html.dark-theme .durationSummary{
 .app-container.carousel-running #btnBotHome{
   visibility:hidden;
 }
-.app-container.carousel-ready #btnBotHome{
-  visibility:hidden;
-}
 .app-container.carousel-ready #btnBotRefresh{
   z-index:1800;
 }
@@ -1289,7 +1286,7 @@ button:focus:not(.paxBtn):not(.tzBtn) {
       }
     })();
   </script>
-<meta name="offline-build" content="8c49d904571d43eb20657a10"></head>
+<meta name="offline-build" content="f56b658f60dd63894c53497a"></head>
 
 <body>
 
@@ -2115,6 +2112,8 @@ function showCarouselStart(){
   const app = document.querySelector(".app-container");
   app?.classList.remove("carousel-running");
   app?.classList.add("carousel-ready");
+  const cancelButton = $("carouselCancelBtn");
+  if(cancelButton) cancelButton.hidden = false;
   document.activeElement?.blur();
   requestAnimationFrame(() => $("btnBotRefresh")?.focus({ preventScroll: true }));
 }
@@ -2151,7 +2150,7 @@ function retreatCarousel(){
 
 function finishCarousel({ completed = true } = {}){
   carouselStepIndex = -1;
-  document.querySelector(".app-container")?.classList.remove("carousel-running");
+  document.querySelector(".app-container")?.classList.remove("carousel-running", "carousel-ready");
   const nextButton = $("carouselNextBtn");
   const prevButton = $("carouselPrevBtn");
   const cancelButton = $("carouselCancelBtn");
