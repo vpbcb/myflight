@@ -8,13 +8,17 @@ const root = path.resolve(__dirname, '..');
 const bumpScript = path.join(root, 'scripts', 'bump-cache-version.cjs');
 
 test('cache bump script increments the daily PWA cache sequence without writing in dry-run mode', () => {
-    const result = spawnSync(process.execPath, [bumpScript, '--date=260916', '--dry-run'], {
+    const sourceFile = path.join(root, 'sw.source.js');
+    const sourceBefore = fs.readFileSync(sourceFile, 'utf8');
+    const [, date, sequence] = sourceBefore.match(/const CACHE_NAME = 'myflight_v\.(\d{6})-(\d+)';/);
+    const result = spawnSync(process.execPath, [bumpScript, `--date=${date}`, '--dry-run'], {
         cwd: root,
         encoding: 'utf8'
     });
 
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /myflight_v\.260916-3 -> myflight_v\.260916-4/);
+    assert.match(result.stdout, new RegExp(`myflight_v\\.${date}-${sequence} -> myflight_v\\.${date}-${Number(sequence) + 1}`));
+    assert.equal(fs.readFileSync(sourceFile, 'utf8'), sourceBefore);
 });
 
 test('main pushes use GitHub Actions to bump, rebuild, commit, and deploy the PWA cache', () => {
