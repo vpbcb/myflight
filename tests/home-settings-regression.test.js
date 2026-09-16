@@ -33,14 +33,14 @@ test('home footer keeps Refresh and replaces Theme and Mail with Settings', () =
     assert.doesNotMatch(homeControls, /id="themeToggleBtn"|id="btnMail"|id="pushToggleBtn"/);
 });
 
-test('Settings modal contains Theme, Awake, Push, Mail and Update in order', () => {
+test('Settings modal contains Mail, Awake, Update, Theme and Push in order', () => {
     const settingsStart = indexHtml.indexOf('<div id="settingsModal"');
     const settingsEnd = indexHtml.indexOf('<div id="notesKeypadModal"', settingsStart);
     assert.notEqual(settingsStart, -1);
     assert.ok(settingsEnd > settingsStart);
 
     const settings = indexHtml.slice(settingsStart, settingsEnd);
-    const ids = ['themeToggleBtn', 'awakeToggleBtn', 'pushToggleBtn', 'btnMail', 'updateAppBtn'];
+    const ids = ['btnMail', 'awakeToggleBtn', 'updateAppBtn', 'themeToggleBtn', 'pushToggleBtn'];
     let previousPosition = -1;
     ids.forEach(id => {
         const position = settings.indexOf(`id="${id}"`);
@@ -60,8 +60,8 @@ test('Settings actions form two centered rows of equal tiles', () => {
         indexHtml,
         /\.settings-actions\s*>\s*button\s*\{[\s\S]*grid-column:\s*span\s+2;/
     );
-    assert.match(indexHtml, /\.settings-actions\s*>\s*#btnMail\s*\{[\s\S]*grid-column:\s*2\s*\/\s*span\s+2;/);
-    assert.match(indexHtml, /\.settings-actions\s*>\s*#updateAppBtn\s*\{[\s\S]*grid-column:\s*4\s*\/\s*span\s+2;/);
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#themeToggleBtn\s*\{[\s\S]*grid-column:\s*2\s*\/\s*span\s+2;/);
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#pushToggleBtn\s*\{[\s\S]*grid-column:\s*4\s*\/\s*span\s+2;/);
     assert.match(
         indexHtml,
         /\.settings-action-btn,\s*\n\s*\.push-toggle-card\s*\{[\s\S]*height:\s*82px;[\s\S]*flex-direction:\s*column;/
