@@ -23,7 +23,7 @@ function functionBody(name) {
 test('new approach carousel continues from FAP through Racetrack fields', () => {
     assert.match(
         myNpaHtml,
-        /const NEW_APPROACH_CAROUSEL_STEPS = Object\.freeze\(\['gpa', 'fdp', 'fap', 'downwindRadioFixShift', 'racetrack', 'downwindTime', 'gsAppr'\]\);/
+        /const NEW_APPROACH_CAROUSEL_STEPS = Object\.freeze\(\['gpa', 'fdp', 'fap', 'downwindRadioFixShift', 'racetrack', 'inboundCrs', 'downwindTime', 'gsAppr'\]\);/
     );
     const advance = functionBody('advanceNewApproachCarousel');
     assert.match(advance, /completedField === 'downwindTime' && getTextOrBlank\('downwindTime'\) !== ""/);
@@ -34,7 +34,9 @@ test('new approach carousel continues from FAP through Racetrack fields', () => 
 test('Racetrack carousel step opens an explicit Left or Right choice modal', () => {
     assert.match(functionBody('selectRadioAidShift'), /newApproachCarouselStep === 'downwindRadioFixShift'[\s\S]*advanceNewApproachCarousel\('downwindRadioFixShift'\)/);
     assert.match(functionBody('advanceNewApproachCarousel'), /nextField === 'racetrack'[\s\S]*openRacetrackChoiceModal\(\)/);
-    assert.match(myNpaHtml, /id="racetrackChoiceModal"[\s\S]*selectRacetrackChoice\('Left'\)[\s\S]*selectRacetrackChoice\('Right'\)/);
+    assert.match(myNpaHtml, /id="racetrackChoiceModal"[\s\S]*class="modal-options racetrack-choice-options"[\s\S]*selectRacetrackChoice\('Left'\)[\s\S]*selectRacetrackChoice\('Right'\)/);
+    assert.match(myNpaHtml, /\.racetrack-choice-options\s*\{[^}]*flex-direction:\s*row;/);
+    assert.match(myNpaHtml, /\.racetrack-choice-options \.modal-opt-btn\s*\{[^}]*flex:\s*1 1 0;/);
     assert.match(functionBody('selectRacetrackChoice'), /value === 'Left' \? 'Left' : 'Right'/);
     assert.match(functionBody('selectRacetrackChoice'), /newApproachCarouselStep === 'racetrack'[\s\S]*advanceNewApproachCarousel\('racetrack'\)/);
     assert.match(functionBody('closeNpaKeypad'), /NEW_APPROACH_CAROUSEL_STEPS\.includes\(activeNpaField\)/);
