@@ -213,3 +213,16 @@ html.dark-theme {
         padding-bottom: var(--bottom-nav-padding-bottom);
     }
 }
+
+/* === Dock-стиль нижней панели (главная страница) ===
+   Включается классом bottom-controls--dock в index.html.
+   ОТКАТ: удалить класс bottom-controls--dock из разметки — вернутся прежние значения. */
+html:root .bottom-controls.bottom-controls--panel.bottom-controls--dock{
+  --dock-extra-height:5px;          /* на сколько панель выше исходной (растёт вверх) */
+  --nav-panel-bg:#2c333d;           /* фон */
+  --nav-panel-ink:#7d818a;          /* иконки и текст */
+  --nav-divider:var(--nav-panel-ink); /* разделители — цвет текста */
+  --bottom-nav-color:var(--nav-panel-ink);
+  height:calc(var(--bottom-nav-reserved-height) + var(--dock-extra-height));
+  background:var(--nav-panel-bg);
+}
