@@ -120,7 +120,7 @@ test('standalone Android tablets share the current iPad home geometry', () => {
 
 test('service worker includes the shared stylesheet with the current cache version', () => {
     const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260911-5';/);
+    assert.match(sw, /const CACHE_NAME = 'myflight_v\.260916-1';/);
     const release = JSON.parse(sw.match(/const PRECACHE_BUILD = (\{.*\});/)[1]);
     assert.ok(release.assets.some(asset => asset.url === 'bottom-navigation.css' && /^[a-f0-9]{64}$/.test(asset.sha256)));
 });
