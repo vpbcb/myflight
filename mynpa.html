@@ -3283,7 +3283,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="4cf5d3873e8e55e6b4a3a5dc"></head>
+<meta name="offline-build" content="59bdc773a4a156132bdf9378"></head>
 <body>
 
 <div class="app-wrapper">
@@ -9280,7 +9280,11 @@
         if (!clearButton) return;
         const shouldShowBack = activeNpaField === 'downwindRadioFixShift'
             && currentKpVal === "";
-        clearButton.textContent = shouldShowBack ? 'Back' : 'CLR';
+        const shouldShowNext = newApproachCarouselActive
+            && newApproachCarouselStep === 'downwindTime'
+            && activeNpaField === 'downwindTime'
+            && currentKpVal === "";
+        clearButton.textContent = shouldShowBack ? 'Back' : shouldShowNext ? 'Next' : 'CLR';
     }
 
     function configureNpaKeypad(type) {
@@ -9755,6 +9759,15 @@
                 activeNpaField = '';
                 keypadWasCleared = false;
                 openRadioAidShiftModal();
+                return;
+            }
+            if (
+                newApproachCarouselActive
+                && newApproachCarouselStep === 'downwindTime'
+                && activeNpaField === 'downwindTime'
+                && currentKpVal === ""
+            ) {
+                closeNpaKeypad('done');
                 return;
             }
             currentKpVal = "";

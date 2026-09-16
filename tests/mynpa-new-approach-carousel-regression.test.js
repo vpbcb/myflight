@@ -46,11 +46,16 @@ test('empty manual Racetrack NAV aid input returns to aid selection', () => {
     assert.match(myNpaHtml, /id="keypadClearBtn"[^>]*onclick="kpPress\('clear'\)"[^>]*>CLR<\/button>/);
     assert.match(myNpaHtml, /downwindRadioFixShift:\s*'NAV AID SHIFT FROM LAND THR'/);
     const clearButton = functionBody('updateNpaKeypadClearButton');
-    assert.match(clearButton, /activeNpaField === 'downwindRadioFixShift'[\s\S]*currentKpVal === ""[\s\S]*shouldShowBack \? 'Back' : 'CLR'/);
-    assert.doesNotMatch(clearButton, /newApproachCarousel/);
+    assert.match(clearButton, /activeNpaField === 'downwindRadioFixShift'[\s\S]*currentKpVal === ""[\s\S]*shouldShowBack \? 'Back'/);
     const keypadPress = functionBody('kpPress');
     assert.match(keypadPress, /key === 'clear'[\s\S]*activeNpaField === 'downwindRadioFixShift'[\s\S]*currentKpVal === ""[\s\S]*openRadioAidShiftModal\(\)/);
-    assert.doesNotMatch(keypadPress.slice(0, keypadPress.indexOf("currentKpVal = \"\";")), /newApproachCarousel/);
+});
+
+test('empty carousel downwind time uses Next to continue to ground speed', () => {
+    const clearButton = functionBody('updateNpaKeypadClearButton');
+    assert.match(clearButton, /newApproachCarouselActive[\s\S]*newApproachCarouselStep === 'downwindTime'[\s\S]*activeNpaField === 'downwindTime'[\s\S]*currentKpVal === ""/);
+    assert.match(clearButton, /shouldShowBack \? 'Back' : shouldShowNext \? 'Next' : 'CLR'/);
+    assert.match(functionBody('kpPress'), /activeNpaField === 'downwindTime'[\s\S]*currentKpVal === ""[\s\S]*closeNpaKeypad\('done'\)/);
 });
 
 test('Radio Aid Shift explains the Racetrack navigation aid choice', () => {
