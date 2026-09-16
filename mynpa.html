@@ -966,6 +966,10 @@
             padding-top: 3px;
             padding-bottom: 2px;
         }
+        #npaBlock2 .cell-label,
+        #npaBlock2 .racetrack-offset-track {
+            font-weight: 600;
+        }
         #npaBlock2 .cell-label {
             margin-bottom: 0;
             line-height: 1.05;
@@ -1925,6 +1929,15 @@
             color: var(--text-muted);
             text-align: center;
         }
+        .radio-aid-shift-hint {
+            margin: -7px 0 12px;
+            font-size: 10px;
+            font-style: italic;
+            font-weight: 400;
+            line-height: 1.25;
+            color: var(--text-muted);
+            text-align: center;
+        }
         .modal-options {
             display: flex;
             flex-direction: column;
@@ -2528,13 +2541,14 @@
             text-align: center;
             text-transform: uppercase;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.45s ease;
             z-index: 2600;
         }
 
         .npa-edit-mode-toast.active {
             opacity: 1;
+            visibility: visible;
         }
 
         html.dark-theme .npa-edit-mode-toast {
@@ -3263,7 +3277,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="7814bc5ad65efca366037478"></head>
+<meta name="offline-build" content="4caac594785e9178931bd991"></head>
 <body>
 
 <div class="app-wrapper">
@@ -3427,7 +3441,7 @@
 
                             <div class="c2-row downwind-pair-row">
                                 <div class="cell-wrapper flex-1 downwind-mini-block">
-                                    <span class="cell-label">Racetrack radio aid shift <br> from land THR:</span>
+                                    <span class="cell-label">Racetrack NAV aid <br> <span style="text-transform: lowercase;">or</span> manual dist from NDB to THR:</span>
                                     <input type="text" class="cell-input" id="downwindRadioFixShift" readonly onclick="openRadioAidShiftModal()">
                                 </div>
                                 <div class="cell-wrapper flex-1 downwind-mini-block" id="finalDescentFromBlock" onclick="toggleFinalDescentFrom()">
@@ -3751,8 +3765,8 @@
         body.addEventListener('scroll', saveNpaProfileScrollPosition, { passive: true });
     }
 
-    const NPA_EDIT_UNLOCK_HOLD_MS = 1500;
-    const NPA_EDIT_TOAST_FADE_DELAY_MS = 460;
+    const NPA_EDIT_UNLOCK_HOLD_MS = 800;
+    const NPA_EDIT_TOAST_FADE_MS = 700;
     const NPA_EDIT_LOCKED_FIELDS = [
         'rwLength',
         'elevation',
@@ -3779,6 +3793,7 @@
     let npaEditLockHoldTimer = null;
     let npaEditLockHoldActivated = false;
     let npaEditToastTimer = null;
+    let npaEditToastHideTimer = null;
 
     function getNpaLockIconSvg(unlocked) {
         const shackle = unlocked
@@ -3825,10 +3840,24 @@
         const toast = document.getElementById('npaEditModeToast');
         if (!toast) return;
         clearTimeout(npaEditToastTimer);
+        clearTimeout(npaEditToastHideTimer);
         toast.classList.add('active');
+
+        toast.style.transition = 'none';
+        toast.style.opacity = '0';
+        toast.style.visibility = 'visible';
+        void toast.offsetWidth;
+
+        toast.style.transition = `opacity ${NPA_EDIT_TOAST_FADE_MS}ms ease-out`;
+        toast.style.opacity = '1';
         npaEditToastTimer = setTimeout(() => {
-            toast.classList.remove('active');
-        }, NPA_EDIT_TOAST_FADE_DELAY_MS);
+            toast.style.transition = `opacity ${NPA_EDIT_TOAST_FADE_MS}ms ease-in`;
+            toast.style.opacity = '0';
+            npaEditToastHideTimer = setTimeout(() => {
+                toast.style.visibility = 'hidden';
+                toast.classList.remove('active');
+            }, NPA_EDIT_TOAST_FADE_MS);
+        }, NPA_EDIT_TOAST_FADE_MS);
     }
 
     function setNpaEditModeUnlocked(unlocked, showToast) {
@@ -6966,15 +6995,19 @@
         if (navigator.vibrate) navigator.vibrate(15);
     }
 
-    function closeRadioAidShiftModal(event) {
+    function closeRadioAidShiftModal(event, preserveNewApproachCarousel = false) {
         if (event && event !== 'button' && event.target !== event.currentTarget) return;
         document.getElementById('radioAidShiftModal')?.classList.remove('active');
+        if (!preserveNewApproachCarousel && newApproachCarouselStep === 'downwindRadioFixShift') {
+            newApproachCarouselActive = false;
+            newApproachCarouselStep = '';
+        }
     }
 
     function openManualRadioAidShift() {
         const keypadTarget = activeRadioAidShiftTarget === 'profileRadio' ? 'radio' : 'downwindRadioFixShift';
         const allowLockedRadio = keypadTarget === 'radio' && radioAidShiftModalAllowsLockedRadio;
-        closeRadioAidShiftModal('button');
+        closeRadioAidShiftModal('button', true);
         if (allowLockedRadio) {
             if (navigator.vibrate) navigator.vibrate(15);
             activeNpaField = keypadTarget;
@@ -7156,6 +7189,9 @@
             downwindRadioFixDirectSource = makeRadioDirectSourceForSelection(aid, type, runwayInfo, index);
         }
         applyRadioAidShiftValue(Number(shift).toFixed(1));
+        if (newApproachCarouselActive && newApproachCarouselStep === 'downwindRadioFixShift') {
+            advanceNewApproachCarousel('downwindRadioFixShift');
+        }
         closeRadioAidShiftModal('button');
     }
 
@@ -7570,7 +7606,9 @@
     let airportDeleteConfirmTarget = null;
     let activeRadioAidShiftTarget = 'downwind';
     let radioAidShiftModalAllowsLockedRadio = false;
+    const NEW_APPROACH_CAROUSEL_STEPS = Object.freeze(['gpa', 'fdp', 'fap', 'downwindRadioFixShift', 'racetrack', 'downwindTime', 'gsAppr']);
     let newApproachCarouselActive = false;
+    let newApproachCarouselStep = '';
     let newApproachState = {
         navType: 'VOR',
         suffix: '',
@@ -8776,6 +8814,7 @@
 
     function startNewApproachCarousel() {
         newApproachCarouselActive = true;
+        newApproachCarouselStep = 'gpa';
         setTimeout(() => {
             const menu = document.getElementById('gpaMenu');
             if (menu) menu.style.display = 'block';
@@ -8785,25 +8824,35 @@
     function advanceNewApproachCarousel(completedField) {
         if (!newApproachCarouselActive) return false;
 
-        const nextField = completedField === 'gpa'
-            ? 'fdp'
-            : completedField === 'fdp'
-                ? 'fap'
-                : '';
-        if (nextField) {
-            setTimeout(() => openNpaKeypad(nextField), 0);
-            return true;
-        }
-
-        if (completedField === 'fap') {
+        if (completedField === 'downwindTime' && getTextOrBlank('downwindTime') !== "") {
             newApproachCarouselActive = false;
+            newApproachCarouselStep = '';
             document.activeElement?.blur();
-            setTimeout(() => toggleNpaBlock('npaBlock2'), 0);
             return true;
         }
 
-        newApproachCarouselActive = false;
-        return false;
+        const completedIndex = NEW_APPROACH_CAROUSEL_STEPS.indexOf(completedField);
+        const nextField = completedIndex === -1 ? '' : NEW_APPROACH_CAROUSEL_STEPS[completedIndex + 1];
+        if (!nextField) {
+            newApproachCarouselActive = false;
+            newApproachCarouselStep = '';
+            document.activeElement?.blur();
+            return false;
+        }
+
+        newApproachCarouselStep = nextField;
+        if (nextField === 'downwindRadioFixShift') {
+            setTimeout(() => {
+                toggleNpaBlock('npaBlock2');
+                openRadioAidShiftModal();
+            }, 0);
+            return true;
+        }
+
+        if (nextField === 'racetrack') return true;
+
+        setTimeout(() => openNpaKeypad(nextField), 0);
+        return true;
     }
 
     async function saveNewApproachFromModal() {
@@ -9073,6 +9122,9 @@
         markNpaCurrentApproachDirtyForField('racetrack');
         updateRacetrackSectors();
         scheduleNpaCurrentPageStateSave();
+        if (newApproachCarouselActive && newApproachCarouselStep === 'racetrack') {
+            advanceNewApproachCarousel('racetrack');
+        }
     }
 
     // --- ЛОГИКА ЦИФРОВОЙ КЛАВИАТУРЫ ---
@@ -9184,6 +9236,14 @@
         document.getElementById('keypadModal').style.display = 'flex';
     }
 
+    function updateNpaKeypadClearButton() {
+        const clearButton = document.getElementById('keypadClearBtn');
+        if (!clearButton) return;
+        const shouldShowBack = activeNpaField === 'downwindRadioFixShift'
+            && currentKpVal === "";
+        clearButton.textContent = shouldShowBack ? 'Back' : 'CLR';
+    }
+
     function configureNpaKeypad(type) {
         const titleEl = document.getElementById('kpTitle');
         const subtitleEl = document.getElementById('kpSubtitle');
@@ -9210,7 +9270,7 @@
             const titles = {
                 radio: 'MANUAL DIST',
                 tar: 'SHIFT FROM THR (TAR)',
-                downwindRadioFixShift: 'RADIO FIX SHIFT FROM LAND THR'
+                downwindRadioFixShift: 'NAV AID SHIFT FROM LAND THR'
             };
             if (titleEl) titleEl.innerText = titles[type];
             if (subtitleEl) subtitleEl.innerText = '+: за торцом / -: перед торцом';
@@ -9473,7 +9533,7 @@
         if (navigator.vibrate) navigator.vibrate(15);
 
         const keypadModal = document.getElementById('keypadModal');
-        const completedCarouselField = newApproachCarouselActive && ['gpa', 'fdp', 'fap'].includes(activeNpaField)
+        const completedCarouselField = newApproachCarouselActive && NEW_APPROACH_CAROUSEL_STEPS.includes(activeNpaField)
             ? activeNpaField
             : "";
         const shouldAdvanceNewApproachCarousel = e === 'done' && completedCarouselField !== "";
@@ -9648,6 +9708,16 @@
         if (navigator.vibrate) navigator.vibrate(10);
 
         if (key === 'clear') {
+            if (
+                activeNpaField === 'downwindRadioFixShift'
+                && currentKpVal === ""
+            ) {
+                document.getElementById('keypadModal').style.display = 'none';
+                activeNpaField = '';
+                keypadWasCleared = false;
+                openRadioAidShiftModal();
+                return;
+            }
             currentKpVal = "";
             keypadWasCleared = true;
             npaTempSignOnlyInput = false;
@@ -9757,6 +9827,7 @@
     }
 
     function updateKpDisplay() {
+        updateNpaKeypadClearButton();
         const displayEl = document.getElementById('kpValue');
         if (!displayEl) return;
 
@@ -9919,6 +9990,7 @@
 <div id="radioAidShiftModal" class="modal-overlay" onclick="closeRadioAidShiftModal(event)">
     <div class="modal-content npa-form-modal" onclick="event.stopPropagation()">
         <div class="modal-header">Radio Aid Shift</div>
+        <div class="radio-aid-shift-hint"><em>(Радиосредство, от которого строится ипподром, или ввести дальность этого радиосредства от торца ВПП)</em></div>
         <div class="modal-options" id="radioAidShiftOptions"></div>
         <div class="npa-modal-actions">
             <button id="radioAidShiftClearButton" type="button" class="modal-opt-btn" onclick="handleRadioAidShiftClearButton()">Cancel</button>
@@ -9979,7 +10051,7 @@
         </div>
         <div id="kpExtraRow" class="keypad-extra-grid"></div>
         <div class="keypad-action-row">
-            <button class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
+            <button id="keypadClearBtn" class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
             <button id="doneBtn" class="kp-btn kp-done" onclick="closeNpaKeypad('done')">DONE</button>
         </div>
     </div>
