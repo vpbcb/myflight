@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -15,14 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Bump PWA cache for a main push
+        if: github.event_name == 'push'
+        run: node scripts/bump-cache-version.cjs
+      - run: npm run build
       - run: npm run lint
       - run: npm run check:offline
       - run: npm test
-      - run: npm run build
       - run: node scripts/verify-offline-build.cjs
+      - name: Commit the PWA cache release
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git diff --cached --quiet || git commit -m "chore: bump PWA cache"
+          git push
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

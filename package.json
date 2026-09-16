@@ -5,6 +5,7 @@
     "test": "node scripts/run-tests.cjs",
     "lint": "node scripts/check-syntax.cjs",
     "build": "node scripts/build-offline.cjs",
+    "bump:cache": "node scripts/bump-cache-version.cjs",
     "check:offline": "node scripts/build-offline.cjs --check"
   }
 }

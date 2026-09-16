@@ -53,8 +53,8 @@ assert.deepStrictEqual(
 const serviceWorkerSource = fs.readFileSync(path.join(projectRoot, 'sw.js'), 'utf8');
 assert.match(
     serviceWorkerSource,
-    /const CACHE_NAME = 'myflight_v\.260916-3';/,
-    'the PWA cache must be bumped for the aircraft database update'
+    /const CACHE_NAME = 'myflight_v\.\d{6}-\d+';/,
+    'the PWA cache must use the versioned release format'
 );
 
 console.log('Aircraft database values and cache version are current.');
