@@ -31,9 +31,12 @@ test('new approach carousel continues from FAP through Racetrack fields', () => 
     assert.match(advance, /setTimeout\(\(\) => openNpaKeypad\(nextField\), 0\)/);
 });
 
-test('Racetrack choices advance only during the new approach carousel', () => {
+test('Racetrack carousel step opens an explicit Left or Right choice modal', () => {
     assert.match(functionBody('selectRadioAidShift'), /newApproachCarouselStep === 'downwindRadioFixShift'[\s\S]*advanceNewApproachCarousel\('downwindRadioFixShift'\)/);
-    assert.match(functionBody('toggleRacetrack'), /newApproachCarouselStep === 'racetrack'[\s\S]*advanceNewApproachCarousel\('racetrack'\)/);
+    assert.match(functionBody('advanceNewApproachCarousel'), /nextField === 'racetrack'[\s\S]*openRacetrackChoiceModal\(\)/);
+    assert.match(myNpaHtml, /id="racetrackChoiceModal"[\s\S]*selectRacetrackChoice\('Left'\)[\s\S]*selectRacetrackChoice\('Right'\)/);
+    assert.match(functionBody('selectRacetrackChoice'), /value === 'Left' \? 'Left' : 'Right'/);
+    assert.match(functionBody('selectRacetrackChoice'), /newApproachCarouselStep === 'racetrack'[\s\S]*advanceNewApproachCarousel\('racetrack'\)/);
     assert.match(functionBody('closeNpaKeypad'), /NEW_APPROACH_CAROUSEL_STEPS\.includes\(activeNpaField\)/);
 });
 

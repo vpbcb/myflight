@@ -3277,7 +3277,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="6eb3c0535322e6476e7660c0"></head>
+<meta name="offline-build" content="a92f7329c04d0823857f3549"></head>
 <body>
 
 <div class="app-wrapper">
@@ -7004,6 +7004,36 @@
         }
     }
 
+    function openRacetrackChoiceModal() {
+        if (!guardNpaEditableField('racetrack')) return;
+        document.getElementById('racetrackChoiceModal')?.classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    function closeRacetrackChoiceModal(event, preserveNewApproachCarousel = false) {
+        if (event && event !== 'button' && event.target !== event.currentTarget) return;
+        document.getElementById('racetrackChoiceModal')?.classList.remove('active');
+        if (!preserveNewApproachCarousel && newApproachCarouselStep === 'racetrack') {
+            newApproachCarouselActive = false;
+            newApproachCarouselStep = '';
+        }
+    }
+
+    function selectRacetrackChoice(value) {
+        if (!guardNpaEditableField('racetrack')) return;
+        const racetrack = value === 'Left' ? 'Left' : 'Right';
+        const el = document.getElementById('racetrackVal');
+        if (!el) return;
+        el.innerText = racetrack;
+        markNpaCurrentApproachDirtyForField('racetrack');
+        updateRacetrackSectors();
+        scheduleNpaCurrentPageStateSave();
+        closeRacetrackChoiceModal('button', true);
+        if (newApproachCarouselActive && newApproachCarouselStep === 'racetrack') {
+            advanceNewApproachCarousel('racetrack');
+        }
+    }
+
     function openManualRadioAidShift() {
         const keypadTarget = activeRadioAidShiftTarget === 'profileRadio' ? 'radio' : 'downwindRadioFixShift';
         const allowLockedRadio = keypadTarget === 'radio' && radioAidShiftModalAllowsLockedRadio;
@@ -8849,7 +8879,10 @@
             return true;
         }
 
-        if (nextField === 'racetrack') return true;
+        if (nextField === 'racetrack') {
+            setTimeout(() => openRacetrackChoiceModal(), 0);
+            return true;
+        }
 
         setTimeout(() => openNpaKeypad(nextField), 0);
         return true;
@@ -9995,6 +10028,19 @@
         <div class="npa-modal-actions">
             <button id="radioAidShiftClearButton" type="button" class="modal-opt-btn" onclick="handleRadioAidShiftClearButton()">Cancel</button>
             <button type="button" class="modal-opt-btn primary" onclick="openManualRadioAidShift()">MANUAL DIST</button>
+        </div>
+    </div>
+</div>
+
+<div id="racetrackChoiceModal" class="modal-overlay" onclick="closeRacetrackChoiceModal(event)">
+    <div class="modal-content npa-form-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">Racetrack conf</div>
+        <div class="modal-options">
+            <button type="button" class="modal-opt-btn" onclick="selectRacetrackChoice('Left')">Left</button>
+            <button type="button" class="modal-opt-btn primary" onclick="selectRacetrackChoice('Right')">Right</button>
+        </div>
+        <div class="npa-modal-actions">
+            <button type="button" class="modal-opt-btn" onclick="closeRacetrackChoiceModal('button')">Cancel</button>
         </div>
     </div>
 </div>
