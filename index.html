@@ -542,7 +542,7 @@
         }
 
         .title {
-            font-size: 0.8rem;
+            font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: -0.3px;
         }
@@ -1204,6 +1204,130 @@
             }
         }
 
+        /* === MyWind: объёмная кнопка с ветроуказателем === */
+        .project-card--raised {
+            --raised-face-1: #ffffff;
+            --raised-face-2: #dde5ef;
+            --raised-edge: rgba(15, 23, 42, 0.18);
+            --raised-drop: rgba(15, 23, 42, 0.45);
+            --raised-inner-top: rgba(255, 255, 255, 0.95);
+            --raised-inner-bottom: rgba(15, 23, 42, 0.16);
+            --raised-gloss: rgba(255, 255, 255, 0.9);
+            position: relative;
+            isolation: isolate;
+            border: 1px solid var(--raised-edge);
+            background: linear-gradient(180deg, var(--raised-face-1) 0%, var(--raised-face-2) 100%);
+            box-shadow:
+                inset 0 1px 0 var(--raised-inner-top),
+                inset 0 -3px 5px -2px var(--raised-inner-bottom),
+                0 3px 0 -1px var(--raised-edge),
+                0 10px 18px -10px var(--raised-drop);
+            transform: translateY(-1px);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            will-change: transform;
+        }
+
+        /* Верхний блик — придаёт кнопке выпуклость */
+        .project-card--raised::before {
+            content: "";
+            position: absolute;
+            inset: 2px 2px auto 2px;
+            height: 52%;
+            border-radius: 14px 14px 50% 50% / 14px 14px 26% 26%;
+            background: linear-gradient(180deg, var(--raised-gloss), rgba(255, 255, 255, 0));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .project-card--raised > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Нажатие — кнопка «вдавливается» в поверхность */
+        .project-card--raised:active {
+            transform: translateY(2px);
+            opacity: 1;
+            box-shadow:
+                inset 0 2px 6px -1px var(--raised-inner-bottom),
+                inset 0 -1px 0 var(--raised-inner-top),
+                0 0 0 -1px var(--raised-edge),
+                0 3px 7px -6px var(--raised-drop);
+        }
+
+        /* Иконки крупнее общего слота, но сам слот не меняется: поэтому
+           заголовки всех кнопок в ряду стоят на одном уровне. Позиционируем
+           от центра слота, а не растяжением flex — так иконка гарантированно
+           стоит по центру кнопки и не упирается в край. */
+        .project-card--raised .icon-box {
+            position: relative;
+        }
+
+        .project-card--raised .icon-box > svg {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 2px rgba(15, 23, 42, 0.3));
+        }
+
+        .project-card--raised .icon-box .windsock-icon {
+            left: calc(50% + 6px);
+            transform: translate(-50%, -50%) scale(2.22);
+        }
+
+        /* MyPath: вид на ВПП в перспективе из кабины + огни PAPI слева */
+        .project-card--raised .icon-box .descent-icon {
+            left: calc(50% + 6px);
+            transform: translate(-50%, -50%) scale(1.9);
+        }
+
+        /* MyNPA: схема racetrack, NDB на развороте и самолёт на него */
+        .project-card--raised .icon-box .npa-icon {
+            left: 50%;
+            transform: translate(-50%, -50%) scale(2.85);
+        }
+
+        /* MyShift: растровая иконка из icons/.
+           Слот иконки не меняется, поэтому подпись стоит на одном уровне
+           с остальными кнопками ряда. */
+        .project-card--raised .icon-box .shift-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100%;
+            height: 100%;
+            transform: translate(-50%, -50%) scale(1.4);
+            object-fit: contain;
+        }
+
+        /* Заголовки объёмных кнопок — умеренная жирность */
+        .project-card--raised .info .title {
+            font-weight: 500;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-theme) .project-card--raised {
+                --raised-face-1: #2a374d;
+                --raised-face-2: #131a29;
+                --raised-edge: rgba(0, 0, 0, 0.65);
+                --raised-drop: rgba(0, 0, 0, 0.7);
+                --raised-inner-top: rgba(255, 255, 255, 0.16);
+                --raised-inner-bottom: rgba(0, 0, 0, 0.55);
+                --raised-gloss: rgba(255, 255, 255, 0.14);
+            }
+        }
+
+        html.dark-theme .project-card--raised {
+            --raised-face-1: #2a374d;
+            --raised-face-2: #131a29;
+            --raised-edge: rgba(0, 0, 0, 0.65);
+            --raised-drop: rgba(0, 0, 0, 0.7);
+            --raised-inner-top: rgba(255, 255, 255, 0.16);
+            --raised-inner-bottom: rgba(0, 0, 0, 0.55);
+            --raised-gloss: rgba(255, 255, 255, 0.14);
+        }
+
     </style>
     <!-- Микро-скрипт защиты от белой вспышки (как на подстраницах) -->
     <script>
@@ -1391,7 +1515,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="645bcd1f2659ea1271fb298f"></head>
+<meta name="offline-build" content="4a97bec5054371bfda587fca"></head>
 <body>
     <div class="app-shell">
 
@@ -1462,8 +1586,10 @@
                 <div class="info"><span class="title">MyFuel</span></div>
             </a>
 
-            <a href="./myshift.html" class="project-card">
-                <div class="icon-box">📅</div>
+            <a href="./myshift.html" class="project-card project-card--raised" id="myshiftCard">
+                <div class="icon-box">
+                    <img class="shift-icon" src="./icons/myshifticon.png" alt="" aria-hidden="true">
+                </div>
                 <div class="info"><span class="title">MyShift</span></div>
             </a>
 
@@ -1473,18 +1599,109 @@
                 <div class="info"><span class="title">MyWeather</span></div>
             </a>
 
-            <a href="./mynpa.html" class="project-card" id="mynpaCard">
-                <div class="icon-box">🗺️</div>
+            <a href="./mynpa.html" class="project-card project-card--raised" id="mynpaCard">
+                <div class="icon-box">
+                    <svg class="npa-icon" viewBox="-30 -14 134 60" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="npaPlane" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#3b4a61"/>
+                                <stop offset="1" stop-color="#121b28"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- схема racetrack: тонкая чёрная линия, наклон 15° против часовой -->
+                        <g transform="rotate(-15 62 17)">
+                            <rect x="30" y="4" width="64" height="26" rx="13" fill="none" stroke="#0f172a" stroke-width="1.3"/>
+                            <!-- NDB на левом нижнем развороте: жирная точка и три кольца пунктиром -->
+                            <g stroke="#0f172a" stroke-width="1.1" stroke-dasharray="2.2 2.2" fill="none" opacity="0.5">
+                                <circle cx="33.8" cy="26.2" r="3.4"/>
+                                <circle cx="33.8" cy="26.2" r="5.8"/>
+                                <circle cx="33.8" cy="26.2" r="8.2"/>
+                            </g>
+                            <circle cx="33.8" cy="26.2" r="2.5" fill="#0f172a"/>
+                        </g>
+                        <!-- самолёт отдельно: левее и в два раза крупнее, носом на NDB -->
+                        <g transform="translate(-10 8) rotate(118) scale(1.3) translate(-11.5 -12)">
+                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="url(#npaPlane)"/>
+                        </g>
+                    </svg>
+                </div>
                 <div class="info"><span class="title">MyNPA</span></div>
             </a>
 
-            <a href="./mywind.html" class="project-card">
-                <div class="icon-box">💨</div>
+            <a href="./mywind.html" class="project-card project-card--raised" id="mywindCard">
+                <div class="icon-box">
+                    <svg class="windsock-icon" viewBox="-11 6 104 48" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="mwSockRed" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#ff7373"/>
+                                <stop offset="0.38" stop-color="#e01b1b"/>
+                                <stop offset="1" stop-color="#8f0f0e"/>
+                            </linearGradient>
+                            <linearGradient id="mwSockWhite" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#ffffff"/>
+                                <stop offset="0.46" stop-color="#f1f5f9"/>
+                                <stop offset="1" stop-color="#aeb9c8"/>
+                            </linearGradient>
+                            <linearGradient id="mwSockMouth" x1="0" y1="0" x2="1" y2="0.2">
+                                <stop offset="0" stop-color="#630c0c"/>
+                                <stop offset="1" stop-color="#c62828"/>
+                            </linearGradient>
+                            <clipPath id="mwSockClip">
+                                <path d="M14 8 A5.5 22 0 0 0 14 52 L90 39 L90 21 Z"/>
+                            </clipPath>
+                        </defs>
+                        <!-- крепления ветроуказателя, сведённые в одну точку -->
+                        <g stroke="#26364a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.8">
+                            <path d="M-6 30 L11.7 8.1"/>
+                            <path d="M-6 30 L16.3 51.9"/>
+                            <circle cx="-6" cy="30" r="1.9" fill="#26364a" stroke="none"/>
+                        </g>
+                        <g transform="rotate(-6 14 30)">
+                            <ellipse cx="14" cy="30" rx="5.5" ry="22" fill="url(#mwSockMouth)" stroke="#4a0f0f" stroke-width="1.5"/>
+                            <g clip-path="url(#mwSockClip)">
+                                <path d="M14 8 L29.2 10.6 L29.2 49.4 L14 52 Z" fill="url(#mwSockRed)"/>
+                                <path d="M29.2 10.6 L44.4 13.2 L44.4 46.8 L29.2 49.4 Z" fill="url(#mwSockWhite)"/>
+                                <path d="M44.4 13.2 L59.6 15.8 L59.6 44.2 L44.4 46.8 Z" fill="url(#mwSockRed)"/>
+                                <path d="M59.6 15.8 L74.8 18.4 L74.8 41.6 L59.6 44.2 Z" fill="url(#mwSockWhite)"/>
+                                <path d="M74.8 18.4 L90 21 L90 39 L74.8 41.6 Z" fill="url(#mwSockRed)"/>
+                                <path d="M15.6 10.9 L88.4 23.3" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.6" stroke-linecap="round"/>
+                                <path d="M15.6 48.9 L88.4 36.5" fill="none" stroke="rgba(15,23,42,0.16)" stroke-width="2.8" stroke-linecap="round"/>
+                            </g>
+                            <path d="M14 8 A5.5 22 0 0 0 14 52 L90 39 L90 21 Z" fill="none" stroke="#5c1414" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+                        </g>
+                    </svg>
+                </div>
                 <div class="info"><span class="title">MyWind</span></div>
             </a>
 
-            <a href="./mypath.html" class="project-card">
-                <div class="icon-box">📐</div>
+            <a href="./mypath.html" class="project-card project-card--raised" id="mypathCard">
+                <div class="icon-box">
+                    <svg class="descent-icon" viewBox="0 0 76 46" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="mpRwy" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#5d6f88"/>
+                                <stop offset="1" stop-color="#222e3d"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- вид на ВПП в перспективе из кабины -->
+                        <path d="M48 4 L56 4 L67 44 L37 44 Z" fill="url(#mpRwy)" stroke="#1b2532" stroke-width="1.2" stroke-linejoin="round"/>
+                        <!-- осевая линия: штрихи сокращаются в перспективе -->
+                        <g fill="#ffffff">
+                            <path d="M50.34 36 L53.66 36 L53.88 42 L50.12 42 Z"/>
+                            <path d="M50.62 28 L53.38 28 L53.54 32.5 L50.46 32.5 Z"/>
+                            <path d="M50.89 20.5 L53.11 20.5 L53.25 24.3 L50.75 24.3 Z"/>
+                            <path d="M51.14 13.5 L52.86 13.5 L52.97 16.6 L51.03 16.6 Z"/>
+                            <path d="M51.36 7.4 L52.64 7.4 L52.73 9.8 L51.27 9.8 Z"/>
+                        </g>
+                        <!-- огни PAPI слева от ВПП: два белых, два красных -->
+                        <g stroke-width="1">
+                            <circle cx="14" cy="25" r="2.9" fill="#f8fbff" stroke="#7f95ad"/>
+                            <circle cx="20" cy="25" r="2.9" fill="#f8fbff" stroke="#7f95ad"/>
+                            <circle cx="26" cy="25" r="2.9" fill="#e02424" stroke="#7d1010"/>
+                            <circle cx="32" cy="25" r="2.9" fill="#e02424" stroke="#7d1010"/>
+                        </g>
+                    </svg>
+                </div>
                 <div class="info"><span class="title">MyPath</span></div>
             </a>
         </div> <!-- Конец .container -->

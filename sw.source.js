@@ -1,9 +1,9 @@
-const CACHE_NAME = 'myflight_v.260916-7';
+const CACHE_NAME = 'myflight_v.260919-18';
 const APP_CACHE = CACHE_NAME;
 const PRECACHE_BUILD = null;
 const APP_ID = "myflight";
 const LEGACY_PREFIXES = ["myflight_"];
-const OPTIONAL_ASSETS = ["myflightlogo.png", "icons/icon-shortcut-144.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-192.png", "icons/icon-maskable-512.png", "toicon.png", "landicon.png", "fdp.png", "fap.png", "handicon.png"];
+const OPTIONAL_ASSETS = ["myflightlogo.png", "icons/myshifticon.png", "icons/icon-shortcut-144.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-192.png", "icons/icon-maskable-512.png", "toicon.png", "landicon.png", "fdp.png", "fap.png", "handicon.png"];
 const FALLBACK_HTML = '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MyFlight — офлайн</title><body><h1>MyFlight</h1><p>Офлайн-копия недоступна. Подключитесь к интернету и откройте приложение снова. Пользовательские данные не удалены.</p></body></html>';
 
 // Offline protocol 2: immutable releases, repair, persistent client pins.

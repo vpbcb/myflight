@@ -5,15 +5,18 @@ const root = path.resolve(__dirname, '..');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const pages = ['index.html', 'myfuel.html', 'mywind.html', 'mypath.html', 'mynpa.html', 'myshift.html', 'offline.html'];
 const assets = [...pages, 'manifest.json', 'app.js', 'offline-client.js', 'bottom-navigation.css', 'suflights.js', 'dbaircraft.js',
-    'vendor/firebase-app-compat.js', 'vendor/firebase-database-compat.js', 'vendor/firebase-auth-compat.js'].sort();
+    'vendor/firebase-app-compat.js', 'vendor/firebase-database-compat.js', 'vendor/firebase-auth-compat.js', 'icons/myshifticon.png'].sort();
+const binaries = new Set(['icons/myshifticon.png']);
 const source = fs.readFileSync(path.join(root, 'sw.source.js'), 'utf8').replace(/\r\n/g, '\n');
 const raw = new Map(assets.map(url => {
+    if (binaries.has(url)) return [url, fs.readFileSync(path.join(root, url))];
     const bytes = Buffer.from(fs.readFileSync(path.join(root, url), 'utf8').replace(/\r\n/g, '\n'));
     return [url, pages.includes(url) ? Buffer.from(bytes.toString().replace(/<meta name="offline-build" content="[^"]+">\s*/g, '')) : bytes];
 }));
 const id = hash(JSON.stringify([...raw].map(([url, bytes]) => ({ url, hash: hash(bytes) }))) + source).slice(0, 24);
 const mime = url => url.endsWith('.html') ? ['text/html'] : url.endsWith('.css') ? ['text/css']
-    : url.endsWith('.js') ? ['text/javascript', 'application/javascript'] : ['application/json', 'application/manifest+json'];
+    : url.endsWith('.js') ? ['text/javascript', 'application/javascript']
+    : url.endsWith('.png') ? ['image/png'] : ['application/json', 'application/manifest+json'];
 const output = new Map([...raw].map(([url, bytes]) => [url, pages.includes(url)
     ? Buffer.from(bytes.toString().replace('</head>', '<meta name="offline-build" content="' + id + '"></head>')) : bytes]));
 const build = { id, assets: [...output].map(([url, bytes]) => ({ url, sha256: hash(bytes), mime: mime(url) })) };

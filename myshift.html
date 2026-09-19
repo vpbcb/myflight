@@ -614,9 +614,10 @@ button.pill{
   --durationInk:#185a9d;
 }
 html.dark-theme .durationSummary{
-  --card:#3b2c20;
-  --ctlBorder:#795837;
-  --durationInk:#96caff;
+  /* светлее оранжевый, чем прежний #3b2c20 */
+  --card:#8a5a24;
+  --ctlBorder:#c99456;
+  --durationInk:#fff1de;
 }
 .mtCol{ display:flex; flex-direction:column; align-items:center; gap:4px; }
 .resultTimeColumn{
@@ -801,6 +802,62 @@ html.dark-theme .durationSummary{
   opacity: 0.72;
   filter:none;
   cursor:not-allowed;
+  box-shadow:none;
+  transform:none;
+}
+
+/* Тёмная тема: активная кнопка — тёмно-синяя, неактивные — тёмная поверхность.
+   Объём (градиент, нижняя кромка, внутренний блик, вдавливание) сохраняем. */
+html.dark-theme .paxBtn,
+html.dark-theme .tzBtn{
+  background: linear-gradient(180deg, #29344a 0%, #1b2536 100%);
+  color: #a9bdd6;
+  border-color: #3d4c66;
+  box-shadow:
+    0 2px 0 #131b29,
+    0 4px 8px rgb(0 0 0 / 45%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+html.dark-theme .paxBtn.active,
+html.dark-theme .tzBtn.active{
+  background: linear-gradient(180deg, #22639b 0%, #123f6b 100%);
+  color: #ffffff;
+  border-color: #0d3a63;
+  box-shadow:
+    0 2px 0 #0b2438,
+    0 4px 8px rgb(0 0 0 / 45%),
+    inset 0 1px 0 rgb(255 255 255 / 14%);
+}
+html.dark-theme .paxBtn:hover:not(:disabled),
+html.dark-theme .tzBtn:hover:not(:disabled){
+  background: linear-gradient(180deg, #33415c 0%, #232f45 100%);
+  color: #d5e4f5;
+  border-color: #4d5f7d;
+  box-shadow:
+    0 2px 0 #131b29,
+    0 5px 10px rgb(0 0 0 / 50%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+html.dark-theme .paxBtn.active:hover:not(:disabled),
+html.dark-theme .tzBtn.active:hover:not(:disabled){
+  background: linear-gradient(180deg, #2a71ad 0%, #164a7b 100%);
+  color: #ffffff;
+  border-color: #0d3a63;
+}
+html.dark-theme .paxBtn:active:not(:disabled),
+html.dark-theme .tzBtn:active:not(:disabled){
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 #131b29,
+    0 1px 3px rgb(0 0 0 / 45%),
+    inset 0 2px 4px rgb(0 0 0 / 45%);
+}
+html.dark-theme .paxBtn:disabled,
+html.dark-theme .tzBtn:disabled{
+  border-color: #2c3648;
+  background: #1a2130;
+  color: #6b7a90;
+  opacity: 0.72;
   box-shadow:none;
   transform:none;
 }
@@ -1286,7 +1343,7 @@ button:focus:not(.paxBtn):not(.tzBtn) {
       }
     })();
   </script>
-<meta name="offline-build" content="645bcd1f2659ea1271fb298f"></head>
+<meta name="offline-build" content="4a97bec5054371bfda587fca"></head>
 
 <body>
 

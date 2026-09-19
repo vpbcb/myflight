@@ -46,15 +46,21 @@
   position:relative;
 }
 html.dark-theme .bottom-controls.bottom-controls--panel{
-  --nav-panel-bg:#1e2f41;
+  /* как фон поля Notes в тёмной теме (--card-bg) */
+  --nav-panel-bg:#161e2e;
   --nav-panel-ink:#aecbe4;
   --nav-divider:rgba(255,255,255,0.2);
+  /* плоский фон: градиент затемнял бы цвет и он не совпадал бы с Notes */
+  background:var(--nav-panel-bg);
 }
 @media (prefers-color-scheme: dark){
   html:not(.light-theme) .bottom-controls.bottom-controls--panel{
-    --nav-panel-bg:#1e2f41;
+    /* как фон поля Notes в тёмной теме (--card-bg) */
+    --nav-panel-bg:#161e2e;
     --nav-panel-ink:#aecbe4;
     --nav-divider:rgba(255,255,255,0.2);
+    /* плоский фон: градиент затемнял бы цвет и он не совпадал бы с Notes */
+    background:var(--nav-panel-bg);
   }
 }
 
