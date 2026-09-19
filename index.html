@@ -756,8 +756,8 @@
             border-radius: 8px;
             padding: 0 10px;
             font-family: inherit;
-            font-weight: 900;
-            font-size: 0.8rem;
+            font-weight: 600;
+            font-size: 1.05rem;
             line-height: 1.1;
             letter-spacing: 0;
             cursor: pointer;
@@ -774,25 +774,21 @@
             position: relative;
             min-height: 42px;
             overflow: hidden;
+            padding: 0 12px;
+            transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+            /* Мягкий объём: внутренний блик сверху и лёгкая тень под кнопкой.
+               Жёсткая нижняя кромка убрана — она читалась как чёрта под кнопкой. */
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                0 4px 10px -4px rgba(15, 23, 42, 0.35);
         }
-        .quick-note-card::after {
-            content: '+';
-            position: absolute;
-            top: 5px;
-            right: 6px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.42);
-            color: currentColor;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            line-height: 1;
-            font-weight: 900;
+        .quick-note-card:active {
+            transform: translateY(1px);
+            filter: brightness(0.97);
+            box-shadow:
+                inset 0 2px 5px -1px rgba(0, 0, 0, 0.2),
+                0 1px 3px -2px rgba(15, 23, 42, 0.35);
         }
-        .quick-note-card:active,
         .note-chip:active {
             transform: scale(0.97);
             filter: brightness(0.96);
@@ -810,12 +806,14 @@
             text-overflow: ellipsis;
         }
 
+        /* Вертикальный градиент — тот же объёмный язык, что у кнопок приложений;
+           диагональ 135° давала светящееся пятно в центре и «плоский» вид. */
         .quick-note-card.note-fob,
-        .note-chip.note-fob { background: linear-gradient(135deg, #fdba74 0%, #fb923c 52%, #f97316 100%); color: #431407; }
+        .note-chip.note-fob { background: linear-gradient(180deg, #f9b26b 0%, #f97316 100%); color: #431407; }
         .quick-note-card.note-stand,
-        .note-chip.note-stand { background: linear-gradient(135deg, #fde68a 0%, #facc15 58%, #eab308 100%); color: #422006; }
+        .note-chip.note-stand { background: linear-gradient(180deg, #f7d94c 0%, #e0a90b 100%); color: #422006; }
         .quick-note-card.note-crew,
-        .note-chip.note-crew { background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 52%, #0ea5e9 100%); color: #082f49; }
+        .note-chip.note-crew { background: linear-gradient(180deg, #4cc3f7 0%, #0b93d6 100%); color: #06304a; }
 
         @media (prefers-color-scheme: dark) {
             :root:not(.light-theme) .quick-note-card,
@@ -823,12 +821,17 @@
                 border-color: rgba(255, 255, 255, 0.16);
                 box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
             }
+            :root:not(.light-theme) .quick-note-card {
+                box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                    0 4px 10px -4px rgba(0, 0, 0, 0.55);
+            }
             :root:not(.light-theme) .quick-note-card.note-fob,
-            :root:not(.light-theme) .note-chip.note-fob { background: linear-gradient(135deg, #c7834f 0%, #b7642c 52%, #9f4c16 100%); color: #2f1205; }
+            :root:not(.light-theme) .note-chip.note-fob { background: linear-gradient(180deg, #c7834f 0%, #9f4c16 100%); color: #2f1205; }
             :root:not(.light-theme) .quick-note-card.note-stand,
-            :root:not(.light-theme) .note-chip.note-stand { background: linear-gradient(135deg, #c9af52 0%, #b39214 58%, #95750b 100%); color: #2d2103; }
+            :root:not(.light-theme) .note-chip.note-stand { background: linear-gradient(180deg, #c9af52 0%, #95750b 100%); color: #2d2103; }
             :root:not(.light-theme) .quick-note-card.note-crew,
-            :root:not(.light-theme) .note-chip.note-crew { background: linear-gradient(135deg, #519eba 0%, #277fa3 52%, #0b668f 100%); color: #031e2f; }
+            :root:not(.light-theme) .note-chip.note-crew { background: linear-gradient(180deg, #519eba 0%, #0b668f 100%); color: #031e2f; }
         }
 
         html.dark-theme .quick-note-card,
@@ -836,12 +839,17 @@
             border-color: rgba(255, 255, 255, 0.16);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
+        html.dark-theme .quick-note-card {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                0 4px 10px -4px rgba(0, 0, 0, 0.55);
+        }
         html.dark-theme .quick-note-card.note-fob,
-        html.dark-theme .note-chip.note-fob { background: linear-gradient(135deg, #c7834f 0%, #b7642c 52%, #9f4c16 100%); color: #2f1205; }
+        html.dark-theme .note-chip.note-fob { background: linear-gradient(180deg, #c7834f 0%, #9f4c16 100%); color: #2f1205; }
         html.dark-theme .quick-note-card.note-stand,
-        html.dark-theme .note-chip.note-stand { background: linear-gradient(135deg, #c9af52 0%, #b39214 58%, #95750b 100%); color: #2d2103; }
+        html.dark-theme .note-chip.note-stand { background: linear-gradient(180deg, #c9af52 0%, #95750b 100%); color: #2d2103; }
         html.dark-theme .quick-note-card.note-crew,
-        html.dark-theme .note-chip.note-crew { background: linear-gradient(135deg, #519eba 0%, #277fa3 52%, #0b668f 100%); color: #031e2f; }
+        html.dark-theme .note-chip.note-crew { background: linear-gradient(180deg, #519eba 0%, #0b668f 100%); color: #031e2f; }
 
         .modal-content.notes-keypad-content {
             width: 80%;
@@ -1298,6 +1306,46 @@
             transform: translate(-50%, -50%) scale(var(--npa-scale));
         }
 
+        /* MyWind: крепления ветроуказателя — те же тёмные линии, что и схема
+           MyNPA, поэтому в тёмной теме им нужна такая же светлая обводка.
+           Опорная точка задана заливкой, поэтому меняем ещё и fill. */
+        html.dark-theme .project-card--raised .mw-mount {
+            stroke: #9aa4ba;
+        }
+        html.dark-theme .project-card--raised .mw-mount-dot {
+            fill: #9aa4ba;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-theme) .project-card--raised .mw-mount {
+                stroke: #9aa4ba;
+            }
+            :root:not(.light-theme) .project-card--raised .mw-mount-dot {
+                fill: #9aa4ba;
+            }
+        }
+
+        /* В тёмной теме линии схемы почти сливаются с кнопкой, поэтому даём им
+           тонкую светло-серую обводку. Днём правило не применяется. */
+        html.dark-theme .project-card--raised .npa-icon .npa-line {
+            stroke: #9aa4ba;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-theme) .project-card--raised .npa-icon .npa-line {
+                stroke: #9aa4ba;
+            }
+        }
+        /* Сам силуэт самолёта тоже тёмный — тонкая светлая обводка даёт контур */
+        html.dark-theme .project-card--raised .npa-icon .npa-plane {
+            stroke: #9aa4ba;
+            stroke-width: 0.9;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not(.light-theme) .project-card--raised .npa-icon .npa-plane {
+                stroke: #9aa4ba;
+                stroke-width: 0.9;
+            }
+        }
+
         /* MyShift: растровая иконка из icons/.
            Слот иконки не меняется, поэтому подпись стоит на одном уровне
            с остальными кнопками ряда. */
@@ -1311,7 +1359,7 @@
             object-fit: contain;
         }
 
-        /* Узкий экран: слот мельче (30px), поэтому множители пересчитаны
+, поэтому множители пересчитаны
            обратной пропорцией — иконка сохраняет размер относительно кнопки. */
         @media (max-width: 480px) and (max-height: 900px), (pointer: coarse) and (max-height: 900px) {
             .project-card--raised {
@@ -1548,7 +1596,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="66d351d4e6170d35224dfc3a"></head>
+<meta name="offline-build" content="0c6bc5c7f0f431ab5491d785"></head>
 <body>
     <div class="app-shell">
 
@@ -1641,20 +1689,20 @@
                                 <stop offset="1" stop-color="#121b28"/>
                             </linearGradient>
                         </defs>
-                        <!-- схема racetrack: тонкая чёрная линия, наклон 15° против часовой -->
+                        <!-- схема racetrack: тонкая линия, наклон 15° против часовой -->
                         <g transform="rotate(-15 62 17)">
-                            <rect x="30" y="4" width="64" height="26" rx="13" fill="none" stroke="#0f172a" stroke-width="1.3"/>
+                            <rect class="npa-line" x="30" y="4" width="64" height="26" rx="13" fill="none" stroke="#0f172a" stroke-width="1.3"/>
                             <!-- NDB на левом нижнем развороте: жирная точка и три кольца пунктиром -->
-                            <g stroke="#0f172a" stroke-width="1.1" stroke-dasharray="2.2 2.2" fill="none" opacity="0.5">
+                            <g class="npa-line" stroke="#0f172a" stroke-width="1.1" stroke-dasharray="2.2 2.2" fill="none" opacity="0.5">
                                 <circle cx="33.8" cy="26.2" r="3.4"/>
                                 <circle cx="33.8" cy="26.2" r="5.8"/>
                                 <circle cx="33.8" cy="26.2" r="8.2"/>
                             </g>
-                            <circle cx="33.8" cy="26.2" r="2.5" fill="#0f172a"/>
+                            <circle class="npa-line" cx="33.8" cy="26.2" r="2.5" fill="#0f172a" stroke="none"/>
                         </g>
                         <!-- самолёт отдельно: левее и в два раза крупнее, носом на NDB -->
                         <g transform="translate(-10 8) rotate(118) scale(1.3) translate(-11.5 -12)">
-                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="url(#npaPlane)"/>
+                            <path class="npa-plane" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="url(#npaPlane)"/>
                         </g>
                     </svg>
                 </div>
@@ -1684,10 +1732,10 @@
                             </clipPath>
                         </defs>
                         <!-- крепления ветроуказателя, сведённые в одну точку -->
-                        <g stroke="#26364a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.8">
+                        <g class="mw-mount" stroke="#26364a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.8">
                             <path d="M-6 30 L11.7 8.1"/>
                             <path d="M-6 30 L16.3 51.9"/>
-                            <circle cx="-6" cy="30" r="1.9" fill="#26364a" stroke="none"/>
+                            <circle class="mw-mount-dot" cx="-6" cy="30" r="1.9" fill="#26364a" stroke="none"/>
                         </g>
                         <g transform="rotate(-6 14 30)">
                             <ellipse cx="14" cy="30" rx="5.5" ry="22" fill="url(#mwSockMouth)" stroke="#4a0f0f" stroke-width="1.5"/>
