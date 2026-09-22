@@ -134,10 +134,11 @@ body {
             overflow-y: auto;
             /* Убрано -webkit-overflow-scrolling: touch; как в RWY Wind Limits */
             z-index: 10;
-            margin: 5px 0px max(65px, calc(var(--safe-bottom) + 60px)) 0px; 
+            margin: 5px 0 0; /* панель навигации стоит в потоке и сама отодвигает область скролла */
             padding: 10px 8px;
             background: rgba(0, 0, 0, 0.07);
             border: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: none; /* нижнюю линию рисует разделитель панели навигации */
             border-radius: 0;
         }
 
@@ -699,7 +700,7 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="0da507169a3273ed4366509c"></head>
+<meta name="offline-build" content="b1733184d785606903364802"></head>
 <body>
 
 <div class="app-wrapper">
@@ -1033,7 +1034,7 @@ html.dark-theme input[readonly] {
 
 <!-- КНОПКИ УПРАВЛЕНИЯ (ЗАФИКСИРОВАНЫ ВНИЗУ) -->
 
-    <div class="bottom-controls">
+    <div class="bottom-controls bottom-controls--panel bottom-controls--flow" role="navigation" aria-label="Навигация MyLoad">
     <!-- Кнопка Refresh (Слева) -->
     <button class="refresh-btn bottom-action bottom-action--left" id="refreshBtn" title="Сбросить поля">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">

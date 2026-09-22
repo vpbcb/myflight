@@ -22,8 +22,8 @@
         :root {
             --bg: #f1f5f9;
             --card: #ffffff;
-            --accent: #0ea5e9;
-            --status-bg: #0ea5e9; /* Цвет плашки для светлой темы */
+            --accent: #1976d2; /* Синий заголовков Flight/Cabin Crew из MyShift */
+            --status-bg: #1976d2; /* Цвет плашки для светлой темы */
             --table-border: rgba(0, 0, 0, 0.3); /* Цвет обводки таблицы */
             --text: #1e293b;
             --dim: #64748b;
@@ -49,7 +49,7 @@
             --bg: #0b0f19;
             --card: rgba(22, 30, 46, 0.98);
             --accent: #0273ad;
-            --status-bg: #016091;
+            --status-bg: #0273ad;
             --table-border: #57677d;
             --text: #cbd5e1;
             --dim: #96a4b3;
@@ -88,6 +88,7 @@
         /* --- ФОН БЛОКА НИЖНИХ ВКЛАДОК В ТЕМНОЙ ТЕМЕ --- */
         html.dark-theme .tabs-content-area {
             background: rgba(0, 0, 0, 0.15);
+            border-color: #676d77;
         }
 
         /* --- ЦВЕТ НЕАКТИВНЫХ КНОПОК НИЖНЕГО РЯДА (6, 5, 4, 3...) --- */
@@ -110,6 +111,7 @@
             color: var(--text) !important;
             border-bottom: 1px solid #121824 !important;
             border-top: 3px solid var(--accent);
+            border-left-color: #676d77; border-right-color: #676d77; /* тон --border на #262e3d */
         }
         /* Убран дублирующий border-bottom для нижнего ряда (кнопка должна быть плоской) */
 
@@ -327,10 +329,13 @@
             color: var(--accent); /* Синий текст */
             font-size: 1.6rem;
             background: var(--card); /* Белый фон для контраста */
-            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.15); /* Легкое свечение */
+            box-shadow: 0 4px 6px -1px rgba(25, 118, 210, 0.15); /* Легкое свечение */
         }
         .action-btn { cursor: pointer; display: flex; align-items: center; justify-content: center; flex-direction: column; width: 100%; line-height: 1.1; }
         .action-btn small { font-size: 0.65rem; color: var(--dim); display: block; }
+        /* PF: «2П 80%» одной строкой, подсказка long tap курсивом под ней */
+        #crewBtn small { display: inline; font-size: 0.8rem; margin-left: 3px; }
+        #crewBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; margin-top: 1px; }
 
         /* --- КАРТОТЕКА И СПЕЦ-КНОПКИ --- ДВИГАТЬ ВСЮ БИБЛИОТЕКУ ВВЕРХ ВНИЗ*/
         .tabs-container { margin-top: 10px; margin-bottom: 6px; display: flex; flex-direction: column; min-width: 0; max-width: 100%; container-type: inline-size; }
@@ -341,7 +346,20 @@
         .tabs-container > .tab-line-wrapper:first-child { margin-bottom: -9px; position: relative; z-index: 10; }
 
         .tabs-row { display: grid; gap: 2px; flex: 1; }
-        .tabs-row.upper { grid-template-columns: repeat(5, 1fr); }
+        .tabs-row.upper { grid-template-columns: repeat(5, 1fr); position: relative; }
+        /* Линия в зазорах между верхними вкладками: лежит под кнопками на уровне их
+           нижнего бордера, поэтому под активной вкладкой (бордер цвета панели) её не видно. */
+        .tabs-row.upper::after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 1px;
+            /* --border полупрозрачный: подкладываем фон кнопки, чтобы тон линии совпадал с их бордером */
+            background: linear-gradient(var(--border), var(--border)) #e2e8f0;
+            pointer-events: none;
+        }
+        html.dark-theme .tabs-row.upper::after { background: linear-gradient(var(--border), var(--border)) #262e3d; }
+        .tabs-row.upper > .tab-btn { position: relative; z-index: 1; }
         .tabs-row.lower { grid-template-columns: repeat(6, 1fr); }
         /* MAN нижний таб имеет 1 ячейку на всю ширину */
         .tabs-row.lower.atis-active { grid-template-columns: 1fr; }
@@ -362,6 +380,9 @@
         .tab-btn.active {
             background: var(--card); color: var(--accent);
             border-bottom: 1px solid var(--card) !important; border-top: 3px solid var(--accent);
+            /* --border полупрозрачный и на белом фоне выглядит бледнее, чем на серых кнопках:
+               берём тот же тон, что получается у неактивных (#e2e8f0 + 10% чёрного) */
+            border-left-color: #cbd1d8; border-right-color: #cbd1d8;
         }
 
         /* Возвращаем видимую нижнюю границу для активных кнопок нижнего ряда */
@@ -379,7 +400,7 @@
         /* высота белого блока белый блок библиотеки табов */
         .tabs-content-area {
             background: var(--card);
-            border: 1px solid var(--border);
+            border: 1px solid #cbd1d8; /* тон --border на фоне неактивных вкладок, чтобы обводка блока совпадала с ними */
             border-top: 0;
             border-radius: 0 0 12px 12px;
             padding: 17px 5px 5px 5px; /* Увеличили padding-top до 17px для имитации центра */
@@ -428,7 +449,7 @@
             bottom: 190px; /* Размещаем над рядом кнопок управления */
             left: 69%;
             transform: translateX(-50%);
-            background: rgba(14, 165, 233, 0.9); /* Акцентный синий, полупрозрачный */
+            background: rgba(25, 118, 210, 0.9); /* Акцентный синий, полупрозрачный */
             color: #ffffff;
             padding: 8px 16px;
             border-radius: 20px;
@@ -471,9 +492,9 @@
             text-align: center;
             font-size: clamp(0.7rem, 3.5vw, 0.95rem); /* Увеличенный гибкий шрифт */
             font-weight: 900;
-            color: var(--accent);
-            background-color: rgba(14, 165, 233, 0.12);
-            border: 1px solid rgba(14, 165, 233, 0.25);
+            color: #0ea5e9;
+            background-color: rgba(25, 118, 210, 0.25);
+            border: 1px solid rgba(25, 118, 210, 0.4);
             border-radius: 6px;
             padding: 5px 2px;
             margin-top: 8px;
@@ -662,7 +683,7 @@
 
         /* --- ПОЛНАЯ СИНХРОНИЗАЦИЯ ПЛАШКИ LAND (DARK THEME) --- */
 html.dark-theme .land-status-row {
-    background: rgba(2, 115, 173, 0.15) !important; /* Ночной полупрозрачный фон */
+    background: rgba(2, 115, 173, 0.25) !important; /* Полупрозрачный фон в тон плашке */
     color: #4c9fc7 !important; /* Светло-голубой светящийся текст для контраста */
     border-color: rgba(2, 115, 173, 0.4) !important;
 }
@@ -866,7 +887,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
         })();
     </script>
-    <meta name="offline-build" content="0da507169a3273ed4366509c"></head>
+    <meta name="offline-build" content="b1733184d785606903364802"></head>
 <body>
 
 <div class="calculator">
@@ -1730,6 +1751,16 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     let isCrewLongPress = false;
     let lastC = "2П<small>80%</small>"; // По умолчанию переключаем на 70%
 
+    // Единая разметка кнопки PF: для 2П добавляем подсказку о долгом нажатии
+    function crewBtnMarkup(content) {
+        const hint = content.includes('2П') ? '<em class="crew-hint">(long tap)</em>' : '';
+        return `<span style="font-size:1.1rem;font-weight:800">${content}</span>${hint}`;
+    }
+    function crewBtnLabel() {
+        const span = document.getElementById('crewBtn').querySelector('span');
+        return (span ? span.innerText : '').toUpperCase();
+    }
+
     function startPressCrew(e) {
         if (e && e.button !== undefined && e.button !== 0) return; // Игнорируем правый клик
 
@@ -1762,11 +1793,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (!isCrewLongPress) {
             // ОДИНОЧНЫЙ БЫСТРЫЙ ТАП (Мгновенное переключение без задержек)
             const btn = document.getElementById('crewBtn');
-            if (btn.innerHTML.includes("КВС")) {
-                btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">${lastC}</span>`;
-            } else {
-                btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
-            }
+            btn.innerHTML = crewBtnMarkup(btn.innerHTML.includes("КВС") ? lastC : 'КВС');
             updateStatusRow(); // Обновляем плашку
             if (typeof updateTable === 'function') updateTable({ center: false });
         }
@@ -1781,7 +1808,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function closeCrewModal() { document.getElementById('crewModal').classList.remove('active'); }
     function selectCrew(m, s) {
         lastC = s ? `${m}<small>${s}</small>` : m;
-        document.getElementById('crewBtn').innerHTML = `<span style="font-size:1.1rem;font-weight:800">${lastC}</span>`;
+        document.getElementById('crewBtn').innerHTML = crewBtnMarkup(lastC);
         closeCrewModal();
         updateStatusRow(); // Обновляем плашку
         if (typeof updateTable === 'function') updateTable({ center: false }); // Триггер обновления таблицы
@@ -1871,7 +1898,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         let opStr = (currentOpMode === 'coursePlusBtn') ? getLandSelectionText() : 'TAKEOFF';
 
         // 3. Экипаж (Форматируем 2П с процентами в скобках)
-        let crewStr = document.getElementById('crewBtn').innerText.toUpperCase().replace(/\s+/g, '');
+        let crewStr = crewBtnLabel().replace(/\s+/g, '');
         if (crewStr.includes('80%')) crewStr = '2П(80%)';
         else if (crewStr.includes('50%')) crewStr = '2П(50%)';
 
@@ -1944,7 +1971,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (isAutoActive) {
             const btn = document.getElementById('crewBtn');
             if (btn.innerHTML.includes('2П')) {
-                btn.innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
+                btn.innerHTML = crewBtnMarkup('КВС');
             }
         }
 
@@ -1990,7 +2017,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         const isTO = currentOpMode === 'courseMinusBtn';
         const isLand = !isTO;
         const acTypeStr = document.getElementById('acTypeBtn').innerText.toUpperCase();
-        const crewStr = document.getElementById('crewBtn').innerText.toUpperCase();
+        const crewStr = crewBtnLabel();
 
         // Считываем состояние новой объединенной кнопки
         const isNarrowCont = document.getElementById('narrowContBtn').classList.contains('active');
@@ -2264,7 +2291,7 @@ function centerTable() {
         // UI Сброс (Тему оформления не трогаем, чтобы не слепило ночью)
         document.getElementById('windDirInput').textContent = "243°";
         document.getElementById('acTypeBtn').innerHTML = "<span>A320</span>";
-        document.getElementById('crewBtn').innerHTML = `<span style="font-size:1.1rem;font-weight:800">КВС</span>`;
+        document.getElementById('crewBtn').innerHTML = crewBtnMarkup('КВС');
         document.getElementById('narrowContBtn').classList.remove('active');
 
         // Вкладки верхнего ряда

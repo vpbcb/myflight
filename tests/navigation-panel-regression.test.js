@@ -5,15 +5,12 @@ const test = require('node:test');
 const root = path.resolve(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 
-test('five opted-in pages use a single shared navigation panel', () => {
-    for (const name of ['index.html', 'myshift.html', 'mynpa.html', 'mywind.html', 'mypath.html']) {
+test('all six pages use a single shared navigation panel', () => {
+    for (const name of ['index.html', 'myshift.html', 'mynpa.html', 'mywind.html', 'mypath.html', 'myfuel.html']) {
         const html = read(name);
         assert.match(html, /class="bottom-controls[^"]*\bbottom-controls--panel\b/);
         assert.doesNotMatch(html, /\.(?:home-nav|myshift-nav)\b/);
         assert.doesNotMatch(html, /\.bottom-controls\.bottom-controls--panel\s*\{/);
-    }
-    for (const name of ['myfuel.html']) {
-        assert.doesNotMatch(read(name), /class="[^"]*\bbottom-controls--panel\b/);
     }
 });
 

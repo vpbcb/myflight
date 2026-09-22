@@ -495,7 +495,7 @@
         }
 
         .settings-actions > #themeToggleBtn {
-            grid-column: 2 / span 2;
+            grid-column: 4 / span 2;
         }
 
         #settingsModal #updateAppBtn {
@@ -511,7 +511,7 @@
             line-height: 1.2;
         }
         .settings-actions > #pushToggleBtn {
-            grid-column: 4 / span 2;
+            grid-column: 2 / span 2;
         }
 
         .project-card:active {
@@ -1218,7 +1218,7 @@
             --descent-scale: 1.9;
             --npa-scale: 2.85;
             --shift-scale: 1.4;
-            --load-scale: 1.7;
+            --load-scale: 1.53;
             --raised-face-1: #ffffff;
             --raised-face-2: #dde5ef;
             --raised-edge: rgba(15, 23, 42, 0.18);
@@ -1375,7 +1375,7 @@
                 --descent-scale: 1.78;
                 --npa-scale: 2.67;
                 --shift-scale: 1.31;
-                --load-scale: 1.59;
+                --load-scale: 1.43;
             }
         }
 
@@ -1387,7 +1387,7 @@
                 --descent-scale: 1.31;
                 --npa-scale: 1.96;
                 --shift-scale: 0.96;
-                --load-scale: 1.17;
+                --load-scale: 1.05;
             }
         }
 
@@ -1605,7 +1605,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="0da507169a3273ed4366509c"></head>
+<meta name="offline-build" content="b1733184d785606903364802"></head>
 <body>
     <div class="app-shell">
 
@@ -1872,17 +1872,17 @@
                         </svg>
                         <span>Update app</span>
                     </button>
-                    <button type="button" class="settings-action-btn" id="themeToggleBtn">
-                        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                        <span id="themeText">Dark mode</span>
-                    </button>
                     <button type="button" class="push-toggle-card" id="pushToggleBtn" aria-pressed="false">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>
                         </svg>
                         <span id="pushText">Phone notifications disabled</span>
+                    </button>
+                    <button type="button" class="settings-action-btn" id="themeToggleBtn">
+                        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <span id="themeText">Dark mode</span>
                     </button>
                 </div>
             </div>

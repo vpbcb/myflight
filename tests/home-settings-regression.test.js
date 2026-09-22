@@ -40,7 +40,7 @@ test('Settings modal contains Mail, Awake, Update, Theme and Push in order', () 
     assert.ok(settingsEnd > settingsStart);
 
     const settings = indexHtml.slice(settingsStart, settingsEnd);
-    const ids = ['btnMail', 'awakeToggleBtn', 'updateAppBtn', 'themeToggleBtn', 'pushToggleBtn'];
+    const ids = ['btnMail', 'awakeToggleBtn', 'updateAppBtn', 'pushToggleBtn', 'themeToggleBtn'];
     let previousPosition = -1;
     ids.forEach(id => {
         const position = settings.indexOf(`id="${id}"`);
@@ -60,8 +60,8 @@ test('Settings actions form two centered rows of equal tiles', () => {
         indexHtml,
         /\.settings-actions\s*>\s*button\s*\{[\s\S]*grid-column:\s*span\s+2;/
     );
-    assert.match(indexHtml, /\.settings-actions\s*>\s*#themeToggleBtn\s*\{[\s\S]*grid-column:\s*2\s*\/\s*span\s+2;/);
-    assert.match(indexHtml, /\.settings-actions\s*>\s*#pushToggleBtn\s*\{[\s\S]*grid-column:\s*4\s*\/\s*span\s+2;/);
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#themeToggleBtn\s*\{[\s\S]*grid-column:\s*4\s*\/\s*span\s+2;/);
+    assert.match(indexHtml, /\.settings-actions\s*>\s*#pushToggleBtn\s*\{[\s\S]*grid-column:\s*2\s*\/\s*span\s+2;/);
     assert.match(
         indexHtml,
         /\.settings-action-btn,\s*\n\s*\.push-toggle-card\s*\{[\s\S]*height:\s*82px;[\s\S]*flex-direction:\s*column;/
