@@ -266,6 +266,16 @@ body {
 
         .section-header-bar { background-color: var(--section-header-blue); width: 100%; border-radius: 15px; padding: 2px 0; margin-bottom: 5px; text-align: center; border: 1px solid #BBDEFB; }
         html.dark-theme .section-header-bar { border-color: #2c3e50; }
+        /* Плашка борта и ряд Aircraft/Crew — одна карточка: плашка служит шапкой, общая синяя рамка */
+        .ac-group { border: 1px solid var(--section-header-blue); border-radius: 15px; overflow: hidden;
+            background-color: rgba(25, 118, 210, 0.06); margin-bottom: 5px; }
+        .ac-group .section-header-bar { border: none; border-radius: 0; margin-bottom: 0; }
+        .ac-group .compact-row { padding: 0; margin-bottom: 0; gap: 0; }
+        /* Плитки прилегают к рамке карточки: внешние стороны без своей обводки, скруглены только нижние внешние углы */
+        .ac-group .compact-row .tile-gray { border-radius: 0; border-top: none; border-bottom: none; }
+        .ac-group .compact-row .col:first-child .tile-gray { border-left: none; border-bottom-left-radius: 14px; }
+        .ac-group .compact-row .col:last-child .tile-gray { border-right: none; border-left: none; border-bottom-right-radius: 14px; }
+        html.dark-theme .ac-group { background-color: rgba(2, 115, 173, 0.12); }
         html.dark-theme .section-title { color: #ffffff; } /* Белый текст как на плашке TAKEOFF */
 
         /* Обводка для серых и оранжевых полей в темной теме (согласно стилю RWY) */
@@ -410,7 +420,7 @@ body {
         }
         .payload-source-hint { font-style: italic; font-size: 0.7rem; font-weight: 600; color: #888; white-space: nowrap; line-height: 1; }
         .compact-row { margin-bottom: 3px; }
-        .compact-row .tile-gray { padding: 4px 10px; gap: 8px; flex-direction: row; align-items: center; justify-content: space-between; }
+        .compact-row .tile-gray { padding: 4px 10px; gap: 8px; border-radius: 10px; flex-direction: row; align-items: center; justify-content: space-between; }
         .compact-row .label-tile { margin-bottom: 0; white-space: nowrap; flex-shrink: 0; }
         .compact-row .tile-gray input,
         .compact-row .tile-gray select { width: auto; flex: 1; min-width: 0; }
@@ -736,7 +746,7 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="1ac7ea2f31949c5b5fc9feb8"></head>
+<meta name="offline-build" content="2ef6f425dd2356f53d0abbaf"></head>
 <body>
 
 <div class="app-wrapper">
@@ -744,6 +754,7 @@ html.dark-theme input[readonly] {
 
     <div class="pinned-header">
     <div class="section-card">
+        <div class="ac-group">
         <div class="section-header-bar" style="position: relative;">
             <h2 id="acSectionTitle" class="section-title">Aircraft</h2>
         </div>
@@ -769,6 +780,7 @@ html.dark-theme input[readonly] {
                         </select>
                 </div>
             </div>
+        </div>
         </div>
 
         <div class="top-row compact-row">
@@ -1028,7 +1040,7 @@ html.dark-theme input[readonly] {
             </div>
         </div>
 
-        <div class="input-row-gray" style="position: relative; margin-bottom: 5px;">
+        <div class="input-row-gray" style="position: relative; margin-bottom: 5px; border-radius: 10px;">
             <span class="label-left">Max.Fuel</span>
             <input type="number" id="maxFuel" class="nav-input" onfocus="..." onblur="...">
             
