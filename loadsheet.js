@@ -119,6 +119,32 @@ const LoadsheetEngine = (() => {
         return (spec.macAtZero - clamped) / spec.macPerDegree;
     }
 
+    // %MAC limit at a weight from WBM points [weightKg, %MAC]. Between points the limit is linear in
+    // moment, i.e. (mac - REF_MAC) * weight is linear in weight. Outside the tabulated weights -> null.
+    function envelopeLimit(points, weightKg) {
+        if (!points || !points.length || !(weightKg >= points[0][0])) return null;
+        for (let i = 1; i < points.length; i += 1) {
+            const [w1, c1] = points[i - 1];
+            const [w2, c2] = points[i];
+            if (weightKg <= w2) {
+                const q1 = (c1 - CONST.REF_MAC) * w1;
+                const q2 = (c2 - CONST.REF_MAC) * w2;
+                const q = q1 + (q2 - q1) * (weightKg - w1) / (w2 - w1);
+                return CONST.REF_MAC + q / weightKg;
+            }
+        }
+        return weightKg === points[points.length - 1][0] ? points[points.length - 1][1] : null;
+    }
+
+    // Takeoff CG envelope check: { fwd, aft, inside } or null when the config has no envelope.
+    function towCgCheck(mac, weightKg, spec) {
+        if (!spec) return null;
+        const fwd = envelopeLimit(spec.fwd, weightKg);
+        const aft = envelopeLimit(spec.aft, weightKg);
+        const inside = fwd !== null && aft !== null && mac >= fwd - 1e-9 && mac <= aft + 1e-9;
+        return { fwd, aft, inside };
+    }
+
     function formatPitchTrim(trim) {
         const magnitude = Math.round(Math.abs(trim) * 10) / 10;
         if (magnitude === 0) return '0.0';
@@ -252,11 +278,18 @@ const LoadsheetEngine = (() => {
             zfwOver: data.mzfw !== null && zfw > data.mzfw,
             towOver: mtow !== null && tow > mtow,
             towCgBelow27: precise.mac.tow < CONST.CG_CAUTION_MAC,
+            towCg: towCgCheck(precise.mac.tow, tow, data.towCg),
             zoneOver,
             holdOver
         };
         if (limits.zfwOver) warnings.push(`ZFW ${zfw} кг превышает MZFW ${data.mzfw} кг`);
         if (limits.towOver) warnings.push(`TOW ${tow} кг превышает MTOW ${mtow} кг`);
+        if (limits.towCg && !limits.towCg.inside) {
+            const { fwd, aft } = limits.towCg;
+            warnings.push(fwd === null || aft === null
+                ? `TOW ${tow} кг вне диапазона весов взлётной центровки WBM`
+                : `TOW CG ${precise.mac.tow.toFixed(1)}% MAC вне пределов ${fwd.toFixed(1)}–${aft.toFixed(1)}% MAC`);
+        }
         if (limits.towCgBelow27) warnings.push(`TOW CG ${precise.mac.tow.toFixed(1)}% MAC < 27%: требуется коррекция взлётных характеристик`);
 
         return {
@@ -272,5 +305,5 @@ const LoadsheetEngine = (() => {
         };
     }
 
-    return { CONST, roundSymmetric, nearestRowIndex, indexToMac, macToIndex, fuelIndex, pitchTrim, formatPitchTrim, calculate };
+    return { CONST, roundSymmetric, nearestRowIndex, indexToMac, macToIndex, fuelIndex, pitchTrim, formatPitchTrim, envelopeLimit, towCgCheck, calculate };
 })();

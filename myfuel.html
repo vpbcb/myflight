@@ -252,8 +252,6 @@ body {
            display: flex, который перебивает стандартный UA-стиль [hidden]{display:none}.
            Форсируем скрытие явно, чтобы атрибут hidden всегда работал. */
         [hidden] { display: none !important; }
-        input.bg-brown { background-color: #d9b48f !important; color: #3b2a14 !important; }
-        html.dark-theme input.bg-brown { background-color: #8a5a2b !important; color: #f3e6d6 !important; }
 
         /* CARDS */
         .section-card { 
@@ -298,12 +296,12 @@ body {
         
 
         /* ИНПУТЫ И ИХ ЦВЕТА (ИСПРАВЛЕНО) */
-        input, select { 
+        input, select { font-family: inherit; 
             -webkit-user-select: auto; /* Разрешаем взаимодействие тексту внутри инпутов */
             user-select: auto;
             border: 1px solid transparent; 
             outline: none; 
-            font-size: 16px; 
+            font-size: clamp(15px, 4.8vw, 18px); 
             background-color: var(--input-bg) !important; 
             color: var(--digits-color) !important; 
             border-radius: 10px; 
@@ -377,30 +375,68 @@ body {
         .compact-tiles .tile-gray { padding: 4px 5px; gap: 2px; border-radius: 10px; }
         .compact-tiles .label-tile { margin-bottom: 0; }
         .cargo-row .label-tile { font-size: 13px; white-space: nowrap; }
+        .compact-tiles .label-tile { white-space: nowrap; }
+        /* Узкие экраны (320px): поля в ряд Cargo/ZFW ужимаем, чтобы цифры не обрезались */
+        @media (max-width: 359px) {
+            .cargo-row, .compact-tiles { gap: 4px; }
+            .cargo-row .tile-gray, .compact-tiles .tile-gray { padding: 4px 3px; }
+            .cargo-row input, .cargo-row select, .compact-tiles input { padding: 0 2px; }
+            .cargo-row .label-tile { font-size: 12px; }
+            .compact-tiles .label-tile { font-size: 12px; }
+        }
+        /* Обёртка визуально выглядит как обычный инпут (та же таблетка), а сам <input> внутри
+           неё прозрачный — так подпись (auto)/(manual) оказывается "внутри поля" сразу после цифр. */
+        .payload-value-wrap {
+            flex: 1; min-width: 0; height: 30px; border-radius: 10px; border: 1px solid transparent;
+            background-color: var(--input-bg); display: flex; align-items: center; justify-content: center; gap: 3px; padding: 0 5px;
+            cursor: text; touch-action: manipulation;
+        }
+        .payload-source-hint { pointer-events: none; }
+        /* Ручной ввод: тонкая коричневая рамка и лёгкое свечение вместо заливки —
+           фон поля остаётся обычным, чтобы цифры не теряли контраст. */
+        .payload-value-wrap.bg-brown {
+            border-color: #b8823f !important;
+            box-shadow: 0 0 6px rgba(184, 130, 63, 0.55);
+        }
+        html.dark-theme .payload-value-wrap.bg-brown {
+            border-color: #d9a35c !important;
+            box-shadow: 0 0 6px rgba(217, 163, 92, 0.5);
+        }
+        .payload-value-wrap input#payload {
+            /* ширина подгоняется под содержимое в JS (payloadEl.style.width), иначе
+               браузерная дефолтная ширина number-инпута прижимает цифры вправо */
+            flex: 0 0 auto; height: auto; padding: 0;
+            border: none !important; background: transparent !important; text-align: right;
+        }
+        .payload-source-hint { font-style: italic; font-size: 0.7rem; font-weight: 600; color: #888; white-space: nowrap; line-height: 1; }
         .compact-row { margin-bottom: 3px; }
         .compact-row .tile-gray { padding: 4px 10px; gap: 8px; flex-direction: row; align-items: center; justify-content: space-between; }
         .compact-row .label-tile { margin-bottom: 0; white-space: nowrap; flex-shrink: 0; }
         .compact-row .tile-gray input,
         .compact-row .tile-gray select { width: auto; flex: 1; min-width: 0; }
+        @media (max-width: 359px) {
+            .compact-row .tile-gray { padding: 4px 6px; gap: 4px; }
+            .compact-row .tile-gray input, .compact-row .tile-gray select { padding: 0 2px; }
+        }
         
         .input-row-orange { background-color: var(--orange-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.15); }
 
-        .label-left { font-size: 15px; font-weight: bold; color: var(--text-main); margin-right: 10px; white-space: nowrap; width: 110px; flex-shrink: 0; }
-        .label-tile { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        .label-left { font-size: 15px; font-weight: 600; color: var(--text-main); margin-right: 10px; white-space: nowrap; width: 110px; flex-shrink: 0; }
+        .label-tile { font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
         .cont-inputs { display: flex; gap: 5px; width: 100%; }
 
         /* FOOTER & WEIGHTS */
         .footer-gray-bar { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 8px 10px; display: flex; gap: 10px; margin-top: 10px; border: 1px solid rgba(0, 0, 0, 0.15); }
         .footer-item { flex: 1; display: flex; align-items: center; gap: 5px; }
-        .label-footer { font-size: 12px; font-weight: bold; color: var(--text-main); line-height: 1.1; white-space: normal; text-align: center; margin-right: 2px; min-width: 65px; }
+        .label-footer { font-size: 12px; font-weight: 600; color: var(--text-main); line-height: 1.1; white-space: normal; text-align: center; margin-right: 2px; min-width: 65px; }
         
         .weights-grid { display: flex; gap: 5px; margin-bottom: 5px; }
         .weights-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
         .weights-col .input-row-gray { margin-bottom: 0; }
-        .label-weight { width: 50px; font-size: 14px; font-weight: bold; }
+        .label-weight { width: 50px; font-size: 14px; font-weight: 600; }
 
         .alert-text { color: red !important; font-weight: 900 !important; }
-        .help-icon { display: inline-flex; justify-content: center; align-items: center; width: 18px; height: 18px; border-radius: 50%; background-color: var(--primary-blue); color: white; font-size: 12px; font-weight: bold; cursor: pointer; user-select: none; }
+        .help-icon { display: inline-flex; justify-content: center; align-items: center; width: 18px; height: 18px; border-radius: 50%; background-color: var(--section-header-blue); color: white; font-size: 12px; font-weight: bold; cursor: pointer; user-select: none; }
 
         /* MODAL */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
@@ -700,7 +736,7 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="36ec8356372d2764f70d95a2"></head>
+<meta name="offline-build" content="bbb56c0af81de3763fbc9583"></head>
 <body>
 
 <div class="app-wrapper">
@@ -750,9 +786,22 @@ html.dark-theme input[readonly] {
             </div>
         </div>
 
-        <div class="input-row-gray">
-            <span class="label-left">Payload</span>
-            <input type="number" id="payload" class="nav-input" inputmode="numeric" onfocus="onPayloadFocus()" onblur="onPayloadBlur()" oninput="onPayloadInput()">
+        <div class="top-row compact-row">
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Payload</span>
+                    <div class="payload-value-wrap" id="payloadValueWrap" onpointerdown="focusPayloadField(event)">
+                        <input type="number" id="payload" class="nav-input" inputmode="numeric" enterkeyhint="done" onfocus="onPayloadFocus()" onblur="onPayloadBlur()" oninput="onPayloadInput()" onkeydown="onPayloadKeyDown(event)">
+                        <em id="payloadSource" class="payload-source-hint"></em>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">TOW</span>
+                    <input type="number" id="tow" readonly>
+                </div>
+            </div>
         </div>
 
         <div class="top-row compact-tiles" style="margin-bottom: 0;">
@@ -945,20 +994,12 @@ html.dark-theme input[readonly] {
             <div onclick="openExtraModal()" style="position: absolute; right: 0; top: 0; width: 60px; height: 100%; cursor: pointer; z-index: 10;"></div>
         </div>
 
-        <div class="input-row-gray" hidden>
-            <span class="label-left">APU/Taxi</span>
-            <input type="text" inputmode="decimal" enterkeyhint="done" id="taxi" placeholder="12500" class="nav-input"
-                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                   onblur="this.placeholder=this.dataset.ph"
-                   oninput="calculateAll()"
-                   onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
-        </div>
 
-        <div class="top-row compact-row" style="margin-bottom: 5px;">
+        <div class="top-row compact-tiles" style="margin-bottom: 5px;">
             <div class="col">
                 <div class="tile-gray" style="background-color: var(--orange-pill-bg);">
                     <span class="label-tile">Total Fuel</span>
-                    <input type="number" id="totalFuel" placeholder="12500" class="nav-input" style="font-weight: bold;"
+                    <input type="number" id="totalFuel" placeholder="12500" class="nav-input" style="font-weight: 600;"
                            onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
                            onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
@@ -973,6 +1014,16 @@ html.dark-theme input[readonly] {
                         <option value="0.810">0.810</option>
                         <option value="0.820">0.820</option>
                     </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Taxi</span>
+                    <input type="number" inputmode="numeric" enterkeyhint="done" id="taxi" value="200" placeholder="200" class="nav-input"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()"
+                           onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
                 </div>
             </div>
         </div>
@@ -1004,10 +1055,6 @@ html.dark-theme input[readonly] {
 
         <div class="weights-grid">
             <div class="weights-col">
-                <div class="input-row-gray">
-                    <span class="label-left label-weight">TOW</span>
-                    <input type="number" id="tow" readonly>
-                </div>
                 <div class="input-row-gray">
                     <span class="label-left label-weight">MTOW</span>
                     <input type="number" id="mtow" readonly>
@@ -1207,7 +1254,7 @@ html.dark-theme input[readonly] {
         if (!ac) return;
 
         lastHomeContext = home;
-        document.getElementById('acSearch').value = ac.regFull || ac.reg;
+        document.getElementById('acSearch').value = ac.reg;
         selectAircraft(ac);
 
         const crewSelect = document.getElementById('crew');
@@ -1230,6 +1277,28 @@ html.dark-theme input[readonly] {
         const raw = document.getElementById('payload').value;
         payloadManual = raw === '' ? null : (parseFloat(raw) || 0);
         calculateAll();
+    }
+
+    // Инпут сужен под цифры, поэтому тап по любому месту пилюли ставит курсор в поле.
+    function focusPayloadField(event) {
+        const el = document.getElementById('payload');
+        if (event.target === el) return;
+        event.preventDefault();
+        el.focus();
+    }
+
+    function onPayloadKeyDown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            event.target.blur();
+            return;
+        }
+        // На пустом поле браузер не шлёт input, поэтому сбрасываем на авторасчёт вручную:
+        // серые цифры плейсхолдера сразу показывают автоматическое значение.
+        if ((event.key === 'Backspace' || event.key === 'Delete') && event.target.value === '') {
+            payloadManual = null;
+            calculateAll();
+        }
     }
 
     function onPayloadBlur() {
@@ -1350,6 +1419,8 @@ html.dark-theme input[readonly] {
         localStorage.setItem('fuelApp_data', JSON.stringify(data));
     }
 
+    const DEFAULT_TAXI = '200';
+
     function loadFormData() {
         const saved = localStorage.getItem('fuelApp_data');
         if (!saved) return;
@@ -1395,6 +1466,9 @@ html.dark-theme input[readonly] {
                     }
                 });
             }
+            // Taxi раньше был скрыт и сохранялся пустым — подставляем значение по умолчанию.
+            const taxiEl = document.getElementById('taxi');
+            if (taxiEl.value === '') taxiEl.value = DEFAULT_TAXI;
             // 3. Считаем
             calculateAll();
         } catch (e) {
@@ -1494,8 +1568,10 @@ html.dark-theme input[readonly] {
         if (paxWeight) paxWeight.value = '80';
         const fuelDensity = document.getElementById('fuelDensity');
         if (fuelDensity) fuelDensity.value = '0.785';
+        document.getElementById('taxi').value = DEFAULT_TAXI;
         payloadManual = null;
-        document.getElementById('payload').classList.remove('bg-brown');
+        document.getElementById('payloadValueWrap').classList.remove('bg-brown');
+        document.getElementById('payloadSource').textContent = '';
 
         saveFormData(); // Сохраняем пустой стейт
     }
@@ -1813,7 +1889,15 @@ html.dark-theme input[readonly] {
         const payload = payloadManual !== null ? payloadManual : payloadAuto;
         const payloadEl = document.getElementById('payload');
         if (!payloadEditing) payloadEl.value = payload;
-        payloadEl.classList.toggle('bg-brown', payloadManual !== null);
+        // Пока поле пустое, серые цифры плейсхолдера показывают актуальный авторасчёт.
+        else if (payloadEl.value === '') payloadEl.placeholder = String(payload);
+        // Number-инпут по умолчанию не сжимается под контент — подгоняем ширину под цифры,
+        // чтобы (auto)/(manual) стояла сразу после числа, а не у правого края пилюли.
+        const payloadShown = payloadEditing ? (payloadEl.value || payloadEl.placeholder || '') : String(payload);
+        payloadEl.style.width = (payloadShown.length + 1) + 'ch';
+        document.getElementById('payloadValueWrap').classList.toggle('bg-brown', payloadManual !== null);
+        document.getElementById('payloadSource').textContent =
+            payloadEditing ? '' : (payloadManual !== null ? '(m)' : '(auto)');
         const zfw = dow + payload;
         setVal('zfw', zfw);
         const tow = zfw + takeoffFuel;
@@ -1838,7 +1922,10 @@ html.dark-theme input[readonly] {
         macTowEl.classList.remove('bg-green', 'bg-red');
         if (loadsheet.ok && takeoffFuel > 0) {
             macTowEl.value = macTow.toFixed(1);
-            macTowEl.classList.add(macTow < LoadsheetEngine.CONST.CG_CAUTION_MAC ? 'bg-red' : 'bg-green');
+            // Красный только когда центровка за передним/задним взлётным пределом WBM для этого веса.
+            const towCg = LoadsheetEngine.towCgCheck(macTow, tow, loadsheetDB[currentAircraft.config].towCg);
+            const macTowBad = !!towCg && towCg.fwd !== null && towCg.aft !== null && !towCg.inside;
+            macTowEl.classList.add(macTowBad ? 'bg-red' : 'bg-green');
             const trim = LoadsheetEngine.pitchTrim(macTow, loadsheetDB[currentAircraft.config].pitchTrim);
             document.getElementById('stabTo').value = LoadsheetEngine.formatPitchTrim(trim);
         } else {

@@ -11,6 +11,9 @@
 // Pitch trim (THS for takeoff) is the linear scale printed under the CG chart:
 //   trim = (macAtZero - mac) / macPerDegree, positive = nose up; mac clamped to [minMac, maxMac]
 //   (the scale is marked "Constant" beyond those points). Measured from the vector blanks.
+// Takeoff CG envelope (towCg) is the WBM "Design CG Limits" takeoff column (CTL-LIM-DWCG-DCG,
+// 21 NOV 25) for the weight variant of each config: [weightKg, %MAC] points; between points the
+// limit varies linearly in moment. A320 forward limits use the "Extended Forward" column.
 // Fuel index is non-linear and kept as the printed table:
 //   rows: [weightKg, idx@0.785, idx@0.800, idx@0.810, idx@0.820]; null = above tank capacity
 //   full: index at full tanks per density; full-tank weight = aircraftDB.maxFuel (litres) * density
@@ -27,6 +30,8 @@ const loadsheetDB = {
     "8/150": {
         ltsVersion: "A320-214 VERSION: 8 BC-150 YC", issue: "2015-11-20", mzfw: 62500,
         pitchTrim: { macAtZero: 28.5, macPerDegree: 4.6, minMac: 17, maxMac: 40 },
+        towCg: { wv: "011", fwd: [[37230, 15], [53000, 15], [63000, 17], [66000, 17], [72000, 17], [73500, 18.9], [75500, 24.25]],
+                 aft: [[37230, 37], [47500, 37], [57900, 41], [66000, 41], [72100, 41], [75500, 38.7]] },
         cargo: {
             "1": { kgPerIndex: -155.6, max: 3402 },
             "3": { kgPerIndex: 249.1, max: 2426 },
@@ -85,6 +90,8 @@ const loadsheetDB = {
     "12/144": {
         ltsVersion: "A320-251N VERSION: 12 BC-144 YC", issue: "2020-03-16", mzfw: 62800,
         pitchTrim: { macAtZero: 30.9, macPerDegree: 3.65, minMac: 17, maxMac: 39 },
+        towCg: { wv: "068", fwd: [[40600, 15], [53000, 15], [63000, 17], [66300, 17], [72000, 17], [73500, 19], [75500, 22.04]],
+                 aft: [[40600, 32.38], [45249, 35], [50000, 37], [67400, 40], [73326, 40], [75500, 38.44]] },
         cargo: {
             "1": { kgPerIndex: -152.0, max: 3402 },
             "3": { kgPerIndex: 249.1, max: 2426 },
@@ -144,6 +151,8 @@ const loadsheetDB = {
     "16/167": {
         ltsVersion: "A321-211 VERSION: 16 BC-167 YC", issue: "2015-11-20", mzfw: 71500,
         pitchTrim: { macAtZero: 28.3, macPerDegree: 3.63, minMac: 12, maxMac: 41 },
+        towCg: { wv: "000", fwd: [[47500, 12], [71000, 12], [83000, 17.5], [89000, 17.5]],
+                 aft: [[47500, 27.65], [81800, 40.1], [89000, 38]] },
         cargo: {
             "1": { kgPerIndex: -85.9, max: 2268 },
             "2": { kgPerIndex: -132.5, max: 3468 },
@@ -209,6 +218,8 @@ const loadsheetDB = {
     "28/142": {
         ltsVersion: "A321-211 VERSION: 28 BC-142 YC (Graphical LTS)", issue: null, mzfw: 71500,
         pitchTrim: { macAtZero: 28.3, macPerDegree: 3.63, minMac: 12, maxMac: 41 },
+        towCg: { wv: "000", fwd: [[47500, 12], [71000, 12], [83000, 17.5], [89000, 17.5]],
+                 aft: [[47500, 27.65], [81800, 40.1], [89000, 38]] },
         cargo: {
             "1": { kgPerIndex: -85.9, max: 2268 },
             "2": { kgPerIndex: -132.5, max: 3468 },
@@ -227,6 +238,8 @@ const loadsheetDB = {
     "12/184": {
         ltsVersion: "A321-251NX VERSION: 12 BC-184 YC (1 ACT installed)", issue: "2020-10-26", mzfw: 75600,
         pitchTrim: { macAtZero: 28.3, macPerDegree: 3.63, minMac: 12, maxMac: 41 },
+        towCg: { wv: "053", fwd: [[46600, 12], [71000, 12], [83000, 17.5], [89000, 17.5], [91500, 19], [93500, 21.65]],
+                 aft: [[46600, 26.08], [83749, 39.5], [93500, 36.88]] },
         cargo: {
             "1": { kgPerIndex: -85.9, max: 2268 },
             "2": { kgPerIndex: -132.4, max: 3468 },

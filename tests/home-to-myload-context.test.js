@@ -79,7 +79,7 @@ test('MyLoad pulls the aircraft and crew chosen on the home page', () => {
 
     assert.equal(selected.length, 1);
     assert.equal(selected[0].reg, '73753');
-    assert.equal(acSearch.value, 'RA-73753');
+    assert.equal(acSearch.value, '73753'); // поле принимает только цифры бортового номера
     assert.equal(crewSelect.value, '2/5');
 });
 

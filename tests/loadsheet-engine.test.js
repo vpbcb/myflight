@@ -279,3 +279,25 @@ test('calculate does not mutate its input or the database', () => {
     assert.equal(r.ok, true);
     assert.equal(JSON.stringify(loadsheetDB), snapshot);
 });
+
+test('takeoff CG envelope follows the WBM design limits', () => {
+    const a320 = loadsheetDB['8/150'].towCg;
+    // Табличные точки WBM WV 011 (extended forward) читаются как есть.
+    assert.equal(E.envelopeLimit(a320.fwd, 63000), 17);
+    assert.equal(E.envelopeLimit(a320.aft, 57900), 41);
+    // Между точками предел линеен по моменту, а не по %MAC.
+    const fwd74 = E.envelopeLimit(a320.fwd, 74000);
+    assert.ok(fwd74 > 18.9 && fwd74 < 24.25);
+    assert.notEqual(fwd74.toFixed(2), (18.9 + (24.25 - 18.9) * 0.25).toFixed(2));
+
+    assert.equal(E.towCgCheck(61.6, 64000, a320).inside, false); // RA-73180: зелёный был ошибкой
+    assert.equal(E.towCgCheck(35.1, 64000, a320).inside, true);
+    assert.equal(E.towCgCheck(16.0, 64000, a320).inside, false);
+    assert.equal(E.towCgCheck(30, 76000, a320).inside, false); // тяжелее последней точки WBM
+
+    for (const [config, spec] of Object.entries(loadsheetDB)) {
+        assert.ok(spec.towCg, `${config}: нет взлётных пределов CG`);
+        const heaviest = spec.towCg.fwd[spec.towCg.fwd.length - 1][0];
+        assert.equal(spec.towCg.aft[spec.towCg.aft.length - 1][0], heaviest, `${config}: fwd/aft на разных весах`);
+    }
+});
