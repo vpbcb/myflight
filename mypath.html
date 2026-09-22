@@ -1066,6 +1066,8 @@ html.dark-theme .shift-value-toast {
             const containerSelector = '.app-shell, .app-wrapper, .calculator, .app-container';
             const relockSteps = [60, 150, 350, 700, 1200];
             let lockedHeight = 0;
+            let relockTimers = [];
+            let relockFrame = 0;
 
             function isEditable(element) {
                 return Boolean(element && (
@@ -1079,6 +1081,9 @@ html.dark-theme .shift-value-toast {
             }
 
             function keepViewportPinned() {
+                // Лишний scrollTo во время анимации клавиатуры даёт рывок — прокручиваем только реально сдвинутую страницу.
+                const bodyTop = document.body ? document.body.scrollTop : 0;
+                if (!root.scrollTop && !bodyTop && !window.scrollY) return;
                 root.scrollTop = 0;
                 if (document.body) document.body.scrollTop = 0;
                 window.scrollTo(0, 0);
@@ -1120,7 +1125,7 @@ html.dark-theme .shift-value-toast {
                     (nextHeight && nextHeight < lockedHeight - 80)
                 );
 
-                if (!lockedHeight || forceHeight) {
+                if (!lockedHeight || (forceHeight && !editableFocused)) {
                     lockedHeight = nextHeight || innerHeight || lockedHeight;
                 } else if (!keyboardLikelyOpen && !editableFocused && nextHeight) {
                     lockedHeight = nextHeight;
@@ -1157,15 +1162,29 @@ html.dark-theme .shift-value-toast {
                 }
             }
 
+            function cancelRelock() {
+                relockTimers.forEach(timer => clearTimeout(timer));
+                relockTimers = [];
+                if (relockFrame && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(relockFrame);
+                relockFrame = 0;
+            }
+
             function relockViewport() {
+                cancelRelock();
+                // Поле уже в фокусе (клавиатура открывается) — серия пересчётов высоты только дёргала бы страницу.
+                if (isEditableFocused() && lockedHeight) {
+                    lockViewport();
+                    return;
+                }
                 lockedHeight = 0;
                 lockViewport({ forceHeight: true });
                 if (typeof requestAnimationFrame === 'function') {
-                    requestAnimationFrame(() => lockViewport({ forceHeight: true }));
+                    relockFrame = requestAnimationFrame(() => {
+                        relockFrame = 0;
+                        lockViewport({ forceHeight: true });
+                    });
                 }
-                relockSteps.forEach(delay => {
-                    setTimeout(() => lockViewport({ forceHeight: true }), delay);
-                });
+                relockTimers = relockSteps.map(delay => setTimeout(() => lockViewport({ forceHeight: true }), delay));
             }
 
             window.MyFlightViewportLock = {
@@ -1189,6 +1208,7 @@ html.dark-theme .shift-value-toast {
 
             document.addEventListener('focusin', event => {
                 if (!isEditable(event.target)) return;
+                cancelRelock();
                 lockViewport();
                 keepViewportPinned();
                 setTimeout(keepViewportPinned, 100);
@@ -1201,7 +1221,7 @@ html.dark-theme .shift-value-toast {
             }
         })();
     </script>
-<meta name="offline-build" content="e37d7f8420604dbb4eb6949a"></head>
+<meta name="offline-build" content="9c20edd715b15f2e165c5ed4"></head>
 
 <body>
 
