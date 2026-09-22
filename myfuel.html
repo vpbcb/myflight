@@ -20,6 +20,7 @@
             --primary-blue: #2196F3;
             --dark-blue-text: #ffffff; /* Белый текст как на плашке TAKEOFF */
             --light-blue-bg: #0ea5e9;  /* Голубой фон плашки TAKEOFF из RWY */
+            --section-header-blue: #1976d2; /* Синий заголовков Flight/Cabin Crew из MyShift */
             --bg-body: #ffffff;
             --gray-pill-bg: #E7EDF0; /* Стерильный светлый фон как у кнопок (PF) в RWY */
             --orange-pill-bg: #FF9800;
@@ -41,6 +42,7 @@
         html.dark-theme {
             --bg-body: rgba(22, 30, 46, 0.98); /* Серо-голубой цвет карточек из RWY */
             --light-blue-bg: #016091; /* Темно-синий как плашка TAKEOFF из RWY */
+            --section-header-blue: #0273ad; /* Синий заголовков Flight/Cabin Crew из MyShift (ночная тема) */
             --gray-pill-bg: rgba(0, 0, 0, 0.2); /* Фон кнопок a/c type из RWY */
             --orange-pill-bg: #e0580f;
             --text-main: #e0e0e0;
@@ -116,6 +118,13 @@ body {
             padding-top: max(2px, calc(var(--safe-top) + 2px));
         }
 
+        /* --- ЗАКРЕПЛЕННЫЙ БЛОК AIRCRAFT НАД ЗОНОЙ СКРОЛЛА --- */
+        .pinned-header {
+            flex-shrink: 0;
+            padding: 5px 8px 0 8px;
+        }
+        .pinned-header .section-card { margin-bottom: 0; border: none; }
+
         /* --- ЗОНА СКРОЛЛА В ВИДЕ ОТДЕЛЬНОГО КОНТЕЙНЕРА С ОБВОДКОЙ --- */
         .precision-scroll-container {
             flex: 1;
@@ -127,9 +136,9 @@ body {
             z-index: 10;
             margin: 5px 0px max(65px, calc(var(--safe-bottom) + 60px)) 0px; 
             padding: 10px 8px;
-            background: rgba(0, 0, 0, 0.07); 
-            border: 1px solid rgba(0, 0, 0, 0.1); 
-            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.07);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 0;
         }
 
         /* --- КАСТОМНАЯ ПОЛОСА ПРОКРУТКИ (Адаптировано из RWY) --- */
@@ -238,7 +247,12 @@ body {
         input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        
+        /* Некоторые контейнеры (.input-row-gray, .footer-gray-bar) задают собственный
+           display: flex, который перебивает стандартный UA-стиль [hidden]{display:none}.
+           Форсируем скрытие явно, чтобы атрибут hidden всегда работал. */
+        [hidden] { display: none !important; }
+        input.bg-brown { background-color: #d9b48f !important; color: #3b2a14 !important; }
+        html.dark-theme input.bg-brown { background-color: #8a5a2b !important; color: #f3e6d6 !important; }
 
         /* CARDS */
         .section-card { 
@@ -251,7 +265,7 @@ body {
         }
         html.dark-theme .section-card { border-color: rgba(255, 255, 255, 0.1); }
 
-        .section-header-bar { background-color: var(--light-blue-bg); width: 100%; border-radius: 15px; padding: 6px 0; margin-bottom: 5px; text-align: center; border: 1px solid #BBDEFB; }
+        .section-header-bar { background-color: var(--section-header-blue); width: 100%; border-radius: 15px; padding: 2px 0; margin-bottom: 5px; text-align: center; border: 1px solid #BBDEFB; }
         html.dark-theme .section-header-bar { border-color: #2c3e50; }
         html.dark-theme .section-title { color: #ffffff; } /* Белый текст как на плашке TAKEOFF */
 
@@ -263,7 +277,8 @@ body {
             border-color: rgba(255, 255, 255, 0.2) !important;
         }
         
-        .section-title { font-size: 16px; font-weight: 800; margin: 0; color: var(--dark-blue-text); text-transform: uppercase; letter-spacing: 1.5px; }
+        .section-title { font-size: 19px; font-weight: 600; margin: 0; color: var(--dark-blue-text); text-transform: uppercase; letter-spacing: 1.5px; }
+        .section-title:not(#acSectionTitle) { font-size: 16px; }
 
         /* Специальный стиль для заголовка самолета (разрешает перенос на 2 строки) */
         #acSectionTitle {
@@ -273,8 +288,6 @@ body {
             align-items: center;
             column-gap: 8px;
             line-height: 1.2;
-            padding-left: 35px; /* Для визуальной симметрии */
-            padding-right: 35px; /* Жестко резервируем место справа, чтобы текст не наезжал на кнопку (i) */
             min-height: 24px;
         }
         #acSectionTitle span {
@@ -359,9 +372,17 @@ body {
         .col { flex: 1; display: flex; flex-direction: column; }
         .input-row-gray { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; margin-top: 0 !important; border: 1px solid rgba(0, 0, 0, 0.15); }
         .tile-gray { background-color: var(--gray-pill-bg); border-radius: 20px; padding: 8px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; height: 100%; border: 1px solid rgba(0, 0, 0, 0.15); }
+        .cargo-row .tile-gray { padding: 4px 5px; gap: 2px; border-radius: 10px; }
+        .compact-tiles .tile-gray { padding: 4px 5px; gap: 2px; border-radius: 10px; }
+        .compact-tiles .label-tile { margin-bottom: 0; }
+        .cargo-row .label-tile { font-size: 13px; white-space: nowrap; }
+        .compact-row { margin-bottom: 3px; }
+        .compact-row .tile-gray { padding: 4px 10px; gap: 8px; flex-direction: row; align-items: center; justify-content: space-between; }
+        .compact-row .label-tile { margin-bottom: 0; white-space: nowrap; flex-shrink: 0; }
+        .compact-row .tile-gray input,
+        .compact-row .tile-gray select { width: auto; flex: 1; min-width: 0; }
         
         .input-row-orange { background-color: var(--orange-pill-bg); border-radius: 20px; padding: 5px 8px 5px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(0, 0, 0, 0.15); }
-        #totalFuel { background-color: var(--input-readonly-bg) !important; }
 
         .label-left { font-size: 15px; font-weight: bold; color: var(--text-main); margin-right: 10px; white-space: nowrap; width: 110px; flex-shrink: 0; }
         .label-tile { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
@@ -678,36 +699,27 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="077bbb74b231e9c690395cd2"></head>
+<meta name="offline-build" content="2271158ec525c636c18c4568"></head>
 <body>
 
 <div class="app-wrapper">
-    <h2 class="app-title">=Aircraft Fuel=</h2>
+    <h2 class="app-title">=Aircraft Loadsheet=</h2>
 
-    <div class="precision-scroll-container" id="mainScroll">
-        
-
+    <div class="pinned-header">
     <div class="section-card">
         <div class="section-header-bar" style="position: relative;">
             <h2 id="acSectionTitle" class="section-title">Aircraft</h2>
-            
-            <div id="infoBtnContainer" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
-                <div style="width: 24px; height: 24px; background-color: var(--primary-blue); color: white; border: 1px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: serif; font-size: 14px; pointer-events: none;">
-                    i
-                </div>
-                <div onclick="openInfoModal()" style="position: absolute; right: -10px; top: -10px; width: 44px; height: 44px; cursor: pointer; z-index: 10;"></div>
-            </div>
         </div>
 
-        <div class="top-row">
+        <div class="top-row compact-row">
             <div class="col">
                 <div class="tile-gray">
                     <div class="label-tile">
-                        <span>Поиск ВС</span>
+                        <span>Aircraft</span>
                         <span class="help-icon" onclick="toggleHelp()">?</span>
                     </div>
                   <input type="text" id="acSearch" placeholder="Номер/Имя" class="nav-input"
-       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
+       onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
        onblur="this.placeholder=this.dataset.ph"
        oninput="searchAircraft()"
        autocomplete="off" autocorrect="off" spellcheck="false" inputmode="search">
@@ -715,14 +727,14 @@ html.dark-theme input[readonly] {
             </div>
             <div class="col">
                 <div class="tile-gray">
-                    <span class="label-tile">Числ. экипажа</span>
+                    <span class="label-tile">Crew</span>
                     <select id="crew" class="nav-input" onchange="calculateAll()">
                         </select>
                 </div>
             </div>
         </div>
 
-        <div class="top-row">
+        <div class="top-row compact-row">
             <div class="col">
                 <div class="tile-gray">
                     <span class="label-tile">DOW</span>
@@ -739,15 +751,147 @@ html.dark-theme input[readonly] {
 
         <div class="input-row-gray">
             <span class="label-left">Payload</span>
-            <input type="number" id="payload" placeholder="12500" class="nav-input"
-                   onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" 
-                   onblur="this.placeholder=this.dataset.ph"
-                   oninput="calculateAll()">
+            <input type="number" id="payload" class="nav-input" inputmode="numeric" onfocus="onPayloadFocus()" onblur="onPayloadBlur()" oninput="onPayloadInput()">
         </div>
 
-       <div class="input-row-gray" style="margin-bottom: 0;">
-            <span class="label-left">ZFW</span>
-            <input type="number" id="zfw" readonly>
+        <div class="top-row compact-tiles" style="margin-bottom: 0;">
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">ZFW</span>
+                    <input type="number" id="zfw" readonly>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">MAC ZFW</span>
+                    <input type="text" id="macZfw" readonly>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">MAC TOW</span>
+                    <input type="text" id="macTow" readonly>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Stab TO</span>
+                    <input type="text" id="stabTo" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="precision-scroll-container" id="mainScroll">
+
+
+    <div class="section-card">
+        <div class="section-header-bar">
+            <h2 class="section-title">Cargo (kg)</h2>
+        </div>
+
+        <div class="top-row cargo-row" style="margin-bottom: 0;">
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Cargo 1</span>
+                    <input type="number" id="cargo1" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col" id="cargo2Col" hidden>
+                <div class="tile-gray">
+                    <span class="label-tile">Cargo 2</span>
+                    <input type="number" id="cargo2" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Cargo 3</span>
+                    <input type="number" id="cargo3" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Cargo 4</span>
+                    <input type="number" id="cargo4" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Cargo 5</span>
+                    <input type="number" id="cargo5" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header-bar">
+            <h2 class="section-title">Pax</h2>
+        </div>
+
+        <div class="top-row cargo-row" style="margin-bottom: 0;">
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Pax weight</span>
+                    <select id="paxWeight" class="nav-input" onchange="calculateAll()">
+                        <option value="80" selected>80</option>
+                        <option value="85">85</option>
+                        <option value="90">90</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">OA</span>
+                    <input type="number" id="paxOA" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">OB</span>
+                    <input type="number" id="paxOB" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">OC</span>
+                    <input type="number" id="paxOC" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col" id="paxODCol" hidden>
+                <div class="tile-gray">
+                    <span class="label-tile">OD</span>
+                    <input type="number" id="paxOD" placeholder="0" class="nav-input" inputmode="numeric"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -809,9 +953,27 @@ html.dark-theme input[readonly] {
                    onkeydown="if(event.key === 'Enter' || event.keyCode === 13) this.blur();">
         </div>
 
-        <div class="input-row-orange" style="margin-bottom: 5px;" hidden>
-            <span class="label-left">Total Fuel</span>
-            <input type="number" id="totalFuel" readonly style="font-weight: bold;">
+        <div class="top-row compact-row" style="margin-bottom: 5px;">
+            <div class="col">
+                <div class="tile-gray" style="background-color: var(--orange-pill-bg);">
+                    <span class="label-tile">Total Fuel</span>
+                    <input type="number" id="totalFuel" placeholder="12500" class="nav-input" style="font-weight: bold;"
+                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
+                           onblur="this.placeholder=this.dataset.ph"
+                           oninput="calculateAll()">
+                </div>
+            </div>
+            <div class="col">
+                <div class="tile-gray">
+                    <span class="label-tile">Density</span>
+                    <select id="fuelDensity" class="nav-input" onchange="calculateAll()">
+                        <option value="0.785" selected>0.785</option>
+                        <option value="0.800">0.800</option>
+                        <option value="0.810">0.810</option>
+                        <option value="0.820">0.820</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="input-row-gray" style="position: relative; margin-bottom: 5px;">
@@ -1014,9 +1176,35 @@ html.dark-theme input[readonly] {
 
 
 <script src="./dbaircraft.js"></script>
+<script src="./dbloadsheet.js"></script>
+<script src="./loadsheet.js"></script>
 
 <script>
     let currentAircraft = null;
+    let lastLoadsheet = null;
+    let payloadManual = null;   // number when the user typed a payload, null = automatic
+    let payloadEditing = false; // while focused the field is left empty for typing
+
+    function onPayloadFocus() {
+        const el = document.getElementById('payload');
+        payloadEditing = true;
+        el.placeholder = el.value;
+        el.value = '';
+    }
+
+    function onPayloadInput() {
+        const raw = document.getElementById('payload').value;
+        payloadManual = raw === '' ? null : (parseFloat(raw) || 0);
+        calculateAll();
+    }
+
+    function onPayloadBlur() {
+        const el = document.getElementById('payload');
+        payloadEditing = false;
+        if (el.value.trim() === '') payloadManual = null;
+        el.placeholder = '';
+        calculateAll();
+    }
 
     const val = (id) => parseFloat(document.getElementById(id).value) || 0;
     const setVal = (id, v) => document.getElementById(id).value = (v === "" || isNaN(v)) ? "" : v;
@@ -1034,17 +1222,14 @@ html.dark-theme input[readonly] {
     
     // --- NAVIGATION & SCROLL LOGIC ---
     const navOrder = [
-        'acSearch', 
-        'payload', 
-        'trip', 
-        'alt', 
-        'final', 
-        'extra', 
-        'taxi'
+        'acSearch',
+        'cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5',
+        'paxOA', 'paxOB', 'paxOC', 'paxOD',
+        'totalFuel'
     ];
 
     // Отключаем фокус на полях, которые "ломают" нативный перескок Android-клавиатуры
-    const skipIds = ['crew', 'contPerc', 'dow', 'doi', 'zfw', 'contVal', 'totalFuel', 'maxFuel', 'remFuel', 'minDev', 'tow', 'mtow', 'lw', 'mlw', 'rtow'];
+    const skipIds = ['crew', 'paxWeight', 'fuelDensity', 'contPerc', 'dow', 'doi', 'zfw', 'macZfw', 'macTow', 'stabTo', 'contVal', 'maxFuel', 'remFuel', 'minDev', 'tow', 'mtow', 'lw', 'mlw', 'rtow'];
     skipIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.setAttribute('tabindex', '-1');
@@ -1061,13 +1246,12 @@ html.dark-theme input[readonly] {
             el.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.keyCode === 13) {
                     e.preventDefault();
-                    if (index < navOrder.length - 1) {
-                        const nextEl = document.getElementById(navOrder[index + 1]);
-                        if (nextEl) {
-                            if (!isIosPwaSafeMode()) {
-                                nextEl.focus({ preventScroll: true });
-                                if (nextEl.tagName === 'INPUT') nextEl.select();
-                            }
+                    const nextEl = navOrder.slice(index + 1).map(nextId => document.getElementById(nextId))
+                        .find(candidate => candidate && candidate.offsetParent !== null);
+                    if (nextEl) {
+                        if (!isIosPwaSafeMode()) {
+                            nextEl.focus({ preventScroll: true });
+                            if (nextEl.tagName === 'INPUT') nextEl.select();
                         }
                     } else {
                         el.blur(); // Прячем клавиатуру после последнего поля
@@ -1115,6 +1299,7 @@ html.dark-theme input[readonly] {
     function saveFormData() {
         const data = {
             aircraft: currentAircraft,
+            payloadManual,
             inputs: {}
         };
         const inputs = document.querySelectorAll('input, select');
@@ -1158,6 +1343,8 @@ html.dark-theme input[readonly] {
                 const infoBtn = document.getElementById('infoBtnContainer');
                 if (infoBtn) infoBtn.style.display = 'block';
             }
+
+            payloadManual = Number.isFinite(data.payloadManual) ? data.payloadManual : null;
 
             // 2. Восстанавливаем поля
             if (data.inputs) {
@@ -1247,7 +1434,9 @@ html.dark-theme input[readonly] {
         
         // 3. Жестко очищаем ВСЕ оставшиеся поля
         const idsToClear = [
-            'payload', 'zfw', 
+            'payload', 'zfw', 'macZfw', 'macTow', 'stabTo',
+            'cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5',
+            'paxOA', 'paxOB', 'paxOC', 'paxOD',
             'trip', 'contVal', 'alt', 'final', 'extra', 'taxi', 'totalFuel',
             'remFuel', 'minDev', 
             'tow', 'lw', 'rtow'
@@ -1264,7 +1453,13 @@ html.dark-theme input[readonly] {
         // 4. Возвращаем дефолтные 3%
         const contPerc = document.getElementById('contPerc');
         if (contPerc) contPerc.value = '3'; 
-        
+        const paxWeight = document.getElementById('paxWeight');
+        if (paxWeight) paxWeight.value = '80';
+        const fuelDensity = document.getElementById('fuelDensity');
+        if (fuelDensity) fuelDensity.value = '0.785';
+        payloadManual = null;
+        document.getElementById('payload').classList.remove('bg-brown');
+
         saveFormData(); // Сохраняем пустой стейт
     }
 
@@ -1404,7 +1599,9 @@ html.dark-theme input[readonly] {
 
     function clearAircraftSelection() {
         currentAircraft = null;
-        
+        document.getElementById('cargo2Col').hidden = true;
+        document.getElementById('paxODCol').hidden = true;
+
         const titleEl = document.getElementById('acSectionTitle');
         if (titleEl) {
             titleEl.textContent = "Aircraft";
@@ -1553,20 +1750,64 @@ html.dark-theme input[readonly] {
         setVal('dow', dow);
         setVal('doi', doi);
 
-        const payload = val('payload');
-        const zfw = dow + payload;
-        setVal('zfw', zfw);
-
         const alt = val('alt');
         const final = val('final');
         const extra = val('extra');
         const taxi = val('taxi');
-        
-        const totalFuel = trip + contVal + alt + final + extra + taxi;
-        setVal('totalFuel', totalFuel);
 
+        const totalFuel = val('totalFuel');
         const takeoffFuel = Math.max(0, totalFuel - taxi);
+
+        const paxWeight = val('paxWeight') || LoadsheetEngine.CONST.DEFAULT_PAX_WEIGHT;
+        const ltsData = loadsheetDB[currentAircraft.config];
+        const hasCargo2 = !!(ltsData && ltsData.cargo['2']);
+        const hasOD = !!(ltsData && ltsData.cabin.OD);
+        document.getElementById('cargo2Col').hidden = !hasCargo2;
+        document.getElementById('paxODCol').hidden = !hasOD;
+
+        const pax = { OA: val('paxOA'), OB: val('paxOB'), OC: val('paxOC') };
+        if (hasOD) pax.OD = val('paxOD');
+        const cargo = { '1': val('cargo1'), '3': val('cargo3'), '4': val('cargo4'), '5': val('cargo5') };
+        if (hasCargo2) cargo['2'] = val('cargo2');
+        const paxCount = Object.values(pax).reduce((a, b) => a + b, 0);
+        const cargoWeight = Object.values(cargo).reduce((a, b) => a + b, 0);
+
+        const payloadAuto = paxCount * paxWeight + cargoWeight;
+        const payload = payloadManual !== null ? payloadManual : payloadAuto;
+        const payloadEl = document.getElementById('payload');
+        if (!payloadEditing) payloadEl.value = payload;
+        payloadEl.classList.toggle('bg-brown', payloadManual !== null);
+        const zfw = dow + payload;
+        setVal('zfw', zfw);
         const tow = zfw + takeoffFuel;
+
+        const loadsheet = LoadsheetEngine.calculate({
+            aircraft: currentAircraft,
+            crew: crewVal,
+            paxWeight,
+            pax,
+            cargo,
+            fuel: { kg: takeoffFuel, density: val('fuelDensity') || LoadsheetEngine.CONST.DEFAULT_DENSITY }
+        }, loadsheetDB);
+        lastLoadsheet = loadsheet;
+
+        // With a manual payload the indices stay as computed from the zones, but %MAC is
+        // converted on the weights that actually go into the loadsheet.
+        const macZfw = loadsheet.ok ? LoadsheetEngine.indexToMac(loadsheet.lts.index.zfw, zfw) : null;
+        const macTow = loadsheet.ok ? LoadsheetEngine.indexToMac(loadsheet.lts.index.tow, tow) : null;
+        document.getElementById('macZfw').value = loadsheet.ok ? macZfw.toFixed(1) : '';
+
+        const macTowEl = document.getElementById('macTow');
+        macTowEl.classList.remove('bg-green', 'bg-red');
+        if (loadsheet.ok && takeoffFuel > 0) {
+            macTowEl.value = macTow.toFixed(1);
+            macTowEl.classList.add(macTow < LoadsheetEngine.CONST.CG_CAUTION_MAC ? 'bg-red' : 'bg-green');
+            const trim = LoadsheetEngine.pitchTrim(macTow, loadsheetDB[currentAircraft.config].pitchTrim);
+            document.getElementById('stabTo').value = LoadsheetEngine.formatPitchTrim(trim);
+        } else {
+            macTowEl.value = '';
+            document.getElementById('stabTo').value = '';
+        }
         setVal('tow', tow);
 
         const lw = tow - trip;

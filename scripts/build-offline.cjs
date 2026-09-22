@@ -4,7 +4,7 @@ const { createHash } = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const pages = ['index.html', 'myfuel.html', 'mywind.html', 'mypath.html', 'mynpa.html', 'myshift.html', 'offline.html'];
-const assets = [...pages, 'manifest.json', 'app.js', 'offline-client.js', 'bottom-navigation.css', 'suflights.js', 'dbaircraft.js',
+const assets = [...pages, 'manifest.json', 'app.js', 'offline-client.js', 'bottom-navigation.css', 'suflights.js', 'dbaircraft.js', 'dbloadsheet.js', 'loadsheet.js',
     'vendor/firebase-app-compat.js', 'vendor/firebase-database-compat.js', 'vendor/firebase-auth-compat.js', 'icons/myshifticon.png'].sort();
 const binaries = new Set(['icons/myshifticon.png']);
 const source = fs.readFileSync(path.join(root, 'sw.source.js'), 'utf8').replace(/\r\n/g, '\n');
