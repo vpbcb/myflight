@@ -700,7 +700,7 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="cf22b96ff089df3f0a67661f"></head>
+<meta name="offline-build" content="b58af90b974c8f08a9113af2"></head>
 <body>
 
 <div class="app-wrapper">
@@ -1184,6 +1184,39 @@ html.dark-theme input[readonly] {
     let currentAircraft = null;
     let lastLoadsheet = null;
     let payloadManual = null;   // number when the user typed a payload, null = automatic
+    // Борт и экипаж с главной страницы. Тянем их только когда там что-то поменялось,
+    // чтобы правки, сделанные здесь, не перетирались при каждом открытии.
+    const HOME_AC_KEY = 'myflight_selected_ac_reg';
+    const HOME_CREW_KEY = 'myflight_info_crew_config';
+    let lastHomeContext = null;
+
+    function readHomeContext() {
+        try {
+            return { reg: localStorage.getItem(HOME_AC_KEY) || '', crew: localStorage.getItem(HOME_CREW_KEY) || '' };
+        } catch (e) {
+            return { reg: '', crew: '' };
+        }
+    }
+
+    function applyHomeContext() {
+        const home = readHomeContext();
+        if (!home.reg) return;
+        if (lastHomeContext && lastHomeContext.reg === home.reg && lastHomeContext.crew === home.crew) return;
+
+        const ac = aircraftDB.find(item => item.reg === home.reg);
+        if (!ac) return;
+
+        lastHomeContext = home;
+        document.getElementById('acSearch').value = ac.regFull || ac.reg;
+        selectAircraft(ac);
+
+        const crewSelect = document.getElementById('crew');
+        if (home.crew && [...crewSelect.options].some(option => option.value === home.crew)) {
+            crewSelect.value = home.crew;
+        }
+        calculateAll();
+        saveFormData();
+    }
     let payloadEditing = false; // while focused the field is left empty for typing
 
     function onPayloadFocus() {
@@ -1301,6 +1334,7 @@ html.dark-theme input[readonly] {
         const data = {
             aircraft: currentAircraft,
             payloadManual,
+            homeContext: lastHomeContext,
             inputs: {}
         };
         const inputs = document.querySelectorAll('input, select');
@@ -1346,6 +1380,7 @@ html.dark-theme input[readonly] {
             }
 
             payloadManual = Number.isFinite(data.payloadManual) ? data.payloadManual : null;
+            lastHomeContext = data.homeContext || null;
 
             // 2. Восстанавливаем поля
             if (data.inputs) {
@@ -1403,6 +1438,7 @@ html.dark-theme input[readonly] {
         
         initRefreshButton(); 
         loadFormData();
+        applyHomeContext();
         calculateAll();
        
     });

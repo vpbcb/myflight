@@ -1605,7 +1605,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="cf22b96ff089df3f0a67661f"></head>
+<meta name="offline-build" content="b58af90b974c8f08a9113af2"></head>
 <body>
     <div class="app-shell">
 
@@ -2764,10 +2764,22 @@ function showAmbiguity(matches, query) {
 
 let currentAircraft = null;
 const INFO_CREW_CONFIG_STORAGE_KEY = 'myflight_info_crew_config';
+// Борт, выбранный здесь, подхватывает MyLoad. Обратной связи нет: правки в MyLoad сюда не приходят.
+const SELECTED_AC_STORAGE_KEY = 'myflight_selected_ac_reg';
+
+function saveSelectedAircraftReg(reg, storage = localStorage) {
+    try {
+        if (reg) storage.setItem(SELECTED_AC_STORAGE_KEY, reg);
+        else storage.removeItem(SELECTED_AC_STORAGE_KEY);
+    } catch (e) {
+        // Хранилище может быть недоступно (приватный режим) — поиск обязан работать дальше.
+    }
+}
 
 // Форматирование и вывод результата
 function applyAcResult(ac, query) {
     currentAircraft = ac;
+    saveSelectedAircraftReg(ac && ac.reg);
     const resAc = document.getElementById('resAc');
     const infoBtn = document.getElementById('infoBtnContainer');
 
@@ -2943,6 +2955,7 @@ function searchLocalAc(inputElem) {
 
     const resetToPlaceholder = () => {
         currentAircraft = null;
+        saveSelectedAircraftReg('');
         resAc.innerHTML = "поиск ВС по номеру или имени";
         resAc.style.color = "var(--text-secondary)";
         resAc.style.fontWeight = "600";
@@ -2989,6 +3002,7 @@ function searchLocalAc(inputElem) {
             }
         } else {
             currentAircraft = null;
+            saveSelectedAircraftReg('');
             if (infoBtn) infoBtn.style.display = "none";
             resAc.innerHTML = "Борт не найден";
             resAc.style.color = "#ef4444";
