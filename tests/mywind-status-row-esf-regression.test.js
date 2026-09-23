@@ -89,7 +89,7 @@ test('plaque appears without an opacity fade and refreshes with every table upda
     const rule = myWindHtml.match(/\.land-status-row\s*\{[^}]*\}/)[0];
     assert.doesNotMatch(rule, /transition:[^;]*opacity/);
     assert.match(rule, /opacity:\s*0;/);
-    assert.match(rule, /font-weight:\s*500;/);
+    assert.match(rule, /font-weight:\s*700;/);
     assert.match(myWindHtml, /function updateTable\(options = \{\}\) \{\s*const tableBody = document\.getElementById\('tableBody'\);\s*if \(!tableBody\) return;\s*updateStatusRow\(\);/);
 });
 
