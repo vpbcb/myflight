@@ -49,6 +49,7 @@ function loadMyLoadContext(localStorage, crewOptions = ['2/4', '2/5', '3/4', '3/
     vm.runInContext(
         `const HOME_AC_KEY = 'myflight_selected_ac_reg';
          const HOME_CREW_KEY = 'myflight_info_crew_config';
+         const HOME_AC_STAMP_KEY = 'myflight_selected_ac_at';
          ${extractFunction(myfuelHtml, 'readHomeContext')}
          ${extractFunction(myfuelHtml, 'applyHomeContext')}`,
         context
@@ -59,12 +60,22 @@ function loadMyLoadContext(localStorage, crewOptions = ['2/4', '2/5', '3/4', '3/
 test('the home page stores the resolved registration for MyLoad', () => {
     assert.match(indexHtml, /const SELECTED_AC_STORAGE_KEY = 'myflight_selected_ac_reg';/);
     const storage = fakeStorage();
-    const context = { localStorage: storage, SELECTED_AC_STORAGE_KEY: 'myflight_selected_ac_reg' };
+    const context = {
+        localStorage: storage,
+        SELECTED_AC_STORAGE_KEY: 'myflight_selected_ac_reg',
+        SELECTED_AC_STAMP_STORAGE_KEY: 'myflight_selected_ac_at',
+        Date: { now: () => 1000 }
+    };
     vm.createContext(context);
     vm.runInContext(extractFunction(indexHtml, 'saveSelectedAircraftReg'), context);
 
     context.saveSelectedAircraftReg('73753');
     assert.equal(storage.getItem('myflight_selected_ac_reg'), '73753');
+    assert.equal(storage.getItem('myflight_selected_ac_at'), '1000');
+    // Автоповтор поиска при открытии главной метку выбора не трогает.
+    context.Date.now = () => 2000;
+    context.saveSelectedAircraftReg('73753', storage, false);
+    assert.equal(storage.getItem('myflight_selected_ac_at'), '1000');
     context.saveSelectedAircraftReg('');
     assert.equal(storage.getItem('myflight_selected_ac_reg'), null);
 });
@@ -135,4 +146,31 @@ test('a crew value the aircraft does not offer is ignored', () => {
 
     assert.equal(selected.length, 1);
     assert.equal(crewSelect.value, '');
+});
+
+test('re-picking the same aircraft on the home page overrides a local MyLoad change', () => {
+    const storage = fakeStorage();
+    storage.setItem('myflight_selected_ac_reg', '73753');
+    storage.setItem('myflight_info_crew_config', '2/5');
+    storage.setItem('myflight_selected_ac_at', '1000');
+
+    const { context, crewSelect, selected } = loadMyLoadContext(storage);
+    context.applyHomeContext();
+    assert.equal(selected.length, 1);
+
+    // Локальная правка в MyLoad, главная не трогалась — правка сохраняется.
+    crewSelect.value = '3/5';
+    context.applyHomeContext();
+    assert.equal(selected.length, 1);
+
+    // На главной снова выбрали тот же борт — метка новая, MyLoad подтягивает.
+    storage.setItem('myflight_selected_ac_at', '2000');
+    context.applyHomeContext();
+    assert.equal(selected.length, 2);
+    assert.equal(crewSelect.value, '2/5');
+});
+
+test('the home page restores its last search without marking a new selection', () => {
+    assert.match(indexHtml, /restoringAcSearch = true;\s*try \{\s*searchLocalAc\(aInput\);/);
+    assert.match(indexHtml, /saveSelectedAircraftReg\(ac && ac\.reg, localStorage, !restoringAcSearch\)/);
 });
