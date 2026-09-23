@@ -47,9 +47,8 @@ function renderStatusRow(mappingIndex, { width = 360, opMode = 'courseMinusBtn',
         element.getBoundingClientRect = () => {
             const size = parseFloat(element.style.fontSize) || 15;
             const spacing = element.style.letterSpacing === '0px' ? 0 : 1;
-            const bold = element.style.fontWeight === '700' ? 0.95 : 1;
             const chars = element.text().replace(/\s+/g, ' ').length;
-            return { width: chars * (size * 0.7 * bold + spacing) };
+            return { width: chars * (size * 0.7 + spacing) };
         };
         return element;
     };
@@ -78,11 +77,11 @@ test('long status text is shrunk to fit the plaque, short text is left alone', (
     assert.equal(short.style.fontSize, '');
     assert.equal(short.style.letterSpacing, '');
 
-    const long = renderStatusRow(3, { width: 320, opMode: 'coursePlusBtn', land: 'AUTOLAND + AUTOROLL', aircraft: 'A321 neo', crew: '2П 80%' }).content;
+    const long = renderStatusRow(3, { width: 340, opMode: 'coursePlusBtn', land: 'AUTOLAND + AUTOROLL', aircraft: 'A321 neo', crew: '2П 80%' }).content;
     const width = long.getBoundingClientRect().width;
-    assert.ok(width <= 316, `content ${width}px must fit 316px`);
+    assert.ok(width <= 336, `content ${width}px must fit 336px`);
     assert.equal(long.style.letterSpacing, '0px');
-    assert.equal(long.style.fontWeight, '700');
+    assert.equal(long.style.fontWeight, undefined);
     assert.ok(parseFloat(long.style.fontSize) < 15);
 });
 
@@ -90,6 +89,7 @@ test('plaque appears without an opacity fade and refreshes with every table upda
     const rule = myWindHtml.match(/\.land-status-row\s*\{[^}]*\}/)[0];
     assert.doesNotMatch(rule, /transition:[^;]*opacity/);
     assert.match(rule, /opacity:\s*0;/);
+    assert.match(rule, /font-weight:\s*500;/);
     assert.match(myWindHtml, /function updateTable\(options = \{\}\) \{\s*const tableBody = document\.getElementById\('tableBody'\);\s*if \(!tableBody\) return;\s*updateStatusRow\(\);/);
 });
 
