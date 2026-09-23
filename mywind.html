@@ -500,11 +500,28 @@
             margin-top: 8px;
             width: 100%;
             letter-spacing: 1px; /* Сжали интервал, чтобы всё влезло */
+            line-height: 1.25;
             text-transform: uppercase;
-            transition: opacity 0.3s ease, background-color 0.3s ease;
+            /* Без анимации opacity: плашка появляется в том же кадре, что и таблица */
+            transition: background-color 0.3s ease;
             opacity: 0;
             pointer-events: none;
             white-space: nowrap; /* Жестко запрещаем перенос на вторую строку */
+        }
+        /* Содержимое сжимается по ширине (fitStatusRow), высота плашки остаётся прежней */
+        .land-status-row .status-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35em;
+            vertical-align: middle;
+        }
+        /* GOOD TO / MEDIUM и MEDIUM / TO POOR — в две строки высотой в одну */
+        .land-status-row .status-esf-stack {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            font-size: 0.62em;
+            line-height: 1;
         }
 
 
@@ -917,7 +934,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
         })();
     </script>
-    <meta name="offline-build" content="c953b5d9f943a35efeb31d96"></head>
+    <meta name="offline-build" content="282f86fb3f5fcb52ca67709a"></head>
 <body>
 
 <div class="calculator">
@@ -1914,6 +1931,12 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     }
 
     // === НОВАЯ ФУНКЦИЯ: Интеллектуальная сборка текста плашки ===
+    // ESF: длинные состояния — в две строки
+    const ESF_STATUS_LINES = {
+        'GOOD to MEDIUM': ['GOOD to', 'MEDIUM'],
+        'MEDIUM to POOR': ['MEDIUM', 'to POOR']
+    };
+
     function updateStatusRow() {
         const statusRow = document.getElementById('landStatusRow');
         if (!statusRow) return;
@@ -1932,9 +1955,52 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (crewStr.includes('80%')) crewStr = '2П(80%)';
         else if (crewStr.includes('50%')) crewStr = '2П(50%)';
 
+        // 4. Состояние ВПП по ESF — общий индекс всех табов (например, RWYCC 4 → GOOD to MEDIUM)
+        const esf = rwyMapping[currentMappingIndex]?.ESF || '';
+        const esfLines = ESF_STATUS_LINES[esf];
+        const esfEl = document.createElement('span');
+        if (esfLines) {
+            esfEl.className = 'status-esf-stack';
+            esfLines.forEach(line => {
+                const lineEl = document.createElement('span');
+                lineEl.textContent = line;
+                esfEl.append(lineEl);
+            });
+        } else {
+            esfEl.textContent = esf;
+        }
+
         // Собираем всё вместе
-        statusRow.textContent = `${acStr} + ${opStr} + ${crewStr}`;
+        const content = document.createElement('span');
+        content.className = 'status-content';
+        content.append(`${acStr} + ${opStr} + ${crewStr} + RW`, esfEl);
+        statusRow.replaceChildren(content);
+        fitStatusRow(statusRow);
     }
+
+    // Ужимаем текст, пока он не влезет в плашку: интервал, затем жирность, затем размер.
+    function fitStatusRow(statusRow) {
+        const content = statusRow.querySelector('.status-content');
+        if (!content) return;
+        content.style.letterSpacing = content.style.fontWeight = content.style.fontSize = '';
+        const style = getComputedStyle(statusRow);
+        const available = statusRow.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        if (!(available > 0)) return;
+        const fits = () => content.getBoundingClientRect().width <= available;
+        if (fits()) return;
+        content.style.letterSpacing = '0px';
+        if (fits()) return;
+        content.style.fontWeight = '700';
+        let size = parseFloat(style.fontSize);
+        while (!fits() && size > 8) {
+            size -= 0.5;
+            content.style.fontSize = size + 'px';
+        }
+    }
+    window.addEventListener('resize', () => {
+        const statusRow = document.getElementById('landStatusRow');
+        if (statusRow) fitStatusRow(statusRow);
+    });
 
     function showLandHint() {
         const toast = document.getElementById('landHintToast');
@@ -2110,6 +2176,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function updateTable(options = {}) {
     const tableBody = document.getElementById('tableBody');
     if (!tableBody) return;
+    updateStatusRow(); // RW (ESF) в плашке меняется вместе с любым табом
+
     const shouldCenter = options.center === true;
     const previousScrollTop = tableBody.scrollTop;
 
