@@ -778,7 +778,7 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="490517453186c33eed94516d"></head>
+<meta name="offline-build" content="c953b5d9f943a35efeb31d96"></head>
 <body>
 
 <div class="app-wrapper">
@@ -1396,9 +1396,9 @@ html.dark-theme input[readonly] {
         'paxOA', 'paxOB', 'paxOC', 'paxOD', 'totalFuel', 'taxi'];
     function clearFieldToZero(event) {
         const el = event.target;
-        if (el.value === '') return;
         event.preventDefault();
-        el.value = '';
+        if (el.value === '0') return;
+        el.value = '0';
         el.dispatchEvent(new Event('input', { bubbles: true }));
     }
     clearOnDeleteIds.forEach(id => {
@@ -1409,6 +1409,10 @@ html.dark-theme input[readonly] {
         });
         el.addEventListener('beforeinput', event => {
             if (event.inputType && event.inputType.startsWith('delete')) clearFieldToZero(event);
+        });
+        // Первая цифра после 0 заменяет его: «0» + «5» даёт 5, а не 05.
+        el.addEventListener('input', () => {
+            if (/^0\d/.test(el.value)) el.value = String(Number(el.value));
         });
     });
 
