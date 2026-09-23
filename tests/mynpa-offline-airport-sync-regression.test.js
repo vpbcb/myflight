@@ -26,18 +26,18 @@ test('active admin mode is marked by a gold badge with a crown', () => {
     assert.match(mynpaSource, /\.npa-admin-mode-label[\s\S]*?color:\s*#b27c00;/);
 });
 
-function createHarness(initialStorage = {}) {
+function createHarness(initialStorage = {}, page = 'mynpa.html') {
     const storage = new Map(
         Object.entries(initialStorage).map(([key, value]) => [key, JSON.stringify(value)])
     );
-    const setCalls = [];
+    const setCalls = [], storageWrites = [], listeners = [];
     const localStorage = {
         getItem: key => storage.has(key) ? storage.get(key) : null,
-        setItem: (key, value) => storage.set(key, String(value)),
+        setItem: (key, value) => { storageWrites.push(key); storage.set(key, String(value)); },
         removeItem: key => storage.delete(key)
     };
     const window = {
-        addEventListener() {},
+        addEventListener(type) { listeners.push(type); },
         dispatchEvent() {},
         npaAuth: { currentUser: { uid: 'offline-admin', email: 'admin@example.test' } },
         npaDb: {
@@ -53,7 +53,7 @@ function createHarness(initialStorage = {}) {
     };
     const document = {
         readyState: 'loading',
-        addEventListener() {},
+        addEventListener(type) { listeners.push(type); },
         querySelector() { return null; },
         head: { appendChild() {} }
     };
@@ -68,6 +68,7 @@ function createHarness(initialStorage = {}) {
     vm.runInNewContext(syncModuleSource, {
         window,
         document,
+        location: { pathname: '/myflight/' + page },
         navigator: { onLine: false },
         localStorage,
         CustomEvent: TestCustomEvent,
@@ -80,6 +81,8 @@ function createHarness(initialStorage = {}) {
     return {
         window,
         setCalls,
+        storageWrites,
+        listeners,
         read(key) {
             const value = storage.get(key);
             return value ? JSON.parse(value) : null;
@@ -171,4 +174,19 @@ test('cloud write carries updatedAt and refreshes the persisted reference snapsh
     assert.equal(harness.setCalls[0].payload.updatedAt, 400);
     assert.equal('localReferenceOverride' in harness.setCalls[0].payload, false);
     assert.equal(harness.read(STORAGE_KEYS.references).UAAA.updatedAt, 400);
+});
+
+test('Firebase sync runs only on Home and MyNPA', () => {
+    const seed = { [STORAGE_KEYS.airports]: {}, [STORAGE_KEYS.references]: {}, [STORAGE_KEYS.approaches]: {}, [STORAGE_KEYS.pending]: [] };
+    for (const page of ['', 'index.html', 'mynpa.html']) {
+        const harness = createHarness(seed, page);
+        assert.equal(typeof harness.window.MyFlightNpaSync, 'object', page || 'scope root');
+        assert.ok(harness.listeners.includes('DOMContentLoaded'), page || 'scope root');
+    }
+    for (const page of ['mywind.html', 'mypath.html', 'myfuel.html', 'myshift.html']) {
+        const harness = createHarness(seed, page);
+        assert.equal(harness.window.MyFlightNpaSync, undefined, page);
+        assert.deepEqual(harness.storageWrites, [], page);
+        assert.deepEqual(harness.listeners, [], page);
+    }
 });

@@ -263,12 +263,16 @@ body {
             box-shadow: none; 
         }
         html.dark-theme .section-card { border-color: rgba(255, 255, 255, 0.1); }
+        /* Cargo, Pax и Fuel — один общий белый блок; внутренние разделы без своих рамок */
+        .load-group { margin-bottom: 5px; }
+        .load-group > .section-card { border: none; border-radius: 0; padding: 0; margin: 0 0 8px; }
+        .load-group > .section-card:last-child { margin-bottom: 0; }
 
         .section-header-bar { background-color: var(--section-header-blue); width: 100%; border-radius: 15px; padding: 2px 0; margin-bottom: 5px; text-align: center; border: 1px solid #BBDEFB; }
         html.dark-theme .section-header-bar { border-color: #2c3e50; }
         /* Плашка борта и ряд Aircraft/Crew — одна карточка: плашка служит шапкой, общая синяя рамка */
         .ac-group { border: 1px solid var(--section-header-blue); border-radius: 15px; overflow: hidden;
-            background-color: rgba(25, 118, 210, 0.06); margin-bottom: 5px; }
+            background-color: rgba(25, 118, 210, 0.06); margin-bottom: 18px; }
         .ac-group .section-header-bar { border: none; border-radius: 0; margin-bottom: 0; }
         .ac-group .compact-row { padding: 0; margin-bottom: 0; gap: 0; }
         /* Плитки прилегают к рамке карточки: внешние стороны без своей обводки, скруглены только нижние внешние углы */
@@ -546,6 +550,14 @@ html.dark-theme input[readonly] {
         }
 
         
+        /* Заголовок страницы: единый вид на всех страницах (эталон — MyLoad) */
+        h2.app-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase;
+            text-align: center; line-height: normal; margin: 5px 0; padding: 0;
+            color: #000; opacity: 0.6;
+        }
+        html.dark-theme h2.app-title { color: #e0e0e0; }
     </style>
     <!-- Микро-скрипт синхронизации темы с Хабом -->
     <script>
@@ -766,11 +778,11 @@ html.dark-theme input[readonly] {
             }
         })();
     </script>
-<meta name="offline-build" content="3dafe54ad1559ca680d02264"></head>
+<meta name="offline-build" content="eab8ac313e100047c92f5c00"></head>
 <body>
 
 <div class="app-wrapper">
-    <h2 class="app-title">=Aircraft Loadsheet=</h2>
+    <h2 class="app-title">Aircraft Loadsheet</h2>
 
     <div class="pinned-header">
     <div class="section-card">
@@ -867,7 +879,7 @@ html.dark-theme input[readonly] {
 
     <div class="precision-scroll-container" id="mainScroll">
 
-
+    <div class="section-card load-group">
     <div class="section-card">
         <div class="section-header-bar">
             <h2 class="section-title">Cargo (kg)</h2>
@@ -978,7 +990,7 @@ html.dark-theme input[readonly] {
     </div>
 
 
-    <div class="section-card" style="margin-bottom: 5px !important; padding-bottom: 5px !important;">
+    <div class="section-card">
         <div class="section-header-bar">
             <h2 class="section-title">Fuel (kg)</h2>
         </div>
@@ -1077,6 +1089,7 @@ html.dark-theme input[readonly] {
                 <input type="number" id="minDev" readonly>
             </div>
         </div>
+    </div>
     </div>
 
 
@@ -1267,20 +1280,27 @@ html.dark-theme input[readonly] {
     // чтобы правки, сделанные здесь, не перетирались при каждом открытии.
     const HOME_AC_KEY = 'myflight_selected_ac_reg';
     const HOME_CREW_KEY = 'myflight_info_crew_config';
+    const HOME_AC_STAMP_KEY = 'myflight_selected_ac_at';
     let lastHomeContext = null;
 
     function readHomeContext() {
         try {
-            return { reg: localStorage.getItem(HOME_AC_KEY) || '', crew: localStorage.getItem(HOME_CREW_KEY) || '' };
+            return {
+                reg: localStorage.getItem(HOME_AC_KEY) || '',
+                crew: localStorage.getItem(HOME_CREW_KEY) || '',
+                stamp: localStorage.getItem(HOME_AC_STAMP_KEY) || ''
+            };
         } catch (e) {
-            return { reg: '', crew: '' };
+            return { reg: '', crew: '', stamp: '' };
         }
     }
 
     function applyHomeContext() {
         const home = readHomeContext();
         if (!home.reg) return;
-        if (lastHomeContext && lastHomeContext.reg === home.reg && lastHomeContext.crew === home.crew) return;
+        // Новый выбор на главной (в том числе повторный выбор того же борта) меняет метку — тогда подтягиваем.
+        if (lastHomeContext && lastHomeContext.reg === home.reg && lastHomeContext.crew === home.crew &&
+            (lastHomeContext.stamp || '') === home.stamp) return;
 
         const ac = aircraftDB.find(item => item.reg === home.reg);
         if (!ac) return;
@@ -1596,8 +1616,7 @@ html.dark-theme input[readonly] {
         // 4. Возвращаем дефолтные 3%
         const contPerc = document.getElementById('contPerc');
         if (contPerc) contPerc.value = '3'; 
-        const paxWeight = document.getElementById('paxWeight');
-        if (paxWeight) paxWeight.value = '80';
+        // Pax weight не сбрасываем: выбранный вес пассажира сохраняется и после Refresh.
         const fuelDensity = document.getElementById('fuelDensity');
         if (fuelDensity) fuelDensity.value = '0.785';
         document.getElementById('taxi').value = DEFAULT_TAXI;

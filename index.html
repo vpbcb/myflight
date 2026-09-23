@@ -1625,7 +1625,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="3dafe54ad1559ca680d02264"></head>
+<meta name="offline-build" content="eab8ac313e100047c92f5c00"></head>
 <body>
     <div class="app-shell">
 
@@ -2786,11 +2786,16 @@ let currentAircraft = null;
 const INFO_CREW_CONFIG_STORAGE_KEY = 'myflight_info_crew_config';
 // Борт, выбранный здесь, подхватывает MyLoad. Обратной связи нет: правки в MyLoad сюда не приходят.
 const SELECTED_AC_STORAGE_KEY = 'myflight_selected_ac_reg';
+// Метка выбора: меняется только когда борт выбрал пользователь, чтобы MyLoad подтянул и повторный
+// выбор того же борта, но не реагировал на автоповтор поиска при открытии главной.
+const SELECTED_AC_STAMP_STORAGE_KEY = 'myflight_selected_ac_at';
+let restoringAcSearch = false;
 
-function saveSelectedAircraftReg(reg, storage = localStorage) {
+function saveSelectedAircraftReg(reg, storage = localStorage, markSelection = true) {
     try {
         if (reg) storage.setItem(SELECTED_AC_STORAGE_KEY, reg);
         else storage.removeItem(SELECTED_AC_STORAGE_KEY);
+        if (reg && markSelection) storage.setItem(SELECTED_AC_STAMP_STORAGE_KEY, String(Date.now()));
     } catch (e) {
         // Хранилище может быть недоступно (приватный режим) — поиск обязан работать дальше.
     }
@@ -2799,7 +2804,7 @@ function saveSelectedAircraftReg(reg, storage = localStorage) {
 // Форматирование и вывод результата
 function applyAcResult(ac, query) {
     currentAircraft = ac;
-    saveSelectedAircraftReg(ac && ac.reg);
+    saveSelectedAircraftReg(ac && ac.reg, localStorage, !restoringAcSearch);
     const resAc = document.getElementById('resAc');
     const infoBtn = document.getElementById('infoBtnContainer');
 
@@ -3057,8 +3062,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (aInput) {
         const savedAc = localStorage.getItem('last_ac_query');
         if (savedAc) aInput.value = savedAc;
-        // Запускаем поиск борта.
-        searchLocalAc(aInput);
+        // Запускаем поиск борта. Это восстановление, а не выбор пользователя — метку выбора не трогаем.
+        restoringAcSearch = true;
+        try {
+            searchLocalAc(aInput);
+        } finally {
+            restoringAcSearch = false;
+        }
     }
 });
 </script>

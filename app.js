@@ -318,8 +318,12 @@
 })();
 
 // Shared MyNPA Realtime Database bootstrap and pending cloud sync.
-// Runs on every main page so cloud data and queued admin writes stay current.
+// Runs on Home (opened on every launch) and on MyNPA, the only page that reads this data,
+// so cloud data and queued admin writes stay current without loading Firebase elsewhere.
 (function () {
+    const NPA_SYNC_PAGES = ['', 'index.html', 'mynpa.html'];
+    if (!NPA_SYNC_PAGES.includes(location.pathname.split('/').pop())) return;
+
     const NPA_AIRPORTS_DB_KEY = 'mynpa_airports_rtdb_v1';
     const NPA_REFERENCE_CACHE_KEY = 'mynpa_airports_reference_v1';
     const NPA_CLOUD_APPROACHES_KEY = 'mynpa_cloud_approaches_v1';

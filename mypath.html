@@ -1009,6 +1009,16 @@ html.light-theme .shift-alert-plate {
 html.dark-theme .shift-value-toast {
     background: rgb(2, 115, 173);
 }
+        /* Заголовок страницы: единый вид на всех страницах (эталон — MyLoad) */
+        h2.app-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase;
+            text-align: center; line-height: normal; margin: 5px 0; padding: 0;
+            color: #000; opacity: 0.6;
+        }
+        html.dark-theme h2.app-title { color: #e0e0e0; }
+        /* Верхняя рамка .calculator (1px) сдвигает заголовок — компенсируем, чтобы он стоял как на MyLoad */
+        .calculator > h2.app-title { margin-top: 4px; }
     </style>
 
     <!-- Микро-скрипт синхронизации темы с Хабом -->
@@ -1221,7 +1231,7 @@ html.dark-theme .shift-value-toast {
             }
         })();
     </script>
-<meta name="offline-build" content="3dafe54ad1559ca680d02264"></head>
+<meta name="offline-build" content="eab8ac313e100047c92f5c00"></head>
 
 <body>
 
@@ -1254,7 +1264,7 @@ html.dark-theme .shift-value-toast {
     </a>
     </div>
 
-    <h2>Approach path calc</h2>
+    <h2 class="app-title">Approach path calc</h2>
 
 <div class="table">
         <input type="hidden" id="pathShiftInput" value="0">

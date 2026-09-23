@@ -3091,6 +3091,14 @@
     margin-top: 1px;
     text-transform: none;
 }
+        /* Заголовок страницы: единый вид на всех страницах (эталон — MyLoad) */
+        h2.app-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase;
+            text-align: center; line-height: normal; margin: 5px 0; padding: 0;
+            color: #000; opacity: 0.6;
+        }
+        html.dark-theme h2.app-title { color: #e0e0e0; }
     </style>
 
     <script>
@@ -3303,7 +3311,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="3dafe54ad1559ca680d02264"></head>
+<meta name="offline-build" content="eab8ac313e100047c92f5c00"></head>
 <body>
 
 <div class="app-wrapper">
@@ -3312,7 +3320,7 @@
             <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
         </button>
         <div class="npa-title-stack">
-            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">=NPA CALC=</h2>
+            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">NPA CALC</h2>
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">
                 <span class="npa-admin-mode-text">admin mode ON</span>
                 <svg class="npa-admin-mode-crown" viewBox="0 0 16 16" aria-hidden="true" focusable="false">

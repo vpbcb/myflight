@@ -1156,7 +1156,15 @@ button:focus:not(.paxBtn):not(.tzBtn) {
     }
 }
 
-</style>
+        /* Заголовок страницы: единый вид на всех страницах (эталон — MyLoad) */
+        h2.app-title {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.6rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase;
+            text-align: center; line-height: normal; margin: 5px 0; padding: 0;
+            color: #000; opacity: 0.6;
+        }
+        html.dark-theme h2.app-title { color: #e0e0e0; }
+    </style>
 <!-- Микро-скрипт синхронизации темы с Хабом (Без вспышек) -->
 <script>
     (function() {
@@ -1363,12 +1371,12 @@ button:focus:not(.paxBtn):not(.tzBtn) {
       }
     })();
   </script>
-<meta name="offline-build" content="3dafe54ad1559ca680d02264"></head>
+<meta name="offline-build" content="eab8ac313e100047c92f5c00"></head>
 
 <body>
 
 <div class="app-container">
-  <h2>Duty time calc</h2>
+  <h2 class="app-title">Duty time calc</h2>
 
 
 <div class="headerFixed">
