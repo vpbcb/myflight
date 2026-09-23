@@ -333,9 +333,11 @@
         }
         .action-btn { cursor: pointer; display: flex; align-items: center; justify-content: center; flex-direction: column; width: 100%; line-height: 1.1; }
         .action-btn small { font-size: 0.65rem; color: var(--dim); display: block; }
-        /* PF: «2П 80%» одной строкой, подсказка long tap курсивом под ней */
+        /* PF: «2П 80%» одной строкой, подсказка long tap курсивом под ней (так же у Land) */
         #crewBtn small { display: inline; font-size: 0.8rem; margin-left: 3px; }
-        #crewBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; margin-top: 1px; }
+        #crewBtn .crew-hint, #coursePlusBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; margin-top: 1px; }
+        /* На активной синей кнопке Land серый текст не читается — берём цвет кнопки */
+        #coursePlusBtn.active-op .crew-hint { color: inherit; opacity: 0.85; }
 
         /* --- КАРТОТЕКА И СПЕЦ-КНОПКИ --- ДВИГАТЬ ВСЮ БИБЛИОТЕКУ ВВЕРХ ВНИЗ*/
         .tabs-container { margin-top: 10px; margin-bottom: 6px; display: flex; flex-direction: column; min-width: 0; max-width: 100%; container-type: inline-size; }
@@ -934,7 +936,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
         })();
     </script>
-    <meta name="offline-build" content="5f82e343859aeea9a5206364"></head>
+    <meta name="offline-build" content="d0de5aa2fd5d7d29c7b7a6c0"></head>
 <body>
 
 <div class="calculator">
@@ -971,7 +973,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         <button class="action-btn active-op" id="courseMinusBtn" onclick="toggleOpMode('courseMinusBtn')">Take off</button>
 
         <div id="windDirInput" class="data-input" style="touch-action: pan-y; display: flex; align-items: center; justify-content: center;" onpointerdown="startPressWindDir(event)" onpointerup="endPressWindDir(event)" onpointerleave="cancelPressWindDir()" onclick="clickWindDir(event)" oncontextmenu="event.preventDefault()">243°</div>
-        <button class="action-btn" id="coursePlusBtn" style="touch-action: pan-y;" onpointerdown="startPressLand(event)" onpointerup="endPressLand(event)" onpointerleave="cancelPressLand()" oncontextmenu="event.preventDefault()">Land</button>
+        <button class="action-btn" id="coursePlusBtn" style="touch-action: pan-y;" onpointerdown="startPressLand(event)" onpointerup="endPressLand(event)" onpointerleave="cancelPressLand()" oncontextmenu="event.preventDefault()"><span>Land</span><em class="crew-hint">(long tap)</em></button>
 
         <button class="action-btn" id="crewBtn" style="touch-action: pan-y;" onpointerdown="startPressCrew(event)" onpointerup="endPressCrew(event)" onpointerleave="cancelPressCrew()" oncontextmenu="event.preventDefault()">
             <span style="font-size:1.1rem; font-weight: 800;">КВС</span>

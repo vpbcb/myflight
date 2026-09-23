@@ -92,3 +92,9 @@ test('plaque appears without an opacity fade and refreshes with every table upda
     assert.match(rule, /opacity:\s*0;/);
     assert.match(myWindHtml, /function updateTable\(options = \{\}\) \{\s*const tableBody = document\.getElementById\('tableBody'\);\s*if \(!tableBody\) return;\s*updateStatusRow\(\);/);
 });
+
+test('Land button shows the same (long tap) hint as the 2П crew button', () => {
+    assert.match(myWindHtml, /id="coursePlusBtn"[^>]*><span>Land<\/span><em class="crew-hint">\(long tap\)<\/em><\/button>/);
+    assert.match(myWindHtml, /#crewBtn \.crew-hint, #coursePlusBtn \.crew-hint \{[^}]*display: block;[^}]*font-style: italic;/);
+    assert.match(myWindHtml, /#coursePlusBtn\.active-op \.crew-hint \{ color: inherit;/);
+});
