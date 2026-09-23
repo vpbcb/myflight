@@ -61,7 +61,9 @@ test('status row shows the runway state from the shared ESF mapping', () => {
     expected.forEach((esf, index) => {
         const { content } = renderStatusRow(index);
         assert.equal(content.className, 'status-content');
-        assert.equal(content.children[0], 'A320W + TAKEOFF + КВС + RW');
+        const main = content.children[0];
+        assert.equal(main.children.map(part => typeof part === 'string' ? part : part.textContent).join(''), 'A320W + TAKEOFF + КВС + RW');
+        assert.deepEqual(main.children.filter(part => typeof part !== 'string').map(part => part.className), ['status-muted', 'status-muted', 'status-muted', 'status-muted']);
         const esfEl = content.children[1];
         if (Array.isArray(esf)) {
             assert.equal(esfEl.className, 'status-esf-stack', `row ${index}`);
@@ -89,6 +91,7 @@ test('plaque appears without an opacity fade and refreshes with every table upda
     const rule = myWindHtml.match(/\.land-status-row\s*\{[^}]*\}/)[0];
     assert.doesNotMatch(rule, /transition:[^;]*opacity/);
     assert.match(rule, /opacity:\s*0;/);
+    assert.match(myWindHtml, /\.land-status-row \.status-muted \{\s*font-weight: 500;\s*opacity: 0\.85;/);
     assert.match(rule, /font-weight:\s*700;/);
     assert.match(myWindHtml, /function updateTable\(options = \{\}\) \{\s*const tableBody = document\.getElementById\('tableBody'\);\s*if \(!tableBody\) return;\s*updateStatusRow\(\);/);
 });

@@ -518,6 +518,10 @@
             vertical-align: middle;
         }
         /* GOOD TO / MEDIUM и MEDIUM / TO POOR — в две строки высотой в одну */
+        .land-status-row .status-muted {
+            font-weight: 500;
+            opacity: 0.85;
+        }
         .land-status-row .status-esf-stack {
             display: inline-flex;
             flex-direction: column;
@@ -936,7 +940,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             }
         })();
     </script>
-    <meta name="offline-build" content="89db893385796b50295039b2"></head>
+    <meta name="offline-build" content="ca629138b97d5f5f3de55453"></head>
 <body>
 
 <div class="calculator">
@@ -1975,7 +1979,20 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         // Собираем всё вместе
         const content = document.createElement('span');
         content.className = 'status-content';
-        content.append(`${acStr} + ${opStr} + ${crewStr} + RW`, esfEl);
+        // Плюсы и «RW» — отдельными элементами: не жирные и чуть светлее текста
+        const mutedEl = text => {
+            const el = document.createElement('span');
+            el.className = 'status-muted';
+            el.textContent = text;
+            return el;
+        };
+        const mainEl = document.createElement('span');
+        [acStr, ...opStr.split(' + '), crewStr].forEach((part, index) => {
+            if (index) mainEl.append(' ', mutedEl('+'), ' ');
+            mainEl.append(part);
+        });
+        mainEl.append(' ', mutedEl('+'), ' ', mutedEl('RW'));
+        content.append(mainEl, esfEl);
         statusRow.replaceChildren(content);
         fitStatusRow(statusRow);
     }
