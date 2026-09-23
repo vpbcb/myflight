@@ -798,7 +798,7 @@ html.dark-theme input[readonly] {
                         <span>Aircraft</span>
                         <span class="help-icon" onclick="toggleHelp()">?</span>
                     </div>
-                  <input type="text" id="acSearch" placeholder="Номер/Имя" class="nav-input"
+                  <input type="text" id="acSearch" class="nav-input"
        onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
        onblur="this.placeholder=this.dataset.ph"
        oninput="searchAircraft()"
@@ -1063,7 +1063,7 @@ html.dark-theme input[readonly] {
             <div class="col">
                 <div class="tile-gray">
                     <span class="label-tile">Taxi</span>
-                    <input type="number" inputmode="numeric" enterkeyhint="done" id="taxi" value="200" placeholder="200" class="nav-input"
+                    <input type="number" inputmode="numeric" enterkeyhint="done" id="taxi" value="200" placeholder="0" class="nav-input"
                            onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
                            onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()"
@@ -1390,6 +1390,28 @@ html.dark-theme input[readonly] {
         if (el) el.setAttribute('tabindex', '-1');
     });
 
+    // Backspace/Delete в полях загрузки и топлива обнуляет поле целиком, а не стирает по одной цифре.
+    // beforeinput нужен для Android-клавиатур, которые не всегда присылают keydown с key === 'Backspace'.
+    const clearOnDeleteIds = ['cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5',
+        'paxOA', 'paxOB', 'paxOC', 'paxOD', 'totalFuel', 'taxi'];
+    function clearFieldToZero(event) {
+        const el = event.target;
+        if (el.value === '') return;
+        event.preventDefault();
+        el.value = '';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    clearOnDeleteIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('keydown', event => {
+            if (event.key === 'Backspace' || event.key === 'Delete') clearFieldToZero(event);
+        });
+        el.addEventListener('beforeinput', event => {
+            if (event.inputType && event.inputType.startsWith('delete')) clearFieldToZero(event);
+        });
+    });
+
     // Навешиваем логику на каждое поле ввода
     navOrder.forEach((id, index) => {
         const el = document.getElementById(id);
@@ -1588,14 +1610,9 @@ html.dark-theme input[readonly] {
     // --- ЛОГИКА КНОПКИ REFRESH (Клик и Долгое удержание) ---
     // --- ЛОГИКА КНОПКИ REFRESH (Только одиночный клик) ---
     function clearFields() {
-        // 1. Очищаем поле поиска
-        const searchInput = document.getElementById('acSearch');
-        if (searchInput) searchInput.value = '';
+        // Борт и экипаж Refresh не трогает — очищается только загрузка и топливо.
 
-        // 2. Сбрасываем самолет
-        clearAircraftSelection(); 
-        
-        // 3. Жестко очищаем ВСЕ оставшиеся поля
+        // Жестко очищаем поля загрузки и результаты
         const idsToClear = [
             'payload', 'zfw', 'macZfw', 'macTow', 'stabTo',
             'cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5',
@@ -1624,7 +1641,8 @@ html.dark-theme input[readonly] {
         document.getElementById('payloadValueWrap').classList.remove('bg-brown');
         document.getElementById('payloadSource').textContent = '';
 
-        saveFormData(); // Сохраняем пустой стейт
+        calculateAll(); // Пересчитываем результаты для оставленного борта
+        saveFormData();
     }
 
     function initRefreshButton() {
