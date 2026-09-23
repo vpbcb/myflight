@@ -37,11 +37,27 @@ async function readDescriptor(name, verify = true) {
     return { name, cache, meta };
   } catch { return null; }
 }
-async function completeBuilds() {
+// Selection order needs only the release markers; resources are verified by the callers.
+async function candidateBuilds() {
   const names = (await caches.keys()).filter(name => name.startsWith(CACHE_PREFIX));
-  const builds = (await Promise.all(names.map(name => readDescriptor(name)))).filter(Boolean);
+  const builds = (await Promise.all(names.map(name => readDescriptor(name, false)))).filter(Boolean);
   return builds.sort((a, b) => Number(b.meta.id === PRECACHE_BUILD?.id) - Number(a.meta.id === PRECACHE_BUILD?.id)
     || b.meta.installedAt - a.meta.installedAt);
+}
+async function completeBuilds() {
+  return (await Promise.all((await candidateBuilds()).map(build => readDescriptor(build.name)))).filter(Boolean);
+}
+// Same order and full verification as completeBuilds(), but backups are hashed only when
+// every preferred build has failed; a navigation no longer hashes every retained release.
+async function* completeBuildsInOrder(accept = () => true) {
+  for (const candidate of await candidateBuilds()) {
+    if (!accept(candidate.meta)) continue;
+    const build = await readDescriptor(candidate.name);
+    if (build && accept(build.meta)) yield build;
+  }
+}
+async function firstCompleteBuild(accept) {
+  for await (const build of completeBuildsInOrder(accept)) return build;
 }
 async function downloadAsset(cache, asset) {
   const controller = new AbortController();
@@ -64,7 +80,7 @@ function ensureCurrentBuild() {
   if (repairPromise) return repairPromise;
   repairPromise = (async () => {
     if (!PRECACHE_BUILD?.assets?.length) throw new Error("Build the offline shell before publishing");
-    const existing = (await completeBuilds()).find(item => item.meta.id === PRECACHE_BUILD.id);
+    const existing = await firstCompleteBuild(meta => meta.id === PRECACHE_BUILD.id);
     if (existing) return existing;
     // Even repair writes elsewhere: an open page may still use the damaged cache.
     const names = await caches.keys();
@@ -114,7 +130,7 @@ async function legacyMatch(request) {
 async function matchAppCaches(request, clientId) {
   if (!belongsToApp(new URL(urlOf(request)))) return undefined;
   const pin = await pinnedBuild(clientId);
-  for (const build of pin ? [pin] : await completeBuilds()) {
+  for await (const build of pin ? [pin] : completeBuildsInOrder()) {
     const response = await build.cache.match(request);
     if (!response) continue;
     const asset = build.meta.assets.find(asset => appUrl(asset.url) === urlOf(request));
@@ -134,7 +150,7 @@ async function fetchWithTimeout(request, milliseconds = 5000) {
 }
 async function appShellResponse(request, clientId) {
   try {
-    let build = (await completeBuilds())[0];
+    let build = await firstCompleteBuild();
     if (!build) { try { build = await ensureCurrentBuild(); } catch { /* Legacy fallback below. */ } }
     if (build) {
       const relative = new URL(urlOf(request)).pathname.slice(APP_BASE_URL.pathname.length);
@@ -208,8 +224,10 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || !belongsToApp(new URL(request.url))) return;
   if (request.mode === "navigate") {
-    event.respondWith(appShellResponse(request, event.resultingClientId));
-    event.waitUntil(warmOptionalCache());
+    const response = appShellResponse(request, event.resultingClientId);
+    event.respondWith(response);
+    // Optional images wait for the page so they do not compete with it for storage.
+    event.waitUntil(response.then(warmOptionalCache, warmOptionalCache));
   } else event.respondWith(cacheFirst(request, event.clientId));
 });
 self.addEventListener("message", event => {
@@ -219,12 +237,12 @@ self.addEventListener("message", event => {
       if (type === "ACTIVATE_UPDATE" || type === "SKIP_WAITING") { await ensureCurrentBuild(); await self.skipWaiting(); return; }
       if (type === "REPAIR_OFFLINE_CACHE") await ensureCurrentBuild();
       if (type === "CLIENT_READY") {
-        const build = (await completeBuilds()).find(build => build.meta.id === event.data.buildId);
+        const build = await firstCompleteBuild(meta => meta.id === event.data.buildId);
         if (build && event.source?.id) { await pinClient(event.source.id, build); await collectOldBuilds(); }
         return;
       }
       if (type === "WARM_OPTIONAL_CACHE") { await warmOptionalCache(); reply({ complete: true }); return; }
-      const build = (await completeBuilds()).find(build => build.meta.id === PRECACHE_BUILD?.id);
+      const build = await firstCompleteBuild(meta => meta.id === PRECACHE_BUILD?.id);
       if (type === "GET_CACHE_NAME") { reply({ cacheName: APP_CACHE, buildId: build?.meta.id }); return; }
       if (type === "GET_APP_INSTALLATION") { reply({ appCache: APP_CACHE, installedAt: build?.meta.installedAt ?? null }); return; }
       reply({ ready: Boolean(build), buildId: build?.meta.id, protocol: 2 });

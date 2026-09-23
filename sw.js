@@ -1,6 +1,6 @@
 const CACHE_NAME = 'myflight_v.260922-14';
 const APP_CACHE = CACHE_NAME;
-const PRECACHE_BUILD = {"id":"5450f1d740fe2b2ffe0db707","assets":[{"url":"app.js","sha256":"3818287cba0a696d99b342ca934ea8da2c46b69edb8811213a3858e62c6ea278","mime":["text/javascript","application/javascript"]},{"url":"bottom-navigation.css","sha256":"38668d2d777be44a430d3598f0a2439c34e4ca48a8de6d9958592b87e64279e2","mime":["text/css"]},{"url":"dbaircraft.js","sha256":"6158e2df5043f5c19efebfa5ebdce36a46b3f9f4f7a855a2889e84e7710154e8","mime":["text/javascript","application/javascript"]},{"url":"dbloadsheet.js","sha256":"f4edeb7ac2c3fb1104357e3a8343c95ceb3a3452fbd0f46a51d0165234aa3246","mime":["text/javascript","application/javascript"]},{"url":"icons/myshifticon.png","sha256":"e10b40aca1cd867a6a7d251cbe015e9e57c660c8bf83a4fe958c221fc19d2d7d","mime":["image/png"]},{"url":"index.html","sha256":"282d707b79d0ece84f01f7ecfe607f11d9469f26dbdc6b26ea7817d2513f5ae4","mime":["text/html"]},{"url":"loadsheet.js","sha256":"2784d332c115fb4ab9402ab2c6ddda301e8920d25946a69d4f68ff905195ac48","mime":["text/javascript","application/javascript"]},{"url":"manifest.json","sha256":"e382db87c44960721e4b8ab0cd06a97d665d8dea6fce18564324fe645c3d913d","mime":["application/json","application/manifest+json"]},{"url":"myfuel.html","sha256":"97aaa050651a351b3068d94465769455d077ad92c1ce07df508e3011916abbcb","mime":["text/html"]},{"url":"mynpa.html","sha256":"2c2d5121a7a50de0b4deabcd2e80f3b6768792dda89f8728ab76ad8b3826cdff","mime":["text/html"]},{"url":"mypath.html","sha256":"7afcd4a522d3f48d54ae83a70cc3cbbafcab427457df9142ad8f8d81aa3711d9","mime":["text/html"]},{"url":"myshift.html","sha256":"a0931c39cefa82015d2569974b4371746d9cb0a4a93d52455d2831d896795771","mime":["text/html"]},{"url":"mywind.html","sha256":"616fb38760ffb7b40d54cece431347e7040607210fcbfab6157df7eb2543852f","mime":["text/html"]},{"url":"offline-client.js","sha256":"586b942a120aa82cf89c3da5aa75fcc120d76df670550a02fe9167225ec9d112","mime":["text/javascript","application/javascript"]},{"url":"offline.html","sha256":"2a0704fc89958a54f1ace9f86d8ee83424ce21d1fc6d3a61f0c43fdc04b658f2","mime":["text/html"]},{"url":"suflights.js","sha256":"cf60f70830ceedeb0242971216ccced6d4246313e6e84a3b77913113d7543235","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-app-compat.js","sha256":"2d038b9f99cdc28119b4e5c2a4ed86d561fc36c051e515ef35176b1cabe780c1","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-auth-compat.js","sha256":"1451e1285d1a09eed6c9f71b07ba01fb097add66b024d13e2454ba07d50a53c6","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-database-compat.js","sha256":"1fdd331f8fd0448f9d7ce97573cb828a83aad7a7bb2c4da0e75fdb9563eef129","mime":["text/javascript","application/javascript"]}]};
+const PRECACHE_BUILD = {"id":"105cbe2d7e399993055c2831","assets":[{"url":"app.js","sha256":"3818287cba0a696d99b342ca934ea8da2c46b69edb8811213a3858e62c6ea278","mime":["text/javascript","application/javascript"]},{"url":"bottom-navigation.css","sha256":"38668d2d777be44a430d3598f0a2439c34e4ca48a8de6d9958592b87e64279e2","mime":["text/css"]},{"url":"dbaircraft.js","sha256":"6158e2df5043f5c19efebfa5ebdce36a46b3f9f4f7a855a2889e84e7710154e8","mime":["text/javascript","application/javascript"]},{"url":"dbloadsheet.js","sha256":"f4edeb7ac2c3fb1104357e3a8343c95ceb3a3452fbd0f46a51d0165234aa3246","mime":["text/javascript","application/javascript"]},{"url":"icons/myshifticon.png","sha256":"e10b40aca1cd867a6a7d251cbe015e9e57c660c8bf83a4fe958c221fc19d2d7d","mime":["image/png"]},{"url":"index.html","sha256":"e894e884022bfb9431ce39b13606e23a51d8fbad19f2f90ab9bdea061a02ba45","mime":["text/html"]},{"url":"loadsheet.js","sha256":"2784d332c115fb4ab9402ab2c6ddda301e8920d25946a69d4f68ff905195ac48","mime":["text/javascript","application/javascript"]},{"url":"manifest.json","sha256":"e382db87c44960721e4b8ab0cd06a97d665d8dea6fce18564324fe645c3d913d","mime":["application/json","application/manifest+json"]},{"url":"myfuel.html","sha256":"275dff08dfdd0b59b4d55c926526f2eb91fd0b1fc8b5426c305425612c49e91a","mime":["text/html"]},{"url":"mynpa.html","sha256":"cd7b69eb96df9f1cec678f353afb3c993310a4eac6e695efea4dd14162ed1079","mime":["text/html"]},{"url":"mypath.html","sha256":"aea7118d0dd11a2761c364af4f306f8d5052ad62fe897c9e0f06826775f9955c","mime":["text/html"]},{"url":"myshift.html","sha256":"a37707eb9624d24a15a4b31dc4a39ec59f881e9509acb1f97346e2d6622291b4","mime":["text/html"]},{"url":"mywind.html","sha256":"1db366920eff944ef1d92a525e05a7c78efc918d114cb7af93a69f6d79caa2f0","mime":["text/html"]},{"url":"offline-client.js","sha256":"586b942a120aa82cf89c3da5aa75fcc120d76df670550a02fe9167225ec9d112","mime":["text/javascript","application/javascript"]},{"url":"offline.html","sha256":"85875156f6b74732a594e78ecb345e77b1de918b3f9af72440fdaf23be92b1ef","mime":["text/html"]},{"url":"suflights.js","sha256":"cf60f70830ceedeb0242971216ccced6d4246313e6e84a3b77913113d7543235","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-app-compat.js","sha256":"2d038b9f99cdc28119b4e5c2a4ed86d561fc36c051e515ef35176b1cabe780c1","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-auth-compat.js","sha256":"1451e1285d1a09eed6c9f71b07ba01fb097add66b024d13e2454ba07d50a53c6","mime":["text/javascript","application/javascript"]},{"url":"vendor/firebase-database-compat.js","sha256":"1fdd331f8fd0448f9d7ce97573cb828a83aad7a7bb2c4da0e75fdb9563eef129","mime":["text/javascript","application/javascript"]}]};
 const APP_ID = "myflight";
 const LEGACY_PREFIXES = ["myflight_"];
 const OPTIONAL_ASSETS = ["myflightlogo.png", "icons/myshifticon.png", "icons/icon-shortcut-144.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-192.png", "icons/icon-maskable-512.png", "toicon.png", "landicon.png", "fdp.png", "fap.png", "handicon.png"];
@@ -37,11 +37,27 @@ async function readDescriptor(name, verify = true) {
     return { name, cache, meta };
   } catch { return null; }
 }
-async function completeBuilds() {
+// Selection order needs only the release markers; resources are verified by the callers.
+async function candidateBuilds() {
   const names = (await caches.keys()).filter(name => name.startsWith(CACHE_PREFIX));
-  const builds = (await Promise.all(names.map(name => readDescriptor(name)))).filter(Boolean);
+  const builds = (await Promise.all(names.map(name => readDescriptor(name, false)))).filter(Boolean);
   return builds.sort((a, b) => Number(b.meta.id === PRECACHE_BUILD?.id) - Number(a.meta.id === PRECACHE_BUILD?.id)
     || b.meta.installedAt - a.meta.installedAt);
+}
+async function completeBuilds() {
+  return (await Promise.all((await candidateBuilds()).map(build => readDescriptor(build.name)))).filter(Boolean);
+}
+// Same order and full verification as completeBuilds(), but backups are hashed only when
+// every preferred build has failed; a navigation no longer hashes every retained release.
+async function* completeBuildsInOrder(accept = () => true) {
+  for (const candidate of await candidateBuilds()) {
+    if (!accept(candidate.meta)) continue;
+    const build = await readDescriptor(candidate.name);
+    if (build && accept(build.meta)) yield build;
+  }
+}
+async function firstCompleteBuild(accept) {
+  for await (const build of completeBuildsInOrder(accept)) return build;
 }
 async function downloadAsset(cache, asset) {
   const controller = new AbortController();
@@ -64,7 +80,7 @@ function ensureCurrentBuild() {
   if (repairPromise) return repairPromise;
   repairPromise = (async () => {
     if (!PRECACHE_BUILD?.assets?.length) throw new Error("Build the offline shell before publishing");
-    const existing = (await completeBuilds()).find(item => item.meta.id === PRECACHE_BUILD.id);
+    const existing = await firstCompleteBuild(meta => meta.id === PRECACHE_BUILD.id);
     if (existing) return existing;
     // Even repair writes elsewhere: an open page may still use the damaged cache.
     const names = await caches.keys();
@@ -114,7 +130,7 @@ async function legacyMatch(request) {
 async function matchAppCaches(request, clientId) {
   if (!belongsToApp(new URL(urlOf(request)))) return undefined;
   const pin = await pinnedBuild(clientId);
-  for (const build of pin ? [pin] : await completeBuilds()) {
+  for await (const build of pin ? [pin] : completeBuildsInOrder()) {
     const response = await build.cache.match(request);
     if (!response) continue;
     const asset = build.meta.assets.find(asset => appUrl(asset.url) === urlOf(request));
@@ -134,7 +150,7 @@ async function fetchWithTimeout(request, milliseconds = 5000) {
 }
 async function appShellResponse(request, clientId) {
   try {
-    let build = (await completeBuilds())[0];
+    let build = await firstCompleteBuild();
     if (!build) { try { build = await ensureCurrentBuild(); } catch { /* Legacy fallback below. */ } }
     if (build) {
       const relative = new URL(urlOf(request)).pathname.slice(APP_BASE_URL.pathname.length);
@@ -208,8 +224,10 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET" || !belongsToApp(new URL(request.url))) return;
   if (request.mode === "navigate") {
-    event.respondWith(appShellResponse(request, event.resultingClientId));
-    event.waitUntil(warmOptionalCache());
+    const response = appShellResponse(request, event.resultingClientId);
+    event.respondWith(response);
+    // Optional images wait for the page so they do not compete with it for storage.
+    event.waitUntil(response.then(warmOptionalCache, warmOptionalCache));
   } else event.respondWith(cacheFirst(request, event.clientId));
 });
 self.addEventListener("message", event => {
@@ -219,12 +237,12 @@ self.addEventListener("message", event => {
       if (type === "ACTIVATE_UPDATE" || type === "SKIP_WAITING") { await ensureCurrentBuild(); await self.skipWaiting(); return; }
       if (type === "REPAIR_OFFLINE_CACHE") await ensureCurrentBuild();
       if (type === "CLIENT_READY") {
-        const build = (await completeBuilds()).find(build => build.meta.id === event.data.buildId);
+        const build = await firstCompleteBuild(meta => meta.id === event.data.buildId);
         if (build && event.source?.id) { await pinClient(event.source.id, build); await collectOldBuilds(); }
         return;
       }
       if (type === "WARM_OPTIONAL_CACHE") { await warmOptionalCache(); reply({ complete: true }); return; }
-      const build = (await completeBuilds()).find(build => build.meta.id === PRECACHE_BUILD?.id);
+      const build = await firstCompleteBuild(meta => meta.id === PRECACHE_BUILD?.id);
       if (type === "GET_CACHE_NAME") { reply({ cacheName: APP_CACHE, buildId: build?.meta.id }); return; }
       if (type === "GET_APP_INSTALLATION") { reply({ appCache: APP_CACHE, installedAt: build?.meta.installedAt ?? null }); return; }
       reply({ ready: Boolean(build), buildId: build?.meta.id, protocol: 2 });

@@ -116,3 +116,22 @@ test('legacy cleanup cannot delete new protocol caches', async () => {
   app.offline();
   assert.match(await (await vm.runInContext(`appShellResponse(new Request('${scope}'))`, app.context)).text(), /safe/);
 });
+
+test('wrong bytes in the current release select the complete backup offline', async () => {
+  const old = worker('old'); await old.install();
+  const next = worker('new', old.storage); await next.install();
+  for (const [name, entries] of old.storage) if (name.endsWith(':new')) entries.set(scope + 'app.js', new Response('/* tampered */'));
+  next.offline();
+  assert.match(await (await vm.runInContext(`appShellResponse(new Request('${scope}'), 'window')`, next.context)).text(), /old/);
+  assert.match(await (await vm.runInContext(`cacheFirst(new Request('${scope}app.js'), 'window')`, next.context)).text(), /old/);
+});
+test('navigation hashes only the preferred release when it is complete', async () => {
+  const storage = new Map();
+  for (const id of ['first', 'second']) await worker(id, storage).install();
+  const current = worker('third', storage); await current.install();
+  let hashed = 0;
+  current.context.crypto = { subtle: { digest: (...args) => { hashed++; return webcrypto.subtle.digest(...args); } } };
+  current.offline();
+  assert.match(await (await vm.runInContext(`appShellResponse(new Request('${scope}'))`, current.context)).text(), /third/);
+  assert.equal(hashed, 3);
+});
