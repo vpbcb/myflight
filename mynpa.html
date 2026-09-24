@@ -1658,8 +1658,9 @@
             position: absolute;
             top: calc(100% + 5px);
             left: 50%;
-            width: max(100%, 5.6em);
-            min-width: 5.6em;
+            /* Узкое меню: при центровке над полем GPA у левого края не выходит за экран */
+            width: max(100%, 4.2em);
+            min-width: 4.2em;
             box-sizing: border-box;
             z-index: 3000;
             display: none;
@@ -1687,7 +1688,8 @@
         .gpa-menu-item:last-child {
             border-bottom: none;
             color: var(--accent-orange);
-            font-weight: 800;
+            font-size: clamp(0.6rem, 3.3vw, 0.75rem);
+            font-weight: 500;
         }
 
         .gpa-menu-item:active {
@@ -3383,7 +3385,7 @@
                                     <div class="gpa-menu-item" onclick="setGpa(2.7, event)">2.7°</div>
                                     <div class="gpa-menu-item" onclick="setGpa(3.0, event)">3.0°</div>
                                     <div class="gpa-menu-item" onclick="setGpa(3.5, event)">3.5°</div>
-                                    <div class="gpa-menu-item" onclick="setGpa('another', event)">Another...</div>
+                                    <div class="gpa-menu-item" onclick="setGpa('another', event)">Another</div>
                                 </div>
                             </div>
                         </div>
