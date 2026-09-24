@@ -107,8 +107,8 @@
             max-width: 100%;
             overflow: hidden;
             z-index: 30;
-            margin: 5px 0 var(--bottom-nav-reserved-height, 0px) 0;
-            padding: 8px 10px 6px;
+            margin: 0 0 var(--bottom-nav-reserved-height, 0px) 0; /* Верхний отступ минимальный: карточка Airport ближе к строке замка и шестерёнки */
+            padding: 2px 10px 6px;
             background: transparent;
             border: none;
         }
@@ -119,7 +119,7 @@
             position: relative;
             flex-shrink: 0;
             min-height: max(36px, calc(var(--safe-top) + 32px));
-            padding: max(2px, calc(var(--safe-top) + 2px)) 8px 4px;
+            padding: max(2px, calc(var(--safe-top) + 2px)) 8px 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -932,6 +932,10 @@
             max-height: none;
             opacity: 1;
             transform: none;
+        }
+        /* Подсказка под таблицей профиля заходит в нижний padding карточки — не обрезаем её краем панели */
+        #npaBlock4.npa-tab-panel.open {
+            overflow: visible;
         }
         .npa-tab-panel .card-content {
             padding: 0;
@@ -2849,9 +2853,13 @@
             margin: 1px 0 0;
             padding: 0 4px;
             min-height: 12px;
-            color: var(--text-muted);
-            font-size: 9px;
-            font-weight: 700;
+            /* Шрифт и бледность как у подсказки под таблицей на MyWind (.table-hint) */
+            color: #64748b;
+            opacity: 0.6;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: clamp(0.5rem, 2.6vw, 0.68rem);
+            font-style: italic;
+            font-weight: 500;
             line-height: 1.1;
             display: flex;
             flex-wrap: wrap;
@@ -2866,7 +2874,7 @@
             white-space: nowrap;
         }
         html.dark-theme .npa-profile-unit-hint {
-            color: #94a3b8;
+            color: #96a4b3;
         }
         .npa-profile-shift-label {
             display: none;
@@ -3320,7 +3328,7 @@
             <span class="bottom-edit-lock-hint" id="npaEditLockHint">hold to unlock<br>and edit data</span>
         </button>
         <div class="npa-title-stack">
-            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">NPA CALC</h2>
+            <h2 class="app-title" id="npaCalcTitle" title="Double tap or long press for admin login">NPA CALCULATOR</h2>
             <span class="npa-admin-mode-label" id="npaAdminModeLabel">
                 <span class="npa-admin-mode-text">admin mode ON</span>
                 <svg class="npa-admin-mode-crown" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -3506,7 +3514,7 @@
                                 </div>
                                 <div class="npa-profile-body" id="npaProfileTableBody"></div>
                             </div>
-                            <div class="npa-profile-unit-hint"><span>short tap on either column will highlite it,long tap will switch nm/km</span></div>
+                            <div class="npa-profile-unit-hint"><span>short tap on either column will highlight it, long tap will switch nm/km</span></div>
                         </div>
                     </div>
                 </div>
@@ -5903,7 +5911,8 @@
         const tableRect = table.getBoundingClientRect();
         const minTableHeight = 80;
         const minBodyHeight = 50;
-        const hintHeight = hint ? Math.ceil(hint.getBoundingClientRect().height) + 8 : 0;
+        // +2: промежуток под подсказкой (до нижнего края карточки) такой же, как над ней (от таблицы)
+        const hintHeight = hint ? Math.ceil(hint.getBoundingClientRect().height) + 2 : 0;
 
         const availableTableHeight = Math.floor(contentBottom - tableRect.top - hintHeight);
         const blockHeight = Math.max(0, contentHeight - 16);

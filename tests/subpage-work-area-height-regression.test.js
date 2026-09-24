@@ -23,8 +23,8 @@ test('shared navigation exposes one adaptive reserved height', () => {
 });
 
 test('four calculator work areas reserve exactly the shared navigation height', () => {
-    assert.match(myNpaHtml, /\.precision-scroll-container\s*\{[^}]*margin:\s*5px 0 var\(--bottom-nav-reserved-height,\s*0px\) 0;/);
-    assert.match(myNpaHtml, /\.precision-scroll-container\s*\{[^}]*padding:\s*8px 10px 6px;/);
+    assert.match(myNpaHtml, /\.precision-scroll-container\s*\{[^}]*margin:\s*0 0 var\(--bottom-nav-reserved-height,\s*0px\) 0;/);
+    assert.match(myNpaHtml, /\.precision-scroll-container\s*\{[^}]*padding:\s*2px 10px 6px;/);
     assert.match(myNpaHtml, /\.npa-tabs-card\s*\{[^}]*margin-bottom:\s*0;/);
     assert.match(myShiftHtml, /\.app-container\s*\{[^}]*padding-bottom:\s*var\(--bottom-nav-reserved-height,\s*max\(44px,\s*calc\(var\(--safe-bottom\)\s*\+\s*40px\)\)\);/);
 });
