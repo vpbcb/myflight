@@ -14,7 +14,7 @@ const between = (start, end) => {
 const rwyMappingSource = between('const rwyMapping = [', '];') + '];';
 const statusRowSource = between('    // ESF: длинные состояния', "    window.addEventListener('resize'");
 
-// Minimal DOM: text width = characters × font size × 0.7 (+ letter spacing), enough to exercise the fit loop.
+// Minimal DOM: text width = characters × font size × 0.7, enough to exercise the fit loop.
 function createElement() {
     return {
         className: '', textContent: '', children: [], style: {},
@@ -46,9 +46,8 @@ function renderStatusRow(mappingIndex, { width = 360, opMode = 'courseMinusBtn',
         const element = originalCreate();
         element.getBoundingClientRect = () => {
             const size = parseFloat(element.style.fontSize) || 15;
-            const spacing = element.style.letterSpacing === '0px' ? 0 : 1;
             const chars = element.text().replace(/\s+/g, ' ').length;
-            return { width: chars * (size * 0.7 + spacing) };
+            return { width: chars * size * 0.7 };
         };
         return element;
     };
@@ -63,7 +62,7 @@ test('status row shows the runway state from the shared ESF mapping', () => {
         assert.equal(content.className, 'status-content');
         const main = content.children[0];
         assert.equal(main.children.map(part => typeof part === 'string' ? part : part.textContent).join(''), 'A320W + TAKEOFF + КВС + RW');
-        assert.deepEqual(main.children.filter(part => typeof part !== 'string').map(part => part.className), ['status-muted', 'status-muted', 'status-muted', 'status-muted']);
+        assert.deepEqual(main.children.filter(part => typeof part !== 'string').map(part => part.className), ['status-muted', 'status-muted', 'status-muted', 'status-muted status-rw']);
         const esfEl = content.children[1];
         if (Array.isArray(esf)) {
             assert.equal(esfEl.className, 'status-esf-stack', `row ${index}`);
@@ -77,12 +76,11 @@ test('status row shows the runway state from the shared ESF mapping', () => {
 test('long status text is shrunk to fit the plaque, short text is left alone', () => {
     const short = renderStatusRow(0, { width: 420 }).content;
     assert.equal(short.style.fontSize, '');
-    assert.equal(short.style.letterSpacing, '');
 
     const long = renderStatusRow(3, { width: 340, opMode: 'coursePlusBtn', land: 'AUTOLAND + AUTOROLL', aircraft: 'A321 neo', crew: '2П 80%' }).content;
     const width = long.getBoundingClientRect().width;
     assert.ok(width <= 336, `content ${width}px must fit 336px`);
-    assert.equal(long.style.letterSpacing, '0px');
+    assert.equal(long.style.letterSpacing, undefined);
     assert.equal(long.style.fontWeight, undefined);
     assert.ok(parseFloat(long.style.fontSize) < 15);
 });
@@ -92,7 +90,9 @@ test('plaque appears without an opacity fade and refreshes with every table upda
     assert.doesNotMatch(rule, /transition:[^;]*opacity/);
     assert.match(rule, /opacity:\s*0;/);
     assert.match(myWindHtml, /\.land-status-row \.status-muted \{\s*font-weight: 500;\s*opacity: 0\.85;/);
+    assert.match(myWindHtml, /\.land-status-row \.status-rw \{\s*font-size: 0\.75em;\s*vertical-align: 0\.12em;/);
     assert.match(rule, /font-weight:\s*700;/);
+    assert.match(rule, /letter-spacing:\s*0;/);
     assert.match(myWindHtml, /function updateTable\(options = \{\}\) \{\s*const tableBody = document\.getElementById\('tableBody'\);\s*if \(!tableBody\) return;\s*updateStatusRow\(\);/);
 });
 

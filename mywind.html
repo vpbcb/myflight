@@ -501,7 +501,7 @@
             padding: 5px 2px;
             margin-top: 8px;
             width: 100%;
-            letter-spacing: 1px; /* Сжали интервал, чтобы всё влезло */
+            letter-spacing: 0; /* Всегда без разрядки: плотность текста одинакова при любой длине строки */
             line-height: 1.25;
             text-transform: uppercase;
             /* Без анимации opacity: плашка появляется в том же кадре, что и таблица */
@@ -521,6 +521,11 @@
         .land-status-row .status-muted {
             font-weight: 500;
             opacity: 0.85;
+        }
+        /* Мелкий RW поднят так, чтобы середина его заглавных совпадала с серединой остального текста */
+        .land-status-row .status-rw {
+            font-size: 0.75em;
+            vertical-align: 0.12em;
         }
         .land-status-row .status-esf-stack {
             display: inline-flex;
@@ -1980,9 +1985,9 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         const content = document.createElement('span');
         content.className = 'status-content';
         // Плюсы и «RW» — отдельными элементами: не жирные и чуть светлее текста
-        const mutedEl = text => {
+        const mutedEl = (text, extraClass = '') => {
             const el = document.createElement('span');
-            el.className = 'status-muted';
+            el.className = extraClass ? `status-muted ${extraClass}` : 'status-muted';
             el.textContent = text;
             return el;
         };
@@ -1991,7 +1996,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             if (index) mainEl.append(' ', mutedEl('+'), ' ');
             mainEl.append(part);
         });
-        mainEl.append(' ', mutedEl('+'), ' ', mutedEl('RW'));
+        mainEl.append(' ', mutedEl('+'), ' ', mutedEl('RW', 'status-rw'));
         content.append(mainEl, esfEl);
         statusRow.replaceChildren(content);
         fitStatusRow(statusRow);
@@ -2001,13 +2006,11 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     function fitStatusRow(statusRow) {
         const content = statusRow.querySelector('.status-content');
         if (!content) return;
-        content.style.letterSpacing = content.style.fontSize = '';
+        content.style.fontSize = '';
         const style = getComputedStyle(statusRow);
         const available = statusRow.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
         if (!(available > 0)) return;
         const fits = () => content.getBoundingClientRect().width <= available;
-        if (fits()) return;
-        content.style.letterSpacing = '0px';
         if (fits()) return;
         let size = parseFloat(style.fontSize);
         while (!fits() && size > 8) {
