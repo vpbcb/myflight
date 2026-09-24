@@ -399,10 +399,10 @@ body {
             .compact-tiles .label-tile { font-size: 12px; }
         }
         /* Обёртка визуально выглядит как обычный инпут (та же таблетка), а сам <input> внутри
-           неё прозрачный — так подпись (auto)/(manual) оказывается "внутри поля" сразу после цифр. */
+           неё прозрачный — так подпись (a)/(m) оказывается "внутри поля" сразу после цифр. */
         .payload-value-wrap {
             flex: 1; min-width: 0; height: 30px; border-radius: 10px; border: 1px solid transparent;
-            background-color: var(--input-bg); display: flex; align-items: center; justify-content: center; gap: 3px; padding: 0 5px;
+            background-color: var(--input-bg); display: flex; align-items: center; justify-content: center; gap: 2px; padding: 0 3px;
             cursor: text; touch-action: manipulation;
         }
         .payload-source-hint { pointer-events: none; }
@@ -422,7 +422,7 @@ body {
             flex: 0 0 auto; height: auto; padding: 0;
             border: none !important; background: transparent !important; text-align: right;
         }
-        .payload-source-hint { font-style: italic; font-size: 0.7rem; font-weight: 600; color: #888; white-space: nowrap; line-height: 1; }
+        .payload-source-hint { font-style: italic; font-size: clamp(0.5rem, 2.9vw, 0.7rem); font-weight: 600; color: #888; white-space: nowrap; line-height: 1; }
         .compact-row { margin-bottom: 3px; }
         .compact-row .tile-gray { padding: 4px 10px; gap: 8px; border-radius: 10px; flex-direction: row; align-items: center; justify-content: space-between; }
         .compact-row .label-tile { margin-bottom: 0; white-space: nowrap; flex-shrink: 0; }
@@ -890,8 +890,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">Cargo 1</span>
                     <input type="number" id="cargo1" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -899,8 +897,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">Cargo 2</span>
                     <input type="number" id="cargo2" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -908,8 +904,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">Cargo 3</span>
                     <input type="number" id="cargo3" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -917,8 +911,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">Cargo 4</span>
                     <input type="number" id="cargo4" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -926,8 +918,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">Cargo 5</span>
                     <input type="number" id="cargo5" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -954,8 +944,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">OA</span>
                     <input type="number" id="paxOA" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -963,8 +951,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">OB</span>
                     <input type="number" id="paxOB" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -972,8 +958,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">OC</span>
                     <input type="number" id="paxOC" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -981,8 +965,6 @@ html.dark-theme input[readonly] {
                 <div class="tile-gray">
                     <span class="label-tile">OD</span>
                     <input type="number" id="paxOD" placeholder="0" class="nav-input" inputmode="numeric"
-                           onfocus="this.dataset.ph=this.placeholder;this.placeholder=''"
-                           onblur="this.placeholder=this.dataset.ph"
                            oninput="calculateAll()">
                 </div>
             </div>
@@ -1361,7 +1343,10 @@ html.dark-theme input[readonly] {
         calculateAll();
     }
 
-    const val = (id) => parseFloat(document.getElementById(id).value) || 0;
+    // Пока поле Cargo/Pax очищено под ввод (фокус, ничего не набрано), в расчёт идёт прежнее
+    // подтверждённое значение — оно же показано бледно-серым в плейсхолдере.
+    const effectiveValue = el => (el.dataset.pending === '1' && el.value === '' ? (el.dataset.confirmed || '') : el.value);
+    const val = (id) => parseFloat(effectiveValue(document.getElementById(id))) || 0;
     const setVal = (id, v) => document.getElementById(id).value = (v === "" || isNaN(v)) ? "" : v;
     const isIosPwaSafeMode = () => false;
     const focusUnlessIosPwaSafe = (element, options) => {
@@ -1401,6 +1386,29 @@ html.dark-theme input[readonly] {
         el.value = '0';
         el.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    // Cargo/Pax: при установке курсора видимое значение уходит в бледно-серый плейсхолдер, поле пустое.
+    // Пересчёт не меняется, пока не введено новое значение или не нажат Backspace (тогда 0).
+    // Ушли из поля, ничего не введя, — возвращаем прежнее значение.
+    const pendingEditIds = ['cargo1', 'cargo2', 'cargo3', 'cargo4', 'cargo5', 'paxOA', 'paxOB', 'paxOC', 'paxOD'];
+    pendingEditIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('focus', () => {
+            el.dataset.confirmed = el.value;
+            el.dataset.pending = '1';
+            el.placeholder = el.value || '0';
+            el.value = '';
+        });
+        el.addEventListener('blur', () => {
+            if (el.dataset.pending === '1' && el.value === '') el.value = el.dataset.confirmed || '';
+            delete el.dataset.pending;
+            el.placeholder = '0';
+        });
+        el.addEventListener('input', () => {
+            if (el.value !== '') delete el.dataset.pending;
+        });
+    });
+
     clearOnDeleteIds.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -1490,7 +1498,7 @@ html.dark-theme input[readonly] {
                 if (el.type === 'checkbox') {
                     data.inputs[el.id] = el.checked;
                 } else {
-                    data.inputs[el.id] = el.value;
+                    data.inputs[el.id] = effectiveValue(el);
                 }
             }
         });
@@ -1965,12 +1973,12 @@ html.dark-theme input[readonly] {
         // Пока поле пустое, серые цифры плейсхолдера показывают актуальный авторасчёт.
         else if (payloadEl.value === '') payloadEl.placeholder = String(payload);
         // Number-инпут по умолчанию не сжимается под контент — подгоняем ширину под цифры,
-        // чтобы (auto)/(manual) стояла сразу после числа, а не у правого края пилюли.
+        // чтобы (a)/(m) стояла сразу после числа, а не у правого края пилюли.
         const payloadShown = payloadEditing ? (payloadEl.value || payloadEl.placeholder || '') : String(payload);
-        payloadEl.style.width = (payloadShown.length + 1) + 'ch';
+        payloadEl.style.width = (payloadShown.length + 0.5) + 'ch';
         document.getElementById('payloadValueWrap').classList.toggle('bg-brown', payloadManual !== null);
         document.getElementById('payloadSource').textContent =
-            payloadEditing ? '' : (payloadManual !== null ? '(m)' : '(auto)');
+            payloadEditing ? '' : (payloadManual !== null ? '(m)' : '(a)');
         const zfw = dow + payload;
         setVal('zfw', zfw);
         const tow = zfw + takeoffFuel;
