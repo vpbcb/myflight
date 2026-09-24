@@ -1565,6 +1565,13 @@
         .airport-field-wrapper {
             cursor: pointer;
             -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        /* Пока поле не в режиме ввода, касания проходят к блоку: долгий тап открывает модалку,
+           а не выделяет текст; короткий тап фокусирует поле из обработчика блока */
+        #apprName:not(:focus) {
+            pointer-events: none;
         }
         /* Блоки Airport / Approach type / OAT ниже за счёт отступов (шрифты без изменений) */
         .npa-search-card .cell-wrapper {
@@ -3710,7 +3717,7 @@
                     <div class="cell-wrapper flex-1 airport-field-wrapper" id="airportFieldWrapper">
                         <span class="cell-label">Airport</span>
                         <div class="airport-input-row">
-                            <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="4" style="text-transform: uppercase;" onfocus="handleAirportFocus()" onclick="handleAirportFocus()" onblur="handleAirportBlur()" oninput="handleAirportInput()">
+                            <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="4" style="text-transform: uppercase;" onfocus="handleAirportFocus()" onclick="handleAirportFocus()" onblur="handleAirportBlur()" oninput="handleAirportInput()">
                         </div>
                         <em class="airport-long-tap-hint">(long tap)</em>
                         <div class="npa-airport-dropdown" id="npaAirportDropdown"></div>
@@ -5389,6 +5396,8 @@
             inputEl.placeholder = "ICAO";
         }
         closeNpaAirportDropdown();
+        // Снимаем фокус: иначе клавиатура телефона оставляет код «набираемым словом» (подчёркнутым)
+        if (inputEl && document.activeElement === inputEl) inputEl.blur();
         setSelectedNpaType("");
         clearNpaFields();
         renderNpaApproachDropdown(true);
@@ -5428,6 +5437,7 @@
 
         field.addEventListener('pointerdown', event => {
             if (isInsideDropdown(event) || (event.button !== undefined && event.button !== 0)) return;
+            if (event.target === input && document.activeElement === input) return; // идёт ввод кода
             fired = false;
             startX = event.clientX;
             startY = event.clientY;

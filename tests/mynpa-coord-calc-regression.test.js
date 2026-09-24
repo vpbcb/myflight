@@ -277,3 +277,10 @@ test('Airport field: no "i" button, long tap anywhere on the field opens the air
     assert.match(init, /if \(event\.target !== input\) input\.focus\(\);/);
     assert.match(myNpaHtml, /initAirportModalLock\(\);\s*initAirportFieldLongPress\(\);/);
 });
+
+test('Airport field: no IME underline after picking from the list, long tap does not select text', () => {
+    assert.match(functionSource('selectNpaAirport'), /if \(inputEl && document\.activeElement === inputEl\) inputEl\.blur\(\);/);
+    assert.match(myNpaHtml, /id="apprName" placeholder="ICAO" autocomplete="off" autocorrect="off"/);
+    assert.match(myNpaHtml, /#apprName:not\(:focus\) \{\s*pointer-events: none;/);
+    assert.match(myNpaHtml, /\.airport-field-wrapper \{[^}]*user-select: none;/);
+});
