@@ -490,6 +490,20 @@
 
 
         /* --- СТРОКА СТАТУСА LAND ПОД ТАБЛИЦЕЙ (ИНФОРМАЦИОННЫЙ СТИЛЬ) --- */
+        /* Подсказка под таблицей: всегда в одну строку, на узких экранах шрифт уменьшает fitTableHint */
+        .table-hint {
+            margin-top: 2px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: clamp(0.5rem, 2.6vw, 0.68rem);
+            font-style: italic;
+            font-weight: 500;
+            color: var(--dim);
+            opacity: 0.6;
+            line-height: 1.1;
+        }
+        .table-hint b { font-weight: 800; }
         .land-status-row {
             text-align: center;
             font-size: clamp(0.7rem, 3.5vw, 0.95rem); /* Увеличенный гибкий шрифт */
@@ -499,7 +513,7 @@
             border: 1px solid rgba(25, 118, 210, 0.4);
             border-radius: 6px;
             padding: 5px 2px;
-            margin-top: 8px;
+            margin-top: 2px; /* Между таблицей и плашкой — подсказка .table-hint, отступы минимальные */
             width: 100%;
             letter-spacing: 0; /* Всегда без разрядки: плотность текста одинакова при любой длине строки */
             line-height: 1.25;
@@ -958,6 +972,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     </div>
 
     <!-- Текст изменен на TAKEOFF для соответствия дефолтной активной кнопке -->
+    <div id="tableHint" class="table-hint">short tap on either side will highlight it, long tap to switch m/s <b>/</b> kt</div>
+
     <div id="landStatusRow" class="land-status-row">TAKEOFF</div>
 
     <div id="landHintToast" class="hint-toast">TAKEOFF</div>
@@ -1254,6 +1270,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         toggleOpMode(currentOpMode, { center: false });
         // Принудительно проявляем плашку сразу после загрузки
         document.getElementById('landStatusRow').style.opacity = '1';
+        fitTableHint();
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
         restoreTableScrollPosition();
     };
@@ -1343,22 +1360,22 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         } catch (e) {}
     }
 
+    // Прокрутка ставится синхронно, в той же задаче, что и отрисовка строк: иначе браузер успевает
+    // показать кадр с таблицей в самом верху, и при открытии страницы она дёргается к центру.
     function restoreTableScrollPosition() {
-        setTimeout(() => {
-            const tableBody = document.getElementById('tableBody');
-            if (!tableBody || tableBody.children.length === 0) return;
-            const savedScrollTop = getSavedTableScrollTop();
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody || tableBody.children.length === 0) return;
+        const savedScrollTop = getSavedTableScrollTop();
 
-            if (savedScrollTop === null) {
-                centerTable();
-                return;
-            }
+        if (savedScrollTop === null) {
+            centerTable();
+            return;
+        }
 
-            const restoredScrollTop = clampTableScrollTop(tableBody, savedScrollTop);
-            if (restoredScrollTop === null) return;
-            tableBody.scrollTop = restoredScrollTop;
-            saveTableScrollPosition();
-        }, 0);
+        const restoredScrollTop = clampTableScrollTop(tableBody, savedScrollTop);
+        if (restoredScrollTop === null) return;
+        tableBody.scrollTop = restoredScrollTop;
+        saveTableScrollPosition();
     }
 
     function attachTableScrollPersistence() {
@@ -2018,9 +2035,21 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
             content.style.fontSize = size + 'px';
         }
     }
+    // Подсказка под таблицей: уменьшаем шрифт, пока строка не влезет по ширине
+    function fitTableHint() {
+        const hint = document.getElementById('tableHint');
+        if (!hint) return;
+        hint.style.fontSize = '';
+        let size = parseFloat(getComputedStyle(hint).fontSize);
+        while (hint.scrollWidth > hint.clientWidth && size > 6) {
+            size -= 0.25;
+            hint.style.fontSize = size + 'px';
+        }
+    }
     window.addEventListener('resize', () => {
         const statusRow = document.getElementById('landStatusRow');
         if (statusRow) fitStatusRow(statusRow);
+        fitTableHint();
     });
 
     function showLandHint() {
@@ -2343,10 +2372,10 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         }
 
         h += `<div class="${rowClass}">
-                <div class="course-cell" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: ${leftOpacity}; transition: opacity 0.2s ease;" onclick="clickSide('left')">${lCStr}&deg;</div>
+                <div class="course-cell" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y; opacity: ${leftOpacity}; transition: opacity 0.2s ease;" onpointerdown="startPressUnit(event)" onpointerup="endPressUnit(event)" onpointerleave="cancelPressUnit()" onpointercancel="cancelPressUnit()" onclick="clickSide('left')" oncontextmenu="event.preventDefault()">${lCStr}&deg;</div>
                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: ${limitColor}; font-weight: 800; cursor: pointer; touch-action: pan-y; opacity: ${leftOpacity}; transition: opacity 0.2s ease;" onpointerdown="startPressUnit(event)" onpointerup="endPressUnit(event)" onpointerleave="cancelPressUnit()" onpointercancel="cancelPressUnit()" onclick="clickSide('left')" oncontextmenu="event.preventDefault()">${limitStrL}</div>
                 <div class="rwy-divider"></div>
-                <div class="course-cell" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: ${rightOpacity}; transition: opacity 0.2s ease;" onclick="clickSide('right')">${rCStr}&deg;</div>
+                <div class="course-cell" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: pan-y; opacity: ${rightOpacity}; transition: opacity 0.2s ease;" onpointerdown="startPressUnit(event)" onpointerup="endPressUnit(event)" onpointerleave="cancelPressUnit()" onpointercancel="cancelPressUnit()" onclick="clickSide('right')" oncontextmenu="event.preventDefault()">${rCStr}&deg;</div>
                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: ${limitColor}; font-weight: 800; cursor: pointer; touch-action: pan-y; opacity: ${rightOpacity}; transition: opacity 0.2s ease;" onpointerdown="startPressUnit(event)" onpointerup="endPressUnit(event)" onpointerleave="cancelPressUnit()" onpointercancel="cancelPressUnit()" onclick="clickSide('right')" oncontextmenu="event.preventDefault()">${limitStrR}</div>
               </div>`;
     }
@@ -2354,43 +2383,38 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
     if (shouldCenter) {
         centerTable();
     } else {
-        setTimeout(() => {
-            const restoredScrollTop = clampTableScrollTop(tableBody, previousScrollTop);
-            if (restoredScrollTop === null) return;
-            tableBody.scrollTop = restoredScrollTop;
-        }, 0);
+        const restoredScrollTop = clampTableScrollTop(tableBody, previousScrollTop);
+        if (restoredScrollTop !== null) tableBody.scrollTop = restoredScrollTop;
     }
 } // <--- ЗАКРЫВАЕМ updateTable() ЗДЕСЬ!
 
 // === НОВАЯ ОТДЕЛЬНАЯ ФУНКЦИЯ ЦЕНТРОВКИ ===
 function centerTable() {
-    setTimeout(() => {
-        const tableBody = document.getElementById('tableBody');
-        if (!tableBody || tableBody.children.length === 0) return;
+    const tableBody = document.getElementById('tableBody');
+    if (!tableBody || tableBody.children.length === 0) return;
 
-        let targetTop = 0;
-        const isRoundCourse = tableBody.children.length === 19;
+    let targetTop = 0;
+    const isRoundCourse = tableBody.children.length === 19;
 
-        if (isRoundCourse) {
-            // 19 строк: центрируем строго по 10-й строке (индекс 9)
-            const row90 = tableBody.children[9];
-            if (row90) {
-                targetTop = (row90.offsetTop - tableBody.offsetTop) + (row90.clientHeight / 2);
-            }
-        } else {
-            // 18 строк: центрируем строго по красной линии-разделителю (между 9 и 10 строкой)
-            const rowAbove = tableBody.children[8];
-            if (rowAbove) {
-                targetTop = (rowAbove.offsetTop - tableBody.offsetTop) + rowAbove.clientHeight;
-            }
+    if (isRoundCourse) {
+        // 19 строк: центрируем строго по 10-й строке (индекс 9)
+        const row90 = tableBody.children[9];
+        if (row90) {
+            targetTop = (row90.offsetTop - tableBody.offsetTop) + (row90.clientHeight / 2);
         }
+    } else {
+        // 18 строк: центрируем строго по красной линии-разделителю (между 9 и 10 строкой)
+        const rowAbove = tableBody.children[8];
+        if (rowAbove) {
+            targetTop = (rowAbove.offsetTop - tableBody.offsetTop) + rowAbove.clientHeight;
+        }
+    }
 
-        const containerCenter = tableBody.clientHeight / 2;
-        const centeredScrollTop = clampTableScrollTop(tableBody, targetTop - containerCenter);
-        if (centeredScrollTop === null) return;
-        tableBody.scrollTop = centeredScrollTop;
-        saveTableScrollPosition();
-    }, 0);
+    const containerCenter = tableBody.clientHeight / 2;
+    const centeredScrollTop = clampTableScrollTop(tableBody, targetTop - containerCenter);
+    if (centeredScrollTop === null) return;
+    tableBody.scrollTop = centeredScrollTop;
+    saveTableScrollPosition();
 }
 
 

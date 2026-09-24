@@ -101,3 +101,31 @@ test('Land button shows the same (long tap) hint as the 2П crew button', () => 
     assert.match(myWindHtml, /#crewBtn \.crew-hint, #coursePlusBtn \.crew-hint \{[^}]*display: block;[^}]*font-style: italic;/);
     assert.match(myWindHtml, /#coursePlusBtn\.active-op \.crew-hint \{ color: inherit;/);
 });
+
+test('hint between the table and the plaque stays on one line and shrinks to fit', () => {
+    assert.match(myWindHtml, /<div id="tableHint" class="table-hint">short tap on either side will highlight it, long tap to switch m\/s <b>\/<\/b> kt<\/div>\s*<div id="landStatusRow"/);
+    const rule = myWindHtml.match(/\.table-hint \{[^}]*\}/)[0];
+    assert.match(rule, /white-space: nowrap;/);
+    assert.match(rule, /font-style: italic;/);
+    assert.match(myWindHtml, /function fitTableHint\(\) \{[\s\S]*?hint\.scrollWidth > hint\.clientWidth/);
+    assert.match(myWindHtml, /if \(statusRow\) fitStatusRow\(statusRow\);\s*fitTableHint\(\);/);
+});
+
+test('long tap switches m/s/kt on every cell that a short tap highlights', () => {
+    const cells = myWindHtml.match(/<div [^>]*onclick="clickSide\('(?:left|right)'\)"[^>]*>/g);
+    assert.equal(cells.length, 4);
+    cells.forEach(cell => {
+        assert.match(cell, /onpointerdown="startPressUnit\(event\)" onpointerup="endPressUnit\(event\)" onpointerleave="cancelPressUnit\(\)" onpointercancel="cancelPressUnit\(\)"/);
+        assert.match(cell, /touch-action: pan-y;/);
+        assert.match(cell, /oncontextmenu="event\.preventDefault\(\)"/);
+    });
+});
+
+test('table scroll is set in the same task as the rows, so the page opens without a jump', () => {
+    const centerSource = myWindHtml.slice(myWindHtml.indexOf('function centerTable() {'), myWindHtml.indexOf('\n}\n', myWindHtml.indexOf('function centerTable() {')));
+    assert.doesNotMatch(centerSource, /setTimeout/);
+    const restoreSource = between('    function restoreTableScrollPosition() {', '    function attachTableScrollPersistence()');
+    assert.doesNotMatch(restoreSource, /setTimeout/);
+    const updateSource = between('function updateTable(options = {}) {', 'function centerTable() {');
+    assert.doesNotMatch(updateSource.slice(updateSource.indexOf('tableBody.innerHTML = h;')), /setTimeout/);
+});
