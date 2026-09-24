@@ -1007,22 +1007,35 @@
             font-size: 9px;
             line-height: 1.05;
         }
-        /* Заголовки секций на синей плашке: высота, скругление и отступ текста как у калькулятора,
-           начертание как у его заголовка (800, без полупрозрачности) */
-        #npaBlock2 .card-content > .npa-subsection-title {
+        /* Единый класс плашки-заголовка секции (эталон — Racetrack entry / Downwind leg):
+           используется на вкладке Racetrack и в модалке аэродрома (Runways, Radio Aids) */
+        .npa-section-plaque {
             box-sizing: border-box;
             align-self: flex-start; /* плашка по ширине текста заголовка */
+            width: fit-content;
             display: flex;
             align-items: center;
-            padding: 3px 12px; /* минимальные отступы сверху и снизу */
+            margin: 0;
+            padding: 3px 12px;
             border: 1px solid rgba(25, 118, 210, 0.35);
             border-radius: 12px;
             background: rgba(25, 118, 210, 0.08);
             color: #0d47a1;
+            font-size: 9px;
             font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
             opacity: 1;
         }
-        html.dark-theme #npaBlock2 .card-content > .npa-subsection-title {
+        /* В модалке аэродрома под плашкой тот же интервал 4px, что на вкладке Racetrack */
+        .npa-modal-section > .npa-section-plaque {
+            margin-bottom: -4px; /* gap секции 8px → 4px */
+        }
+        .npa-modal-section > .npa-section-plaque + .npa-modal-section {
+            margin-top: 0;
+        }
+        html.dark-theme .npa-section-plaque {
             border-color: rgba(56, 189, 248, 0.35);
             background: rgba(56, 189, 248, 0.1);
             color: #7dd3fc;
@@ -1532,34 +1545,34 @@
             min-width: 0;
             flex: 1 1 auto;
         }
-        .airport-info-btn {
-            -webkit-appearance: none;
-            appearance: none;
-            box-sizing: border-box;
-            flex: 0 0 28px;
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            min-height: 28px;
-            max-width: 28px;
-            max-height: 28px;
-            padding: 0;
-            border: 1px solid rgba(14, 165, 233, 0.35);
-            border-radius: 50%;
-            background: rgba(14, 165, 233, 0.1);
-            color: var(--accent-blue);
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 900;
-            line-height: 28px;
-            display: grid;
-            place-items: center;
+        /* Подсказка под кодом ICAO: долгий тап по полю открывает данные аэродрома */
+        .airport-long-tap-hint {
+            display: block;
+            margin-top: 1px;
+            color: #64748b;
+            opacity: 0.7;
+            font-size: 0.55rem;
+            font-style: italic;
+            font-weight: 500;
+            line-height: 1;
             text-align: center;
-            cursor: pointer;
+            text-transform: none;
+            pointer-events: none;
         }
-        .airport-info-btn:active {
-            background: var(--accent-blue);
-            color: #ffffff;
+        html.dark-theme .airport-long-tap-hint {
+            color: #96a4b3;
+        }
+        .airport-field-wrapper {
+            cursor: pointer;
+            -webkit-touch-callout: none;
+        }
+        /* Блоки Airport / Approach type / OAT ниже за счёт отступов (шрифты без изменений) */
+        .npa-search-card .cell-wrapper {
+            padding-top: 2px;
+            padding-bottom: 1px;
+        }
+        .npa-search-card .airport-long-tap-hint {
+            margin-top: -2px;
         }
         .approach-type-wrapper {
             cursor: pointer;
@@ -2016,7 +2029,7 @@
             text-transform: none;
         }
         #tempC {
-            font-size: 16px !important;
+            font-size: 17px !important; /* как код ICAO и Approach type */
             font-weight: 600 !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
             line-height: 22px !important;
@@ -2028,6 +2041,11 @@
             color: var(--accent-blue) !important;
         }
 
+        /* Код ICAO аэродрома — основным синим, 17px (начертание прежнее) */
+        #apprName {
+            font-size: 17px !important;
+            color: var(--accent-blue) !important;
+        }
         #apprName.airport-ghost-value {
             color: rgba(100, 116, 139, 0.30) !important;
         }
@@ -2154,22 +2172,32 @@
             overflow-y: auto;
             padding: 0.65rem;
         }
+        /* Модалка по центру экрана; растёт симметрично вверх и вниз до высоты приложения,
+           дальше прокручивается только содержимое. С открытой клавиатурой — прижата к верху */
         #addAirportModal.active {
-            align-items: flex-start;
+            align-items: center;
             overflow-y: auto;
             padding: max(0.5rem, env(safe-area-inset-top)) 0.25rem max(0.75rem, env(safe-area-inset-bottom));
         }
         #addAirportModal .npa-form-modal {
-            max-height: min(86vh, calc(var(--airport-modal-vh, var(--app-height)) - 1.5rem));
+            max-height: calc(var(--airport-modal-vh, var(--app-height)) - 1.5rem);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
         #addAirportModal.keyboard-open {
+            align-items: flex-start;
             padding-top: max(0.25rem, env(safe-area-inset-top));
         }
         #addAirportModal.keyboard-open .npa-form-modal {
             max-height: calc(var(--airport-modal-vh, 100vh) - 0.75rem);
+        }
+        #addAirportModal .add-airport-title-row {
+            flex: 0 0 auto;
+            margin-bottom: 8px; /* зазор до плашки Runways — 8px (было 12 + 12) */
+        }
+        #addAirportModal .add-airport-scroll-area > .npa-modal-section:first-child {
+            margin-top: 0;
         }
         #addAirportModal .add-airport-scroll-area {
             flex: 1 1 auto;
@@ -2179,18 +2207,22 @@
             -webkit-overflow-scrolling: touch;
             padding-bottom: 0.65rem;
         }
+        /* Ползунок прокрутки модалки аэродрома — основной синий, как на вкладке Racetrack */
+        #addAirportModal .add-airport-scroll-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        #addAirportModal .add-airport-scroll-area::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 10px;
+        }
+        html.dark-theme #addAirportModal .add-airport-scroll-area::-webkit-scrollbar-thumb {
+            background: #0273ad;
+        }
         .npa-modal-section {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-top: 12px;
-        }
-        .npa-modal-section-title {
-            color: #64748b;
-            font-size: 7.5px;
-            font-weight: 800;
-            letter-spacing: 0.35px;
-            text-transform: uppercase;
         }
         .add-airport-title-row {
             display: flex;
@@ -2198,6 +2230,75 @@
             gap: 0.45rem;
             align-items: stretch;
             margin-bottom: 0.75rem;
+        }
+        /* Замок в модалке аэродрома — как на главной странице; пока закрыт, кнопки удаления скрыты
+           (visibility, чтобы разметка не сдвигалась) */
+        /* Ряд: замок слева, ICAO ровно по центру модалки (боковые колонки равной ширины),
+           кнопка закрытия справа */
+        #addAirportModal .add-airport-title-row {
+            display: grid;
+            grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+            align-items: center;
+            gap: 0;
+        }
+        #addAirportModal .add-airport-icao-row {
+            justify-self: center;
+            min-width: 0;
+            grid-template-columns: auto minmax(5rem, 9.5rem) auto;
+        }
+        #addAirportModal .airport-modal-lock-btn {
+            justify-self: start;
+        }
+        /* Кнопка закрытия — как в настройках MyActivity: красный квадрат с градиентом и белым крестиком
+           (крестик — SVG, чтобы стоял точно по центру) */
+        .airport-modal-close-btn {
+            justify-self: end;
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border: 1px solid #941f1f;
+            border-radius: 8px;
+            background-color: #c62828;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 7L17 17M17 7L7 17' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"),
+                linear-gradient(180deg, #f26666 0%, #c62828 52%, #991b1b 100%);
+            background-position: center, center;
+            background-size: 60% 60%, 100% 100%;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .airport-modal-close-btn:active {
+            transform: scale(0.94);
+        }
+        #addAirportModal .airport-modal-lock-btn {
+            position: relative;
+            left: auto;
+            top: auto;
+            transform: none;
+            flex: 0 0 auto;
+            width: 72px; /* постоянная ширина: поле ICAO не сдвигается при смене надписи замка */
+            z-index: 1;
+        }
+        #addAirportModal .airport-modal-lock-btn:active {
+            transform: scale(0.9);
+        }
+        #addAirportModal .airport-modal-lock-btn::after {
+            left: -8px;
+            top: -8px;
+            bottom: -8px;
+        }
+        #addAirportModal .airport-modal-lock-btn.unlocked .bottom-edit-lock-hint {
+            color: var(--accent-blue);
+            opacity: 0.9;
+        }
+        html.dark-theme #addAirportModal .airport-modal-lock-btn.unlocked .bottom-edit-lock-hint {
+            color: #38bdf8;
+        }
+        #addAirportModal:not(.delete-unlocked) .npa-modal-delete-btn {
+            visibility: hidden;
+            pointer-events: none;
         }
         .add-airport-title-row .modal-header {
             margin-bottom: 0;
@@ -2397,6 +2498,14 @@
         .npa-modal-delete-btn:active {
             transform: scale(0.94);
         }
+        /* Круг и крестик — одна SVG-картинка в общей системе координат: масштабируются вместе,
+           поэтому центр крестика совпадает с центром круга на любом экране и в любой ОС
+           (символ «×» из шрифта садился не в центр) */
+        .npa-modal-delete-btn {
+            font-size: 0 !important;
+            border: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='%23ef4444' fill-opacity='0.08' stroke='%23ef4444' stroke-opacity='0.5'/%3E%3Cpath d='M8 8L16 16M16 8L8 16' stroke='%23ef4444' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        }
         .airport-runway-block {
             padding-top: 1.35rem;
         }
@@ -2493,19 +2602,53 @@
             gap: 6px;
             width: 100%;
         }
-        .airport-radio-add-row .modal-opt-btn {
+        /* Единый класс кнопок Add RWY / Add Radio Aid / Add TAR — как «Обновить приложение»
+           в настройках MyActivity: белая объёмная кнопка высотой 42px. Ширина прежняя:
+           Add RWY — на всю ширину, Add Radio Aid и Add TAR делят ряд поровну */
+        .npa-add-btn {
+            box-sizing: border-box;
+            width: 100%;
+            block-size: 42px;
+            min-block-size: 42px;
+            padding: 0 12px;
+            border: 1px solid #c8d5dc;
+            border-radius: 8px;
+            background-color: #ffffff;
+            background-image: linear-gradient(180deg, rgb(255 255 255 / 94%) 0%, rgb(255 255 255 / 38%) 50%, rgb(78 101 111 / 20%) 100%);
+            box-shadow:
+                0 2px 0 #879aa3,
+                0 3px 5px rgb(45 68 79 / 12%),
+                inset 1px 1px 1px rgb(255 255 255 / 92%),
+                inset -1px -1px 1px rgb(69 91 101 / 20%);
+            color: #334155;
+            font-family: inherit;
+            font-size: clamp(0.68rem, 2vw, 0.82rem);
+            font-weight: 400;
+            line-height: 1.05;
+            cursor: pointer;
+            transition: box-shadow 120ms ease, transform 120ms ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .airport-radio-add-row .npa-add-btn {
             flex: 1 1 0;
             min-width: 0;
             width: auto;
-            background: rgba(14, 165, 233, 0.10);
-            border-color: rgba(14, 165, 233, 0.45);
-            color: var(--accent-blue);
-            font-weight: 900;
-            box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.08);
         }
-        html.dark-theme .airport-radio-add-row .modal-opt-btn {
-            background: rgba(14, 165, 233, 0.16);
-            border-color: rgba(14, 165, 233, 0.55);
+        .npa-add-btn:active {
+            background-image: linear-gradient(180deg, rgb(78 101 111 / 12%) 0%, rgb(255 255 255 / 38%) 100%);
+            box-shadow:
+                0 1px 0 #758b95,
+                inset 1px 1px 3px rgb(69 91 101 / 30%),
+                inset -1px -1px 2px rgb(255 255 255 / 72%);
+            transform: translateY(1px);
+        }
+        html.dark-theme .npa-add-btn {
+            border-color: rgba(148, 163, 184, 0.35);
+            background-color: #262e3d;
+            background-image: linear-gradient(180deg, rgb(255 255 255 / 10%) 0%, rgb(255 255 255 / 3%) 50%, rgb(0 0 0 / 18%) 100%);
+            box-shadow: 0 2px 0 #0f172a, inset 1px 1px 1px rgb(255 255 255 / 10%);
+            color: #cbd5e1;
         }
         .npa-choice-btn.active {
             background: var(--accent-blue);
@@ -2624,6 +2767,11 @@
             text-align: center;
             min-width: 0;
             font-size: clamp(0.62rem, 3vw, 0.8rem);
+        }
+        /* Координаты — начертание как у длины ВПП в метрах (500) */
+        .npa-coord-field .npa-modal-input,
+        .airport-radio-aid-block [data-radio-field="coord"] {
+            font-weight: 500;
         }
         .kp-mask-typed,
         .kp-mask-dot {
@@ -3003,6 +3151,23 @@
         }
         #npaProfileRadioHeader .npa-profile-head-large {
             color: var(--accent-blue);
+        }
+        #npaProfileRadioHeader.is-placeholder .npa-profile-head-large {
+            color: inherit;
+        }
+        /* Подсказка «(long tap)» — мелко курсивом и вне потока: первые две строки заголовка
+           стоят на той же высоте, что «DIST FROM / TAR» в четвёртом столбце */
+        #npaProfileRadioHeader {
+            position: relative;
+        }
+        #npaProfileRadioHeader .npa-profile-head-tiny {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 1px;
+            font-style: italic;
+            font-weight: 500;
         }
         .npa-profile-head .npa-profile-alt {
             font-size: 0.75rem;
@@ -3546,13 +3711,13 @@
                         <span class="cell-label">Airport</span>
                         <div class="airport-input-row">
                             <input type="text" class="cell-input" id="apprName" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="4" style="text-transform: uppercase;" onfocus="handleAirportFocus()" onclick="handleAirportFocus()" onblur="handleAirportBlur()" oninput="handleAirportInput()">
-                            <button type="button" class="airport-info-btn" title="Airport" aria-label="Airport info" onclick="openAirportInfoModal(event)">i</button>
                         </div>
+                        <em class="airport-long-tap-hint">(long tap)</em>
                         <div class="npa-airport-dropdown" id="npaAirportDropdown"></div>
                     </div>
                     <div class="cell-wrapper flex-1 approach-type-wrapper" id="approachTypeWrapper" onclick="toggleNpaApproachDropdown(event)">
                         <span class="cell-label">APPROACH TYPE</span>
-                        <div class="btn-val" id="selectedTypeLabel" style="color: var(--accent-blue); font-size: 16px;"></div>
+                        <div class="btn-val" id="selectedTypeLabel" style="color: var(--accent-blue); font-size: 17px;"></div>
                         <div class="npa-approach-dropdown" id="npaApproachDropdown"></div>
                     </div>
                     <div class="cell-wrapper flex-1">
@@ -3628,7 +3793,7 @@
                 <div class="npa-tab-content-area">
                     <div id="npaBlock2" class="foldBlock npa-tab-panel">
                         <div class="card-content">
-                            <div class="npa-subsection-title">Racetrack entry</div>
+                            <div class="npa-section-plaque">Racetrack entry</div>
 
                             <div class="c2-row">
                                 <div class="cell-wrapper flex-1" style="cursor: pointer;" onclick="toggleRacetrack()">
@@ -3665,7 +3830,7 @@
                             </div>
 
                             <div class="npa-subsection-divider"></div>
-                            <div class="npa-subsection-title">Downwind leg</div>
+                            <div class="npa-section-plaque">Downwind leg</div>
 
                             <div class="c2-row">
                                 <div class="cell-wrapper flex-1">
@@ -3901,6 +4066,8 @@
         initNpaHeaderActionUnlock();
         initNpaRefreshButton();
         initNpaEditLockMode();
+        initAirportModalLock();
+        initAirportFieldLongPress();
         initNpaProfileUnitToggles();
         initNpaProfileScrollMemory();
         restoreNpaCoordCalc();
@@ -5244,6 +5411,56 @@
         }, delay);
     }
 
+    // Поле Airport целиком (с заголовком): короткий тап — ввод кода ICAO, долгий тап — модалка аэродрома
+    function initAirportFieldLongPress() {
+        const field = document.getElementById('airportFieldWrapper');
+        const input = document.getElementById('apprName');
+        if (!field || !input) return;
+        let timer = null;
+        let fired = false;
+        let startX = 0;
+        let startY = 0;
+        const cancel = () => {
+            clearTimeout(timer);
+            timer = null;
+        };
+        const isInsideDropdown = event => Boolean(event.target.closest('#npaAirportDropdown'));
+
+        field.addEventListener('pointerdown', event => {
+            if (isInsideDropdown(event) || (event.button !== undefined && event.button !== 0)) return;
+            fired = false;
+            startX = event.clientX;
+            startY = event.clientY;
+            cancel();
+            timer = setTimeout(() => {
+                timer = null;
+                fired = true;
+                if (navigator.vibrate) navigator.vibrate(25);
+                if (document.activeElement === input) input.blur();
+                openAirportInfoModal();
+            }, NPA_PROFILE_LONG_PRESS_MS);
+        });
+        field.addEventListener('pointermove', event => {
+            if (timer && (Math.abs(event.clientX - startX) > 8 || Math.abs(event.clientY - startY) > 8)) cancel();
+        });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(name => field.addEventListener(name, cancel));
+        field.addEventListener('contextmenu', event => {
+            if (!isInsideDropdown(event)) event.preventDefault();
+        });
+        // После долгого тапа клик не должен открывать ввод; короткий тап по заголовку — фокус в поле
+        field.addEventListener('click', event => {
+            if (isInsideDropdown(event)) return;
+            if (fired) {
+                fired = false;
+                event.preventDefault();
+                event.stopPropagation();
+                if (document.activeElement === input) input.blur();
+                return;
+            }
+            if (event.target !== input) input.focus();
+        }, true);
+    }
+
     function handleAirportFocus() {
         const inputEl = document.getElementById('apprName');
         if (!inputEl) return;
@@ -5782,7 +5999,7 @@
         const numeric = getCleanDisplayNumber(rawValue);
         const value = numeric === "" ? 0 : Number(numeric);
         if (value === 0) {
-            return ['long tap to', 'add dist'];
+            return ['dist from', 'Radio Aid', '(long tap)'];
         }
         const sign = value >= 0 ? '+' : '-';
         return ['dist', `THR${sign}${Math.abs(value).toFixed(1)}nm`];
@@ -5800,6 +6017,8 @@
 
         renderNpaProfileHeaderCell(distHeader, 'dist from', 'RW THR');
         renderNpaProfileHeaderCell(radioHeader, radioHeaderLines[0], radioHeaderLines[1], radioHeaderLines[2] || "");
+        // Пустой столбец («Radio Aid») не выделяем синим — синим показывается только выбранное радиосредство
+        radioHeader?.classList.toggle('is-placeholder', radioHeaderLines[1] === 'Radio Aid');
         renderNpaProfileHeaderCell(tarHeader, 'dist from', getProfileTarHeaderTargetLabel());
     }
 
@@ -5875,6 +6094,8 @@
     function setNpaProfileFocusColumn(column) {
         if (!isValidNpaProfileUnitColumn(column)) return;
         if (column === 'radio' && !hasNpaProfileRadioReference()) return;
+        // Без значения TAR столбец DIST FROM TAR не выделяется (как столбец радиосредства без данных)
+        if (column === 'tar' && !isNpaProfileTarColumnVisible()) return;
         const activeColumn = getNpaProfileActiveColumn();
         npaProfileActiveColumns = activeColumn === column ? [] : [column];
         applyNpaProfileFocusClasses();
@@ -7373,6 +7594,11 @@
         const runwayInfo = findRunwayForThreshold(airport, threshold);
         options.innerHTML = "";
         options.classList.toggle('profile-radio-options', activeRadioAidShiftTarget === 'profileRadio');
+        // Пояснение про ипподром относится только к Downwind; для столбца профиля его не показываем
+        const shiftHint = modal.querySelector('.radio-aid-shift-hint');
+        if (shiftHint) shiftHint.hidden = activeRadioAidShiftTarget === 'profileRadio';
+        const shiftTitle = modal.querySelector('.modal-header');
+        if (shiftTitle) shiftTitle.textContent = activeRadioAidShiftTarget === 'profileRadio' ? 'Radio Aid Distance' : 'Radio Aid Shift';
 
         const radioAids = Array.isArray(airport?.radioAids)
             ? airport.radioAids.filter(aid => {
@@ -8383,7 +8609,7 @@
     function scrollAddAirportFieldIntoView(element, behavior = 'smooth') {
         const modal = document.getElementById('addAirportModal');
         const scroller = modal?.querySelector('.add-airport-scroll-area');
-        if (!element?.closest?.('#addAirportModal') || !scroller) return;
+        if (!element?.closest?.('#addAirportModal') || !scroller || !scroller.contains(element)) return;
 
         syncAddAirportModalViewport();
 
@@ -8577,6 +8803,7 @@
         addAirportRadioAidBlocksFromData(radioAidData);
         document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
         updateAirportTarAddButtonVisibility();
+        setAirportModalDeleteUnlocked(false);
         if (navigator.vibrate) navigator.vibrate(20);
         modal.classList.add('active');
         syncAddAirportModalViewport();
@@ -8586,6 +8813,57 @@
         setTimeout(() => {
             keepAddAirportFieldVisible(input);
         }, 50);
+    }
+
+    // Замок модалки аэродрома: долгий тап открывает (видны кнопки удаления), короткий тап закрывает
+    let airportModalDeleteUnlocked = false;
+    let airportModalLockHoldTimer = null;
+    let airportModalLockHoldActivated = false;
+
+    function setAirportModalDeleteUnlocked(unlocked) {
+        airportModalDeleteUnlocked = Boolean(unlocked);
+        document.getElementById('addAirportModal')?.classList.toggle('delete-unlocked', airportModalDeleteUnlocked);
+        const button = document.getElementById('airportModalLockBtn');
+        if (!button) return;
+        const hintText = airportModalDeleteUnlocked ? 'tap to<br>lock' : 'hold to<br>edit data';
+        button.innerHTML = `${getNpaLockIconSvg(airportModalDeleteUnlocked)}<span class="bottom-edit-lock-hint">${hintText}</span>`;
+        button.classList.toggle('unlocked', airportModalDeleteUnlocked);
+        button.setAttribute('aria-label', airportModalDeleteUnlocked ? 'Delete unlocked' : 'Delete locked');
+    }
+
+    function cancelAirportModalLockHold() {
+        clearTimeout(airportModalLockHoldTimer);
+        airportModalLockHoldTimer = null;
+    }
+
+    function initAirportModalLock() {
+        const button = document.getElementById('airportModalLockBtn');
+        if (!button) return;
+        button.addEventListener('pointerdown', event => {
+            if (airportModalDeleteUnlocked) return;
+            event.preventDefault();
+            airportModalLockHoldActivated = false;
+            cancelAirportModalLockHold();
+            airportModalLockHoldTimer = setTimeout(() => {
+                airportModalLockHoldTimer = null;
+                airportModalLockHoldActivated = true;
+                if (navigator.vibrate) navigator.vibrate(25);
+                setAirportModalDeleteUnlocked(true);
+            }, NPA_EDIT_UNLOCK_HOLD_MS);
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(eventName => {
+            button.addEventListener(eventName, cancelAirportModalLockHold);
+        });
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            if (airportModalLockHoldActivated) {
+                airportModalLockHoldActivated = false;
+                return;
+            }
+            if (airportModalDeleteUnlocked) setAirportModalDeleteUnlocked(false);
+        });
+        button.addEventListener('contextmenu', event => event.preventDefault());
+        setAirportModalDeleteUnlocked(false);
     }
 
     function openAirportInfoModal(event) {
@@ -10466,29 +10744,31 @@
 
 <div id="addAirportModal" class="modal-overlay" onclick="closeAddAirportModal(event)">
     <div class="modal-content npa-form-modal" onclick="event.stopPropagation()">
+        <div class="add-airport-title-row">
+            <button type="button" class="bottom-edit-lock-btn airport-modal-lock-btn" id="airportModalLockBtn" aria-label="Delete locked"></button>
+            <div class="add-airport-icao-row">
+                <label for="addAirportIcao">ICAO</label>
+                <input id="addAirportIcao" class="npa-modal-input" type="text" maxlength="4" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" oninput="sanitizeAddAirportIcaoInput()" onkeydown="handleAddAirportIcaoKeydown(event)" onclick="startAirportIcaoCarousel()">
+                <button type="button" class="npa-modal-delete-btn airport-delete-btn" onclick="openAirportDeleteConfirm('airport', this)" aria-label="Delete airport">×</button>
+            </div>
+            <button type="button" class="airport-modal-close-btn" onclick="closeAddAirportModal('button')" aria-label="Close"></button>
+        </div>
         <div class="add-airport-scroll-area">
-            <div class="add-airport-title-row">
-                <div class="add-airport-icao-row">
-                    <label for="addAirportIcao">ICAO</label>
-                    <input id="addAirportIcao" class="npa-modal-input" type="text" maxlength="4" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" oninput="sanitizeAddAirportIcaoInput()" onkeydown="handleAddAirportIcaoKeydown(event)" onclick="startAirportIcaoCarousel()">
-                    <button type="button" class="npa-modal-delete-btn airport-delete-btn" onclick="openAirportDeleteConfirm('airport', this)" aria-label="Delete airport">×</button>
-                </div>
-            </div>
             <div class="npa-modal-section">
-                <div class="npa-modal-section-title">Runways</div>
+                <div class="npa-section-plaque">Runways</div>
                 <div id="airportRunwaysContainer" class="npa-modal-section"></div>
-                <button type="button" class="modal-opt-btn" onclick="addAirportRunwayBlock({}, true)">Add RWY</button>
+                <button type="button" class="npa-add-btn" onclick="addAirportRunwayBlock({}, true)">Add RWY</button>
             </div>
             <div class="npa-modal-section">
-                <div class="npa-modal-section-title">Radio Aids</div>
+                <div class="npa-section-plaque">Radio Aids</div>
                 <div id="airportRadioAidsContainer" class="npa-modal-section"></div>
                 <div id="airportRadioAidTypeChoices" class="npa-choice-row no-wrap npa-hidden">
                     <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('VOR', {}, true)">VOR</button>
                     <button type="button" class="npa-choice-btn" onclick="addAirportRadioAidBlock('NDB', {}, true)">NDB</button>
                 </div>
                 <div class="airport-radio-add-row">
-                    <button type="button" class="modal-opt-btn" onclick="addAirportRadioAidStart()">Add Radio Aid</button>
-                    <button id="addAirportTarButton" type="button" class="modal-opt-btn" onclick="addAirportTarBlock()">Add TAR</button>
+                    <button type="button" class="npa-add-btn" onclick="addAirportRadioAidStart()">Add Radio Aid</button>
+                    <button id="addAirportTarButton" type="button" class="npa-add-btn" onclick="addAirportTarBlock()">Add TAR</button>
                 </div>
             </div>
         </div>

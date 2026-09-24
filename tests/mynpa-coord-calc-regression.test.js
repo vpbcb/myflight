@@ -187,3 +187,93 @@ test('with both lines empty CLR becomes EXIT and closes the keypad', () => {
     const clear = myNpaHtml.slice(myNpaHtml.indexOf("if (key === 'clear') {"), myNpaHtml.indexOf("if (key === 'temp_sign') {"));
     assert.match(clear, /if \(getCoordCalcShownValue\(\)\.trim\(\) === ""\) \{\s*closeNpaKeypad\(\);\s*return;/);
 });
+
+test('DIST FROM TAR column is not highlighted by a tap when there is no TAR value', () => {
+    const focus = functionSource('setNpaProfileFocusColumn');
+    assert.match(focus, /if \(column === 'radio' && !hasNpaProfileRadioReference\(\)\) return;/);
+    assert.match(focus, /if \(column === 'tar' && !isNpaProfileTarColumnVisible\(\)\) return;/);
+});
+
+test('empty Radio Aid column header reads DIST FROM / Radio Aid / (long tap), hint out of flow', () => {
+    assert.match(functionSource('getProfileRadioHeaderLines'), /if \(value === 0\) \{\s*return \['dist from', 'Radio Aid', '\(long tap\)'\];/);
+    assert.match(myNpaHtml, /#npaProfileRadioHeader \.npa-profile-head-tiny \{\s*position: absolute;\s*top: 100%;[^}]*font-style: italic;/);
+});
+
+test('placeholder "Radio Aid" header is not highlighted in blue', () => {
+    assert.match(functionSource('updateNpaProfileUnitHeaders'), /radioHeader\?\.classList\.toggle\('is-placeholder', radioHeaderLines\[1\] === 'Radio Aid'\);/);
+    assert.match(myNpaHtml, /#npaProfileRadioHeader\.is-placeholder \.npa-profile-head-large \{\s*color: inherit;/);
+});
+
+test('Radio Aid modal for the profile column hides the racetrack explanation', () => {
+    assert.match(functionSource('openRadioAidShiftModal'), /const shiftHint = modal\.querySelector\('\.radio-aid-shift-hint'\);\s*if \(shiftHint\) shiftHint\.hidden = activeRadioAidShiftTarget === 'profileRadio';/);
+});
+
+test('Radio Aid modal is titled "Radio Aid Distance" for the profile column', () => {
+    assert.match(functionSource('openRadioAidShiftModal'), /shiftTitle\.textContent = activeRadioAidShiftTarget === 'profileRadio' \? 'Radio Aid Distance' : 'Radio Aid Shift';/);
+});
+
+test('airport modal delete buttons draw circle and cross as one SVG, so the cross is always centred', () => {
+    const rule = myNpaHtml.match(/\.npa-modal-delete-btn \{\s*font-size: 0 !important;[^}]*\}/)[0];
+    assert.match(rule, /border: 0;/);
+    // круг и крестик в одной системе координат 24×24 с центром (12, 12)
+    assert.match(rule, /viewBox='0 0 24 24'/);
+    assert.match(rule, /circle cx='12' cy='12'/);
+    assert.match(rule, /d='M8 8L16 16M16 8L8 16'/);
+    assert.match(rule, /center \/ 100% 100% no-repeat;/);
+    assert.doesNotMatch(myNpaHtml, /\.npa-modal-delete-btn::before/);
+});
+
+test('airport modal lock: long tap shows delete buttons, short tap hides them, locked on every open', () => {
+    assert.match(myNpaHtml, /<div class="add-airport-title-row">\s*<button type="button" class="bottom-edit-lock-btn airport-modal-lock-btn" id="airportModalLockBtn"/);
+    assert.match(myNpaHtml, /#addAirportModal:not\(\.delete-unlocked\) \.npa-modal-delete-btn \{\s*visibility: hidden;\s*pointer-events: none;/);
+    const init = functionSource('initAirportModalLock');
+    assert.match(init, /setAirportModalDeleteUnlocked\(true\);\s*\}, NPA_EDIT_UNLOCK_HOLD_MS\);/);
+    assert.match(init, /if \(airportModalDeleteUnlocked\) setAirportModalDeleteUnlocked\(false\);/);
+    const setLock = functionSource('setAirportModalDeleteUnlocked');
+    assert.match(setLock, /'tap to<br>lock' : 'hold to<br>edit data'/);
+    assert.match(setLock, /getNpaLockIconSvg\(airportModalDeleteUnlocked\)/);
+    assert.match(myNpaHtml, /#addAirportModal \.add-airport-title-row \{\s*display: grid;\s*grid-template-columns: minmax\(72px, 1fr\) auto minmax\(72px, 1fr\);/);
+    assert.match(myNpaHtml, /<button type="button" class="airport-modal-close-btn" onclick="closeAddAirportModal\('button'\)" aria-label="Close"><\/button>/);
+    assert.match(myNpaHtml, /\.airport-modal-close-btn \{[^}]*linear-gradient\(180deg, #f26666 0%, #c62828 52%, #991b1b 100%\)/);
+    assert.match(functionSource('openAddAirportModal'), /setAirportModalDeleteUnlocked\(false\);/);
+    assert.match(myNpaHtml, /initNpaEditLockMode\(\);\s*initAirportModalLock\(\);/);
+});
+
+test('airport modal: header row stays outside the scroll area, modal is centred and grows to app height', () => {
+    assert.match(myNpaHtml, /<div class="modal-content npa-form-modal" onclick="event\.stopPropagation\(\)">\s*<div class="add-airport-title-row">[\s\S]*?<button type="button" class="airport-modal-close-btn"[^>]*><\/button>\s*<\/div>\s*<div class="add-airport-scroll-area">/);
+    assert.match(myNpaHtml, /#addAirportModal\.active \{\s*align-items: center;/);
+    assert.match(myNpaHtml, /#addAirportModal\.keyboard-open \{\s*align-items: flex-start;/);
+    assert.match(myNpaHtml, /#addAirportModal \.npa-form-modal \{\s*max-height: calc\(var\(--airport-modal-vh, var\(--app-height\)\) - 1\.5rem\);/);
+    assert.match(functionSource('scrollAddAirportFieldIntoView'), /!scroller\.contains\(element\)/);
+});
+
+test('Racetrack and airport-modal section titles share one plaque class', () => {
+    for (const title of ['Racetrack entry', 'Downwind leg', 'Runways', 'Radio Aids']) {
+        assert.ok(myNpaHtml.includes(`<div class="npa-section-plaque">${title}</div>`), title);
+    }
+    assert.match(myNpaHtml, /\.npa-section-plaque \{[^}]*padding: 3px 12px;[^}]*border-radius: 12px;[^}]*color: #0d47a1;/);
+    assert.doesNotMatch(myNpaHtml, /npa-modal-section-title|#npaBlock2 \.card-content > \.npa-subsection-title/);
+});
+
+test('Add RWY / Add Radio Aid / Add TAR share one button class styled like MyActivity "refresh app"', () => {
+    for (const label of ['Add RWY', 'Add Radio Aid', 'Add TAR']) {
+        assert.match(myNpaHtml, new RegExp(`<button [^>]*class="npa-add-btn"[^>]*>${label}</button>`), label);
+    }
+    const rule = myNpaHtml.match(/\.npa-add-btn \{[^}]*\}/)[0];
+    assert.match(rule, /width: 100%;/);
+    assert.match(myNpaHtml, /\.airport-radio-add-row \.npa-add-btn \{[^}]*flex: 1 1 0;/);
+    assert.match(rule, /block-size: 42px;/);
+    assert.match(rule, /border: 1px solid #c8d5dc;/);
+    assert.match(rule, /border-radius: 8px;/);
+    assert.match(rule, /font-weight: 400;/);
+});
+
+test('Airport field: no "i" button, long tap anywhere on the field opens the airport modal', () => {
+    assert.doesNotMatch(myNpaHtml, /airport-info-btn/);
+    assert.match(myNpaHtml, /<\/div>\s*<em class="airport-long-tap-hint">\(long tap\)<\/em>\s*<div class="npa-airport-dropdown"/);
+    const init = functionSource('initAirportFieldLongPress');
+    assert.match(init, /document\.getElementById\('airportFieldWrapper'\)/);
+    assert.match(init, /openAirportInfoModal\(\);\s*\}, NPA_PROFILE_LONG_PRESS_MS\);/);
+    assert.match(init, /if \(event\.target !== input\) input\.focus\(\);/);
+    assert.match(myNpaHtml, /initAirportModalLock\(\);\s*initAirportFieldLongPress\(\);/);
+});
