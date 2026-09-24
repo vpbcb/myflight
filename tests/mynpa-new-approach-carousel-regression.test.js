@@ -54,7 +54,7 @@ test('empty manual Racetrack NAV aid input returns to aid selection', () => {
 test('empty carousel downwind time uses Next to continue to ground speed', () => {
     const clearButton = functionBody('updateNpaKeypadClearButton');
     assert.match(clearButton, /newApproachCarouselActive[\s\S]*newApproachCarouselStep === 'downwindTime'[\s\S]*activeNpaField === 'downwindTime'[\s\S]*currentKpVal === ""/);
-    assert.match(clearButton, /shouldShowBack \? 'Back' : shouldShowNext \? 'Next' : 'CLR'/);
+    assert.match(clearButton, /shouldShowBack \? 'Back' : shouldShowNext \? 'Next' : shouldShowExit \? 'EXIT' : 'CLR'/);
     assert.match(functionBody('kpPress'), /activeNpaField === 'downwindTime'[\s\S]*currentKpVal === ""[\s\S]*closeNpaKeypad\('done'\)/);
 });
 

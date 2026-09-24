@@ -829,7 +829,7 @@
             opacity: 0.62;
             font-family: inherit;
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 700;
             line-height: 1.05;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -853,12 +853,30 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            padding-bottom: 13px; /* содержимое поднято: PROFILE на одной высоте с RACETRACK */
         }
         .npa-profile-tab-btn .tab-line {
             font-size: 14px;
-            font-weight: 900;
+            font-weight: 700;
             line-height: 1.05;
             letter-spacing: 0.5px;
+        }
+        /* Неактивная вкладка сохраняет цвет активной (синий, без приглушения) — и RACETRACK, и PROFILE,
+           вместе с нижними строками; отличаются только фон и размеры шрифта */
+        .npa-tab-btn:not(.active) {
+            color: var(--accent-blue);
+            opacity: 1;
+        }
+        /* Подпись под названием вкладки: мелко, без жирного и без заглавных */
+        .npa-tab-btn .npa-tab-sub {
+            display: block;
+            margin-top: 2px;
+            font-size: 10px;
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
         }
         .npa-tab-btn .tab-and {
             display: block;
@@ -960,6 +978,12 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
+            /* Содержимое растёт по высоте и прокручивается панелью, а не сжимается (иначе исчезают разделители) */
+            height: auto;
+            min-height: 100%;
+        }
+        #npaBlock2 .card-content > * {
+            flex-shrink: 0;
         }
         #npaBlock2 .c2-row {
             gap: 5px;
@@ -983,7 +1007,29 @@
             font-size: 9px;
             line-height: 1.05;
         }
+        /* Заголовки секций на синей плашке: высота, скругление и отступ текста как у калькулятора,
+           начертание как у его заголовка (800, без полупрозрачности) */
+        #npaBlock2 .card-content > .npa-subsection-title {
+            box-sizing: border-box;
+            align-self: flex-start; /* плашка по ширине текста заголовка */
+            display: flex;
+            align-items: center;
+            padding: 3px 12px; /* минимальные отступы сверху и снизу */
+            border: 1px solid rgba(25, 118, 210, 0.35);
+            border-radius: 12px;
+            background: rgba(25, 118, 210, 0.08);
+            color: #0d47a1;
+            font-weight: 800;
+            opacity: 1;
+        }
+        html.dark-theme #npaBlock2 .card-content > .npa-subsection-title {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.1);
+            color: #7dd3fc;
+        }
         #npaBlock2 .npa-subsection-divider {
+            width: 80%;
+            align-self: center;
             margin: 12px 0;
         }
         /* Калькулятор расстояния между координатами: свёрнут по умолчанию, раскрывается тапом по заголовку */
@@ -991,12 +1037,57 @@
             overflow-y: auto;
             overscroll-behavior: contain;
         }
+        /* Ползунок прокрутки Racetrack: узкий, основной синий — как у таблицы профиля */
+        #npaBlock2::-webkit-scrollbar {
+            width: 5px;
+        }
+        #npaBlock2::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 10px;
+        }
+        html.dark-theme #npaBlock2::-webkit-scrollbar-thumb {
+            background: #0273ad;
+        }
+        /* Блок — прямоугольник в стиле полей (.cell-wrapper). Свёрнутый он высотой с поле Coord,
+           развёрнутый вмещает поля Coord 1, Coord 2 и S */
+        /* Свой цвет плашки — мягкий бирюзовый: отличается от голубого FDP и оранжевого FAP */
+        .npa-coord-calc {
+            --npa-coord-calc-accent: #115e59;
+            background-color: rgba(20, 184, 166, 0.12);
+            border: 1px solid rgba(13, 148, 136, 0.45);
+            border-radius: 12px;
+        }
+        html.dark-theme .npa-coord-calc {
+            --npa-coord-calc-accent: #5eead4;
+            background-color: rgba(45, 212, 191, 0.1);
+            border-color: rgba(45, 212, 191, 0.4);
+        }
+        #npaBlock2 .npa-coord-calc .npa-subsection-title,
+        .npa-coord-calc-globe,
+        .npa-coord-calc-arrow {
+            color: var(--npa-coord-calc-accent);
+        }
+        /* Заголовок калькулятора: темнее (без общей полупрозрачности) */
+        #npaBlock2 .npa-coord-calc .npa-subsection-title {
+            font-weight: 800;
+            opacity: 1;
+        }
+        .npa-coord-calc-title-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .npa-coord-calc-globe {
+            flex-shrink: 0;
+            color: var(--accent-blue);
+        }
         .npa-coord-calc-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             width: 100%;
-            padding: 2px 0;
+            height: 36px;
+            padding: 0 12px;
             border: 0;
             background: transparent;
             color: inherit;
@@ -1006,12 +1097,10 @@
         }
         .npa-coord-calc-arrow {
             font-size: 10px;
-            color: var(--text-main);
-            opacity: 0.7;
             transition: transform 0.2s ease;
         }
         .npa-coord-calc.open .npa-coord-calc-arrow {
-            transform: rotate(90deg);
+            transform: rotate(180deg);
         }
         .npa-coord-calc-body {
             display: none;
@@ -1020,7 +1109,10 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            margin-top: 6px;
+            padding: 0 6px 6px;
+        }
+        .npa-coord-calc .cell-wrapper {
+            background-color: var(--card-bg);
         }
         .npa-coord-calc .cell-input {
             cursor: pointer;
@@ -1032,8 +1124,26 @@
             line-height: 1.2;
             text-align: center;
         }
+        .npa-coord-calc-unit {
+            font-weight: 400;
+            text-transform: none;
+        }
+        /* «S» и результат в одну строку; S крупный и контрастный */
+        #npaBlock2 .npa-coord-calc-result {
+            flex-direction: row;
+            gap: 10px;
+        }
+        #npaBlock2 .npa-coord-calc-result .cell-label {
+            width: auto;
+            margin: 0;
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
         #npaBlock2 .racetrack-sectors-row .tall-wrapper {
-            height: 58px;
+            height: 53px; /* минус 5px, на которые поднялась строка offset track */
             padding-top: 4px;
             padding-bottom: 3px;
         }
@@ -1046,6 +1156,7 @@
         }
         #npaBlock2 .racetrack-offset-track {
             min-height: 12px;
+            margin-top: 2px; /* сразу под значением Offset, а не прижато к низу блока */
             font-size: 7.5px;
         }
         #npaBlock2 .racetrack-offset-track-value {
@@ -2518,6 +2629,38 @@
         .kp-mask-dot {
             color: var(--text-main);
         }
+        /* Высота дисплея координат фиксирована (две строки базового шрифта) — модалка не меняет высоту,
+           когда fitCoordCalcKeypadDisplay уменьшает шрифт */
+        .modal-val.kp-coord-display {
+            height: calc(2.2rem * 1.1 * 2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        #kpExtraRow .kp-btn:disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .kp-btn.kp-blink {
+            animation: kp-hemisphere-blink 0.3s ease-in-out 6 alternate;
+        }
+        @keyframes kp-hemisphere-blink {
+            to {
+                background: var(--accent-blue);
+                border-color: var(--accent-blue);
+                color: #fff;
+            }
+        }
+        .kp-coord-line {
+            display: block;
+            font-weight: 400;
+            line-height: 1.1;
+            min-width: 6em; /* постоянная ширина: левый край не сдвигается по мере ввода */
+            text-align: left; /* строки по левому краю, блок из двух строк — по центру дисплея */
+        }
+        .kp-coord-hint {
+            opacity: 0.22;
+        }
         .kp-mask-hint {
             color: var(--text-main);
             opacity: 0.22;
@@ -3122,18 +3265,21 @@
     justify-content: center;
     text-align: center;
     margin-left: 2px;
-    transform: translateY(4px);
+    transform: translateY(6px);
     white-space: nowrap;
 }
 .fcu-info-stacked .fcu-main {
     font-size: 11px;
+    font-weight: 700;
     line-height: 1;
 }
 .npa-profile-tab-btn.active .tab-line {
     font-size: 11px;
 }
+/* Активная вкладка: FCU FPA — как заголовок RACETRACK (14px, 700) */
 .npa-profile-tab-btn.active .fcu-info-stacked .fcu-main {
     font-size: 14px;
+    font-weight: 700;
 }
 .fcu-info-stacked .fcu-main.fcu-fpa-hot {
     color: #ef4444;
@@ -3141,10 +3287,14 @@
 .fcu-info-stacked .fcu-main.fcu-fpa-cold {
     color: #0273ad;
 }
+/* Как подпись «&coord.calculator» под RACETRACK (.npa-tab-sub) */
 .fcu-info-stacked .fcu-sub {
-    font-size: 8px;
-    line-height: 1;
-    margin-top: 1px;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: 1;
+    line-height: 1.1;
+    margin-top: 2px;
     text-transform: none;
 }
         /* Заголовок страницы: единый вид на всех страницах (эталон — MyLoad) */
@@ -3461,7 +3611,10 @@
             <div class="npa-tabs-container">
                 <div class="npa-tab-line">
                     <div class="npa-tab-row">
-                        <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock2" onclick="toggleNpaBlock('npaBlock2')">Racetrack</div>
+                        <div role="button" tabindex="0" class="npa-tab-btn" data-target-block="npaBlock2" onclick="toggleNpaBlock('npaBlock2')">
+                            <span class="tab-line">Racetrack</span>
+                            <span class="npa-tab-sub">&amp;coord.calculator</span>
+                        </div>
                         <div role="button" tabindex="0" class="npa-tab-btn npa-profile-tab-btn" data-target-block="npaBlock4" onclick="toggleNpaBlock('npaBlock4')">
                             <span class="tab-line">Profile</span>
                             <div class="fcu-info-stacked">
@@ -3543,8 +3696,11 @@
                             <div class="npa-subsection-divider"></div>
                             <div class="npa-coord-calc" id="npaCoordCalc">
                                 <button type="button" class="npa-coord-calc-header" onclick="toggleNpaCoordCalc()" aria-expanded="false">
-                                    <span class="npa-subsection-title">Coordinate calculator</span>
-                                    <span class="npa-coord-calc-arrow">&#9654;</span>
+                                    <span class="npa-coord-calc-title-group">
+                                        <span class="npa-subsection-title">Coordinate calculator</span>
+                                        <svg class="npa-coord-calc-globe" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                    </span>
+                                    <span class="npa-coord-calc-arrow">&#9660;</span>
                                 </button>
                                 <div class="npa-coord-calc-body" id="npaCoordCalcBody">
                                     <div class="cell-wrapper">
@@ -3557,7 +3713,7 @@
                                     </div>
                                     <div class="cell-wrapper npa-coord-calc-result">
                                         <span class="cell-label">S</span>
-                                        <div class="npa-coord-calc-value" id="npaCoordCalcResult">-- NM</div>
+                                        <div class="npa-coord-calc-value" id="npaCoordCalcResult">-- <span class="npa-coord-calc-unit">nm</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -6854,19 +7010,22 @@
             minutes = Number(nums[1]);
         } else {
             const compact = nums[0];
-            const compactDigits = compact.replace('.', '');
-            if (compact.includes('.') || compactDigits.length > degreeDigits) {
-                degrees = Number(compact.slice(0, degreeDigits));
-                const rest = compact.slice(degreeDigits);
-                if (rest === "") return null;
-
-                if (!compact.includes('.') && rest.length >= 4) {
-                    minutes = Number(rest.slice(0, 2));
+            const integerPart = compact.split('.')[0];
+            // Долгота без ведущего нуля: 3724.9E / 372452E — чётная длина целой части значит 2 цифры градусов
+            const degreeLength = degreeDigits === 3 && integerPart.length >= 4 && integerPart.length % 2 === 0 ? 2 : degreeDigits;
+            if (integerPart.length > degreeDigits || degreeLength !== degreeDigits) {
+                // DDMM(.m) / DDMMSS(.s): градусы — первые 2 (широта) или 3 (долгота) цифры
+                degrees = Number(integerPart.slice(0, degreeLength));
+                const rest = compact.slice(degreeLength);
+                const restInteger = rest.split('.')[0];
+                if (restInteger.length >= 4) {
+                    minutes = Number(restInteger.slice(0, 2));
                     seconds = Number(rest.slice(2));
                 } else {
                     minutes = Number(rest);
                 }
             } else {
+                // Десятичные градусы: 55.9726 / 037.4146
                 degrees = Number(compact);
             }
         }
@@ -6932,6 +7091,90 @@
         return `${distanceNm >= 100 ? Math.round(distanceNm) : distanceNm.toFixed(1)} NM`;
     }
 
+    // Свободный ввод калькулятора: цифры, точка и N/S/E/W; широту и долготу разделяем пробелом
+    function splitCoordCalcText(value) {
+        const text = String(value || '').toUpperCase().replace(/[^0-9.NSEW ]/g, '').replace(/^ +/, '');
+        const spaceIndex = text.indexOf(' ');
+        if (spaceIndex !== -1) {
+            return { lat: text.slice(0, spaceIndex), lon: text.slice(spaceIndex + 1).replace(/ /g, ''), separated: true };
+        }
+        const match = text.match(/^([NS][\d.]*|[\d.]+[NS])([EW]?[\d.]*[EW]?)$/);
+        return match && match[2]
+            ? { lat: match[1], lon: match[2], separated: true }
+            : { lat: text, lon: '', separated: false };
+    }
+
+    function formatCoordCalcText(value) {
+        const { lat, lon } = splitCoordCalcText(value);
+        return lon ? `${lat} ${lon}` : lat;
+    }
+
+    // Кнопки полушарий мигают три раза — подсказка, что букву N/S или E/W нужно набрать
+    function blinkNpaKeypadButtons(keys) {
+        document.querySelectorAll('#kpExtraRow .kp-btn').forEach(button => {
+            if (!keys.includes(button.textContent)) return;
+            button.classList.remove('kp-blink');
+            void button.offsetWidth; // перезапуск анимации при повторном нажатии
+            button.classList.add('kp-blink');
+            button.addEventListener('animationend', () => button.classList.remove('kp-blink'), { once: true });
+        });
+    }
+
+    // Какие буквы полушарий сейчас допустимы: N/S — пока у широты нет буквы, затем E/W — пока её нет у долготы
+    function getCoordCalcAllowedHemispheres(value) {
+        const { lat, lon } = splitCoordCalcText(value);
+        if (!/[NS]/.test(lat)) return ['N', 'S'];
+        if (!/[EW]/.test(lon)) return ['E', 'W'];
+        return [];
+    }
+
+    function updateCoordCalcHemisphereButtons() {
+        const allowed = getCoordCalcAllowedHemispheres(currentKpVal);
+        document.querySelectorAll('#kpExtraRow .kp-btn').forEach(button => {
+            button.disabled = !allowed.includes(button.textContent);
+        });
+    }
+
+    function isCoordCalcComplete(value) {
+        const { lat, lon } = splitCoordCalcText(value);
+        return /\d/.test(lat) && /\d/.test(lon);
+    }
+
+    function getCoordCalcShownValue() {
+        // После CLR (или стирания до пустоты) старое значение поля не подставляем — обе строки пустые
+        return keypadWasCleared ? currentKpVal : (currentKpVal || activeAirportRadioCoordInput?.value || "");
+    }
+
+    // DONE только когда заполнены обе строки; иначе NEXT — переход с широты на долготу.
+    // Без буквы полушария строка не принимается: мигают кнопки N/S или E/W
+    function pressNpaKeypadDone() {
+        if (isNpaCoordCalcKeypad()) {
+            const shownValue = getCoordCalcShownValue();
+            if (!isCoordCalcComplete(shownValue)) {
+                kpPress('next');
+                return;
+            }
+            if (!/[EW]/.test(splitCoordCalcText(shownValue).lon)) {
+                blinkNpaKeypadButtons(['E', 'W']);
+                return;
+            }
+        }
+        closeNpaKeypad('done');
+    }
+
+    // Дисплей клавиатуры калькулятора: всегда две строки (широта / долгота), чтобы высота модалки не прыгала
+    function getCoordCalcKeypadHtml(value) {
+        const { lat, lon } = splitCoordCalcText(value);
+        const line = (part, hint) => part
+            ? `<span class="kp-coord-line">${part}</span>`
+            : `<span class="kp-coord-line kp-coord-hint">${hint}</span>`;
+        return line(lat, 'latitude') + line(lon, 'longitude');
+    }
+
+    function isNpaCoordCalcKeypad() {
+        return activeNpaField === 'airportRadioCoord' && !!activeAirportRadioCoordInput?.dataset?.coordCalc;
+    }
+
     const NPA_COORD_CALC_STORAGE_KEY = 'mynpa_coord_calc_v1';
 
     function saveNpaCoordCalc() {
@@ -6939,7 +7182,6 @@
         if (!calc) return;
         try {
             localStorage.setItem(NPA_COORD_CALC_STORAGE_KEY, JSON.stringify({
-                open: calc.classList.contains('open'),
                 coord1: document.getElementById('npaCoordCalc1')?.value || '',
                 coord2: document.getElementById('npaCoordCalc2')?.value || ''
             }));
@@ -6951,7 +7193,9 @@
         if (!result) return;
         const from = parseNpaCoordinatePair(document.getElementById('npaCoordCalc1')?.value);
         const to = parseNpaCoordinatePair(document.getElementById('npaCoordCalc2')?.value);
-        result.textContent = from && to ? formatCoordCalcDistance(getGreatCircleDistanceNm(from, to)) : '-- NM';
+        const text = from && to ? formatCoordCalcDistance(getGreatCircleDistanceNm(from, to)) : '-- NM';
+        // Число жирное, единица nm — строчными и обычным начертанием
+        result.innerHTML = text.replace(/ NM$/, ' <span class="npa-coord-calc-unit">nm</span>');
         saveNpaCoordCalc();
     }
 
@@ -6979,10 +7223,11 @@
         if (saved && typeof saved === 'object') {
             const coord1 = document.getElementById('npaCoordCalc1');
             const coord2 = document.getElementById('npaCoordCalc2');
-            if (coord1) coord1.value = normalizeStoredCoordinate(saved.coord1);
-            if (coord2) coord2.value = normalizeStoredCoordinate(saved.coord2);
-            setNpaCoordCalcOpen(saved.open === true);
+            if (coord1) coord1.value = formatCoordCalcText(saved.coord1);
+            if (coord2) coord2.value = formatCoordCalcText(saved.coord2);
         }
+        // При загрузке страницы блок всегда свёрнут; сохраняются только координаты
+        setNpaCoordCalcOpen(false);
         updateNpaCoordCalc();
     }
 
@@ -9444,6 +9689,8 @@
         configureNpaKeypad(activeNpaField);
         updateKpDisplay();
         document.getElementById('keypadModal').style.display = 'flex';
+        // Подгонка шрифта калькулятора меряет ширину — повторяем, когда модалка уже видима
+        if (isNpaCoordCalcKeypad()) updateKpDisplay();
     }
 
     function openNpaKeypad(type) {
@@ -9468,7 +9715,9 @@
             && newApproachCarouselStep === 'downwindTime'
             && activeNpaField === 'downwindTime'
             && currentKpVal === "";
-        clearButton.textContent = shouldShowBack ? 'Back' : shouldShowNext ? 'Next' : 'CLR';
+        // Калькулятор координат: обе строки пустые — CLR превращается в EXIT и закрывает клавиатуру
+        const shouldShowExit = isNpaCoordCalcKeypad() && getCoordCalcShownValue().trim() === "";
+        clearButton.textContent = shouldShowBack ? 'Back' : shouldShowNext ? 'Next' : shouldShowExit ? 'EXIT' : 'CLR';
     }
 
     function configureNpaKeypad(type) {
@@ -9531,7 +9780,7 @@
         if (type === 'airportRadioCoord') {
             if (titleEl) titleEl.innerText = getAirportCoordKeypadTitle(activeAirportRadioCoordInput);
             if (subtitleEl) subtitleEl.innerText = '';
-            if (dotBtn) dotBtn.style.visibility = 'hidden';
+            if (dotBtn && !isNpaCoordCalcKeypad()) dotBtn.style.visibility = 'hidden';
             configureNpaExtraButtons(['N', 'S', 'E', 'W']);
             configureNpaBackspaceButton();
             return;
@@ -9872,9 +10121,11 @@
         } else if (activeNpaField === 'airportRadioCoord') {
             const coordInput = activeAirportRadioCoordInput;
             const shouldAdvance = e === 'done' && activeAirportRadioCoordAutoAdvance;
-            if (activeAirportRadioCoordInput) {
+            if (activeAirportRadioCoordInput?.dataset.coordCalc) {
+                activeAirportRadioCoordInput.value = formatCoordCalcText(finalVal);
+                updateNpaCoordCalc();
+            } else if (activeAirportRadioCoordInput) {
                 activeAirportRadioCoordInput.value = finalVal === "" && keypadWasCleared ? "" : getRadioCoordMaskedValue(finalVal, true);
-                if (activeAirportRadioCoordInput.dataset.coordCalc) updateNpaCoordCalc();
             }
             activeAirportRadioCoordInput = null;
             activeAirportRadioCoordAutoAdvance = false;
@@ -9955,6 +10206,21 @@
                 closeNpaKeypad('done');
                 return;
             }
+            // Калькулятор координат: первое CLR стирает долготу (если она есть), второе — широту,
+            // а при пустых строках кнопка работает как EXIT
+            if (isNpaCoordCalcKeypad()) {
+                if (getCoordCalcShownValue().trim() === "") {
+                    closeNpaKeypad();
+                    return;
+                }
+                const parts = splitCoordCalcText(getCoordCalcShownValue());
+                if (parts.lon || parts.separated) {
+                    currentKpVal = parts.separated && !/[NS]$/.test(parts.lat) ? `${parts.lat} ` : parts.lat;
+                    keypadWasCleared = true;
+                    updateKpDisplay();
+                    return;
+                }
+            }
             currentKpVal = "";
             keypadWasCleared = true;
             npaTempSignOnlyInput = false;
@@ -9996,7 +10262,7 @@
         }
 
         if (key === 'del') {
-            if (activeNpaField === 'airportRadioCoord') {
+            if (activeNpaField === 'airportRadioCoord' && !isNpaCoordCalcKeypad()) {
                 const parts = getRadioCoordParts(currentKpVal);
                 currentKpVal = parts.digits.slice(0, -1) + parts.latHem + parts.lonHem;
                 keypadWasCleared = true;
@@ -10012,6 +10278,28 @@
 
         if (activeNpaField === 'airportModal') {
             handleAirportKeypadPress(key);
+            return;
+        }
+
+        if (isNpaCoordCalcKeypad()) {
+            if (key === 'next') {
+                const parts = splitCoordCalcText(currentKpVal);
+                if (!/\d/.test(parts.lat) || parts.separated) return;
+                if (!/[NS]/.test(parts.lat)) {
+                    blinkNpaKeypadButtons(['N', 'S']);
+                    return;
+                }
+                currentKpVal = `${currentKpVal} `;
+                keypadWasCleared = false;
+                updateKpDisplay();
+                return;
+            }
+            const value = String(key).toUpperCase();
+            if (!/^(\d|00|\.|[NSEW])$/.test(value)) return;
+            if (/^[NSEW]$/.test(value) && !getCoordCalcAllowedHemispheres(currentKpVal).includes(value)) return;
+            currentKpVal = `${currentKpVal}${value}`.slice(0, 24);
+            keypadWasCleared = false;
+            updateKpDisplay();
             return;
         }
 
@@ -10063,10 +10351,28 @@
         updateKpDisplay();
     }
 
+    // Координаты калькулятора: если строка шире дисплея, уменьшаем шрифт обеих строк, пока не влезет
+    function fitCoordCalcKeypadDisplay(displayEl) {
+        const box = displayEl.parentElement;
+        if (!box) return;
+        const boxStyle = getComputedStyle(box);
+        const available = box.clientWidth - parseFloat(boxStyle.paddingLeft) - parseFloat(boxStyle.paddingRight);
+        if (!(available > 0)) return;
+        let size = parseFloat(getComputedStyle(displayEl).fontSize);
+        while (displayEl.getBoundingClientRect().width > available && size > 14) {
+            size -= 1;
+            displayEl.style.fontSize = `${size}px`;
+        }
+    }
+
     function updateKpDisplay() {
         updateNpaKeypadClearButton();
         const displayEl = document.getElementById('kpValue');
         if (!displayEl) return;
+        displayEl.style.fontSize = '';
+        displayEl.classList.toggle('kp-coord-display', isNpaCoordCalcKeypad());
+        const doneBtn = document.getElementById('doneBtn');
+        if (doneBtn) doneBtn.textContent = 'DONE';
 
         if (activeNpaField === 'airportModal') {
             const rawValue = getAirportKeypadRawValue(activeAirportKeypad);
@@ -10085,6 +10391,17 @@
                 displayEl.style.opacity = '1';
                 displayEl.textContent = "\u00A0";
             }
+            return;
+        }
+
+        if (isNpaCoordCalcKeypad()) {
+            displayEl.style.color = 'var(--text-main)';
+            displayEl.style.opacity = '1';
+            const shownValue = getCoordCalcShownValue();
+            displayEl.innerHTML = getCoordCalcKeypadHtml(shownValue);
+            if (doneBtn && !isCoordCalcComplete(shownValue)) doneBtn.textContent = 'NEXT';
+            updateCoordCalcHemisphereButtons();
+            fitCoordCalcKeypadDisplay(displayEl);
             return;
         }
 
@@ -10302,7 +10619,7 @@
         <div id="kpExtraRow" class="keypad-extra-grid"></div>
         <div class="keypad-action-row">
             <button id="keypadClearBtn" class="kp-btn kp-clr" onclick="kpPress('clear')">CLR</button>
-            <button id="doneBtn" class="kp-btn kp-done" onclick="closeNpaKeypad('done')">DONE</button>
+            <button id="doneBtn" class="kp-btn kp-done" onclick="pressNpaKeypadDone()">DONE</button>
         </div>
     </div>
 </div>
