@@ -255,9 +255,7 @@ test('fuel table data is well-formed for every configuration', () => {
 });
 
 test('every aircraft in aircraftDB has LTS data and seat counts match its config', () => {
-    const withoutBlank = ['20/120'];
     for (const aircraft of aircraftDB) {
-        if (withoutBlank.includes(aircraft.config)) continue;
         const data = loadsheetDB[aircraft.config];
         assert.ok(data, `${aircraft.regFull}: no LTS data for ${aircraft.config}`);
         const [c, y] = aircraft.config.split('/').map(Number);
