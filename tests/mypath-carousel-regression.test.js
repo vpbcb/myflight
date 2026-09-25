@@ -29,3 +29,9 @@ test('NEW APPR sequence skips temperature after FAP', () => {
 test('temperature remains manually editable', () => {
     assert.match(myPathHtml, /id="temp"[\s\S]{0,300}onclick="openKeypad\('temp', 'TEMPERATURE'\)"/);
 });
+
+test('NEW APPR carousel resets OAT to +15', () => {
+    const reset = functionBody('resetFields');
+    assert.match(reset, /document\.getElementById\('temp'\)\.value = "15";\s*isNeg = false;\s*document\.getElementById\('signBtn'\)\.innerText = '\+';/);
+    assert.ok(reset.indexOf("getElementById('temp').value") < reset.indexOf('calculate();'));
+});

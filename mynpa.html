@@ -9561,6 +9561,10 @@
     function startNewApproachCarousel() {
         newApproachCarouselActive = true;
         newApproachCarouselStep = 'gpa';
+        // OAT при запуске карусели сбрасываем на +15 °C (как в MyPath)
+        setNpaTemperatureValue("15");
+        renderNpaProfileTable();
+        scheduleNpaCurrentPageStateSave();
         setTimeout(() => {
             const menu = document.getElementById('gpaMenu');
             if (menu) menu.style.display = 'block';

@@ -2204,7 +2204,10 @@ for (let d = topMile; d >= 2; d--) {
         if (document.getElementById('pathShiftInput')) document.getElementById('pathShiftInput').value = "0";
         isPathShiftActive = false;
 
-        // Температуру НЕ сбрасываем, оставляем прошлое значение как подсказку
+        // Температура: при запуске карусели сбрасываем на +15 °C (МСА)
+        document.getElementById('temp').value = "15";
+        isNeg = false;
+        document.getElementById('signBtn').innerText = '+';
 
         // 2. Вызываем пересчет (это также сохранит стейт)
         calculate();

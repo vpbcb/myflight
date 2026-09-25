@@ -71,3 +71,7 @@ test('edit mode unlock responds after 0.8 seconds and uses the MyWind RWY toast 
     assert.match(toastBody, /toast\.style\.transition = `opacity \$\{NPA_EDIT_TOAST_FADE_MS\}ms ease-in`;/);
     assert.match(toastBody, /}, NPA_EDIT_TOAST_FADE_MS\);/);
 });
+
+test('new approach carousel resets OAT to +15', () => {
+    assert.match(functionBody('startNewApproachCarousel'), /setNpaTemperatureValue\("15"\);/);
+});
