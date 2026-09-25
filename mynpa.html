@@ -3689,7 +3689,7 @@
             }
         })();
     </script>
-<meta name="offline-build" content="f5b0df926b572c84606c4201"></head>
+<meta name="offline-build" content="c5bb6d20ca69c286a4642db1"></head>
 <body>
 
 <div class="app-wrapper">
@@ -6483,10 +6483,10 @@
         return normalizeBearing360(Math.atan2(vector.x, vector.y) * 180 / Math.PI);
     }
 
+    // Направление оси берём только по координатам торцов (истинное, как и вся геометрия).
+    // Inbound course (inboundCrs) — магнитный курс для секторов входа в зону ожидания,
+    // к конечному участку захода он не относится.
     function getProfileOutboundBearingDeg(runwayInfo) {
-        const inboundCourse = normalizeCourse(getNumberOrBlank('inboundCrs'));
-        if (inboundCourse !== "") return reciprocalBearing(inboundCourse);
-
         const landingCoord = parseNpaCoordinatePair(runwayInfo?.landingCoord);
         const oppositeCoord = parseNpaCoordinatePair(runwayInfo?.oppositeCoord);
         if (!landingCoord || !oppositeCoord) return null;
@@ -6549,9 +6549,8 @@
     }
 
     function getProfileRadioShiftExactNm(radioShiftNm) {
-        const savedExact = normalizeOptionalNmValue(profileRadioShiftExactNm);
-        if (savedExact !== null) return savedExact;
-
+        // При выбранном радиосредстве с координатами сдвиг всегда пересчитываем:
+        // сохранённое значение могло быть посчитано по старой (неверной) оси.
         const source = getProfileRadioDirectSource();
         if (source) {
             const airport = getAirportDocument(getNpaAirportCode());
@@ -6564,8 +6563,16 @@
             }
         }
 
+        const savedExact = normalizeOptionalNmValue(profileRadioShiftExactNm);
+        if (savedExact !== null) return savedExact;
+
         const fallback = Number(radioShiftNm || 0);
         return Number.isFinite(fallback) ? fallback : 0;
+    }
+
+    function getProfileRadioGeometrySource() {
+        const source = getProfileRadioDirectSource();
+        return source && getRadioDirectGeometry(source) ? source : null;
     }
 
     function getNpaProfileRadioDistanceFromThr(thrDistanceNm, radioShiftNm, fallbackThrDistanceNm = thrDistanceNm) {
@@ -6576,7 +6583,24 @@
             : Number.isFinite(fallbackThrNm)
                 ? fallbackThrNm
                 : 0;
-        return baseThrNm + getProfileRadioShiftExactNm(radioShiftNm);
+
+        // Точная дальность (как покажет DME): учитывает радиосредство сбоку от оси
+        const source = getProfileRadioGeometrySource();
+        if (source) {
+            const directDistance = getDirectRadioDistanceFromThr(baseThrNm, source);
+            if (Number.isFinite(directDistance)) return directDistance;
+        }
+
+        // Ручной сдвиг без координат: по модулю, как показывает прибор
+        return Math.abs(baseThrNm + getProfileRadioShiftExactNm(radioShiftNm));
+    }
+
+    // Дальность от торца по значению в колонке radio (для шкалы по радиосредству).
+    // Из двух точек с одной DME берётся дальняя — до пролёта радиосредства.
+    function getNpaProfileThrFromRadioDistance(radioDistanceNm, radioShiftNm) {
+        const source = getProfileRadioGeometrySource();
+        if (source) return getThrDistanceFromDirectRadioDistance(radioDistanceNm, source);
+        return Number(radioDistanceNm) - getProfileRadioShiftExactNm(radioShiftNm);
     }
 
     function getNpaProfileDistancesFromThr(thrDistanceNm, radioShiftNm, tarShiftNm, geometryThrDistanceNm = thrDistanceNm) {

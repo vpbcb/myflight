@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myflight_v.260924-9';
+const CACHE_NAME = 'myflight_v.260925-1';
 const APP_CACHE = CACHE_NAME;
 const PRECACHE_BUILD = null;
 const APP_ID = "myflight";
