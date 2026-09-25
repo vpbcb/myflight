@@ -6631,11 +6631,15 @@
     function getNpaProfileShiftedColumnDisplay(distances, column, overrideValue = '') {
         if (!distances) return "";
         if (column === 'radio' && !distances.radioEnabled) return "";
-        const shiftNm = column === 'radio'
-            ? distances.radioNm - distances.thrNm
-            : column === 'tar'
-                ? distances.tarNm - distances.thrNm
-                : 0;
+        // Дальность от радиосредства не сводится к постоянному сдвигу, поэтому
+        // при выбранном радиосредстве ячейку показываем всегда.
+        if (column === 'radio') {
+            if (!Number.isFinite(distances.radioNm)) return "";
+            return overrideValue || formatNpaProfileDistance(distances.radioNm, column);
+        }
+        const shiftNm = column === 'tar'
+            ? distances.tarNm - distances.thrNm
+            : 0;
 
         if (!hasNpaProfileShiftValue(shiftNm)) return "";
         return overrideValue || formatNpaProfileDistance(distances[`${column}Nm`], column);
@@ -6742,9 +6746,34 @@
         return anchors;
     }
 
-    function getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors) {
+    // Границы шкалы по активной колонке, в NM этой колонки.
+    // Для радиосредства с координатами: DME на 10 NM от торца и минимальная DME
+    // на участке 2–10 NM (у радиосредства сбоку от оси минимум — на его траверзе).
+    function getNpaProfileActiveBaselineNm(activeColumn, radioShiftNm, tarShiftNm) {
+        if (activeColumn === 'radio') {
+            const source = getProfileRadioGeometrySource();
+            const geometry = source ? getRadioDirectGeometry(source) : null;
+            if (geometry) {
+                const alongNm = geometry.ux * geometry.aidVector.x + geometry.uy * geometry.aidVector.y;
+                const closestThrNm = Math.min(10, Math.max(2, alongNm));
+                const topNm = getDirectRadioDistanceFromThr(10, source);
+                const bottomNm = getDirectRadioDistanceFromThr(closestThrNm, source);
+                if (Number.isFinite(topNm) && Number.isFinite(bottomNm)) return [topNm, bottomNm];
+            }
+        }
+        return [10 + getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm), 2];
+    }
+
+    function getNpaProfileThrFromActiveNm(activeColumn, activeNm, radioShiftNm, tarShiftNm) {
+        if (activeColumn === 'radio' && hasNpaProfileRadioReference(radioShiftNm)) {
+            const thrNm = getNpaProfileThrFromRadioDistance(activeNm, radioShiftNm);
+            return Number.isFinite(thrNm) ? thrNm : NaN;
+        }
+        return activeNm - getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm);
+    }
+
+    function getNpaProfileActiveScaleBounds(activeUnit, baselineNm, anchors) {
         const step = normalizeNpaProfileUnit(activeUnit) === 'km' ? 2 : 1;
-        const baselineNm = [10 + activeShiftNm, 2];
         const oldTopActive = convertNpaProfileNmToActiveUnit(Math.max(...baselineNm), activeUnit);
         const oldBottomActive = convertNpaProfileNmToActiveUnit(Math.min(...baselineNm), activeUnit);
         const anchorValues = anchors
@@ -6792,9 +6821,9 @@
 
     function renderNpaProfileActiveScaleRows(metrics, radioShiftNm, tarShiftNm, activeColumn) {
         const activeUnit = normalizeNpaProfileUnit(npaProfileUnits[activeColumn]);
-        const activeShiftNm = getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm);
+        const baselineNm = getNpaProfileActiveBaselineNm(activeColumn, radioShiftNm, tarShiftNm);
         const anchors = getNpaProfileAnchorRows(metrics, radioShiftNm, tarShiftNm, activeColumn);
-        const bounds = getNpaProfileActiveScaleBounds(activeUnit, activeShiftNm, anchors);
+        const bounds = getNpaProfileActiveScaleBounds(activeUnit, baselineNm, anchors);
         const items = [];
 
         for (let activeValue = bounds.top; activeValue >= bounds.bottom - 1e-7; activeValue -= bounds.step) {
@@ -6838,9 +6867,10 @@
             }
 
             const activeNm = convertNpaProfileActiveUnitToNm(item.activeValue, activeUnit);
-            const thrNm = activeNm - activeShiftNm;
+            const thrNm = getNpaProfileThrFromActiveNm(activeColumn, activeNm, radioShiftNm, tarShiftNm);
+            if (!Number.isFinite(thrNm)) return "";
             const distances = getNpaProfileDistancesFromThr(thrNm, radioShiftNm, tarShiftNm);
-            if (!distances || !Number.isFinite(thrNm)) return "";
+            if (!distances) return "";
             const displayOverrides = {
                 [activeColumn]: formatNpaProfileScaleValue(item.activeValue, activeUnit)
             };
