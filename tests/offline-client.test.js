@@ -65,16 +65,19 @@ function fakeElement(tag) {
         remove() { this.removed = true; if (this.parent) this.parent.children = this.parent.children.filter(c => c !== this); }
     };
 }
-async function updatedEnvironment({ seen, storage = 'ok', build = 'new' } = {}) {
+async function updatedEnvironment({ seenBuild, seenCache, storage = 'ok', build = 'new', appCache = 'myflight_v.260925-9', controlled = true } = {}) {
     const current = new Worker(build);
     const registration = { scope, active: current, waiting: null, installing: null, update: async () => registration };
-    const serviceWorker = Object.assign(new EventTarget(), { controller: current, register: async () => registration });
+    const serviceWorker = Object.assign(new EventTarget(), { controller: controlled ? current : null, register: async () => registration });
     // Ответ воркера на GET_APP_INSTALLATION — имя кэша релиза
     current.postMessage = function (message, ports) {
         this.messages.push(message.type);
-        if (ports?.[0]) ports[0].postMessage(message.type === 'GET_APP_INSTALLATION' ? { appCache: 'myflight_v.260925-9' } : { ready: true, buildId: build });
+        if (ports?.[0]) ports[0].postMessage(message.type === 'GET_APP_INSTALLATION' ? { appCache } : { ready: true, buildId: build });
     };
-    const store = new Map(seen === undefined ? [] : [['myflight_seen_build', seen]]);
+    const store = new Map([
+        ...(seenBuild === undefined ? [] : [['myflight_seen_build', seenBuild]]),
+        ...(seenCache === undefined ? [] : [['myflight_seen_app_cache', seenCache]])
+    ]);
     const localStorage = storage === 'broken'
         ? { getItem() { throw Error('denied'); }, setItem() { throw Error('denied'); } }
         : { getItem: key => store.has(key) ? store.get(key) : null, setItem: (key, value) => store.set(key, String(value)) };
@@ -95,25 +98,39 @@ async function updatedEnvironment({ seen, storage = 'ok', build = 'new' } = {}) 
 }
 const modalText = modal => JSON.stringify(modal, (key, value) => key === 'parent' ? undefined : value);
 
-test('first launch only remembers the build and shows no update modal', async () => {
-    const env = await updatedEnvironment({ seen: undefined });
+test('first launch only remembers the cache name and shows no update modal', async () => {
+    const env = await updatedEnvironment();
     assert.equal(env.modal, null);
+    assert.equal(env.store.get('myflight_seen_app_cache'), 'myflight_v.260925-9');
     assert.equal(env.store.get('myflight_seen_build'), 'new');
 });
-test('same build shows no update modal', async () => {
-    const env = await updatedEnvironment({ seen: 'new' });
+test('same cache name shows no update modal even when the build changed', async () => {
+    const env = await updatedEnvironment({ seenBuild: 'old', seenCache: 'myflight_v.260925-9' });
     assert.equal(env.modal, null);
 });
-test('a newly activated build shows "Приложение обновлено" with the version once', async () => {
-    const env = await updatedEnvironment({ seen: 'old' });
+test('a new cache name shows "Приложение обновлено" with the version once', async () => {
+    const env = await updatedEnvironment({ seenBuild: 'new', seenCache: 'myflight_v.260925-8' });
     assert.ok(env.modal, 'modal shown');
     assert.match(modalText(env.modal), /Приложение обновлено/);
     assert.match(modalText(env.modal), /Версия v\.260925-9/);
-    assert.equal(env.store.get('myflight_seen_build'), 'new');
+    assert.equal(env.store.get('myflight_seen_app_cache'), 'myflight_v.260925-9');
     assert.ok(env.current.messages.includes('CLIENT_READY'));
 });
+test('an installed app without the cache key shows the modal when its build changed', async () => {
+    const env = await updatedEnvironment({ seenBuild: 'old' });
+    assert.ok(env.modal, 'modal shown');
+    assert.equal(env.store.get('myflight_seen_app_cache'), 'myflight_v.260925-9');
+});
+test('no controller or no cache name remembers nothing and shows no modal', async () => {
+    for (const options of [{ controlled: false }, { appCache: '' }]) {
+        const env = await updatedEnvironment({ seenBuild: 'old', ...options });
+        assert.equal(env.modal, null);
+        assert.equal(env.store.has('myflight_seen_app_cache'), false);
+        assert.equal(env.store.get('myflight_seen_build'), 'old');
+    }
+});
 test('broken localStorage never blocks CLIENT_READY or throws', async () => {
-    const env = await updatedEnvironment({ seen: 'old', storage: 'broken' });
+    const env = await updatedEnvironment({ seenBuild: 'old', storage: 'broken' });
     assert.equal(env.modal, null);
     assert.ok(env.current.messages.includes('CLIENT_READY'));
 });

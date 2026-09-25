@@ -67,10 +67,11 @@
         } catch { return navigator.onLine === false ? 'offline' : 'failed'; }
         finally { busy = false; }
     }
-    // «Приложение обновлено»: один раз на релиз, при первом открытии страницы новой сборки.
-    // Только читает meta/localStorage и спрашивает у воркера имя кэша; никогда не бросает исключений,
-    // иначе ошибка сочлась бы за startupError и заблокировала CLIENT_READY.
+    // «Приложение обновлено»: один раз на смену имени кэша (номер версии, который видит пользователь),
+    // при первом открытии страницы после смены. Только читает meta/localStorage и спрашивает у воркера
+    // имя кэша; никогда не бросает исключений, иначе ошибка сочлась бы за startupError и заблокировала CLIENT_READY.
     const SEEN_BUILD_KEY = 'myflight_seen_build';
+    const SEEN_APP_CACHE_KEY = 'myflight_seen_app_cache';
     function showUpdatedModal(version) {
         try {
             if (!document.body || document.getElementById('appUpdatedModal')) return;
@@ -118,17 +119,26 @@
     async function announceActivatedBuild() {
         try {
             if (!buildId) return;
-            let seen;
-            try { seen = localStorage.getItem(SEEN_BUILD_KEY); } catch { return; }
-            if (seen === buildId) return;
-            try { localStorage.setItem(SEEN_BUILD_KEY, buildId); } catch { return; }
-            if (!seen) return; // первая установка — не обновление
-            let version = '';
+            let appCache = '';
             try {
                 const info = await message(navigator.serviceWorker?.controller, 'GET_APP_INSTALLATION');
-                version = String(info?.appCache || '').replace(/^myflight_?/i, '');
-            } catch { /* без номера версии */ }
-            showUpdatedModal(version);
+                appCache = String(info?.appCache || '');
+            } catch { /* воркер не ответил */ }
+            if (!appCache) return; // без имени кэша ничего не запоминаем — проверим при следующем открытии
+            let seenCache, seenBuild;
+            try {
+                seenCache = localStorage.getItem(SEEN_APP_CACHE_KEY);
+                seenBuild = localStorage.getItem(SEEN_BUILD_KEY);
+            } catch { return; }
+            if (seenCache === appCache) return;
+            try {
+                localStorage.setItem(SEEN_APP_CACHE_KEY, appCache);
+                localStorage.setItem(SEEN_BUILD_KEY, buildId);
+            } catch { return; }
+            // Ключа кэша ещё нет: на уже установленном приложении смену версии видно по прежней сборке,
+            // на новой установке сборки нет — это не обновление
+            const updated = seenCache ? true : Boolean(seenBuild && seenBuild !== buildId);
+            if (updated) showUpdatedModal(appCache.replace(/^myflight_?/i, ''));
         } catch { /* Уведомление не должно влиять на работу приложения. */ }
     }
     window.MyFlightUpdate = { update, prepare, healthy };
