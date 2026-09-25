@@ -551,10 +551,10 @@
             opacity: 0.4;
             letter-spacing: 1px;
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 400;
             white-space: nowrap;
-            margin-top: -10px; /* Прижимаем ближе к логотипу */
-            margin-bottom: 20px; /* Отступ до карточки поиска */
+            margin-top: -6px; /* Прижимаем ближе к логотипу */
+            margin-bottom: 16px; /* Отступ до карточки поиска (вместе с margin-top карточка стоит на месте) */
             z-index: 50;
             pointer-events: none;
         }
@@ -1634,7 +1634,7 @@
         </div>
 
         <!-- Надпись кэша под логотипом -->
-        <div class="cache-label" id="cacheLabel">cache: checking...</div>
+        <div class="cache-label"><span id="cacheLabel">cache: checking...</span><span class="fleet-weights-label"> · fleet weights R167</span></div>
 
         <!-- БЛОК ПОИСКА РЕЙСА И БОРТА -->
         <div class="flight-search-card">
@@ -2642,9 +2642,11 @@
             // 2. Логика проверки кэша
             const label = document.getElementById('cacheLabel');
             const savedVersion = localStorage.getItem('hubVersion');
+            // В надписи имя кэша без префикса приложения: myflight_v.260925-2 → v.260925-2
+            const shortCacheName = name => String(name).replace(/^myflight_?/i, '');
 
             if (savedVersion && !navigator.onLine) {
-                label.textContent = `cache: ${savedVersion}`;
+                label.textContent = `cache: ${shortCacheName(savedVersion)}`;
                 return;
             }
 
@@ -2654,13 +2656,13 @@
                     const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
                     if (match && match[1]) {
                         localStorage.setItem('hubVersion', match[1]);
-                        label.textContent = `cache: ${match[1]}`;
+                        label.textContent = `cache: ${shortCacheName(match[1])}`;
                     } else {
-                        label.textContent = savedVersion ? `cache: ${savedVersion}` : `cache: unknown`;
+                        label.textContent = savedVersion ? `cache: ${shortCacheName(savedVersion)}` : `cache: unknown`;
                     }
                 })
                 .catch(() => {
-                    label.textContent = savedVersion ? `cache: ${savedVersion}` : `cache: unknown`;
+                    label.textContent = savedVersion ? `cache: ${shortCacheName(savedVersion)}` : `cache: unknown`;
                 });
 
         });
