@@ -7002,8 +7002,13 @@
             if (!isFilledProfileNumber(value)) return null;
             const numeric = Number(value);
             if (normalizeNpaFdpFapMode(mode) === 'dist') {
-                const altitude = roundNpaFdpFapDistanceAltitude(getNpaProfileIndFromDist(numeric, geometry));
-                if (altitude === "") return null;
+                // Высота схемы: при МСА, до ближайших 100 ft (как на схеме);
+                // к ней поправка на температуру, результат вверх до 100 ft
+                const chartAltitude = roundNpaFdpFapDistanceAltitude(getNpaProfileIndFromDist(numeric, getNpaFdpFapInputGeometryState()));
+                if (chartAltitude === "") return null;
+                const correctedAltitude = chartAltitude + (geometry.kTable - 1) * (chartAltitude - geometry.hElev);
+                const altitude = Math.ceil(correctedAltitude / 100 - 1e-6) * 100;
+                if (!Number.isFinite(altitude)) return null;
                 return {
                     altitude,
                     rawDistance: numeric,
@@ -8304,11 +8309,13 @@
         return from && to ? `${from}º…${to}º` : "";
     }
 
-    function formatOffsetTrack(inbound) {
+    // Трек teardrop отклонён от линии удаления на 30° в сторону зоны ожидания:
+    // для правой зоны — outbound − 30°, для левой — outbound + 30°
+    function formatOffsetTrack(inbound, racetrack = 'Right') {
         const outbound = getReciprocalCourse(inbound);
         if (!outbound) return "";
 
-        const offsetTrack = normalizeCourse(Number(outbound) - 30);
+        const offsetTrack = normalizeCourse(Number(outbound) + (racetrack === 'Left' ? 30 : -30));
         return offsetTrack === "" ? "" : `${String(offsetTrack).padStart(3, '0')}°`;
     }
 
@@ -8340,7 +8347,7 @@
         setFieldValue('sectParallel', formatRacetrackSector(inbound, offsets.parallel[0], offsets.parallel[1]));
         setFieldValue('sectOffset', formatRacetrackSector(inbound, offsets.offset[0], offsets.offset[1]));
         const offsetTrackEl = document.getElementById('offsetTrackVal');
-        if (offsetTrackEl) offsetTrackEl.innerText = formatOffsetTrack(inbound);
+        if (offsetTrackEl) offsetTrackEl.innerText = formatOffsetTrack(inbound, racetrack);
     }
 
     let airportRunwayBlockCount = 0;
