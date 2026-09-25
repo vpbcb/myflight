@@ -67,11 +67,76 @@
         } catch { return navigator.onLine === false ? 'offline' : 'failed'; }
         finally { busy = false; }
     }
+    // «Приложение обновлено»: один раз на релиз, при первом открытии страницы новой сборки.
+    // Только читает meta/localStorage и спрашивает у воркера имя кэша; никогда не бросает исключений,
+    // иначе ошибка сочлась бы за startupError и заблокировала CLIENT_READY.
+    const SEEN_BUILD_KEY = 'myflight_seen_build';
+    function showUpdatedModal(version) {
+        try {
+            if (!document.body || document.getElementById('appUpdatedModal')) return;
+            if (!document.getElementById('appUpdatedModalStyle')) {
+                const style = document.createElement('style');
+                style.id = 'appUpdatedModalStyle';
+                style.textContent = '#appUpdatedModal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;'
+                    + 'background:rgba(0,0,0,.72);color:#cbd5e1;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center}'
+                    + '#appUpdatedModal .app-updated-box{width:min(82vw,320px);padding:24px 24px 18px;border-radius:16px;background:#161e2e;'
+                    + 'border:1px solid rgba(255,255,255,.16);box-shadow:0 20px 60px rgba(0,0,0,.45)}'
+                    + '#appUpdatedModal .app-updated-title{font-size:18px;font-weight:800;margin-bottom:8px;color:#38bdf8}'
+                    + '#appUpdatedModal .app-updated-text{font-size:14px;line-height:1.35}'
+                    + '#appUpdatedModal .app-updated-ok{margin-top:16px;min-width:96px;height:38px;border:0;border-radius:10px;'
+                    + 'background:#1976d2;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}';
+                document.head.appendChild(style);
+            }
+            const modal = document.createElement('div');
+            modal.id = 'appUpdatedModal';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            const box = document.createElement('div');
+            box.className = 'app-updated-box';
+            const title = document.createElement('div');
+            title.className = 'app-updated-title';
+            title.textContent = 'Приложение обновлено';
+            box.appendChild(title);
+            if (version) {
+                const text = document.createElement('div');
+                text.className = 'app-updated-text';
+                text.textContent = 'Версия ' + version;
+                box.appendChild(text);
+            }
+            const ok = document.createElement('button');
+            ok.type = 'button';
+            ok.className = 'app-updated-ok';
+            ok.textContent = 'OK';
+            box.appendChild(ok);
+            modal.appendChild(box);
+            const close = () => modal.remove();
+            ok.addEventListener('click', close);
+            modal.addEventListener('click', event => { if (event.target === modal) close(); });
+            document.body.appendChild(modal);
+        } catch { /* Уведомление не должно влиять на работу приложения. */ }
+    }
+    async function announceActivatedBuild() {
+        try {
+            if (!buildId) return;
+            let seen;
+            try { seen = localStorage.getItem(SEEN_BUILD_KEY); } catch { return; }
+            if (seen === buildId) return;
+            try { localStorage.setItem(SEEN_BUILD_KEY, buildId); } catch { return; }
+            if (!seen) return; // первая установка — не обновление
+            let version = '';
+            try {
+                const info = await message(navigator.serviceWorker?.controller, 'GET_APP_INSTALLATION');
+                version = String(info?.appCache || '').replace(/^myflight_?/i, '');
+            } catch { /* без номера версии */ }
+            showUpdatedModal(version);
+        } catch { /* Уведомление не должно влиять на работу приложения. */ }
+    }
     window.MyFlightUpdate = { update, prepare, healthy };
     window.addEventListener('error', event => {
         if (event.error || event.target?.tagName === 'SCRIPT') startupError = true;
     }, true);
     window.addEventListener('load', healthy);
+    window.addEventListener('load', () => { announceActivatedBuild(); });
     navigator.serviceWorker?.addEventListener('controllerchange', healthy);
     const retry = () => { if (!busy) { busy = true; prepare().catch(() => {}).finally(() => { busy = false; }); } };
     window.addEventListener('online', retry);

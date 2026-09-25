@@ -52,3 +52,68 @@ test('an unsaved-data guard rejects explicit activation', async () => {
     assert.equal(await env.window.MyFlightUpdate.update(), 'failed');
     assert.equal(env.reloads(), 0);
 });
+
+// «Приложение обновлено»: окружение с localStorage и минимальным DOM
+function fakeElement(tag) {
+    const listeners = {};
+    return {
+        tagName: tag.toUpperCase(), children: [], attributes: {}, textContent: '', removed: false,
+        setAttribute(name, value) { this.attributes[name] = value; },
+        appendChild(child) { this.children.push(child); child.parent = this; return child; },
+        addEventListener(type, fn) { (listeners[type] ||= []).push(fn); },
+        click() { (listeners.click || []).forEach(fn => fn({ target: this })); },
+        remove() { this.removed = true; if (this.parent) this.parent.children = this.parent.children.filter(c => c !== this); }
+    };
+}
+async function updatedEnvironment({ seen, storage = 'ok', build = 'new' } = {}) {
+    const current = new Worker(build);
+    const registration = { scope, active: current, waiting: null, installing: null, update: async () => registration };
+    const serviceWorker = Object.assign(new EventTarget(), { controller: current, register: async () => registration });
+    // Ответ воркера на GET_APP_INSTALLATION — имя кэша релиза
+    current.postMessage = function (message, ports) {
+        this.messages.push(message.type);
+        if (ports?.[0]) ports[0].postMessage(message.type === 'GET_APP_INSTALLATION' ? { appCache: 'myflight_v.260925-9' } : { ready: true, buildId: build });
+    };
+    const store = new Map(seen === undefined ? [] : [['myflight_seen_build', seen]]);
+    const localStorage = storage === 'broken'
+        ? { getItem() { throw Error('denied'); }, setItem() { throw Error('denied'); } }
+        : { getItem: key => store.has(key) ? store.get(key) : null, setItem: (key, value) => store.set(key, String(value)) };
+    const body = fakeElement('body'), head = fakeElement('head');
+    const document = Object.assign(new EventTarget(), {
+        querySelector: () => ({ content: build }), readyState: 'complete', visibilityState: 'visible', body, head,
+        createElement: fakeElement,
+        getElementById: id => [...body.children, ...head.children].find(el => el.id === id) || null
+    });
+    const window = new EventTarget();
+    vm.runInNewContext(source, { URL, MessageChannel, Event, setTimeout, clearTimeout, localStorage, document, window,
+        navigator: { onLine: true, serviceWorker }, location: { href: scope, reload: () => {} } });
+    await tick(); await tick();
+    window.dispatchEvent(new Event('load'));
+    for (let i = 0; i < 5; i += 1) await tick();
+    const modal = body.children.find(el => el.id === 'appUpdatedModal') || null;
+    return { current, store, modal };
+}
+const modalText = modal => JSON.stringify(modal, (key, value) => key === 'parent' ? undefined : value);
+
+test('first launch only remembers the build and shows no update modal', async () => {
+    const env = await updatedEnvironment({ seen: undefined });
+    assert.equal(env.modal, null);
+    assert.equal(env.store.get('myflight_seen_build'), 'new');
+});
+test('same build shows no update modal', async () => {
+    const env = await updatedEnvironment({ seen: 'new' });
+    assert.equal(env.modal, null);
+});
+test('a newly activated build shows "Приложение обновлено" with the version once', async () => {
+    const env = await updatedEnvironment({ seen: 'old' });
+    assert.ok(env.modal, 'modal shown');
+    assert.match(modalText(env.modal), /Приложение обновлено/);
+    assert.match(modalText(env.modal), /Версия v\.260925-9/);
+    assert.equal(env.store.get('myflight_seen_build'), 'new');
+    assert.ok(env.current.messages.includes('CLIENT_READY'));
+});
+test('broken localStorage never blocks CLIENT_READY or throws', async () => {
+    const env = await updatedEnvironment({ seen: 'old', storage: 'broken' });
+    assert.equal(env.modal, null);
+    assert.ok(env.current.messages.includes('CLIENT_READY'));
+});
