@@ -5638,7 +5638,8 @@
 
     function fitNpaApproachDropdownText(dropdown = document.getElementById('npaApproachDropdown')) {
         if (!dropdown || !dropdown.classList.contains('open')) return;
-        const options = dropdown.querySelectorAll('.npa-approach-option:not(.add-new-appr)');
+        // Включая ADD NEW: на узком экране он тоже уменьшается, а не обрезается многоточием
+        const options = dropdown.querySelectorAll('.npa-approach-option');
         options.forEach(option => {
             option.style.fontSize = '';
             const availableWidth = Math.max(0, option.clientWidth - 8);
@@ -8129,8 +8130,12 @@
         if (!sDownwindManualMode) {
             const distance = getDownwindDistanceFromFinalDescent(metrics);
             setDownwindCalcField('sDownwind', distance === "" ? "" : formatDownwindDistance(distance));
+            // Вручную заданное поле (время или GS) не пересчитываем: пересчитывается другое.
+            // 'distance' берёт источник из downwindCalcSource; без него — как раньше, от времени.
             const timeMinutes = parseDownwindTimeMinutes(getTextOrBlank('downwindTime'));
-            updateDownwindCalculation(timeMinutes !== "" && Number(timeMinutes) > 0 ? 'time' : 'distance');
+            updateDownwindCalculation(downwindCalcSource
+                ? 'distance'
+                : (timeMinutes !== "" && Number(timeMinutes) > 0 ? 'time' : 'distance'));
             return;
         }
         updateDownwindCalculation('distance');

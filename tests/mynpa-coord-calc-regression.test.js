@@ -284,3 +284,16 @@ test('Airport field: no IME underline after picking from the list, long tap does
     assert.match(myNpaHtml, /#apprName:not\(:focus\) \{\s*pointer-events: none;/);
     assert.match(myNpaHtml, /\.airport-field-wrapper \{[^}]*user-select: none;/);
 });
+
+test('ADD NEW in the approach dropdown is font-fitted instead of cut with an ellipsis', () => {
+    const fit = functionSource('fitNpaApproachDropdownText');
+    assert.match(fit, /dropdown\.querySelectorAll\('\.npa-approach-option'\)/);
+    assert.doesNotMatch(fit, /:not\(\.add-new-appr\)/);
+});
+
+test('switching FAP/FDP keeps the manually entered downwind time or ground speed', () => {
+    const body = functionSource('updateDownwindFinalDescent');
+    assert.match(body, /updateDownwindCalculation\(downwindCalcSource\s*\?\s*'distance'/);
+    // 'distance' пересчитывает поле, противоположное последнему введённому вручную
+    assert.match(functionSource('updateDownwindCalculation'), /calcSource = downwindCalcSource;/);
+});
