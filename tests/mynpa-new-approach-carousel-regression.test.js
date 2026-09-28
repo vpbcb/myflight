@@ -75,3 +75,8 @@ test('edit mode unlock responds after 0.8 seconds and uses the MyWind RWY toast 
 test('new approach carousel resets OAT to +15', () => {
     assert.match(functionBody('startNewApproachCarousel'), /setNpaTemperatureValue\("15"\);/);
 });
+
+test('Cancel on the Racetrack NAV aid step skips to the next carousel step instead of resetting it', () => {
+    const cancel = functionBody('handleRadioAidShiftClearButton');
+    assert.match(cancel, /if \(newApproachCarouselActive && newApproachCarouselStep === 'downwindRadioFixShift'\) \{\s*closeRadioAidShiftModal\('button', true\);\s*advanceNewApproachCarousel\('downwindRadioFixShift'\);\s*return;/);
+});

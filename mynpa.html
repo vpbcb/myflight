@@ -7710,6 +7710,12 @@
 
     function handleRadioAidShiftClearButton() {
         if (activeRadioAidShiftTarget !== 'profileRadio') {
+            // В карусели нового захода Cancel пропускает шаг, а не сбрасывает карусель
+            if (newApproachCarouselActive && newApproachCarouselStep === 'downwindRadioFixShift') {
+                closeRadioAidShiftModal('button', true);
+                advanceNewApproachCarousel('downwindRadioFixShift');
+                return;
+            }
             closeRadioAidShiftModal('button');
             return;
         }
