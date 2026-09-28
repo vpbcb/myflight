@@ -297,3 +297,9 @@ test('switching FAP/FDP keeps the manually entered downwind time or ground speed
     // 'distance' пересчитывает поле, противоположное последнему введённому вручную
     assert.match(functionSource('updateDownwindCalculation'), /calcSource = downwindCalcSource;/);
 });
+
+test('the manually entered downwind field (time or GS) is saved with the approach and restored on load', () => {
+    assert.match(myNpaHtml, /gsAppr: getNumberOrBlank\('gsAppr'\),[\s\S]{0,160}\n\s*downwindCalcSource,\n/);
+    assert.match(functionSource('checkAndFillFromDB'),
+        /downwindCalcSource = data\.downwindCalcSource === 'time' \|\| data\.downwindCalcSource === 'speed'\s*\?\s*data\.downwindCalcSource\s*:\s*"";/);
+});

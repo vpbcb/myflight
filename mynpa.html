@@ -8784,6 +8784,7 @@
             sDownwind: "",
             downwindTime: "",
             gsAppr: "",
+            downwindCalcSource: "",
             radioShift: "0.0",
             tarShift: "0.0",
             profileRadioSourceLabel: "",
@@ -8819,6 +8820,8 @@
             sDownwind: getNumberOrBlank('sDownwind'),
             downwindTime: getTextOrBlank('downwindTime'),
             gsAppr: getNumberOrBlank('gsAppr'),
+            // Что задано вручную (время или GS) — чтобы после загрузки захода пересчитывалось другое поле
+            downwindCalcSource,
             radioShift: document.getElementById('radioDistValDisplay').innerText,
             tarShift: document.getElementById('tarDistValDisplay').innerText,
             profileRadioSourceLabel,
@@ -9775,7 +9778,9 @@
         const isVirtualRunwayApproach = Boolean(virtualRunwayData && !savedData);
 
         if (data) {
-            downwindCalcSource = "";
+            downwindCalcSource = data.downwindCalcSource === 'time' || data.downwindCalcSource === 'speed'
+                ? data.downwindCalcSource
+                : "";
             sDownwindManualMode = false;
             downwindRadioFixShiftStoredValue = "";
             downwindRadioFixShiftLabel = data.downwindRadioFixShiftLabel || "";
