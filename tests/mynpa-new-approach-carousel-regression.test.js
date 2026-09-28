@@ -80,3 +80,10 @@ test('Cancel on the Racetrack NAV aid step skips to the next carousel step inste
     const cancel = functionBody('handleRadioAidShiftClearButton');
     assert.match(cancel, /if \(newApproachCarouselActive && newApproachCarouselStep === 'downwindRadioFixShift'\) \{\s*closeRadioAidShiftModal\('button', true\);\s*advanceNewApproachCarousel\('downwindRadioFixShift'\);\s*return;/);
 });
+
+test('cancelling the Inbound course keypad skips to the next carousel step instead of resetting it', () => {
+    const close = functionBody('closeNpaKeypad');
+    assert.match(close, /const skipsStepOnCancel = completedCarouselField === 'inboundCrs';/);
+    assert.match(close, /shouldAdvanceNewApproachCarousel = completedCarouselField !== "" && \(e === 'done' \|\| skipsStepOnCancel\);/);
+    assert.match(close, /if \(completedCarouselField && e !== 'done' && !skipsStepOnCancel\) newApproachCarouselActive = false;/);
+});

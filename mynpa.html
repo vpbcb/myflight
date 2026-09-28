@@ -10381,8 +10381,10 @@
         const completedCarouselField = newApproachCarouselActive && NEW_APPROACH_CAROUSEL_STEPS.includes(activeNpaField)
             ? activeNpaField
             : "";
-        const shouldAdvanceNewApproachCarousel = e === 'done' && completedCarouselField !== "";
-        if (completedCarouselField && e !== 'done') newApproachCarouselActive = false;
+        // Отмена (тап мимо клавиатуры) на шаге Inbound course не обрывает карусель, а пропускает шаг
+        const skipsStepOnCancel = completedCarouselField === 'inboundCrs';
+        const shouldAdvanceNewApproachCarousel = completedCarouselField !== "" && (e === 'done' || skipsStepOnCancel);
+        if (completedCarouselField && e !== 'done' && !skipsStepOnCancel) newApproachCarouselActive = false;
 
         const hasOnlyTempSign = activeNpaField === 'tempC' && npaTempSignOnlyInput && currentKpVal === "";
         const hasNewValue = currentKpVal !== "" || (keypadWasCleared && !hasOnlyTempSign);
