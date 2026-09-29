@@ -336,6 +336,11 @@
         /* PF: «2П 80%» одной строкой, подсказка long tap курсивом под ней (так же у Land) */
         #crewBtn small { display: inline; font-size: 0.8rem; margin-left: 3px; }
         #crewBtn .crew-hint, #coursePlusBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; margin-top: 1px; }
+        /* Курс RWY: та же подсказка под цифрами. Через ::after — текст поля пишется через textContent
+           и читается им же, псевдоэлемент не стирается и в значение не попадает.
+           Вне потока (absolute у нижнего края), чтобы цифры курса не сместились */
+        #windDirInput { padding-bottom: 8px; } /* цифры курса чуть выше, над подсказкой; высота поля та же */
+        #windDirInput::after { content: "(long tap)"; position: absolute; left: 0; right: 0; bottom: 1px; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; text-align: center; pointer-events: none; }
         /* На активной синей кнопке Land серый текст не читается — берём цвет кнопки */
         #coursePlusBtn.active-op .crew-hint { color: inherit; opacity: 0.85; }
 

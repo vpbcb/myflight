@@ -129,3 +129,13 @@ test('table scroll is set in the same task as the rows, so the page opens withou
     const updateSource = between('function updateTable(options = {}) {', 'function centerTable() {');
     assert.doesNotMatch(updateSource.slice(updateSource.indexOf('tableBody.innerHTML = h;')), /setTimeout/);
 });
+
+test('RWY course shows a "(long tap)" hint without moving the course digits', () => {
+    const rule = myWindHtml.match(/#windDirInput::after \{[^}]*\}/)[0];
+    assert.match(rule, /content: "\(long tap\)";/);
+    assert.match(rule, /position: absolute;/);
+    assert.match(rule, /font-style: italic;/);
+    // цифры курса пишутся в textContent — подсказка не должна быть отдельным узлом внутри поля
+    assert.match(myWindHtml, /<div id="windDirInput"[^>]*>243°<\/div>/);
+    assert.doesNotMatch(myWindHtml, /#windDirInput \{[^}]*flex-direction: column/);
+});
