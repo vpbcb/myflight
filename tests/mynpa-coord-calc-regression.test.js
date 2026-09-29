@@ -279,6 +279,17 @@ test('CLR on the FDP/FAP keypad restores the saved approach value and closes the
     assert.match(restore, /clearNpaSessionFdpFap\(\);\s*\} else \{\s*writeNpaSessionFdpFap\(\);/);
 });
 
+test('airport modal lock: one tap locks after a long-tap unlock; the hint is fitted into the button', () => {
+    // флаг долгого тапа сбрасывается до проверки «открыт», иначе первый тап «tap to lock» терялся
+    assert.match(functionSource('initAirportModalLock'), /pointerdown', event => \{\s*\/\/[^\n]*\n\s*airportModalLockHoldActivated = false;\s*if \(airportModalDeleteUnlocked\) return;/);
+    assert.match(functionSource('initNpaEditLockMode'), /pointerdown', event => \{\s*\/\/[^\n]*\n\s*npaEditLockHoldActivated = false;\s*if \(npaEditModeUnlocked\) return;/);
+    assert.match(myNpaHtml, /#addAirportModal \.airport-modal-lock-btn > \* \{\s*pointer-events: none;/);
+    assert.match(functionSource('setAirportModalDeleteUnlocked'), /fitAirportModalLockHint\(\);\s*\}$/);
+    assert.match(functionSource('openAddAirportModal'), /resetAirportModalDirtyState\(\);\s*fitAirportModalLockHint\(\);/);
+    assert.match(functionSource('fitAirportModalLockHint'), /hint\.style\.fontSize = `\$\{fittedSize\}px`;/);
+    assert.match(myNpaHtml, /#addAirportModal \.airport-lock-long-tap \{[^}]*font-size: 0\.78em;/);
+});
+
 test('airport modal: closed lock makes fields read-only and Add buttons inactive; a new airport opens unlocked', () => {
     assert.match(myNpaHtml, /#addAirportModal:not\(\.delete-unlocked\) #addAirportIcao,\s*#addAirportModal:not\(\.delete-unlocked\) #airportRunwaysContainer,\s*#addAirportModal:not\(\.delete-unlocked\) #airportRadioAidsContainer \{\s*pointer-events: none;/);
     const setLock = functionSource('setAirportModalDeleteUnlocked');

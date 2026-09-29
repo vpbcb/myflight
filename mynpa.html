@@ -2445,12 +2445,20 @@
             line-height: 1.1;
             opacity: 1;
             white-space: nowrap;
+            min-width: 0;
+            overflow: hidden; /* страховка; размер подгоняет fitAirportModalLockHint */
         }
-        /* «(long tap)» под надписью закрытого замка — как подсказка кнопки «Режим правки» в MyActivity */
+        /* События — всегда на самой кнопке: содержимое переписывается при смене состояния, и без этого
+           click после долгого тапа мог не прийти */
+        #addAirportModal .airport-modal-lock-btn > * {
+            pointer-events: none;
+        }
+        /* «(long tap)» под надписью закрытого замка — как подсказка кнопки «Режим правки» в MyActivity;
+           в em — уменьшается вместе с надписью */
         #addAirportModal .airport-lock-long-tap {
             display: block;
             margin-top: 1px;
-            font-size: 7px;
+            font-size: 0.78em;
             font-style: italic;
             font-weight: 500;
             line-height: 1;
@@ -4501,9 +4509,10 @@
 
         if (button) {
             button.addEventListener('pointerdown', event => {
+                // Сброс до проверки: если click после долгого тапа не пришёл, флаг не «съест» следующий тап
+                npaEditLockHoldActivated = false;
                 if (npaEditModeUnlocked) return;
                 event.preventDefault();
-                npaEditLockHoldActivated = false;
                 cancelNpaEditLockHold();
                 npaEditLockHoldTimer = setTimeout(() => {
                     npaEditLockHoldTimer = null;
@@ -9184,6 +9193,7 @@
         if (navigator.vibrate) navigator.vibrate(20);
         modal.classList.add('active');
         resetAirportModalDirtyState();
+        fitAirportModalLockHint();
         syncAddAirportModalViewport();
         if (!isEdit) {
             if (focusNpaUnlessIosPwaSafe(input, { preventScroll: true })) selectNpaUnlessIosPwaSafe(input);
@@ -9218,6 +9228,27 @@
         button.innerHTML = `${getNpaLockIconSvg(airportModalDeleteUnlocked)}<span class="bottom-edit-lock-hint">${hintText}${longTapHint}</span>`;
         button.classList.toggle('unlocked', airportModalDeleteUnlocked);
         button.setAttribute('aria-label', airportModalDeleteUnlocked ? 'Delete unlocked' : 'Delete locked');
+        fitAirportModalLockHint();
+    }
+
+    // Надпись замка модалки уменьшается под ширину кнопки (ширина = Save, а шрифт на телефоне
+    // может быть крупнее из-за масштаба текста в системе)
+    function fitAirportModalLockHint() {
+        const button = document.getElementById('airportModalLockBtn');
+        const hint = button?.querySelector('.bottom-edit-lock-hint');
+        if (!hint || !document.getElementById('addAirportModal')?.classList.contains('active')) return;
+        hint.style.fontSize = '';
+        const style = window.getComputedStyle(button);
+        const icon = button.querySelector('svg');
+        const availableWidth = button.clientWidth
+            - (parseFloat(style.paddingLeft) || 0)
+            - (parseFloat(style.paddingRight) || 0)
+            - (icon ? icon.getBoundingClientRect().width + (parseFloat(style.columnGap) || 0) : 0);
+        const contentWidth = hint.scrollWidth;
+        if (availableWidth <= 0 || !contentWidth || contentWidth <= availableWidth) return;
+        const baseSize = parseFloat(window.getComputedStyle(hint).fontSize) || 9;
+        const fittedSize = Math.max(5, Math.floor((baseSize * availableWidth / contentWidth) * 10) / 10);
+        hint.style.fontSize = `${fittedSize}px`;
     }
 
     function cancelAirportModalLockHold() {
@@ -9229,9 +9260,10 @@
         const button = document.getElementById('airportModalLockBtn');
         if (!button) return;
         button.addEventListener('pointerdown', event => {
+            // Сброс до проверки: если click после долгого тапа не пришёл, флаг не «съест» следующий тап
+            airportModalLockHoldActivated = false;
             if (airportModalDeleteUnlocked) return;
             event.preventDefault();
-            airportModalLockHoldActivated = false;
             cancelAirportModalLockHold();
             airportModalLockHoldTimer = setTimeout(() => {
                 airportModalLockHoldTimer = null;
@@ -9252,6 +9284,7 @@
             if (airportModalDeleteUnlocked) setAirportModalDeleteUnlocked(false);
         });
         button.addEventListener('contextmenu', event => event.preventDefault());
+        window.addEventListener('resize', fitAirportModalLockHint);
         setAirportModalDeleteUnlocked(false);
     }
 

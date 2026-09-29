@@ -2368,11 +2368,13 @@ for (let d = topMile; d >= 2; d--) {
             : '';
         const elev = runwayElev !== '' ? runwayElev : getMyNpaNumber(approach.elevation);
 
-        // В режиме DIST FDP/FAP захода — дистанции (nm), а в MyPath это высоты: их не копируем
+        // В режиме DIST FDP/FAP захода — дистанции (nm), а в MyPath это высоты: их не копируем.
+        // В режиме ALT копируются оба, пустое значение очищает поле MyPath
         const isDist = String(approach.fapMode || approach.fdpMode || '').toLowerCase() === 'dist';
         return {
             elev,
             angle: getMyNpaNumber(approach.gpa),
+            copyFdpFap: !isDist,
             fdp: isDist ? '' : getMyNpaNumber(approach.fdp),
             fap: isDist ? '' : getMyNpaNumber(approach.fap)
         };
@@ -2392,8 +2394,10 @@ for (let d = topMile; d >= 2; d--) {
         if (!data) return false;
         if (data.elev !== '') document.getElementById('elev').value = String(Math.round(data.elev));
         if (data.angle !== '') document.getElementById('angleInput').value = `${Number(data.angle).toFixed(1)}°`;
-        if (data.fdp !== '') document.getElementById('fdp').value = String(Math.round(data.fdp));
-        if (data.fap !== '') document.getElementById('fap').value = String(Math.round(data.fap));
+        if (data.copyFdpFap) {
+            document.getElementById('fdp').value = data.fdp === '' ? '' : String(Math.round(data.fdp));
+            document.getElementById('fap').value = data.fap === '' ? '' : String(Math.round(data.fap));
+        }
         isSequentialFlow = false;
         calculate();
         return true;

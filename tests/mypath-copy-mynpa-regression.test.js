@@ -42,6 +42,7 @@ const airportsDb = {
         runways: [{ thr1: '06R', thr1Elev: '-12 ft', thr2: '24L', thr2Elev: '630 ft' }],
         approaches: {
             VORz24L: { threshold: '24L', gpa: '3.0', fdp: '2500', fap: '2000', fapMode: 'alt', elevation: '600' },
+            VORy24L: { threshold: '24L', gpa: '3.0', fdp: '', fap: '2000', fapMode: 'alt' },
             NDB24L: { gpa: '3.2', fdp: '6.5', fap: '5.0', fapMode: 'dist' }
         }
     }
@@ -78,12 +79,19 @@ test('MyPath left button: short tap starts NEW APPR, long tap copies from MyNpa 
 
 test('MyPath copies the saved MyNpa approach: landing THR elevation, GPA and ALT FDP/FAP', () => {
     const read = loadCopyReader(storageFor('VORz24L'));
-    assert.deepEqual({ ...read() }, { elev: 630, angle: 3, fdp: 2500, fap: 2000 });
+    assert.deepEqual({ ...read() }, { elev: 630, angle: 3, copyFdpFap: true, fdp: 2500, fap: 2000 });
+});
+
+test('MyPath copies an empty FDP/FAP of the saved approach too, clearing the MyPath field', () => {
+    const onlyFap = loadCopyReader(storageFor('VORy24L'))();
+    assert.deepEqual({ ...onlyFap }, { elev: 630, angle: 3, copyFdpFap: true, fdp: '', fap: 2000 });
+    const copy = functionSource('copyFromMyNpa');
+    assert.match(copy, /if \(data\.copyFdpFap\) \{\s*document\.getElementById\('fdp'\)\.value = data\.fdp === '' \? '' : String\(Math\.round\(data\.fdp\)\);\s*document\.getElementById\('fap'\)\.value = data\.fap === '' \? '' : String\(Math\.round\(data\.fap\)\);/);
 });
 
 test('MyPath does not copy FDP/FAP of a DIST approach and hides the line without a selected approach', () => {
     const dist = loadCopyReader(storageFor('NDB24L'))();
-    assert.deepEqual({ ...dist }, { elev: 630, angle: 3.2, fdp: '', fap: '' });
+    assert.deepEqual({ ...dist }, { elev: 630, angle: 3.2, copyFdpFap: false, fdp: '', fap: '' });
     assert.equal(loadCopyReader(storageFor(''))(), null);
     assert.equal(loadCopyReader(storageFor('ILS06R'))(), null);
     assert.equal(loadCopyReader({})(), null);
