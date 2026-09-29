@@ -812,6 +812,44 @@ html.light-theme .icon-img {
 .refresh-btn:active {
     transform: scale(0.9);
 }
+
+/* Левая кнопка: NEW APPR и, если на MyNpa выбран заход, вторая строка COPY MYNPA (long tap).
+   С двумя строками шрифт меньше — высота панели навигации не меняется */
+#startApprBtn .start-appr-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+#startApprBtn .start-appr-copy[hidden] {
+    display: none;
+}
+#startApprBtn .start-appr-new,
+#startApprBtn .start-appr-copy {
+    display: block;
+}
+#startApprBtn .start-appr-copy {
+    margin-top: 2px;
+}
+/* «(short tap)» — только когда есть вторая строка */
+#startApprBtn:not(.has-copy) .start-appr-short-hint {
+    display: none;
+}
+#startApprBtn.has-copy {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+#startApprBtn.has-copy .start-appr-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.5px;
+}
+/* Подсказки в скобках — тише основной надписи */
+#startApprBtn .bottom-action-hint {
+    margin-top: 1px;
+    font-size: 0.45rem;
+    font-weight: 400;
+    opacity: 0.6;
+}
 .wind-btn:active {
     transform: translateX(-50%) scale(0.9);
 }
@@ -1239,11 +1277,15 @@ html.dark-theme .shift-value-toast {
 
     <div class="bottom-controls bottom-controls--bordered bottom-controls--panel" role="navigation" aria-label="Навигация MyPath">
     <!-- Кнопка сброса (Слева) -->
-    <button class="refresh-btn bottom-action bottom-action--left" id="startApprBtn" title="Обновить поля">
+    <!-- Короткий тап — NEW APPR; долгий тап (строка видна, если на MyNpa выбран заход) — копия из MyNpa -->
+    <button class="refresh-btn bottom-action bottom-action--left" id="startApprBtn" title="Обновить поля" style="touch-action: pan-y;" oncontextmenu="event.preventDefault()">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0; display: block;">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path>
         </svg>
-        <span class="bottom-action-label" id="startBtnText">Start here</span>
+        <span class="bottom-action-label start-appr-label">
+            <span class="start-appr-new"><span id="startBtnText">NEW APPR</span><em class="bottom-action-hint start-appr-short-hint">(short tap)</em></span>
+            <span class="start-appr-copy" id="copyMyNpaLine" hidden>COPY MYNPA<em class="bottom-action-hint">(long tap)</em></span>
+        </span>
     </button>
 
     <!-- Кнопка перехода в MyWind (По центру) -->
@@ -2212,14 +2254,7 @@ for (let d = topMile; d >= 2; d--) {
         // 2. Вызываем пересчет (это также сохранит стейт)
         calculate();
 
-        // 3. Меняем текст на кнопке
-        const startText = document.getElementById('startBtnText');
-        if (startText) {
-            startText.innerText = 'NEW APPR';
-            sessionStorage.setItem('apprStarted', 'true');
-        }
-
-        // 4. Включаем режим цепочки и открываем первое поле
+        // 3. Включаем режим цепочки и открываем первое поле
         isSequentialFlow = true;
         openKeypad('elev', 'ELEVATION');
     }
@@ -2286,6 +2321,125 @@ for (let d = topMile; d >= 2; d--) {
     }
 
 
+    // --- КОПИЯ ЗАХОДА ИЗ MYNPA (долгий тап по левой кнопке) ---
+    // Берётся сохранённый заход, выбранный на MyNpa (не ручные правки страницы MyNpa):
+    // превышение торца посадки, угол и FDP/FAP из базы аэродромов MyNpa (тот же localStorage)
+    const MYNPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
+    const MYNPA_AIRPORTS_DB_KEY = 'mynpa_airports_rtdb_v1';
+    const START_APPR_HOLD_MS = 300; // как долгий тап кнопки MyPath/MyNpa в MyWind
+
+    function readMyNpaJson(key) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getMyNpaNumber(value) {
+        const normalized = String(value ?? '').replace(',', '.').replace(/[^\d.-]/g, '');
+        if (normalized === '' || normalized === '-' || normalized === '.') return '';
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : '';
+    }
+
+    function getMyNpaSavedApproachForCopy() {
+        const state = readMyNpaJson(MYNPA_PAGE_STATE_KEY);
+        const icao = String(state?.fields?.apprName || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
+        const type = String(state?.selectedType || '').trim();
+        if (icao.length !== 4 || !type || type === '—') return null;
+
+        const airport = readMyNpaJson(MYNPA_AIRPORTS_DB_KEY)?.[icao];
+        const approach = airport?.approaches?.[type];
+        if (!approach) return null;
+
+        // Торец посадки — как в MyNpa: из захода, иначе торец, на который оканчивается имя захода
+        const runways = Array.isArray(airport.runways) ? airport.runways : [];
+        const normalizeThr = value => String(value || '').trim().toUpperCase();
+        const threshold = normalizeThr(approach.threshold) || runways
+            .flatMap(runway => [normalizeThr(runway.thr1), normalizeThr(runway.thr2)])
+            .find(thr => thr && type.toUpperCase().replace(/\s+/g, '').endsWith(thr)) || '';
+        const runway = threshold
+            ? runways.find(item => normalizeThr(item.thr1) === threshold || normalizeThr(item.thr2) === threshold)
+            : null;
+        const runwayElev = runway
+            ? getMyNpaNumber(normalizeThr(runway.thr1) === threshold ? runway.thr1Elev : runway.thr2Elev)
+            : '';
+        const elev = runwayElev !== '' ? runwayElev : getMyNpaNumber(approach.elevation);
+
+        // В режиме DIST FDP/FAP захода — дистанции (nm), а в MyPath это высоты: их не копируем
+        const isDist = String(approach.fapMode || approach.fdpMode || '').toLowerCase() === 'dist';
+        return {
+            elev,
+            angle: getMyNpaNumber(approach.gpa),
+            fdp: isDist ? '' : getMyNpaNumber(approach.fdp),
+            fap: isDist ? '' : getMyNpaNumber(approach.fap)
+        };
+    }
+
+    function updateCopyMyNpaLine() {
+        const button = document.getElementById('startApprBtn');
+        const line = document.getElementById('copyMyNpaLine');
+        if (!button || !line) return;
+        const available = Boolean(getMyNpaSavedApproachForCopy());
+        line.hidden = !available;
+        button.classList.toggle('has-copy', available);
+    }
+
+    function copyFromMyNpa() {
+        const data = getMyNpaSavedApproachForCopy();
+        if (!data) return false;
+        if (data.elev !== '') document.getElementById('elev').value = String(Math.round(data.elev));
+        if (data.angle !== '') document.getElementById('angleInput').value = `${Number(data.angle).toFixed(1)}°`;
+        if (data.fdp !== '') document.getElementById('fdp').value = String(Math.round(data.fdp));
+        if (data.fap !== '') document.getElementById('fap').value = String(Math.round(data.fap));
+        isSequentialFlow = false;
+        calculate();
+        return true;
+    }
+
+    function initStartApprButton() {
+        const startBtn = document.getElementById('startApprBtn');
+        if (!startBtn) return;
+        let holdTimer = null;
+        let longPressHandled = false;
+        const cancelHold = () => {
+            clearTimeout(holdTimer);
+            holdTimer = null;
+        };
+
+        startBtn.addEventListener('pointerdown', (e) => {
+            if (e.button !== undefined && e.button !== 0) return;
+            longPressHandled = false;
+            cancelHold();
+            if (document.getElementById('copyMyNpaLine')?.hidden) return;
+            holdTimer = setTimeout(() => {
+                holdTimer = null;
+                longPressHandled = true;
+                if (copyFromMyNpa() && navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            }, START_APPR_HOLD_MS);
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(eventName => {
+            startBtn.addEventListener(eventName, cancelHold);
+        });
+        startBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (longPressHandled) {
+                longPressHandled = false;
+                return;
+            }
+            resetFields();
+            if (navigator.vibrate) navigator.vibrate(30);
+        });
+
+        updateCopyMyNpaLine();
+        window.addEventListener('pageshow', updateCopyMyNpaLine);
+        window.addEventListener('storage', (e) => {
+            if (e.key === MYNPA_PAGE_STATE_KEY || e.key === MYNPA_AIRPORTS_DB_KEY) updateCopyMyNpaLine();
+        });
+    }
+
     // --- СТАРТ ПРИ ЗАГРУЗКЕ ---
     window.onload = () => {
         initMyPathTableScrollMemory();
@@ -2304,18 +2458,7 @@ for (let d = topMile; d >= 2; d--) {
         calculate(null, hasSavedState);
 
 
-        if (sessionStorage.getItem('apprStarted') === 'true') {
-            document.getElementById('startBtnText').innerText = 'NEW APPR';
-        }
-
-        const startBtn = document.getElementById('startApprBtn');
-        if (startBtn) {
-            startBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                resetFields();
-                if (navigator.vibrate) navigator.vibrate(30);
-            });
-        }
+        initStartApprButton();
 
         const fapLabel = document.getElementById('fapLabelBtn');
         let lastTapTime = 0;
