@@ -232,19 +232,70 @@ test('airport modal lock: long tap shows delete buttons, short tap hides them, l
     const setLock = functionSource('setAirportModalDeleteUnlocked');
     assert.match(setLock, /'tap to<br>lock' : 'hold to<br>edit data'/);
     assert.match(setLock, /getNpaLockIconSvg\(airportModalDeleteUnlocked\)/);
-    assert.match(myNpaHtml, /#addAirportModal \.add-airport-title-row \{\s*display: grid;\s*grid-template-columns: minmax\(72px, 1fr\) auto minmax\(72px, 1fr\);/);
+    assert.match(myNpaHtml, /#addAirportModal \.add-airport-title-row \{\s*display: grid;\s*grid-template-columns: minmax\(100px, 1fr\) auto minmax\(100px, 1fr\);/);
     assert.match(myNpaHtml, /<button type="button" class="airport-modal-close-btn" onclick="closeAddAirportModal\('button'\)" aria-label="Close"><\/button>/);
     assert.match(myNpaHtml, /\.airport-modal-close-btn \{[^}]*linear-gradient\(180deg, #f26666 0%, #c62828 52%, #991b1b 100%\)/);
-    assert.match(functionSource('openAddAirportModal'), /setAirportModalDeleteUnlocked\(false\);/);
+    assert.match(functionSource('openAddAirportModal'), /setAirportModalDeleteUnlocked\(!isEdit\);/);
     assert.match(myNpaHtml, /initNpaEditLockMode\(\);\s*initAirportModalLock\(\);/);
 });
 
 test('airport modal: header row stays outside the scroll area, modal is centred and grows to app height', () => {
-    assert.match(myNpaHtml, /<div class="modal-content npa-form-modal" onclick="event\.stopPropagation\(\)">\s*<div class="add-airport-title-row">[\s\S]*?<button type="button" class="airport-modal-close-btn"[^>]*><\/button>\s*<\/div>\s*<div class="add-airport-scroll-area">/);
+    assert.match(myNpaHtml, /<div class="modal-content npa-form-modal" onclick="event\.stopPropagation\(\)">\s*<div class="add-airport-title-row">[\s\S]*?<button type="button" class="airport-modal-close-btn"[^>]*><\/button>\s*<\/div>\s*<\/div>\s*<div class="add-airport-scroll-area">/);
     assert.match(myNpaHtml, /#addAirportModal\.active \{\s*align-items: center;/);
     assert.match(myNpaHtml, /#addAirportModal\.keyboard-open \{\s*align-items: flex-start;/);
     assert.match(myNpaHtml, /#addAirportModal \.npa-form-modal \{\s*max-height: calc\(var\(--airport-modal-vh, var\(--app-height\)\) - 1\.5rem\);/);
     assert.match(functionSource('scrollAddAirportFieldIntoView'), /!scroller\.contains\(element\)/);
+});
+
+test('manual FDP/FAP survive page switches within a session and reset to the saved approach on reload or new launch', () => {
+    assert.match(myNpaHtml, /const NPA_SESSION_FDP_FAP_KEY = 'mynpa_session_fdp_fap_v1';/);
+    assert.match(functionSource('isNpaPageReload'), /getEntriesByType\('navigation'\)\[0\]\?\.type === 'reload'/);
+    assert.match(functionSource('writeNpaSessionFdpFap'), /sessionStorage\.setItem\(NPA_SESSION_FDP_FAP_KEY/);
+    assert.match(myNpaHtml, /if \(isNpaPageReload\(\)\) clearNpaSessionFdpFap\(\);\s*restoreNpaCoordCalc\(\);\s*const restoredState = restoreNpaCurrentPageState\(\);\s*if \(restoredState\) restoreNpaSessionFdpFapOnLoad\(\);/);
+    assert.match(myNpaHtml, /setFieldValue\(activeNpaField, storedValue\);\s*writeNpaSessionFdpFap\(\);/);
+    const onLoad = functionSource('restoreNpaSessionFdpFapOnLoad');
+    assert.match(onLoad, /if \(applyNpaSessionFdpFap\(\)\) return;/);
+    assert.match(onLoad, /applyNpaFdpFapValues\(data\.fapMode \|\| data\.fdpMode \|\| 'alt', data\.fdp, data\.fap\);/);
+    assert.match(functionSource('applyNpaSessionFdpFap'), /markNpaCurrentApproachDirty\(\);/);
+    // облачное обновление захода не затирает ручные FDP/FAP сессии
+    assert.equal((myNpaHtml.match(/checkAndFillFromDB\(\);\s*applyNpaSessionFdpFap\(\);/g) || []).length, 2);
+    // явный выбор аэродрома/захода и сохранение захода сбрасывают ручные FDP/FAP сессии
+    for (const name of ['selectNpaType', 'selectNpaAirport', 'saveToFirebase']) {
+        assert.match(functionSource(name), /clearNpaSessionFdpFap\(\);/, name);
+    }
+});
+
+test('profile table shows 20 values above FDP (or FAP), as in MyPath', () => {
+    assert.match(myNpaHtml, /const NPA_PROFILE_ROWS_ABOVE_ANCHOR = 20;/);
+    assert.match(functionSource('getNpaProfileDefaultTopMile'), /Math\.floor\(anchorDistance\) \+ NPA_PROFILE_ROWS_ABOVE_ANCHOR/);
+    assert.match(functionSource('getNpaProfileActiveScaleBounds'), /floorNpaProfileStep\(Math\.max\(\.\.\.anchorValues\), step\) \+ \(step \* NPA_PROFILE_ROWS_ABOVE_ANCHOR\)/);
+});
+
+test('CLR on the FDP/FAP keypad restores the saved approach value and closes the keypad', () => {
+    assert.match(functionSource('kpPress'), /if \(key === 'clear'\) \{\s*if \(isNpaFdpFapField\(activeNpaField\) && restoreNpaFdpFapFieldFromApproach\(activeNpaField\)\) \{\s*currentKpVal = "";\s*keypadWasCleared = false;\s*closeNpaKeypad\('done'\);/);
+    const restore = functionSource('restoreNpaFdpFapFieldFromApproach');
+    assert.match(restore, /const data = getNpaSavedApproachData\(\);\s*if \(!data\) return false;/);
+    assert.match(restore, /setFieldValue\(field, data\[field\]\);/);
+    assert.match(restore, /clearNpaSessionFdpFap\(\);\s*\} else \{\s*writeNpaSessionFdpFap\(\);/);
+});
+
+test('airport modal: closed lock makes fields read-only and Add buttons inactive; a new airport opens unlocked', () => {
+    assert.match(myNpaHtml, /#addAirportModal:not\(\.delete-unlocked\) #addAirportIcao,\s*#addAirportModal:not\(\.delete-unlocked\) #airportRunwaysContainer,\s*#addAirportModal:not\(\.delete-unlocked\) #airportRadioAidsContainer \{\s*pointer-events: none;/);
+    const setLock = functionSource('setAirportModalDeleteUnlocked');
+    assert.match(setLock, /querySelectorAll\('\.npa-add-btn'\)\.forEach\(addButton => \{\s*addButton\.disabled = !airportModalDeleteUnlocked;/);
+    assert.match(setLock, /getElementById\('airportRadioAidTypeChoices'\)\?\.classList\.add\('npa-hidden'\)/);
+    assert.match(functionSource('openAddAirportModal'), /setAirportModalDeleteUnlocked\(!isEdit\);/);
+});
+
+test('airport modal: Save sits between ICAO and the close button and shows only when the form changed', () => {
+    assert.match(myNpaHtml, /<div class="add-airport-icao-row">[\s\S]*?<\/div>\s*<div class="add-airport-title-actions">\s*<button id="airportModalSaveBtn" type="button" class="airport-modal-save-btn" onclick="saveAirportFromModal\(\)">Save<\/button>\s*<button type="button" class="airport-modal-close-btn"/);
+    assert.doesNotMatch(myNpaHtml, /add-airport-actions|closeAddAirportModal\('button'\)">Cancel</);
+    assert.match(myNpaHtml, /\.airport-modal-save-btn \{[^}]*linear-gradient\([^}]*visibility: hidden;\s*pointer-events: none;/);
+    assert.match(myNpaHtml, /\.airport-modal-save-btn\.is-dirty \{\s*visibility: visible;\s*pointer-events: auto;/);
+    assert.match(functionSource('openAddAirportModal'), /modal\.classList\.add\('active'\);\s*resetAirportModalDirtyState\(\);/);
+    assert.match(functionSource('updateAirportModalSaveVisibility'), /getAirportModalSnapshot\(\) !== airportModalInitialSnapshot/);
+    assert.match(functionSource('saveAirportFromModal'), /const \{ icao, runways, radioAids \} = collectAirportModalData\(\);/);
+    assert.match(myNpaHtml, /initAirportFieldLongPress\(\);\s*initAirportModalDirtyTracking\(\);/);
 });
 
 test('Racetrack and airport-modal section titles share one plaque class', () => {

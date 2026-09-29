@@ -2241,20 +2241,40 @@
         /* Замок в модалке аэродрома — как на главной странице; пока закрыт, кнопки удаления скрыты
            (visibility, чтобы разметка не сдвигалась) */
         /* Ряд: замок слева, ICAO ровно по центру модалки (боковые колонки равной ширины),
-           кнопка закрытия справа */
+           Save и кнопка закрытия справа; боковые колонки вмещают Save + крестик */
         #addAirportModal .add-airport-title-row {
             display: grid;
-            grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
-            align-items: center;
+            grid-template-columns: minmax(100px, 1fr) auto minmax(100px, 1fr);
+            align-items: start; /* замок и крестик — на одной линии с полем ICAO, а не с надписью под ним */
             gap: 0;
         }
+        /* Надпись ICAO — под полем. Кнопка удаления аэродрома — в правом верхнем углу поля (как у блоков RWY),
+           а не отдельной колонкой: иначе её пустое место разрывает поле и Save */
         #addAirportModal .add-airport-icao-row {
+            position: relative;
             justify-self: center;
             min-width: 0;
-            grid-template-columns: auto minmax(5rem, 9.5rem) auto;
+            grid-template-columns: 6rem; /* 4 буквы ICAO; остальное — замку и Save */
+            row-gap: 0.15rem;
         }
-        #addAirportModal .airport-modal-lock-btn {
-            justify-self: start;
+        #addAirportModal .add-airport-icao-row #addAirportIcao {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        #addAirportModal .add-airport-icao-row .airport-delete-btn {
+            position: absolute;
+            top: -0.55rem;
+            right: -0.55rem;
+            z-index: 2;
+            background-color: var(--card-bg); /* крестик не просвечивает рамку поля */
+            border-radius: 50%;
+        }
+        #addAirportModal .add-airport-icao-row label {
+            grid-column: 1;
+            grid-row: 2;
+            font-weight: 400;
+            line-height: 1;
+            text-align: center;
         }
         /* Кнопка закрытия — как в настройках MyActivity: красный квадрат с градиентом и белым крестиком
            (крестик — SVG, чтобы стоял точно по центру) */
@@ -2279,33 +2299,177 @@
         .airport-modal-close-btn:active {
             transform: scale(0.94);
         }
+        /* Save растянута от поля ICAO до крестика */
+        #addAirportModal .add-airport-title-actions {
+            justify-self: stretch;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-left: 6px;
+        }
+        #addAirportModal .airport-modal-save-btn {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        #addAirportModal .airport-modal-close-btn {
+            flex: 0 0 auto;
+        }
+        /* Save — голубой градиент кнопки Save из MyActivity (--action-sky-*), объём — нижняя кромка и тень
+           как у кнопки «Режим правки»; видна, только когда в модалке есть изменения (класс .is-dirty);
+           visibility, чтобы ряд не сдвигался */
+        .airport-modal-save-btn {
+            height: 42px;
+            padding: 0 10px;
+            border: 1px solid #567bc4;
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(86, 123, 196, 0.16) 0%, rgba(86, 123, 196, 0.3) 100%);
+            box-shadow:
+                0 2px 0 #8fa6d6,
+                0 4px 8px rgba(33, 57, 110, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            color: #17345f;
+            font-family: inherit;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 80ms ease, box-shadow 80ms ease;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .airport-modal-save-btn.is-dirty {
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .airport-modal-save-btn:active {
+            transform: translateY(2px);
+            box-shadow:
+                0 0 0 #8fa6d6,
+                0 1px 3px rgba(33, 57, 110, 0.18),
+                inset 0 2px 4px rgba(33, 57, 110, 0.14);
+        }
+        html.dark-theme .airport-modal-save-btn {
+            border-color: #6f93d8;
+            background: linear-gradient(180deg, rgba(86, 123, 196, 0.32) 0%, rgba(86, 123, 196, 0.5) 100%);
+            box-shadow:
+                0 2px 0 #2f4a7a,
+                0 4px 8px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            color: #dbe6fb;
+        }
+        /* Замок — оформление кнопки «Режим правки» из MyActivity (.edit-lock-button): закрыт — голубой,
+           открыт — оранжевый градиент. Прижат к левому краю; ширина равна Save (колонка минус крестик
+           и два зазора — зеркально правой колонке) */
         #addAirportModal .airport-modal-lock-btn {
             position: relative;
             left: auto;
             top: auto;
-            transform: none;
+            transform: translateY(0);
             flex: 0 0 auto;
-            width: 72px; /* постоянная ширина: поле ICAO не сдвигается при смене надписи замка */
+            justify-self: start;
+            width: calc(100% - 42px - 6px - 6px);
+            height: 42px;
+            margin: 0;
+            padding: 0 6px;
+            border: 1px solid #91a9b7;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #ffffff 0%, #e7f0f4 100%);
+            box-shadow:
+                0 2px 0 #9eb2bd,
+                0 4px 8px rgba(33, 73, 94, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            color: #28566d;
+            justify-content: center;
+            gap: 4px;
             z-index: 1;
+            transition: transform 80ms ease, box-shadow 80ms ease, border-color 120ms ease, background 120ms ease;
+        }
+        #addAirportModal .airport-modal-lock-btn svg {
+            width: 24px;
+            height: 24px;
+            flex: 0 0 24px;
         }
         #addAirportModal .airport-modal-lock-btn:active {
-            transform: scale(0.9);
+            transform: translateY(2px);
+            box-shadow:
+                0 0 0 #7895a5,
+                0 1px 3px rgba(33, 73, 94, 0.18),
+                inset 0 2px 4px rgba(33, 73, 94, 0.14);
+        }
+        #addAirportModal .airport-modal-lock-btn.unlocked {
+            border-color: #c2410c;
+            background: linear-gradient(180deg, #ffffff 0%, #ffedd5 100%);
+            box-shadow:
+                0 2px 0 #d39b76,
+                0 4px 8px rgba(154, 52, 18, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95);
+            color: #9a3412;
+        }
+        #addAirportModal .airport-modal-lock-btn.unlocked:active {
+            box-shadow:
+                0 0 0 #b97850,
+                0 1px 3px rgba(154, 52, 18, 0.18),
+                inset 0 2px 4px rgba(154, 52, 18, 0.14);
+        }
+        /* Тёмная тема (в MyActivity её нет): те же голубой/оранжевый, приглушённые под тёмный фон */
+        html.dark-theme #addAirportModal .airport-modal-lock-btn {
+            border-color: #3d5b6d;
+            background: linear-gradient(180deg, #223846 0%, #172731 100%);
+            box-shadow:
+                0 2px 0 #0f1a21,
+                0 4px 8px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            color: #a9cbe0;
+        }
+        html.dark-theme #addAirportModal .airport-modal-lock-btn.unlocked {
+            border-color: #c2410c;
+            background: linear-gradient(180deg, #3d2616 0%, #2a190d 100%);
+            box-shadow:
+                0 2px 0 #1a0f07,
+                0 4px 8px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            color: #fdba74;
         }
         #addAirportModal .airport-modal-lock-btn::after {
             left: -8px;
             top: -8px;
             bottom: -8px;
         }
-        #addAirportModal .airport-modal-lock-btn.unlocked .bottom-edit-lock-hint {
-            color: var(--accent-blue);
-            opacity: 0.9;
-        }
+        #addAirportModal .airport-modal-lock-btn .bottom-edit-lock-hint,
+        #addAirportModal .airport-modal-lock-btn.unlocked .bottom-edit-lock-hint,
         html.dark-theme #addAirportModal .airport-modal-lock-btn.unlocked .bottom-edit-lock-hint {
-            color: #38bdf8;
+            color: inherit;
+            font-size: 9px;
+            font-weight: 600;
+            line-height: 1.1;
+            opacity: 1;
+            white-space: nowrap;
+        }
+        /* «(long tap)» под надписью закрытого замка — как подсказка кнопки «Режим правки» в MyActivity */
+        #addAirportModal .airport-lock-long-tap {
+            display: block;
+            margin-top: 1px;
+            font-size: 7px;
+            font-style: italic;
+            font-weight: 500;
+            line-height: 1;
         }
         #addAirportModal:not(.delete-unlocked) .npa-modal-delete-btn {
             visibility: hidden;
             pointer-events: none;
+        }
+        /* Закрытый замок: поля только для просмотра — тапы проходят сквозь них к области прокрутки */
+        #addAirportModal:not(.delete-unlocked) #addAirportIcao,
+        #addAirportModal:not(.delete-unlocked) #airportRunwaysContainer,
+        #addAirportModal:not(.delete-unlocked) #airportRadioAidsContainer {
+            pointer-events: none;
+        }
+        #addAirportModal .npa-add-btn:disabled {
+            opacity: 0.45;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
         }
         .add-airport-title-row .modal-header {
             margin-bottom: 0;
@@ -2325,11 +2489,32 @@
             letter-spacing: 0.05rem;
             text-transform: uppercase;
         }
+        /* Крупный ICAO при прежней высоте поля: высота фиксирована, вертикальные отступы сняты.
+           Форма — как у плашки Runways, без фона; обводка цвета шрифта:
+           тёмно-синий (в тёмной теме — светло-синий, иначе не читается) */
         #addAirportIcao {
+            height: 2.625rem;
             min-height: 2.625rem;
-            font-size: 1.15rem;
+            padding: 0 4px;
+            border: 1px solid currentColor; /* рамка — цвета шрифта */
+            border-radius: 12px;
+            background: transparent;
+            color: #0a1f44;
+            font-size: 28px;
+            line-height: 1;
             letter-spacing: 0.08rem;
             text-align: center;
+        }
+        #addAirportIcao::placeholder {
+            color: rgba(10, 31, 68, 0.55);
+        }
+        html.dark-theme #addAirportIcao {
+            border-color: currentColor;
+            background: transparent;
+            color: var(--accent-blue);
+        }
+        html.dark-theme #addAirportIcao::placeholder {
+            color: rgba(56, 189, 248, 0.5);
         }
         .npa-modal-grid {
             display: grid;
@@ -2570,7 +2755,6 @@
         }
         #npaAdminEmail,
         #npaAdminPassword,
-        #addAirportIcao,
         .airport-radio-aid-block [data-radio-field="name"] {
             font-size: 16px;
         }
@@ -2843,17 +3027,6 @@
             background: var(--accent-blue);
             border-color: var(--accent-blue);
             color: #ffffff;
-        }
-        #addAirportModal .add-airport-actions {
-            flex: 0 0 auto;
-            margin: 0 -0.65rem -0.65rem;
-            padding: 0.65rem;
-            border-top: 1px solid var(--border-color);
-            background: var(--card-bg);
-            box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.06);
-        }
-        html.dark-theme #addAirportModal .add-airport-actions {
-            box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.24);
         }
         .npa-hidden {
             display: none !important;
@@ -4075,10 +4248,13 @@
         initNpaEditLockMode();
         initAirportModalLock();
         initAirportFieldLongPress();
+        initAirportModalDirtyTracking();
         initNpaProfileUnitToggles();
         initNpaProfileScrollMemory();
+        if (isNpaPageReload()) clearNpaSessionFdpFap();
         restoreNpaCoordCalc();
         const restoredState = restoreNpaCurrentPageState();
+        if (restoredState) restoreNpaSessionFdpFapOnLoad();
         if (!restoredState) {
             setDefaultTemperature();
             updateRacetrackSectors();
@@ -4590,6 +4766,7 @@
         const NPA_CONFIRMED_CLOUD_AIRPORTS_KEY = 'mynpa_confirmed_cloud_airports_v1';
         const NPA_PENDING_AIRPORT_SAVES_KEY = 'mynpa_pending_cloud_writes_v1';
         const NPA_PAGE_STATE_KEY = 'mynpa_current_page_state_v1';
+        const NPA_SESSION_FDP_FAP_KEY = 'mynpa_session_fdp_fap_v1';
         const NPA_MANUAL_SYNC_DELAY_MS = 15000;
         const NPA_PAGE_STATE_FIELD_IDS = [
             'apprName',
@@ -4828,6 +5005,7 @@
 
         if (shouldRefreshCurrentApproach && window.airportsDb[currentAirportCode]?.approaches?.[currentApproachType]) {
             checkAndFillFromDB();
+            applyNpaSessionFdpFap();
         } else if (shouldRefreshCurrentApproach && !window.airportsDb[currentAirportCode]?.approaches?.[currentApproachType]) {
             setSelectedNpaType("");
             clearNpaFields();
@@ -5009,6 +5187,7 @@
             const approachType = getSelectedNpaType();
             if (!npaCurrentApproachDirty && airportCode && approachType && window.airportsDb?.[airportCode]?.approaches?.[approachType]) {
                 checkAndFillFromDB();
+                applyNpaSessionFdpFap();
             } else if (airportCode && event.detail?.airportsDb?.[airportCode]) {
                 refreshCurrentNpaFromAirportReferenceChange(airportCode);
             }
@@ -5258,6 +5437,111 @@
             }
         }
 
+        // Вручную изменённые FDP/FAP живут до конца сессии приложения: sessionStorage переживает переходы
+        // между страницами MyFlight, новое открытие приложения начинается с пустого sessionStorage, а при
+        // обновлении страницы запись удаляется — тогда FDP/FAP берутся из сохранённого захода
+        function isNpaPageReload() {
+            try {
+                return performance.getEntriesByType('navigation')[0]?.type === 'reload';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function readNpaSessionFdpFap() {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem(NPA_SESSION_FDP_FAP_KEY) || 'null');
+                return saved && typeof saved === 'object' ? saved : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function writeNpaSessionFdpFap() {
+            const airportCode = getNpaAirportCode();
+            const approachType = getSelectedNpaType();
+            if (!airportCode || !approachType || approachType === "—") return;
+            try {
+                sessionStorage.setItem(NPA_SESSION_FDP_FAP_KEY, JSON.stringify({
+                    airportCode,
+                    approachType,
+                    mode: getNpaFdpFapMode('fdp'),
+                    fdp: document.getElementById('fdp')?.value || "",
+                    fap: document.getElementById('fap')?.value || ""
+                }));
+            } catch (error) {
+                // Session view-state; ignore storage quota/privacy failures.
+            }
+        }
+
+        function clearNpaSessionFdpFap() {
+            try {
+                sessionStorage.removeItem(NPA_SESSION_FDP_FAP_KEY);
+            } catch (error) {
+                // Ignore session view-state cleanup failures.
+            }
+        }
+
+        function applyNpaFdpFapValues(mode, fdp, fap) {
+            setNpaFdpFapMode(mode || 'alt');
+            setFieldValue('fdp', fdp);
+            setFieldValue('fap', fap);
+            updateDownwindFinalDescent();
+            renderNpaProfileTable();
+        }
+
+        // Ручные FDP/FAP этой сессии для текущего захода; true — если применены
+        function applyNpaSessionFdpFap() {
+            const saved = readNpaSessionFdpFap();
+            if (!saved || saved.airportCode !== getNpaAirportCode() || saved.approachType !== getSelectedNpaType()) return false;
+            applyNpaFdpFapValues(saved.mode, saved.fdp, saved.fap);
+            markNpaCurrentApproachDirty();
+            return true;
+        }
+
+        // Данные текущего захода из базы (или виртуального захода по ВПП); null — захода нет
+        function getNpaSavedApproachData() {
+            const airportCode = getNpaAirportCode();
+            const approachType = getSelectedNpaType();
+            if (!airportCode || !approachType || approachType === "—") return null;
+            return window.airportsDb?.[airportCode]?.approaches?.[approachType]
+                || getVirtualRunwayApproachData(airportCode, approachType)
+                || null;
+        }
+
+        // При загрузке страницы: в рамках сессии — ручные FDP/FAP, иначе — FDP/FAP сохранённого захода
+        function restoreNpaSessionFdpFapOnLoad() {
+            if (applyNpaSessionFdpFap()) return;
+            const data = getNpaSavedApproachData();
+            if (!data) return;
+            applyNpaFdpFapValues(data.fapMode || data.fdpMode || 'alt', data.fdp, data.fap);
+        }
+
+        // CLR на клавиатуре FDP/FAP — исходное значение поля из сохранённого захода. Режим ALT/DIST общий
+        // для FDP и FAP: если он отличается от сохранённого, из базы возвращаются оба поля.
+        // false — сохранённого захода нет (CLR работает как обычно)
+        function restoreNpaFdpFapFieldFromApproach(field) {
+            const data = getNpaSavedApproachData();
+            if (!data) return false;
+            const savedMode = normalizeNpaFdpFapMode(data.fapMode || data.fdpMode || 'alt');
+            if (savedMode !== getNpaFdpFapMode(field)) {
+                applyNpaFdpFapValues(savedMode, data.fdp, data.fap);
+            } else {
+                setFieldValue(field, data[field]);
+                updateDownwindFinalDescent();
+                renderNpaProfileTable();
+            }
+            const matchesSaved = ['fdp', 'fap'].every(id =>
+                String(getCleanDisplayNumber(document.getElementById(id)?.value)) === String(getCleanDisplayNumber(data[id]))
+            );
+            if (matchesSaved) {
+                clearNpaSessionFdpFap();
+            } else {
+                writeNpaSessionFdpFap();
+            }
+            return true;
+        }
+
         function clearNpaCurrentPageState() {
             try {
                 localStorage.removeItem(NPA_PAGE_STATE_KEY);
@@ -5385,6 +5669,7 @@
 
     function selectNpaAirport(airportCode) {
         setNpaCurrentApproachDirty(false);
+        clearNpaSessionFdpFap();
         const inputEl = document.getElementById('apprName');
         const code = sanitizeNpaAirportCode(airportCode);
         npaAirportGhostValue = code;
@@ -5711,6 +5996,7 @@
     function selectNpaType(type) {
         if (navigator.vibrate) navigator.vibrate(30);
         setNpaCurrentApproachDirty(false);
+        clearNpaSessionFdpFap(); // явный выбор захода — FDP/FAP из базы
         setSelectedNpaType(type);
         npaProfileSavedScrollTop = 0;
         clearNpaProfileScrollPosition(type);
@@ -6674,6 +6960,9 @@
         return Number.isFinite(distance) && distance >= 2 && distance <= topLimit;
     }
 
+    // Сколько значений шкалы профиля показывать выше FDP (или FAP, если FDP нет) — как в MyPath
+    const NPA_PROFILE_ROWS_ABOVE_ANCHOR = 20;
+
     function getNpaProfileDefaultTopMile(metrics) {
         const anchorDistance = metrics.fdpValid && Number.isFinite(metrics.dFdp)
             ? metrics.dFdp
@@ -6682,7 +6971,7 @@
                 : null;
 
         if (!Number.isFinite(anchorDistance)) return 10;
-        return Math.max(10, Math.floor(anchorDistance) + 6);
+        return Math.max(10, Math.floor(anchorDistance) + NPA_PROFILE_ROWS_ABOVE_ANCHOR);
     }
 
     function getNpaProfileActiveShift(activeColumn, radioShiftNm, tarShiftNm) {
@@ -6780,7 +7069,9 @@
         const anchorValues = anchors
             .map(anchor => convertNpaProfileNmToActiveUnit(anchor.activeNm, activeUnit))
             .filter(Number.isFinite);
-        const anchorTop = anchorValues.length ? Math.max(...anchorValues) + (step * 4) : -Infinity;
+        const anchorTop = anchorValues.length
+            ? floorNpaProfileStep(Math.max(...anchorValues), step) + (step * NPA_PROFILE_ROWS_ABOVE_ANCHOR)
+            : -Infinity;
         const topSeed = Math.max(oldTopActive, anchorTop, oldBottomActive);
         const top = ceilNpaProfileStep(topSeed, step);
         const bottom = ceilNpaProfileStep(oldBottomActive, step);
@@ -8888,9 +9179,11 @@
         addAirportRadioAidBlocksFromData(radioAidData);
         document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
         updateAirportTarAddButtonVisibility();
-        setAirportModalDeleteUnlocked(false);
+        // существующий аэродром открывается закрытым (только просмотр), новый — открытым для ввода
+        setAirportModalDeleteUnlocked(!isEdit);
         if (navigator.vibrate) navigator.vibrate(20);
         modal.classList.add('active');
+        resetAirportModalDirtyState();
         syncAddAirportModalViewport();
         if (!isEdit) {
             if (focusNpaUnlessIosPwaSafe(input, { preventScroll: true })) selectNpaUnlessIosPwaSafe(input);
@@ -8905,13 +9198,24 @@
     let airportModalLockHoldTimer = null;
     let airportModalLockHoldActivated = false;
 
+    // Закрытый замок — модалка только для просмотра: поля не принимают тапы (CSS по .delete-unlocked),
+    // кнопки Add неактивны, открытый выбор VOR/NDB и клавиатура поля закрываются
     function setAirportModalDeleteUnlocked(unlocked) {
         airportModalDeleteUnlocked = Boolean(unlocked);
-        document.getElementById('addAirportModal')?.classList.toggle('delete-unlocked', airportModalDeleteUnlocked);
+        const modal = document.getElementById('addAirportModal');
+        modal?.classList.toggle('delete-unlocked', airportModalDeleteUnlocked);
+        modal?.querySelectorAll('.npa-add-btn').forEach(addButton => {
+            addButton.disabled = !airportModalDeleteUnlocked;
+        });
+        if (!airportModalDeleteUnlocked) {
+            document.getElementById('airportRadioAidTypeChoices')?.classList.add('npa-hidden');
+            if (modal?.contains(document.activeElement)) document.activeElement.blur();
+        }
         const button = document.getElementById('airportModalLockBtn');
         if (!button) return;
         const hintText = airportModalDeleteUnlocked ? 'tap to<br>lock' : 'hold to<br>edit data';
-        button.innerHTML = `${getNpaLockIconSvg(airportModalDeleteUnlocked)}<span class="bottom-edit-lock-hint">${hintText}</span>`;
+        const longTapHint = airportModalDeleteUnlocked ? '' : '<em class="airport-lock-long-tap">(long tap)</em>';
+        button.innerHTML = `${getNpaLockIconSvg(airportModalDeleteUnlocked)}<span class="bottom-edit-lock-hint">${hintText}${longTapHint}</span>`;
         button.classList.toggle('unlocked', airportModalDeleteUnlocked);
         button.setAttribute('aria-label', airportModalDeleteUnlocked ? 'Delete unlocked' : 'Delete locked');
     }
@@ -9398,16 +9702,9 @@
         }];
     }
 
-    async function saveAirportFromModal() {
+    // Данные формы модалки аэродрома — то, что сохраняет Save (и по чему определяются изменения)
+    function collectAirportModalData() {
         const icao = sanitizeNpaAirportCode(document.getElementById('addAirportIcao')?.value);
-        if (!icao || icao.length !== 4) {
-            alert("Please enter a valid 4-letter ICAO code.");
-            return;
-        }
-        const currentAirportCode = getNpaAirportCode();
-        const currentApproachType = getSelectedNpaType();
-        const shouldPreserveCurrentApproach = currentAirportCode === icao && currentApproachType;
-
         const runways = Array.from(document.querySelectorAll('#airportRunwaysContainer .airport-runway-block')).map(block => {
             const get = field => block.querySelector(`[data-rwy-field="${field}"]`)?.value?.trim() || "";
             const rwLength = parseNpaModalNumber(get('rwLength'));
@@ -9444,6 +9741,66 @@
                 coord: block.querySelector('[data-radio-field="coord"]')?.value?.trim() || ""
             });
         });
+        return { icao, runways, radioAids };
+    }
+
+    // Save в модалке аэродрома виден, только пока форма отличается от состояния на момент открытия.
+    // Значения полей меняются и из экранной клавиатуры (вне модалки), поэтому проверка идёт
+    // после любого ввода/тапа в документе, пока модалка открыта, и при добавлении/удалении блоков
+    let airportModalInitialSnapshot = "";
+    let airportModalDirtyTimers = [];
+
+    function getAirportModalSnapshot() {
+        return JSON.stringify(collectAirportModalData());
+    }
+
+    function isAddAirportModalOpen() {
+        return Boolean(document.getElementById('addAirportModal')?.classList.contains('active'));
+    }
+
+    function updateAirportModalSaveVisibility() {
+        const button = document.getElementById('airportModalSaveBtn');
+        if (!button) return;
+        const dirty = isAddAirportModalOpen() && getAirportModalSnapshot() !== airportModalInitialSnapshot;
+        button.classList.toggle('is-dirty', dirty);
+    }
+
+    function resetAirportModalDirtyState() {
+        airportModalInitialSnapshot = getAirportModalSnapshot();
+        updateAirportModalSaveVisibility();
+    }
+
+    function scheduleAirportModalDirtyCheck() {
+        if (!isAddAirportModalOpen()) return;
+        airportModalDirtyTimers.forEach(clearTimeout);
+        // сразу после обработчиков события и ещё раз — после отложенных записей (автопереход клавиатуры)
+        airportModalDirtyTimers = [0, 350].map(delay => setTimeout(updateAirportModalSaveVisibility, delay));
+    }
+
+    function initAirportModalDirtyTracking() {
+        ['input', 'change', 'click', 'pointerup', 'keyup'].forEach(eventName => {
+            document.addEventListener(eventName, scheduleAirportModalDirtyCheck, true);
+        });
+        const scrollArea = document.querySelector('#addAirportModal .add-airport-scroll-area');
+        if (scrollArea) {
+            new MutationObserver(scheduleAirportModalDirtyCheck).observe(scrollArea, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['data-display-unit', 'data-tar-thr', 'data-radio-aid-type']
+            });
+        }
+    }
+
+    async function saveAirportFromModal() {
+        const { icao, runways, radioAids } = collectAirportModalData();
+        if (!icao || icao.length !== 4) {
+            alert("Please enter a valid 4-letter ICAO code.");
+            return;
+        }
+        const currentAirportCode = getNpaAirportCode();
+        const currentApproachType = getSelectedNpaType();
+        const shouldPreserveCurrentApproach = currentAirportCode === icao && currentApproachType;
 
         const existingAirport = getAirportDocument(icao);
         const adminMode = isNpaAdminMode();
@@ -9918,6 +10275,7 @@
         const adminMode = isNpaAdminMode();
         if (adminMode) queueApproachSave(airportCode, type, approachData);
         setNpaCurrentApproachDirty(false);
+        clearNpaSessionFdpFap(); // FDP/FAP теперь в сохранённом заходе
         renderNpaApproachDropdown(false);
 
         if (adminMode) {
@@ -10463,6 +10821,7 @@
                     : String(Math.round(Number(numeric)));
             setNpaFdpFapMode(activeNpaField, npaFdpFapActiveInputMode);
             setFieldValue(activeNpaField, storedValue);
+            writeNpaSessionFdpFap();
         } else if (activeNpaField === 'radio' || activeNpaField === 'tar') {
             const displayId = activeNpaField === 'radio' ? 'radioDistValDisplay' : 'tarDistValDisplay';
             document.getElementById(displayId).innerText = finalVal === "" ? "0.0" : finalVal;
@@ -10558,6 +10917,13 @@
         if (navigator.vibrate) navigator.vibrate(10);
 
         if (key === 'clear') {
+            if (isNpaFdpFapField(activeNpaField) && restoreNpaFdpFapFieldFromApproach(activeNpaField)) {
+                currentKpVal = "";
+                keypadWasCleared = false;
+                closeNpaKeypad('done');
+                scheduleNpaCurrentPageStateSave();
+                return;
+            }
             if (
                 activeNpaField === 'downwindRadioFixShift'
                 && currentKpVal === ""
@@ -10844,7 +11210,10 @@
                 <input id="addAirportIcao" class="npa-modal-input" type="text" maxlength="4" placeholder="ICAO" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" oninput="sanitizeAddAirportIcaoInput()" onkeydown="handleAddAirportIcaoKeydown(event)" onclick="startAirportIcaoCarousel()">
                 <button type="button" class="npa-modal-delete-btn airport-delete-btn" onclick="openAirportDeleteConfirm('airport', this)" aria-label="Delete airport">×</button>
             </div>
-            <button type="button" class="airport-modal-close-btn" onclick="closeAddAirportModal('button')" aria-label="Close"></button>
+            <div class="add-airport-title-actions">
+                <button id="airportModalSaveBtn" type="button" class="airport-modal-save-btn" onclick="saveAirportFromModal()">Save</button>
+                <button type="button" class="airport-modal-close-btn" onclick="closeAddAirportModal('button')" aria-label="Close"></button>
+            </div>
         </div>
         <div class="add-airport-scroll-area">
             <div class="npa-modal-section">
@@ -10864,10 +11233,6 @@
                     <button id="addAirportTarButton" type="button" class="npa-add-btn" onclick="addAirportTarBlock()">Add TAR</button>
                 </div>
             </div>
-        </div>
-        <div class="npa-modal-actions add-airport-actions">
-            <button type="button" class="modal-opt-btn" onclick="closeAddAirportModal('button')">Cancel</button>
-            <button type="button" class="modal-opt-btn primary" onclick="saveAirportFromModal()">Save</button>
         </div>
     </div>
 </div>
