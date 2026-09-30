@@ -139,3 +139,26 @@ test('RWY course shows a "(long tap)" hint without moving the course digits', ()
     assert.match(myWindHtml, /<div id="windDirInput"[^>]*>243°<\/div>/);
     assert.doesNotMatch(myWindHtml, /#windDirInput \{[^}]*flex-direction: column/);
 });
+
+test('status plaque is lower via padding only; control row sits 5px above the tabs', () => {
+    const rule = myWindHtml.match(/\.land-status-row\s*\{[^}]*\}/)[0];
+    assert.match(rule, /padding: 3px 2px;/);
+    assert.match(rule, /font-size: clamp\(0\.7rem, 3\.5vw, 0\.95rem\);/);
+    assert.match(myWindHtml, /\.tabs-container \{ margin-top: 5px;/);
+    // заголовки ряда прижаты к полям на одно значение
+    assert.match(myWindHtml, /\.controls-layout > \.grid-label \{ align-self: end; position: relative; top: 2px; \}/);
+});
+
+test('Land "(long tap)" hint never wraps', () => {
+    assert.match(myWindHtml, /#coursePlusBtn \.crew-hint \{ white-space: nowrap; \}/);
+});
+
+test('RWY course digits are fitted and centred between the frame top and the hint', () => {
+    assert.match(myWindHtml, /function fitWindDirCourse\(\)/);
+    assert.match(myWindHtml, /new MutationObserver\(fitWindDirCourse\)\.observe\(el, \{ childList: true, characterData: true, subtree: true \}\)/);
+    // размер/центрирование — только через style, textContent поля не трогаем
+    const source = myWindHtml.slice(myWindHtml.indexOf('function fitWindDirCourse()'), myWindHtml.indexOf('(() => {', myWindHtml.indexOf('function fitWindDirCourse()')));
+    assert.doesNotMatch(source, /el\.(textContent|innerHTML)\s*=/);
+    assert.match(source, /el\.style\.fontSize = /);
+    assert.match(source, /el\.style\.paddingBottom = /);
+});

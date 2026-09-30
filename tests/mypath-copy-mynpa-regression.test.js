@@ -61,6 +61,13 @@ test('MyPath left button: NEW APPR on top, COPY MYNPA (long tap) line hidden unt
     assert.match(myPathHtml, /#startApprBtn:not\(\.has-copy\) \.start-appr-short-hint \{\s*display: none;/);
     assert.match(myPathHtml, /#startApprBtn\.has-copy \.start-appr-label \{\s*font-size: 0\.5rem;/);
     assert.match(myPathHtml, /#startApprBtn \.bottom-action-hint \{[^}]*font-weight: 400;[^}]*opacity: 0\.6;/);
+    // Узкий экран: подсказки компактнее (строчные, без разрядки), основная надпись прежняя
+    assert.match(myPathHtml, /#startApprBtn \.bottom-action-hint \{[^}]*font-size: 0\.4rem;[^}]*letter-spacing: 0;[^}]*text-transform: none;/);
+    // Узкий экран: промежуток меньше, значок меньше, подпись не сжимается (без переноса строк)
+    assert.match(myPathHtml, /@media \(max-width: 370px\) \{\s*#startApprBtn\.has-copy \{\s*gap: 2px;\s*padding-left: 0;\s*padding-right: 0;\s*\}\s*#startApprBtn\.has-copy > svg \{\s*width: 16px;\s*height: 16px;\s*\}\s*#startApprBtn\.has-copy \.start-appr-label \{\s*flex-shrink: 0;/);
+    // Долгий тап не выделяет текст
+    assert.match(myPathHtml, /#startApprBtn,\s*#startApprBtn \*,[^{]*\{\s*-webkit-user-select: none;\s*user-select: none;\s*-webkit-touch-callout: none;/);
+    assert.match(myPathHtml, /startBtn\.addEventListener\('selectstart', e => e\.preventDefault\(\)\)/);
     const update = functionSource('updateCopyMyNpaLine');
     assert.match(update, /line\.hidden = !available;\s*button\.classList\.toggle\('has-copy', available\);/);
 });
@@ -95,4 +102,9 @@ test('MyPath does not copy FDP/FAP of a DIST approach and hides the line without
     assert.equal(loadCopyReader(storageFor(''))(), null);
     assert.equal(loadCopyReader(storageFor('ILS06R'))(), null);
     assert.equal(loadCopyReader({})(), null);
+});
+
+test('long-tap buttons in MyPath do not select text', () => {
+    assert.match(myPathHtml, /#startApprBtn,\s*#startApprBtn \*,\s*#shiftBtn,\s*#shiftBtn \* \{\s*-webkit-user-select: none;\s*user-select: none;\s*-webkit-touch-callout: none;/);
+    assert.match(myPathHtml, /document\.getElementById\('shiftBtn'\)\?\.addEventListener\('selectstart', e => e\.preventDefault\(\)\)/);
 });

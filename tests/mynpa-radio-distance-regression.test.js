@@ -118,3 +118,9 @@ test('manual radio shift without coordinates is shown as an absolute distance', 
     assert.equal(run(context, "getNpaProfileThrFromActiveNm('radio', 3, -2.5, 0)"), 5.5);
     assert.equal(run(context, "getNpaProfileShiftedColumnDisplay({ thrNm: 5, radioNm: 5, radioEnabled: true, tarNm: 5 }, 'radio')"), '5 nm');
 });
+
+test('DIST FROM VOR header: the long-tap hint reads "(long tap)" like the other long-tap hints', () => {
+    const source = functionSource('getProfileRadioHeaderLines');
+    assert.match(source, /normalizeProfileRadioHeaderLabel\(profileRadioSourceLabel\), '\(long tap\)'\]/);
+    assert.doesNotMatch(myNpaHtml, /long tap avail/);
+});

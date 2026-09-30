@@ -564,6 +564,16 @@
                 return;
             }
 
+            if (item.kind === 'deleteApproach') {
+                const approachName = String(item.approachName || '').trim();
+                const approaches = merged[code]?.approaches;
+                if (approachName && approaches && typeof approaches === 'object') {
+                    delete approaches[approachName];
+                    delete approaches[safeApproachKey(approachName)];
+                }
+                return;
+            }
+
             if (item.kind === 'deleteAirport' || item.kind === 'deleteReference') {
                 delete merged[code];
             }
@@ -656,7 +666,13 @@
             updatedAt: Number(item.updatedAt) || Date.now()
         };
         const id = pendingWriteId(queued);
-        const next = getPendingCloudWrites().filter(existing => pendingWriteId(existing) !== id);
+        // Запись и удаление одного захода взаимно заменяют друг друга: в облако уходит последнее действие
+        const oppositeKind = queued.kind === 'approach' ? 'deleteApproach' : queued.kind === 'deleteApproach' ? 'approach' : '';
+        const oppositeId = oppositeKind ? pendingWriteId({ ...queued, kind: oppositeKind }) : '';
+        const next = getPendingCloudWrites().filter(existing => {
+            const existingId = pendingWriteId(existing);
+            return existingId !== id && existingId !== oppositeId;
+        });
         next.push(queued);
         setPendingCloudWrites(next);
     }
@@ -735,7 +751,27 @@
         rebuildCombinedLocalDb();
     }
 
+    async function deleteApproachFromCloud(airportCode, approachName) {
+        if (!isFirebaseReady() || !getLiveAdminUser()) throw new Error('Admin Firebase mode is required');
+        const code = sanitizeAirportCode(airportCode);
+        const key = safeApproachKey(approachName);
+        if (!isValidAirportReferenceKey(code) || !key) throw new Error('Airport and approach are required');
+        await window.npaDb.ref(`airportsNpa/${code}/approaches/${key}`).remove();
+
+        const cloudApproaches = readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {});
+        const approaches = cloudApproaches[code]?.approaches;
+        if (approaches && typeof approaches === 'object') {
+            delete approaches[key];
+            writeJsonStorage(NPA_CLOUD_APPROACHES_KEY, cloudApproaches);
+        }
+        rebuildCombinedLocalDb();
+    }
+
     async function writePendingItem(item) {
+        if (item.kind === 'deleteApproach') {
+            await deleteApproachFromCloud(item.airportCode, item.approachName);
+            return;
+        }
         if (item.kind === 'reference') {
             await writeAirportReferenceToCloud(item.airportCode, item.data);
             return;
@@ -822,6 +858,33 @@
         await loadFirebaseSdkPart(FIREBASE_AUTH_SDK, () => Boolean(window.firebase?.auth), 'auth');
     }
 
+    // Заход, который был в облаке и исчез из него (удалён админом), убираем и из
+    // локальной базы — иначе rebuild сохранил бы его как локальный навсегда.
+    function removeLocalApproachesDeletedInCloud(previousCloud, nextCloud) {
+        const merged = readJsonStorage(NPA_AIRPORTS_DB_KEY, {});
+        const pendingIds = new Set(getPendingCloudWrites().map(pendingWriteId));
+        let changed = false;
+
+        Object.keys(previousCloud || {}).forEach(rawCode => {
+            const code = sanitizeAirportCode(rawCode);
+            const localApproaches = merged[code]?.approaches;
+            if (!localApproaches || typeof localApproaches !== 'object') return;
+            const nextKeys = new Set(Object.keys(getCloudApproachesForAirport(nextCloud, rawCode)));
+
+            Object.keys(getCloudApproachesForAirport(previousCloud, rawCode)).forEach(key => {
+                if (nextKeys.has(key)) return;
+                Object.keys(localApproaches).forEach(localName => {
+                    if (safeApproachKey(localName) !== key) return;
+                    if (pendingIds.has(pendingWriteId({ kind: 'approach', airportCode: code, approachName: localName }))) return;
+                    delete localApproaches[localName];
+                    changed = true;
+                });
+            });
+        });
+
+        if (changed) writeJsonStorage(NPA_AIRPORTS_DB_KEY, merged);
+    }
+
     function attachRealtimeListeners() {
         if (listenersAttached || !isFirebaseReady()) return;
         listenersAttached = true;
@@ -836,7 +899,9 @@
         });
 
         window.npaDb.ref('airportsNpa').on('value', snapshot => {
-            writeJsonStorage(NPA_CLOUD_APPROACHES_KEY, snapshot.val() || {});
+            const nextCloudApproaches = snapshot.val() || {};
+            removeLocalApproachesDeletedInCloud(readJsonStorage(NPA_CLOUD_APPROACHES_KEY, {}), nextCloudApproaches);
+            writeJsonStorage(NPA_CLOUD_APPROACHES_KEY, nextCloudApproaches);
             rebuildCombinedLocalDb();
             updateSyncStatus({ lastApproachSyncAt: Date.now(), lastError: '' });
         }, error => {

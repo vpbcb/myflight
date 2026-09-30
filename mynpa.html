@@ -1639,6 +1639,11 @@
             overflow-wrap: normal;
             cursor: pointer;
         }
+        .npa-approach-option {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
         .npa-airport-option {
             font-size: 13px;
             font-weight: 800;
@@ -3573,6 +3578,13 @@
             -webkit-user-select: text !important;
             user-select: text !important;
             -webkit-touch-callout: default;
+        }
+        /* Поле ICAO: долгий тап открывает карточку аэропорта — вне ввода текст не выделяется
+           и нет лупы/меню iOS; во время ввода кода (фокус) поле ведёт себя как обычно */
+        #apprName:not(:focus) {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none;
         }
 
         /* --- Стили для правой вкладки Profile с FCU FPA --- */
@@ -5748,6 +5760,10 @@
             if (timer && (Math.abs(event.clientX - startX) > 8 || Math.abs(event.clientY - startY) > 8)) cancel();
         });
         ['pointerup', 'pointercancel', 'pointerleave'].forEach(name => field.addEventListener(name, cancel));
+        // Долгий тап не выделяет текст (при вводе кода в фокусе поля выделение не трогаем)
+        field.addEventListener('selectstart', event => {
+            if (document.activeElement !== input) event.preventDefault();
+        });
         field.addEventListener('contextmenu', event => {
             if (!isInsideDropdown(event)) event.preventDefault();
         });
@@ -5925,9 +5941,104 @@
         btn.innerHTML = extraClass === 'add-new-appr' ? label : formatNpaApproachTypeHtml(label);
         btn.onclick = event => {
             event.stopPropagation();
+            if (btn.dataset.longPressFired === 'true') {
+                btn.dataset.longPressFired = '';
+                return;
+            }
             onClick();
         };
+        if (extraClass !== 'add-new-appr') attachNpaApproachOptionLongPress(btn);
         return btn;
+    }
+
+    // Долгий тап по заходу — удаление (с подтверждением); короткий тап — выбор, как раньше
+    function attachNpaApproachOptionLongPress(btn) {
+        let timer = null;
+        let startX = 0;
+        let startY = 0;
+        const cancel = () => {
+            if (timer) clearTimeout(timer);
+            timer = null;
+        };
+
+        btn.addEventListener('pointerdown', event => {
+            startX = event.clientX;
+            startY = event.clientY;
+            btn.dataset.longPressFired = '';
+            cancel();
+            timer = setTimeout(() => {
+                timer = null;
+                btn.dataset.longPressFired = 'true';
+                openNpaApproachDeleteConfirm(btn.dataset.type);
+            }, NPA_PROFILE_LONG_PRESS_MS);
+        });
+        btn.addEventListener('pointermove', event => {
+            if (!timer) return;
+            if (Math.abs(event.clientX - startX) > 8 || Math.abs(event.clientY - startY) > 8) cancel();
+        });
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(eventName => {
+            btn.addEventListener(eventName, cancel);
+        });
+        // Не даём iOS синтезировать click после долгого тапа (он закрыл бы модалку)
+        btn.addEventListener('touchend', event => {
+            if (btn.dataset.longPressFired === 'true') event.preventDefault();
+        }, { passive: false });
+        btn.addEventListener('contextmenu', event => event.preventDefault());
+    }
+
+    function openNpaApproachDeleteConfirm(type) {
+        const airportCode = getNpaAirportCode();
+        const approachName = String(type || '').trim();
+        if (!isValidNpaAirportReferenceKey(airportCode) || !approachName) return;
+
+        const text = document.getElementById('airportDeleteConfirmText');
+        const savedApproach = window.airportsDb?.[airportCode]?.approaches?.[approachName];
+        if (!savedApproach && isRunwayOnlyApproachName(airportCode, approachName)) {
+            // RWxx без сохранённых данных строится из runway аэропорта — удалять нечего
+            if (navigator.vibrate) navigator.vibrate(15);
+            alert(`${approachName} создаётся из данных runway аэропорта ${airportCode}. Чтобы убрать его, удалите runway в карточке аэропорта.`);
+            return;
+        }
+        if (!savedApproach) return;
+
+        airportDeleteConfirmTarget = { kind: 'approach', airportCode, approachName };
+        airportDeleteConfirmOpenedAt = Date.now();
+        if (text) {
+            text.textContent = isNpaAdminMode()
+                ? `Удалить заход ${airportCode} ${approachName} с устройства и из облака?`
+                : `Удалить заход ${airportCode} ${approachName} с этого устройства? Данные в облаке не изменятся.`;
+        }
+        document.getElementById('airportDeleteConfirmModal')?.classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(15);
+    }
+
+    function deleteNpaApproach(airportCode, approachName) {
+        const code = sanitizeNpaAirportCode(airportCode);
+        const airport = window.airportsDb?.[code];
+        if (!isValidNpaAirportReferenceKey(code) || !airport?.approaches?.[approachName]) return;
+
+        delete airport.approaches[approachName];
+        airport.updatedAt = Date.now();
+        persistNpaAirportsDb();
+        if (isNpaAdminMode()) {
+            window.queueNpaCloudWrite?.({
+                kind: 'deleteApproach',
+                airportCode: code,
+                approachName,
+                updatedAt: Date.now()
+            });
+            syncPendingAirportSaves().catch(error => console.error('Approach delete sync error:', error));
+        }
+
+        if (getNpaAirportCode() === code && getSelectedNpaType() === approachName) {
+            setNpaCurrentApproachDirty(false);
+            clearNpaSessionFdpFap();
+            setSelectedNpaType("");
+            clearNpaFields();
+        }
+        closeNpaApproachDropdown();
+        renderNpaApproachDropdown(false);
+        scheduleNpaCurrentPageStateSave();
     }
 
     function fitNpaApproachDropdownText(dropdown = document.getElementById('npaApproachDropdown')) {
@@ -6298,7 +6409,7 @@
 
     function getProfileRadioHeaderLines() {
         if (profileRadioSourceLabel) {
-            return ['dist from', normalizeProfileRadioHeaderLabel(profileRadioSourceLabel), 'long tap avail'];
+            return ['dist from', normalizeProfileRadioHeaderLabel(profileRadioSourceLabel), '(long tap)'];
         }
 
         const rawValue = document.getElementById('radioDistValDisplay')?.innerText || "";
@@ -8670,6 +8781,7 @@
     let activeAirportRadioCoordInput = null;
     let activeAirportRadioCoordAutoAdvance = false;
     let airportDeleteConfirmTarget = null;
+    let airportDeleteConfirmOpenedAt = 0;
     let activeRadioAidShiftTarget = 'downwind';
     let radioAidShiftModalAllowsLockedRadio = false;
     const NEW_APPROACH_CAROUSEL_STEPS = Object.freeze(['gpa', 'fdp', 'fap', 'downwindRadioFixShift', 'racetrack', 'inboundCrs', 'downwindTime', 'gsAppr']);
@@ -9326,12 +9438,20 @@
 
     function closeAirportDeleteConfirm(event) {
         if (event && event !== 'button' && event.target !== event.currentTarget) return;
+        // Отпускание пальца после долгого тапа не должно сразу закрыть модалку
+        if (event && event !== 'button' && Date.now() - airportDeleteConfirmOpenedAt < 450) return;
         document.getElementById('airportDeleteConfirmModal')?.classList.remove('active');
         airportDeleteConfirmTarget = null;
     }
 
     function confirmAirportDelete() {
         const target = airportDeleteConfirmTarget;
+        if (target?.kind === 'approach') {
+            closeAirportDeleteConfirm('button');
+            deleteNpaApproach(target.airportCode, target.approachName);
+            if (navigator.vibrate) navigator.vibrate(25);
+            return;
+        }
         if (target?.kind === 'airport') {
             deleteAirportFromModal(target.airportCode);
             closeAirportDeleteConfirm('button');

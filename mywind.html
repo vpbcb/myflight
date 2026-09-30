@@ -288,6 +288,9 @@
             max-width: 100%;
         }
         .grid-label { font-size: 0.7rem; font-weight: 800; color: var(--dim); text-transform: uppercase; text-align: center; margin-bottom: 0px; /* <-- Убрали нижний отступ у текста */ }
+        /* Заголовки ряда прижаты к своим полям: к низу строки заголовков (двухстрочный A/C TYPE на узком
+           экране не поднимает остальные) и все на одно значение ниже — вдвое ближе RWY к рамке курса */
+        .controls-layout > .grid-label { align-self: end; position: relative; top: 2px; }
 
         .action-btn, .data-input {
             height: 40px; border-radius: 12px; border: 1px solid var(--border);
@@ -339,13 +342,18 @@
         /* Курс RWY: та же подсказка под цифрами. Через ::after — текст поля пишется через textContent
            и читается им же, псевдоэлемент не стирается и в значение не попадает.
            Вне потока (absolute у нижнего края), чтобы цифры курса не сместились */
-        #windDirInput { padding-bottom: 8px; } /* цифры курса чуть выше, над подсказкой; высота поля та же */
+        #windDirInput { padding-bottom: 8px; line-height: 1; } /* цифры курса чуть выше, над подсказкой; высота поля та же.
+           Размер цифр и их центрирование между верхом рамки и подсказкой подгоняет fitWindDirCourse */
         #windDirInput::after { content: "(long tap)"; position: absolute; left: 0; right: 0; bottom: 1px; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; text-align: center; pointer-events: none; }
+        /* Land: «(long tap)» всегда одной строкой; боковые поля кнопки меньше, чтобы подсказка
+           поместилась на узком экране без уменьшения шрифта */
+        #coursePlusBtn { padding-left: 2px; padding-right: 2px; }
+        #coursePlusBtn .crew-hint { white-space: nowrap; }
         /* На активной синей кнопке Land серый текст не читается — берём цвет кнопки */
         #coursePlusBtn.active-op .crew-hint { color: inherit; opacity: 0.85; }
 
         /* --- КАРТОТЕКА И СПЕЦ-КНОПКИ --- ДВИГАТЬ ВСЮ БИБЛИОТЕКУ ВВЕРХ ВНИЗ*/
-        .tabs-container { margin-top: 10px; margin-bottom: 6px; display: flex; flex-direction: column; min-width: 0; max-width: 100%; container-type: inline-size; }
+        .tabs-container { margin-top: 5px; /* зазор под полем курса RWY (самым высоким в ряду) до табов */ margin-bottom: 6px; display: flex; flex-direction: column; min-width: 0; max-width: 100%; container-type: inline-size; }
 
         .tab-line-wrapper {
             display: flex; align-items: flex-end; gap: 12px; width: 100%;
@@ -517,7 +525,7 @@
             background-color: rgba(25, 118, 210, 0.25);
             border: 1px solid rgba(25, 118, 210, 0.4);
             border-radius: 6px;
-            padding: 5px 2px;
+            padding: 3px 2px; /* плашка ниже по высоте за счёт отступов; шрифт прежний */
             margin-top: 2px; /* Между таблицей и плашкой — подсказка .table-hint, отступы минимальные */
             width: 100%;
             letter-spacing: 0; /* Всегда без разрядки: плотность текста одинакова при любой длине строки */
@@ -1276,6 +1284,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         // Принудительно проявляем плашку сразу после загрузки
         document.getElementById('landStatusRow').style.opacity = '1';
         fitTableHint();
+        fitWindDirCourse();
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
         restoreTableScrollPosition();
     };
@@ -2055,7 +2064,57 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         const statusRow = document.getElementById('landStatusRow');
         if (statusRow) fitStatusRow(statusRow);
         fitTableHint();
+        fitWindDirCourse();
     });
+
+    // Курс RWY: цифры максимально крупные, но с зазорами до рамки (сверху и по бокам) и до
+    // подсказки «(long tap)» снизу; по вертикали центр цифр — посередине между верхом рамки
+    // и подсказкой. Метрики берём из canvas, чтобы не трогать textContent поля.
+    const WIND_DIR_FONT_MAX_PX = 44;
+    const WIND_DIR_GAP_PX = 3;
+    const windDirMeasureCtx = document.createElement('canvas').getContext('2d');
+    function fitWindDirCourse() {
+        const el = document.getElementById('windDirInput');
+        if (!el || !windDirMeasureCtx || !el.clientHeight) return;
+        const style = getComputedStyle(el);
+        const hint = getComputedStyle(el, '::after');
+        const hintTop = el.clientHeight - (parseFloat(hint.bottom) || 0) - (parseFloat(hint.fontSize) || 0);
+        const text = el.textContent.trim() || '000°';
+        const metricsAt = size => {
+            windDirMeasureCtx.font = `${style.fontStyle} ${style.fontWeight} ${size}px ${style.fontFamily}`;
+            return { text: windDirMeasureCtx.measureText(text), digit: windDirMeasureCtx.measureText('0') };
+        };
+
+        const base = metricsAt(100);
+        const digitHeight = (base.digit.actualBoundingBoxAscent + base.digit.actualBoundingBoxDescent) / 100;
+        const bySpace = digitHeight > 0 ? (hintTop - 2 * WIND_DIR_GAP_PX) / digitHeight : WIND_DIR_FONT_MAX_PX;
+        const byWidth = base.text.width > 0 ? (el.clientWidth - 2 * WIND_DIR_GAP_PX) / (base.text.width / 100) : WIND_DIR_FONT_MAX_PX;
+        const size = Math.floor(Math.min(WIND_DIR_FONT_MAX_PX, bySpace, byWidth) * 2) / 2;
+        if (!(size > 0)) return;
+
+        // line-height: 1 и flex-центрирование: строка стоит посередине высоты без padding-bottom.
+        // Подбираем padding-bottom так, чтобы середина цифр пришлась на середину [верх рамки, подсказка].
+        // Положение базовой линии в строке меряем скрытым образцом тем же шрифтом (точнее метрик canvas).
+        const m = metricsAt(size);
+        const sample = document.createElement('div');
+        sample.style.cssText = `position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;font:${style.fontStyle} ${style.fontWeight} ${size}px ${style.fontFamily};line-height:1;`;
+        sample.innerHTML = '0<span style="display:inline-block;width:0;height:0;vertical-align:baseline"></span>';
+        document.body.appendChild(sample);
+        const baselineInLine = sample.lastChild.getBoundingClientRect().top - sample.getBoundingClientRect().top;
+        sample.remove();
+        const digitMid = (m.digit.actualBoundingBoxAscent - m.digit.actualBoundingBoxDescent) / 2;
+        const paddingBottom = el.clientHeight - size + 2 * baselineInLine - hintTop - 2 * digitMid;
+        el.style.fontSize = `${size}px`;
+        el.style.paddingBottom = `${Math.max(0, paddingBottom).toFixed(1)}px`;
+    }
+    (() => {
+        const el = document.getElementById('windDirInput');
+        if (!el) return;
+        // Курс меняется из разных мест (клавиатура, долгий тап, сброс, восстановление) — ловим все
+        new MutationObserver(fitWindDirCourse).observe(el, { childList: true, characterData: true, subtree: true });
+        fitWindDirCourse();
+        if (document.fonts?.ready) document.fonts.ready.then(fitWindDirCourse);
+    })();
 
     function showLandHint() {
         const toast = document.getElementById('landHintToast');

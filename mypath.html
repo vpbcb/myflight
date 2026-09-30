@@ -815,6 +815,15 @@ html.light-theme .icon-img {
 
 /* Левая кнопка: NEW APPR и, если на MyNpa выбран заход, вторая строка COPY MYNPA (long tap).
    С двумя строками шрифт меньше — высота панели навигации не меняется */
+/* Долгий тап (COPY MYNPA, SHIFT) не должен выделять текст и вызывать лупу/меню iOS */
+#startApprBtn,
+#startApprBtn *,
+#shiftBtn,
+#shiftBtn * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
 #startApprBtn .start-appr-label {
     display: flex;
     flex-direction: column;
@@ -843,11 +852,31 @@ html.light-theme .icon-img {
     font-size: 0.5rem;
     letter-spacing: 0.5px;
 }
-/* Подсказки в скобках — тише основной надписи */
+/* Узкий экран: строки с подсказками не помещаются рядом со значком — сокращаем промежуток
+   и уменьшаем значок; подпись не сжимается, значок+подпись центрируются во всей ширине кнопки */
+@media (max-width: 370px) {
+    #startApprBtn.has-copy {
+        gap: 2px;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    #startApprBtn.has-copy > svg {
+        width: 16px;
+        height: 16px;
+    }
+    #startApprBtn.has-copy .start-appr-label {
+        flex-shrink: 0;
+    }
+}
+/* Подсказки в скобках — тише и компактнее основной надписи (строчные, без разрядки, как
+   «(long tap)» в других элементах), чтобы на узком экране строка не наезжала на иконку */
 #startApprBtn .bottom-action-hint {
     margin-top: 1px;
-    font-size: 0.45rem;
+    margin-left: 1px;
+    font-size: 0.4rem;
     font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
     opacity: 0.6;
 }
 .wind-btn:active {
@@ -2427,6 +2456,8 @@ for (let d = topMile; d >= 2; d--) {
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(eventName => {
             startBtn.addEventListener(eventName, cancelHold);
         });
+        // Долгий тап не выделяет текст подписи
+        startBtn.addEventListener('selectstart', e => e.preventDefault());
         startBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (longPressHandled) {
@@ -2463,6 +2494,9 @@ for (let d = topMile; d >= 2; d--) {
 
 
         initStartApprButton();
+
+        // Долгий тап по SHIFT не выделяет текст кнопки
+        document.getElementById('shiftBtn')?.addEventListener('selectstart', e => e.preventDefault());
 
         const fapLabel = document.getElementById('fapLabelBtn');
         let lastTapTime = 0;
