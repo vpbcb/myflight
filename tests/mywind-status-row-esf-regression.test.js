@@ -143,6 +143,9 @@ test('RWY course shows a "(long tap)" hint without moving the course digits', ()
 test('status plaque is lower via padding only; control row sits 5px above the tabs', () => {
     const rule = myWindHtml.match(/\.land-status-row\s*\{[^}]*\}/)[0];
     assert.match(rule, /padding: 3px 2px;/);
+    // плашка ближе к заголовкам ряда кнопок, чем к подсказке под таблицей
+    assert.match(rule, /margin-top: 7px;/);
+    assert.match(myWindHtml, /\.controls-layout \{[^}]*margin-top: 0;/);
     assert.match(rule, /font-size: clamp\(0\.7rem, 3\.5vw, 0\.95rem\);/);
     assert.match(myWindHtml, /\.tabs-container \{ margin-top: 5px;/);
     // заголовки ряда прижаты к полям на одно значение

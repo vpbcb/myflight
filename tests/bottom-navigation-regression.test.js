@@ -26,7 +26,7 @@ test('all active pages load the shared bottom navigation stylesheet', () => {
 
 test('bottom actions use fixed three-column slots on every page', () => {
     const expectedSlots = {
-        'index.html': ['left', 'center'],
+        'index.html': ['left', 'right'],
         'myfuel.html': ['left', 'right'],
         'myshift.html': ['left', 'right'],
         'mynpa.html': ['left', 'center', 'right'],

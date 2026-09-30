@@ -30,6 +30,8 @@ test('home footer keeps Refresh and replaces Theme and Mail with Settings', () =
     const homeControls = indexHtml.slice(footerStart, settingsModalStart);
     assert.match(homeControls, /id="refreshBtn"/);
     assert.match(homeControls, /id="settingsToggleBtn"[^>]*onclick="openSettingsModal\(\)"/);
+    // Settings — в правой зоне панели навигации
+    assert.match(homeControls, /class="settings-toggle bottom-action bottom-action--right" id="settingsToggleBtn"/);
     assert.doesNotMatch(homeControls, /id="themeToggleBtn"|id="btnMail"|id="pushToggleBtn"/);
 });
 
