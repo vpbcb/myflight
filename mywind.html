@@ -352,8 +352,6 @@
         /* Land: «(long tap)» всегда одной строкой; боковые поля кнопки меньше, чтобы подсказка
            поместилась на узком экране без уменьшения шрифта */
         #coursePlusBtn { padding-left: 2px; padding-right: 2px; }
-        /* Take off: всегда одной строкой; если не помещается — fitTakeoffBtn уменьшает шрифт */
-        #courseMinusBtn { padding-left: 2px; padding-right: 2px; white-space: nowrap; overflow: hidden; }
         #coursePlusBtn .crew-hint { white-space: nowrap; }
         /* На активной синей кнопке Land серый текст не читается — берём цвет кнопки */
         #coursePlusBtn.active-op .crew-hint { color: inherit; opacity: 0.85; }
@@ -1300,7 +1298,6 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         document.getElementById('landStatusRow').style.opacity = '1';
         fitTableHint();
         fitWindDirCourse();
-        fitTakeoffBtn();
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
         restoreTableScrollPosition();
     };
@@ -2081,20 +2078,8 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (statusRow) fitStatusRow(statusRow);
         fitTableHint();
         fitWindDirCourse();
-        fitTakeoffBtn();
     });
 
-    // Take off не переносится: на узком экране шрифт уменьшается, пока текст не уместится в кнопке
-    function fitTakeoffBtn() {
-        const btn = document.getElementById('courseMinusBtn');
-        if (!btn || !btn.clientWidth) return;
-        btn.style.fontSize = '';
-        let size = parseFloat(getComputedStyle(btn).fontSize);
-        while (btn.scrollWidth > btn.clientWidth && size > 9) {
-            size -= 0.25;
-            btn.style.fontSize = size + 'px';
-        }
-    }
 
     // Курс RWY: цифры максимально крупные, но с зазорами до рамки (сверху и по бокам) и до
     // подсказки «(long tap)» снизу; по вертикали центр цифр — посередине между верхом рамки
