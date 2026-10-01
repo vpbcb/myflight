@@ -2467,6 +2467,12 @@
             font-style: italic;
             font-weight: 500;
             line-height: 1;
+            /* бледно-серая, как все подсказки «(long tap)» */
+            color: #64748b;
+            opacity: 0.7;
+        }
+        html.dark-theme #addAirportModal .airport-lock-long-tap {
+            color: #96a4b3;
         }
         #addAirportModal:not(.delete-unlocked) .npa-modal-delete-btn {
             visibility: hidden;
@@ -3361,6 +3367,12 @@
             margin-top: 1px;
             font-style: italic;
             font-weight: 500;
+            /* бледно-серая, как все подсказки «(long tap)» (эталон — .airport-long-tap-hint) */
+            color: #64748b;
+            opacity: 0.7;
+        }
+        html.dark-theme #npaProfileRadioHeader .npa-profile-head-tiny {
+            color: #96a4b3;
         }
         .npa-profile-head .npa-profile-alt {
             font-size: 0.75rem;

@@ -124,3 +124,8 @@ test('DIST FROM VOR header: the long-tap hint reads "(long tap)" like the other 
     assert.match(source, /normalizeProfileRadioHeaderLabel\(profileRadioSourceLabel\), '\(long tap\)'\]/);
     assert.doesNotMatch(myNpaHtml, /long tap avail/);
 });
+
+test('MyNpa "(long tap)" hints in the DIST FROM header and the airport lock are pale grey', () => {
+    assert.match(myNpaHtml, /#npaProfileRadioHeader \.npa-profile-head-tiny \{[^}]*color: #64748b;\s*opacity: 0\.7;/);
+    assert.match(myNpaHtml, /#addAirportModal \.airport-lock-long-tap \{[^}]*color: #64748b;\s*opacity: 0\.7;/);
+});

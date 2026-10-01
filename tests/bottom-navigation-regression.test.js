@@ -124,3 +124,9 @@ test('service worker includes the shared stylesheet with the current cache versi
     const release = JSON.parse(sw.match(/const PRECACHE_BUILD = (\{.*\});/)[1]);
     assert.ok(release.assets.some(asset => asset.url === 'bottom-navigation.css' && /^[a-f0-9]{64}$/.test(asset.sha256)));
 });
+
+test('navigation "(long tap)" hints are pale grey in both themes', () => {
+    const css = fs.readFileSync(path.join(root, 'bottom-navigation.css'), 'utf8');
+    assert.match(css, /\.bottom-action-hint \{\s*color: #64748b;\s*opacity: 0\.7;/);
+    assert.match(css, /html\.dark-theme \.bottom-action-hint \{\s*color: #96a4b3;/);
+});

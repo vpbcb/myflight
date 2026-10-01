@@ -60,7 +60,7 @@ test('MyPath left button: NEW APPR on top, COPY MYNPA (long tap) line hidden unt
     assert.match(myPathHtml, /<span id="startBtnText">NEW APPR<\/span><em class="bottom-action-hint start-appr-short-hint">\(short tap\)<\/em><\/span>\s*<span class="start-appr-copy" id="copyMyNpaLine" hidden>COPY MYNPA<em class="bottom-action-hint">\(long tap\)<\/em><\/span>/);
     assert.match(myPathHtml, /#startApprBtn:not\(\.has-copy\) \.start-appr-short-hint \{\s*display: none;/);
     assert.match(myPathHtml, /#startApprBtn\.has-copy \.start-appr-label \{\s*font-size: 0\.5rem;/);
-    assert.match(myPathHtml, /#startApprBtn \.bottom-action-hint \{[^}]*font-weight: 400;[^}]*opacity: 0\.6;/);
+    assert.match(myPathHtml, /#startApprBtn \.bottom-action-hint \{[^}]*font-weight: 500;[^}]*opacity: 0\.7;/);
     // Узкий экран: подсказки компактнее (строчные, без разрядки), основная надпись прежняя
     assert.match(myPathHtml, /#startApprBtn \.bottom-action-hint \{[^}]*font-size: 0\.4rem;[^}]*letter-spacing: 0;[^}]*text-transform: none;/);
     // Узкий экран: промежуток меньше, значок меньше, подпись не сжимается (без переноса строк)

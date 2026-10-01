@@ -165,3 +165,20 @@ test('RWY course digits are fitted and centred between the frame top and the hin
     assert.match(source, /el\.style\.fontSize = /);
     assert.match(source, /el\.style\.paddingBottom = /);
 });
+
+test('control labels: RWY slightly higher, A/C TYPE and PF slightly lower', () => {
+    assert.match(myWindHtml, /\.controls-layout > \.grid-label:nth-child\(3\) \{ top: 0; \}/);
+    assert.match(myWindHtml, /\.controls-layout > \.grid-label:nth-child\(1\),\s*\.controls-layout > \.grid-label:nth-child\(5\) \{ top: 4px; \}/);
+});
+
+test('Take off never wraps; the font shrinks to fit the button', () => {
+    assert.match(myWindHtml, /#courseMinusBtn \{[^}]*white-space: nowrap;/);
+    assert.match(myWindHtml, /function fitTakeoffBtn\(\)[\s\S]*?while \(btn\.scrollWidth > btn\.clientWidth/);
+    assert.match(myWindHtml, /fitWindDirCourse\(\);\s*fitTakeoffBtn\(\);/);
+});
+
+test('all MyWind "(long tap)" hints are pale grey', () => {
+    assert.match(myWindHtml, /#windDirInput::after \{[^}]*color: var\(--dim\); opacity: 0\.7;/);
+    assert.match(myWindHtml, /#crewBtn \.crew-hint, #coursePlusBtn \.crew-hint \{[^}]*color: var\(--dim\); opacity: 0\.7;/);
+    assert.match(myWindHtml, /#narrowContBtn em \{[^}]*color: var\(--dim\);\s*opacity: 0\.7;/);
+});

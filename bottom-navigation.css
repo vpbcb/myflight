@@ -75,6 +75,20 @@ html.dark-theme .bottom-controls.bottom-controls--panel{
     line-height: 1;
 }
 
+/* Подсказки «(long tap)» / «(short tap)» в навигации — бледно-серые, как во всём приложении */
+.bottom-action-hint {
+    color: #64748b;
+    opacity: 0.7;
+}
+html.dark-theme .bottom-action-hint {
+    color: #96a4b3;
+}
+@media (prefers-color-scheme: dark) {
+    html:not(.light-theme) .bottom-action-hint {
+        color: #96a4b3;
+    }
+}
+
 :root {
     --bottom-nav-color: #1e293b;
     --bottom-nav-button-height: 32px;

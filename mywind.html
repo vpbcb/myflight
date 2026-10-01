@@ -291,6 +291,10 @@
         /* Заголовки ряда прижаты к своим полям: к низу строки заголовков (двухстрочный A/C TYPE на узком
            экране не поднимает остальные) и все на одно значение ниже — вдвое ближе RWY к рамке курса */
         .controls-layout > .grid-label { align-self: end; position: relative; top: 2px; }
+        /* RWY — чуть выше (над высокой рамкой курса), A/C TYPE и PF — чуть ниже, к своим кнопкам */
+        .controls-layout > .grid-label:nth-child(3) { top: 0; }
+        .controls-layout > .grid-label:nth-child(1),
+        .controls-layout > .grid-label:nth-child(5) { top: 4px; }
 
         .action-btn, .data-input {
             height: 40px; border-radius: 12px; border: 1px solid var(--border);
@@ -338,16 +342,18 @@
         .action-btn small { font-size: 0.65rem; color: var(--dim); display: block; }
         /* PF: «2П 80%» одной строкой, подсказка long tap курсивом под ней (так же у Land) */
         #crewBtn small { display: inline; font-size: 0.8rem; margin-left: 3px; }
-        #crewBtn .crew-hint, #coursePlusBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; margin-top: 1px; }
+        #crewBtn .crew-hint, #coursePlusBtn .crew-hint { display: block; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); opacity: 0.7; line-height: 1; margin-top: 1px; }
         /* Курс RWY: та же подсказка под цифрами. Через ::after — текст поля пишется через textContent
            и читается им же, псевдоэлемент не стирается и в значение не попадает.
            Вне потока (absolute у нижнего края), чтобы цифры курса не сместились */
         #windDirInput { padding-bottom: 8px; line-height: 1; } /* цифры курса чуть выше, над подсказкой; высота поля та же.
            Размер цифр и их центрирование между верхом рамки и подсказкой подгоняет fitWindDirCourse */
-        #windDirInput::after { content: "(long tap)"; position: absolute; left: 0; right: 0; bottom: 1px; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); line-height: 1; text-align: center; pointer-events: none; }
+        #windDirInput::after { content: "(long tap)"; position: absolute; left: 0; right: 0; bottom: 1px; font-size: 0.55rem; font-style: italic; font-weight: 500; color: var(--dim); opacity: 0.7; line-height: 1; text-align: center; pointer-events: none; }
         /* Land: «(long tap)» всегда одной строкой; боковые поля кнопки меньше, чтобы подсказка
            поместилась на узком экране без уменьшения шрифта */
         #coursePlusBtn { padding-left: 2px; padding-right: 2px; }
+        /* Take off: всегда одной строкой; если не помещается — fitTakeoffBtn уменьшает шрифт */
+        #courseMinusBtn { padding-left: 2px; padding-right: 2px; white-space: nowrap; overflow: hidden; }
         #coursePlusBtn .crew-hint { white-space: nowrap; }
         /* На активной синей кнопке Land серый текст не читается — берём цвет кнопки */
         #coursePlusBtn.active-op .crew-hint { color: inherit; opacity: 0.85; }
@@ -451,9 +457,18 @@
         }
         #narrowContBtn em {
             font-size: 0.867em;
+            font-style: italic;
             font-weight: 500;
             letter-spacing: 0;
             text-transform: none;
+            /* бледно-серая, как все подсказки «(long tap)» */
+            color: var(--dim);
+            opacity: 0.7;
+        }
+        /* На активной оранжевой кнопке серый не читается — берём цвет кнопки (как у Land) */
+        #narrowContBtn.active em {
+            color: inherit;
+            opacity: 0.85;
         }
 
         #contBtn { margin-bottom: 12px; }
@@ -1285,6 +1300,7 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         document.getElementById('landStatusRow').style.opacity = '1';
         fitTableHint();
         fitWindDirCourse();
+        fitTakeoffBtn();
         if (typeof updateLandModalUI === 'function') updateLandModalUI({ center: false }); // Применяем блокировки CAT2
         restoreTableScrollPosition();
     };
@@ -2065,7 +2081,20 @@ html.dark-theme .tab-btn.active.atis-display-btn .atis-or {
         if (statusRow) fitStatusRow(statusRow);
         fitTableHint();
         fitWindDirCourse();
+        fitTakeoffBtn();
     });
+
+    // Take off не переносится: на узком экране шрифт уменьшается, пока текст не уместится в кнопке
+    function fitTakeoffBtn() {
+        const btn = document.getElementById('courseMinusBtn');
+        if (!btn || !btn.clientWidth) return;
+        btn.style.fontSize = '';
+        let size = parseFloat(getComputedStyle(btn).fontSize);
+        while (btn.scrollWidth > btn.clientWidth && size > 9) {
+            size -= 0.25;
+            btn.style.fontSize = size + 'px';
+        }
+    }
 
     // Курс RWY: цифры максимально крупные, но с зазорами до рамки (сверху и по бокам) и до
     // подсказки «(long tap)» снизу; по вертикали центр цифр — посередине между верхом рамки
