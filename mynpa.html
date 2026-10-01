@@ -1672,6 +1672,10 @@
             font-size: clamp(11px, 4.2vw, 15px);
             font-weight: 500;
         }
+        /* Airport ADD NEW: не показываем многоточие при уменьшении шрифта до ширины кнопки. */
+        .npa-airport-option.add-new-appr {
+            text-overflow: clip;
+        }
         .npa-approach-empty {
             padding: 8px 4px;
             color: #64748b;
@@ -5681,6 +5685,22 @@
         return btn;
     }
 
+    // Как в Approach Type: ADD NEW целиком помещается в выпадающем списке на узком экране.
+    function fitNpaAirportDropdownText(dropdown = document.getElementById('npaAirportDropdown')) {
+        if (!dropdown || !dropdown.classList.contains('open')) return;
+        const option = dropdown.querySelector('.npa-airport-option.add-new-appr');
+        if (!option) return;
+        option.style.fontSize = '';
+        const availableWidth = Math.max(0, option.clientWidth - 8);
+        const contentWidth = option.scrollWidth;
+        if (!availableWidth || !contentWidth || contentWidth <= availableWidth) return;
+
+        const baseSize = parseFloat(window.getComputedStyle(option).fontSize) || 15;
+        const minSize = 10;
+        const fittedSize = Math.max(minSize, Math.floor((baseSize * availableWidth / contentWidth) * 10) / 10);
+        option.style.fontSize = `${fittedSize}px`;
+    }
+
     function renderNpaAirportDropdown(forceOpen = false, prefixOverride = null) {
         const dropdown = document.getElementById('npaAirportDropdown');
         if (!dropdown) return;
@@ -5698,6 +5718,7 @@
         }
 
         if (forceOpen) dropdown.classList.add('open');
+        fitNpaAirportDropdownText(dropdown);
     }
 
     function selectNpaAirport(airportCode) {
@@ -10291,8 +10312,14 @@
         if (!event.target.closest('#airportFieldWrapper')) closeNpaAirportDropdown();
     });
 
-    window.addEventListener('resize', () => fitNpaApproachDropdownText());
-    window.addEventListener('orientationchange', () => fitNpaApproachDropdownText());
+    window.addEventListener('resize', () => {
+        fitNpaAirportDropdownText();
+        fitNpaApproachDropdownText();
+    });
+    window.addEventListener('orientationchange', () => {
+        fitNpaAirportDropdownText();
+        fitNpaApproachDropdownText();
+    });
 
     function checkAndFillFromDB() {
         const airportCode = getNpaAirportCode();
