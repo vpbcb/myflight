@@ -2377,7 +2377,8 @@
             transform: translateY(0);
             flex: 0 0 auto;
             justify-self: start;
-            width: calc(100% - 42px - 6px - 6px);
+            /* на узком экране колонка сжимается — не уже 84px, иначе надпись замка не помещается */
+            width: max(calc(100% - 42px - 6px - 6px), min(84px, 100%));
             height: 42px;
             margin: 0;
             padding: 0 6px;
@@ -4280,6 +4281,8 @@
         window.addEventListener('orientationchange', () => setTimeout(scheduleNpaProfileLayoutUpdate, 150));
         window.addEventListener('resize', scheduleNpaProfileLayoutUpdate);
         window.visualViewport?.addEventListener('resize', scheduleNpaProfileLayoutUpdate);
+        window.addEventListener('resize', fitAllNpaFdpFapInputs);
+        document.fonts?.ready?.then(fitAllNpaFdpFapInputs);
         initNpaHeaderActionUnlock();
         initNpaRefreshButton();
         initNpaEditLockMode();
@@ -6197,6 +6200,33 @@
         setNpaFdpFapMode(NPA_FDP_FAP_DEFAULT_MODE);
     }
 
+    // FDP/FAP: размер шрифта в CSS задан от ширины контейнера, и на части ширин «2000 ft» / «12.5 nm»
+    // не помещается в поле. Если текст шире поля — уменьшаем шрифт ровно настолько, чтобы влез
+    let npaFdpFapMeasureCanvas = null;
+    function fitNpaFdpFapInput(input) {
+        if (!input) return;
+        input.style.removeProperty('font-size');
+        if (!input.value || !input.clientWidth) return;
+        const style = window.getComputedStyle(input);
+        const available = input.clientWidth
+            - (parseFloat(style.paddingLeft) || 0)
+            - (parseFloat(style.paddingRight) || 0)
+            - 2; // запас на сглаживание/каретку
+        npaFdpFapMeasureCanvas = npaFdpFapMeasureCanvas || document.createElement('canvas');
+        const ctx = npaFdpFapMeasureCanvas.getContext('2d');
+        ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const letterSpacing = parseFloat(style.letterSpacing) || 0;
+        const textWidth = ctx.measureText(input.value).width + letterSpacing * input.value.length;
+        if (!(available > 0) || textWidth <= available) return;
+        const baseSize = parseFloat(style.fontSize) || 14;
+        const fittedSize = Math.max(7, Math.floor((baseSize * available / textWidth) * 10) / 10);
+        input.style.setProperty('font-size', `${fittedSize}px`, 'important');
+    }
+
+    function fitAllNpaFdpFapInputs() {
+        NPA_FDP_FAP_FIELDS.forEach(id => fitNpaFdpFapInput(document.getElementById(id)));
+    }
+
     function formatNpaFdpFapDisplay(field, value) {
         const numeric = getCleanDisplayNumber(value);
         if (numeric === "") return "";
@@ -6367,6 +6397,7 @@
             el.value = formatFeetDisplay(nextValue);
         } else if (id === 'fdp' || id === 'fap') {
             el.value = formatNpaFdpFapDisplay(id, nextValue);
+            fitNpaFdpFapInput(el);
             updateNpaFdpFapModeButton();
         } else if (id === 'inboundCrs') {
             renderInboundCourseDisplay();

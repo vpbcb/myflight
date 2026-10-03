@@ -214,6 +214,14 @@ html.dark-theme {
     white-space: nowrap;
 }
 
+/* Узкий экран: длинные подписи («START CALCULATION») не помещаются в кнопку — уменьшаем разрядку */
+@media (max-width: 359px) {
+    .bottom-controls > .bottom-action > .bottom-action-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.3px;
+    }
+}
+
 @media (hover: hover) and (pointer: fine) and (max-height: 680px) {
     :root {
         --bottom-nav-padding-bottom: max(4px, calc(var(--safe-bottom) + 4px));
