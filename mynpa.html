@@ -2960,8 +2960,9 @@
         html.dark-theme .npa-runway-length-display {
             background: rgba(255, 255, 255, 0.04);
         }
+        /* Основное значение не сжимается; если не влезает — уменьшается nm (fitAirportRunwayLengthDisplay) */
         .npa-runway-length-main {
-            min-width: 0;
+            flex: 0 0 auto;
             font-size: clamp(0.66rem, 4.1vw, 0.95rem);
             font-weight: 500;
             white-space: nowrap;
@@ -5245,6 +5246,7 @@
         let npaProfileSavedScrollTop = 0;
         let npaProfileRestoringScroll = false;
         let npaProfilePendingInitialFapScroll = false;
+        const NPA_PROFILE_ACTIVE_POINT_ROWS_FROM_BOTTOM = 5;
         const NPA_PROFILE_SCROLL_STORAGE_PREFIX = 'mynpa_profile_scroll:';
         let npaProfileLongPressTimer = null;
         let npaProfileLongPressFired = false;
@@ -5467,7 +5469,12 @@
                 loadNpaProfileSavedScrollPosition();
                 renderNpaProfileTable();
                 scheduleNpaProfileLayoutUpdate();
-                scheduleNpaProfileScrollRestore();
+                // Как в MyPath: при открытии страницы — сохранённый скролл, если его нет — строка FDP/FAP на место
+                if (readNpaProfileScrollPosition() !== null) {
+                    scheduleNpaProfileScrollRestore();
+                } else {
+                    scheduleNpaProfileInitialFapScroll();
+                }
                 return true;
             } finally {
                 npaPageStateRestoring = false;
@@ -6834,15 +6841,17 @@
         const profileBlock = document.getElementById('npaBlock4');
         if (!profileBlock || !profileBlock.classList.contains('open')) return false;
 
-        const targetRow = container.querySelector('.highlight-fap');
-        if (!targetRow) return false;
+        // Как в MyPath (scrollToActivePoint): строка FAP, иначе последняя FDP — 5-я снизу
+        const highlights = container.querySelectorAll('.highlight-fdp,.highlight-fap');
+        if (highlights.length === 0) return false;
+        const targetRow = container.querySelector('.highlight-fap') || highlights[highlights.length - 1];
 
         const rowHeight = targetRow.offsetHeight || 45;
         const containerHeight = container.clientHeight;
         if (!containerHeight) return false;
         const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
         const targetScroll = Math.min(
-            Math.max(0, targetRow.offsetTop - (containerHeight - (4 * rowHeight))),
+            Math.max(0, targetRow.offsetTop - (containerHeight - (NPA_PROFILE_ACTIVE_POINT_ROWS_FROM_BOTTOM * rowHeight))),
             maxScroll
         );
 
@@ -7332,40 +7341,6 @@
         }).join('');
     }
 
-    function captureNpaProfileScrollAnchor(container) {
-        if (!container) return null;
-        const anchorRow = container.querySelector('.highlight-fap') || container.querySelector('.highlight-fdp');
-        if (!anchorRow) return { type: 'scroll', scrollTop: container.scrollTop || 0 };
-
-        const containerRect = container.getBoundingClientRect();
-        const rowRect = anchorRow.getBoundingClientRect();
-        return {
-            type: 'row',
-            className: anchorRow.classList.contains('highlight-fap') ? 'highlight-fap' : 'highlight-fdp',
-            topOffset: rowRect.top - containerRect.top,
-            scrollTop: container.scrollTop || 0
-        };
-    }
-
-    function restoreNpaProfileScrollAnchor(container, anchor) {
-        if (!container || !anchor) {
-            if (container) container.scrollTop = 0;
-            return;
-        }
-
-        if (anchor.type === 'row' && anchor.className) {
-            const anchorRow = container.querySelector(`.${anchor.className}`);
-            if (anchorRow) {
-                const containerRect = container.getBoundingClientRect();
-                const rowRect = anchorRow.getBoundingClientRect();
-                container.scrollTop += (rowRect.top - containerRect.top) - anchor.topOffset;
-                return;
-            }
-        }
-
-        container.scrollTop = anchor.scrollTop || 0;
-    }
-
     function getNpaFcuFpaCorrectedState() {
         const elevationValue = getAirportThresholdElevationValue();
         const angleValue = getNumberOrBlank('gpa');
@@ -7498,7 +7473,6 @@
         updateNpaFcuFpaDisplay();
         if (!tableBody) return;
         const shouldInitialFapScroll = npaProfilePendingInitialFapScroll;
-        const scrollAnchor = shouldInitialFapScroll ? null : captureNpaProfileScrollAnchor(tableBody);
         updateNpaProfileUnitHeaders();
         applyNpaProfileFocusClasses();
 
@@ -7525,11 +7499,12 @@
         tableBody.innerHTML = tableHTML || '<div class="npa-profile-row npa-profile-placeholder">Check Inputs...</div>';
         updateDownwindFinalDescent();
         scheduleNpaProfileLayoutUpdate();
+        // Как в MyPath (positionActivePointAfterRender): после каждого пересчёта строка FDP/FAP
+        // снова ставится на своё место; сохранённый скролл восстанавливается только при открытии страницы
         if (shouldInitialFapScroll) {
             scheduleNpaProfileInitialFapScroll();
-        } else {
-            restoreNpaProfileScrollAnchor(tableBody, scrollAnchor);
-            requestAnimationFrame(() => restoreNpaProfileScrollAnchor(tableBody, scrollAnchor));
+        } else if (!npaPageStateRestoring) {
+            setTimeout(scrollToNpaProfilePoint, 50);
         }
     }
 
@@ -7611,6 +7586,25 @@
         const el = document.getElementById('downwindRadioFixShift');
         const visibleValue = el ? getCleanDisplayNumber(el.value) : "";
         return visibleValue === "" ? "" : visibleValue;
+    }
+
+    function hasDownwindRadioFixShiftContent() {
+        return getDownwindRadioFixShiftValueOrBlank() !== ""
+            || !!downwindRadioFixShiftLabel
+            || !!downwindRadioFixDirectSource;
+    }
+
+    function clearDownwindRadioFixShiftFromKeypad() {
+        currentKpVal = "";
+        keypadWasCleared = false;
+        if (hasDownwindRadioFixShiftContent()) {
+            downwindRadioFixShiftLabel = "";
+            downwindRadioFixDirectSource = null;
+            markNpaCurrentApproachDirtyForField('downwindRadioFixShift');
+            setSDownwindManualMode(false);
+            setFieldValue('downwindRadioFixShift', "");
+        }
+        updateKpDisplay();
     }
 
     function getDownwindRadioFixShiftNumber() {
@@ -8854,6 +8848,33 @@
         const nm = Number(meters) / 1852;
         if (main) main.textContent = `${displayValue} ${unit}`;
         if (sub) sub.textContent = `/ ${nm.toFixed(1)} nm`;
+        fitAirportRunwayLengthDisplay(button);
+    }
+
+    // RW length: если «значение + nm» шире поля, уменьшаем шрифт nm, пока не влезет
+    function fitAirportRunwayLengthDisplay(button) {
+        const main = button?.querySelector('.npa-runway-length-main');
+        const sub = button?.querySelector('.npa-runway-length-sub');
+        if (!main || !sub) return;
+        sub.style.fontSize = '';
+        if (!sub.textContent) return;
+        const style = window.getComputedStyle(button);
+        const availableWidth = button.clientWidth
+            - (parseFloat(style.paddingLeft) || 0)
+            - (parseFloat(style.paddingRight) || 0);
+        if (!(availableWidth > 0)) return;
+        const subMargin = parseFloat(window.getComputedStyle(sub).marginLeft) || 0;
+        const subRoom = availableWidth - main.getBoundingClientRect().width - subMargin;
+        const subWidth = sub.getBoundingClientRect().width;
+        if (!subWidth || subWidth <= subRoom) return;
+        const baseSize = parseFloat(window.getComputedStyle(sub).fontSize) || 10;
+        const fittedSize = Math.max(5, Math.floor((baseSize * Math.max(0, subRoom) / subWidth) * 10) / 10);
+        sub.style.fontSize = `${fittedSize}px`;
+    }
+
+    function fitAllAirportRunwayLengthDisplays() {
+        if (!document.getElementById('addAirportModal')?.classList.contains('active')) return;
+        document.querySelectorAll('#addAirportModal [data-rwy-length-display]').forEach(fitAirportRunwayLengthDisplay);
     }
 
     function formatAirportElevDisplay(value) {
@@ -9050,7 +9071,7 @@
         if (target.type === 'length') {
             const value = getKeypadNumericValue();
             if (target.input) {
-                target.input.value = finalVal === "" ? "" : Math.round(rwLengthInputUnit === 'ft' ? value * 0.3048 : value);
+                target.input.value = finalVal === "" ? "" : convertRwLengthKeypadValueToMeters(value);
                 target.input.dataset.displayUnit = rwLengthInputUnit;
             }
             renderAirportRunwayLengthDisplay(target.display || target.block?.querySelector('[data-rwy-length-display]'));
@@ -9339,6 +9360,7 @@
         modal.classList.add('active');
         resetAirportModalDirtyState();
         fitAirportModalLockHint();
+        fitAllAirportRunwayLengthDisplays();
         syncAddAirportModalViewport();
         if (!isEdit) {
             if (focusNpaUnlessIosPwaSafe(input, { preventScroll: true })) selectNpaUnlessIosPwaSafe(input);
@@ -9430,6 +9452,7 @@
         });
         button.addEventListener('contextmenu', event => event.preventDefault());
         window.addEventListener('resize', fitAirportModalLockHint);
+        window.addEventListener('resize', fitAllAirportRunwayLengthDisplays);
         setAirportModalDeleteUnlocked(false);
     }
 
@@ -10629,7 +10652,8 @@
         const clearButton = document.getElementById('keypadClearBtn');
         if (!clearButton) return;
         const shouldShowBack = activeNpaField === 'downwindRadioFixShift'
-            && currentKpVal === "";
+            && currentKpVal === ""
+            && !hasDownwindRadioFixShiftContent();
         const shouldShowNext = newApproachCarouselActive
             && newApproachCarouselStep === 'downwindTime'
             && activeNpaField === 'downwindTime'
@@ -10841,6 +10865,12 @@
         updateKpDisplay();
     }
 
+    // Длина хранится в метрах; ввод в футах не округляем до целых метров, иначе 4000 ft превращается в 3999 ft
+    function convertRwLengthKeypadValueToMeters(value) {
+        if (value === "") return "";
+        return rwLengthInputUnit === 'ft' ? Number((value * 0.3048).toFixed(2)) : Math.round(value);
+    }
+
     function getKeypadNumericValue() {
         if (currentKpVal === "" || currentKpVal === "." || currentKpVal === "-" || currentKpVal === "-.") return "";
         const value = Number(currentKpVal);
@@ -10988,7 +11018,7 @@
             const value = getKeypadNumericValue();
             const el = activeNpaField === 'airportRunwayLength' ? activeAirportRunwayLengthInput : document.getElementById('rwLength');
             if (el) {
-                el.value = finalVal === "" ? "" : Math.round(rwLengthInputUnit === 'ft' ? value * 0.3048 : value);
+                el.value = finalVal === "" ? "" : convertRwLengthKeypadValueToMeters(value);
                 el.dataset.displayUnit = rwLengthInputUnit;
             }
             if (activeNpaField === 'airportRunwayLength') {
@@ -11114,6 +11144,15 @@
                 keypadWasCleared = false;
                 closeNpaKeypad('done');
                 scheduleNpaCurrentPageStateSave();
+                return;
+            }
+            // NAV AID SHIFT: CLR удаляет выбранное средство и полностью очищает поле (не 0.0),
+            // после этого кнопка становится Back
+            if (
+                activeNpaField === 'downwindRadioFixShift'
+                && (currentKpVal !== "" || hasDownwindRadioFixShiftContent())
+            ) {
+                clearDownwindRadioFixShiftFromKeypad();
                 return;
             }
             if (
@@ -11310,7 +11349,8 @@
             if (currentKpVal !== "") {
                 displayEl.style.opacity = '1';
                 displayEl.textContent = formatAirportKeypadValue(activeAirportKeypad, currentKpVal);
-            } else if (rawValue !== "") {
+            } else if (rawValue !== "" && !keypadWasCleared) {
+                // после CLR/стирания старое значение поля не подставляем — видно, что поле очищено
                 displayEl.style.opacity = '1';
                 displayEl.textContent = formatAirportKeypadValue(activeAirportKeypad, rawValue);
             } else if (hint) {
